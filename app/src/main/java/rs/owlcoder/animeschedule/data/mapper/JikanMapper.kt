@@ -1,0 +1,40 @@
+package rs.owlcoder.animeschedule.data.mapper
+
+import rs.owlcoder.animeschedule.data.api.jikan.JikanAnime
+import rs.owlcoder.animeschedule.data.local.db.AiringEpisodeEntity
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZonedDateTime
+
+fun JikanAnime.toAiringEpisodeEntity(
+    dayOfWeek: String,
+    nowEpoch: Long,
+    zoneId: ZoneId = ZoneId.of("Asia/Tokyo")
+): AiringEpisodeEntity? {
+    val broadcastTime = broadcast?.time ?: "00:00"
+    val (hour, minute) = broadcastTime.split(":").map { it.toIntOrNull() ?: 0 }
+    val today = LocalDate.now(zoneId)
+    val targetDay = today.with(
+        java.time.temporal.TemporalAdjusters.nextOrSame(
+            java.time.DayOfWeek.valueOf(dayOfWeek.uppercase())
+        )
+    )
+    val airingZdt = ZonedDateTime.of(targetDay, java.time.LocalTime.of(hour, minute), zoneId)
+    return AiringEpisodeEntity(
+        airingId = malId,
+        animeId = malId,
+        episode = 0,
+        airingAtEpochSeconds = airingZdt.toEpochSecond(),
+        title = titleEnglish ?: title,
+        titleRomaji = title,
+        coverImageUrl = images?.jpg?.largeImageUrl ?: images?.jpg?.imageUrl,
+        coverColor = null,
+        genres = genres.map { it.name },
+        averageScore = score?.times(10)?.toInt(),
+        totalEpisodes = episodes,
+        status = status,
+        format = type,
+        cachedAtEpochSeconds = nowEpoch,
+        source = "jikan"
+    )
+}

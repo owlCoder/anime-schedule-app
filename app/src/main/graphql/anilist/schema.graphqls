@@ -1,0 +1,180 @@
+type Query {
+  Page(page: Int, perPage: Int): Page
+  Media(id: Int, type: MediaType): Media
+}
+
+type Page {
+  pageInfo: PageInfo
+  airingSchedules(
+    id: Int
+    mediaId: Int
+    episode: Int
+    airingAt: Int
+    notYetAired: Boolean
+    id_in: [Int]
+    mediaId_in: [Int]
+    episode_in: [Int]
+    episode_greater: Int
+    episode_lesser: Int
+    airingAt_greater: Int
+    airingAt_lesser: Int
+    sort: [AiringSort]
+  ): [AiringSchedule]
+  media(
+    id: Int
+    type: MediaType
+    sort: [MediaSort]
+  ): [Media]
+}
+
+type PageInfo {
+  total: Int
+  currentPage: Int
+  lastPage: Int
+  hasNextPage: Boolean
+  perPage: Int
+}
+
+type AiringSchedule {
+  id: Int!
+  airingAt: Int!
+  episode: Int!
+  media: Media
+}
+
+type Media {
+  id: Int!
+  title: MediaTitle
+  coverImage: MediaCoverImage
+  bannerImage: String
+  description(asHtml: Boolean): String
+  genres: [String]
+  averageScore: Int
+  meanScore: Int
+  episodes: Int
+  duration: Int
+  status: MediaStatus
+  format: MediaFormat
+  season: MediaSeason
+  seasonYear: Int
+  nextAiringEpisode: AiringSchedule
+  studios(isMain: Boolean): StudioConnection
+  relations: MediaConnection
+  trailer: MediaTrailer
+  siteUrl: String
+  type: MediaType
+}
+
+type MediaTitle {
+  romaji: String
+  english: String
+  native: String
+}
+
+type MediaCoverImage {
+  extraLarge: String
+  large: String
+  medium: String
+  color: String
+}
+
+type StudioConnection {
+  edges: [StudioEdge]
+}
+
+type StudioEdge {
+  isMain: Boolean
+  node: Studio
+}
+
+type Studio {
+  id: Int!
+  name: String!
+}
+
+type MediaConnection {
+  edges: [MediaEdge]
+}
+
+type MediaEdge {
+  relationType: MediaRelation
+  node: Media
+}
+
+type MediaTrailer {
+  id: String
+  site: String
+  thumbnail: String
+}
+
+enum MediaType {
+  ANIME
+  MANGA
+}
+
+enum MediaStatus {
+  FINISHED
+  RELEASING
+  NOT_YET_RELEASED
+  CANCELLED
+  HIATUS
+}
+
+enum MediaFormat {
+  TV
+  TV_SHORT
+  MOVIE
+  SPECIAL
+  OVA
+  ONA
+  MUSIC
+}
+
+enum MediaSeason {
+  WINTER
+  SPRING
+  SUMMER
+  FALL
+}
+
+enum MediaRelation {
+  ADAPTATION
+  PREQUEL
+  SEQUEL
+  PARENT
+  SIDE_STORY
+  CHARACTER
+  SUMMARY
+  ALTERNATIVE
+  SPIN_OFF
+  OTHER
+  SOURCE
+  COMPILATION
+  CONTAINS
+}
+
+enum AiringSort {
+  ID
+  ID_DESC
+  MEDIA_ID
+  MEDIA_ID_DESC
+  TIME
+  TIME_DESC
+  EPISODE
+  EPISODE_DESC
+}
+
+enum MediaSort {
+  ID
+  ID_DESC
+  TITLE_ROMAJI
+  TITLE_ROMAJI_DESC
+  TITLE_ENGLISH
+  TITLE_ENGLISH_DESC
+  START_DATE
+  START_DATE_DESC
+  SCORE
+  SCORE_DESC
+  POPULARITY
+  POPULARITY_DESC
+}

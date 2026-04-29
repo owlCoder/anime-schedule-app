@@ -1,0 +1,73 @@
+# Build outputs
+.gradle/
+build/
+**/build/
+out/
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+.local/
+
+# Kotlin / Java
+*.class
+*.jar
+*.war
+*.ear
+
+# Gradle local files
+gradle-app.setting
+.gradle-cache/
+
+# Local machine config
+local.properties
+.env
+.env.*
+!.env.example
+
+# Secrets / keys
+*.keystore
+*.jks
+*.p12
+*.pem
+*.key
+*.crt
+secrets.properties
+apikey.properties
+credentials.json
+google-services.json
+
+# Generated files
+app/build/generated/
+**/generated/
+**/ksp/
+**/kapt/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test / coverage output
+coverage/
+reports/
+*.exec
+
+# Large media / screenshots unless intentionally added
+screenshots/
+recordings/
+*.mp4
+*.mov
+*.avi
+
+# Dependency caches
+.cxx/
+.externalNativeBuild/
+
+# Claude should not read private notes by default
+private-notes/

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(gradlew.bat *)",
+      "Bash(.\\gradlew.bat *)",
+      "Bash(./gradlew *)",
+      "Bash(git *)",
+      "Bash(adb *)",
+      "Bash(powershell *)"
+    ]
+  }
+}
