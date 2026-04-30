@@ -39,3 +39,5 @@ Thumbs.db
 
 # Captures
 /captures
+gen_history.ps1
+app/.gitkeep_history
