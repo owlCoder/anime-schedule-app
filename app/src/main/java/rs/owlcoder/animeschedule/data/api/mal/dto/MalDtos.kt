@@ -71,5 +71,6 @@ data class MalSearchResponse(
 @Serializable
 data class MalUserResponse(
     val id: Int,
-    val name: String
+    val name: String,
+    val picture: String? = null
 )

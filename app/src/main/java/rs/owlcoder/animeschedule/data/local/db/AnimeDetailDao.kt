@@ -15,4 +15,13 @@ interface AnimeDetailDao {
 
     @Query("SELECT cachedAtEpochSeconds FROM anime_details WHERE animeId = :id")
     suspend fun getCacheTime(id: Int): Long?
+
+    @Query("SELECT * FROM anime_details WHERE animeId = :id")
+    suspend fun getByIdOnce(id: Int): AnimeDetailEntity?
+
+    @Query("SELECT * FROM anime_details WHERE malId = :malId LIMIT 1")
+    suspend fun getByMalId(malId: Int): AnimeDetailEntity?
+
+    @Query("SELECT cachedAtEpochSeconds FROM anime_details WHERE malId = :malId LIMIT 1")
+    suspend fun getCacheTimeByMalId(malId: Int): Long?
 }

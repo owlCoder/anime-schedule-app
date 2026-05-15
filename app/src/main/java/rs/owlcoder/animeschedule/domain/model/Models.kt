@@ -4,6 +4,8 @@ import java.time.LocalDate
 
 data class MalListEntry(
     val animeId: Int,
+    val title: String = "",
+    val coverImageUrl: String? = null,
     val status: WatchStatus,
     val episodesWatched: Int,
     val score: Int,

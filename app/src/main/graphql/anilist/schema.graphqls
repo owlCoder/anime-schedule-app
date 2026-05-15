@@ -1,6 +1,6 @@
 type Query {
   Page(page: Int, perPage: Int): Page
-  Media(id: Int, type: MediaType): Media
+  Media(id: Int, idMal: Int, type: MediaType): Media
 }
 
 type Page {

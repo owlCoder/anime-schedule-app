@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -61,6 +61,8 @@ fun SearchScreen(
     val uiState by viewModel.uiState.collectAsState()
     val recentSearches by viewModel.recentSearches.collectAsState()
     var editingResult by remember { mutableStateOf<rs.owlcoder.animeschedule.domain.model.AnimeSearchResult?>(null) }
+    // Local text state — immediate response while ViewModel debounces
+    var localQuery by remember { mutableStateOf("") }
     var showRecent by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
@@ -77,29 +79,35 @@ fun SearchScreen(
                     )
                 )
                 TextField(
-                    value = uiState.query,
-                    onValueChange = { viewModel.setQuery(it) },
+                    value = localQuery,
+                    onValueChange = {
+                        localQuery = it
+                        viewModel.setQuery(it)
+                        showRecent = it.isEmpty()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .onFocusChanged { showRecent = it.isFocused },
+                        .onFocusChanged { fs -> if (fs.isFocused && localQuery.isEmpty()) showRecent = true },
                     placeholder = { Text("Pretraži anime bazu MAL") },
                     leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null,
-                            modifier = Modifier.size(20.dp))
+                        Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp))
                     },
                     trailingIcon = {
-                        if (uiState.query.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.setQuery("") }) {
-                                Icon(Icons.Default.Close, contentDescription = "Obriši",
-                                    modifier = Modifier.size(18.dp))
+                        if (localQuery.isNotEmpty()) {
+                            IconButton(onClick = {
+                                localQuery = ""
+                                viewModel.setQuery("")
+                                showRecent = true
+                            }) {
+                                Icon(Icons.Default.Close, contentDescription = "Obriši", modifier = Modifier.size(18.dp))
                             }
                         }
                     },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = {
-                        viewModel.onSearchSubmit(uiState.query)
+                        viewModel.onSearchSubmit(localQuery)
                         showRecent = false
                         focusManager.clearFocus()
                     }),
@@ -143,6 +151,7 @@ fun SearchScreen(
                                 Modifier
                                     .fillMaxWidth()
                                     .clickable {
+                                        localQuery = recent
                                         viewModel.setQuery(recent)
                                         viewModel.onSearchSubmit(recent)
                                         showRecent = false
@@ -151,12 +160,9 @@ fun SearchScreen(
                                     .padding(horizontal = 16.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    Icons.Default.History,
-                                    contentDescription = null,
+                                Icon(Icons.Default.History, contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                                    modifier = Modifier.size(20.dp))
                                 Text(recent, modifier = Modifier.padding(start = 12.dp).weight(1f))
                             }
                         }
@@ -167,23 +173,20 @@ fun SearchScreen(
                 }
                 uiState.error != null -> ErrorBanner(uiState.error!!)
                 uiState.noResults -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        "Nema rezultata za \"${uiState.query}\"",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text("Nema rezultata za \"$localQuery\"",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                uiState.query.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Pretraži po naslovu anime", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                localQuery.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Pretraži po naslovu anime",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 else -> LazyColumn(Modifier.fillMaxSize()) {
                     items(uiState.results, key = { it.malId }) { result ->
                         SearchResultCard(
                             result = result,
-                            onCardClick = { onAnimeClick(result.malId); viewModel.onSearchSubmit(uiState.query) },
+                            onCardClick = { onAnimeClick(result.malId); viewModel.onSearchSubmit(localQuery) },
                             onEditStatus = { editingResult = result },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)
                         )
                     }
                     item { Spacer(Modifier.height(16.dp)) }

@@ -54,14 +54,14 @@ class MalAuthManager @Inject constructor(
             tokenStore.saveMalTokens(response.accessToken, response.refreshToken, expiresAt)
             tokenStore.clearPkceVerifier()
 
-            val username = try {
-                malApiService.getMe().name
+            val me = try {
+                malApiService.getMe()
             } catch (e: Exception) {
                 Log.w("MalAuthManager", "getMe() failed after login", e)
-                ""
+                null
             }
-            prefsDataStore.setMalLoggedIn(true, username)
-            Log.d("MalAuthManager", "Login complete, username=$username")
+            prefsDataStore.setMalLoggedIn(true, me?.name ?: "", me?.picture ?: "")
+            Log.d("MalAuthManager", "Login complete, username=${me?.name}")
             true
         } catch (e: HttpException) {
             val body = e.response()?.errorBody()?.string() ?: "(no body)"

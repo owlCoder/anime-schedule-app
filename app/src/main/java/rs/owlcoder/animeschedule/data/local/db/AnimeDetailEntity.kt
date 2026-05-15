@@ -3,9 +3,10 @@ package rs.owlcoder.animeschedule.data.local.db
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "anime_details")
+@Entity(tableName = "anime_details", indices = [androidx.room.Index("malId")])
 data class AnimeDetailEntity(
     @PrimaryKey val animeId: Int,
+    val malId: Int? = null,
     val titleRomaji: String?,
     val titleEnglish: String?,
     val titleNative: String?,

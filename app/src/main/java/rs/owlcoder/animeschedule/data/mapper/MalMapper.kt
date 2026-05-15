@@ -23,6 +23,8 @@ fun MalAnimeNode.toEntity(): MalListEntryEntity {
 
 fun MalListEntryEntity.toDomain(): MalListEntry = MalListEntry(
     animeId = animeId,
+    title = title,
+    coverImageUrl = coverImageUrl,
     status = WatchStatus.fromMal(status),
     episodesWatched = numEpisodesWatched,
     score = score,

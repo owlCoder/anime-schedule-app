@@ -50,5 +50,7 @@ interface MalApiService {
     ): MalAnimeNode
 
     @GET("v2/users/@me")
-    suspend fun getMe(): MalUserResponse
+    suspend fun getMe(
+        @Query("fields") fields: String = "id,name,picture"
+    ): MalUserResponse
 }

@@ -34,6 +34,7 @@ interface MalRepository {
 interface AuthRepository {
     val isLoggedIn: Flow<Boolean>
     val username: Flow<String>
+    val avatarUrl: Flow<String>
     fun buildAuthUri(): Pair<Uri, String>
     suspend fun handleOAuthCallback(code: String, verifier: String): Boolean
     suspend fun logout()

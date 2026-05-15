@@ -22,6 +22,9 @@ class AuthRepositoryImpl @Inject constructor(
     override val username: Flow<String> =
         prefsDataStore.userPreferencesFlow.map { it.malUsername }
 
+    override val avatarUrl: Flow<String> =
+        prefsDataStore.userPreferencesFlow.map { it.malAvatarUrl }
+
     override fun buildAuthUri(): Pair<Uri, String> {
         val verifier = PkceGenerator.generateCodeVerifier()
         val state = PkceGenerator.generateState()

@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import rs.owlcoder.animeschedule.presentation.screens.detail.AnimeDetailScreen
 import rs.owlcoder.animeschedule.presentation.screens.mylist.MyListScreen
+import rs.owlcoder.animeschedule.presentation.screens.notifications.NotificationsScreen
 import rs.owlcoder.animeschedule.presentation.screens.schedule.ScheduleScreen
 import rs.owlcoder.animeschedule.presentation.screens.search.SearchScreen
 import rs.owlcoder.animeschedule.presentation.screens.settings.AboutScreen
@@ -31,6 +32,9 @@ fun AnimeNavHost(navController: NavHostController, modifier: Modifier = Modifier
             MyListScreen(onAnimeClick = { animeId ->
                 navController.navigate(Screen.Detail.createRoute(animeId))
             })
+        }
+        composable(Screen.Notifications.route) {
+            NotificationsScreen()
         }
         composable(Screen.Settings.route) {
             SettingsScreen(onNavigateToAbout = {

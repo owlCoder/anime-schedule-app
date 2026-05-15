@@ -59,3 +59,65 @@ query AnimeDetailQuery($id: Int) {
     siteUrl
   }
 }
+
+query AnimeDetailByMalQuery($idMal: Int) {
+  Media(idMal: $idMal, type: ANIME) {
+    id
+    title {
+      romaji
+      english
+      native
+    }
+    coverImage {
+      extraLarge
+      large
+      color
+    }
+    bannerImage
+    description
+    genres
+    averageScore
+    meanScore
+    episodes
+    duration
+    status
+    format
+    season
+    seasonYear
+    nextAiringEpisode {
+      airingAt
+      episode
+    }
+    studios {
+      edges {
+        isMain
+        node {
+          id
+          name
+        }
+      }
+    }
+    relations {
+      edges {
+        relationType
+        node {
+          id
+          title {
+            romaji
+          }
+          coverImage {
+            medium
+          }
+          format
+          status
+        }
+      }
+    }
+    trailer {
+      id
+      site
+      thumbnail
+    }
+    siteUrl
+  }
+}

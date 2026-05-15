@@ -49,7 +49,7 @@ class MyListViewModel @Inject constructor(
         val allEntries = (result as? AppResult.Success)?.data ?: emptyList()
         val filtered = allEntries
             .filter { it.status == filter }
-            .filter { query.isEmpty() || it.animeId.toString().contains(query, ignoreCase = true) }
+            .filter { query.isEmpty() || it.title.contains(query, ignoreCase = true) }
         MyListUiState(
             entries = filtered,
             isLoading = loading,
@@ -58,6 +58,10 @@ class MyListViewModel @Inject constructor(
             activeFilter = filter
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MyListUiState())
+
+    init {
+        refresh()
+    }
 
     fun setSearchQuery(query: String) = _searchQuery.update { query }
     fun setFilter(status: WatchStatus) = _activeFilter.update { status }

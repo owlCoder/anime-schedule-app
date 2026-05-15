@@ -6,6 +6,7 @@ import com.apollographql.apollo.exception.ApolloException
 import rs.owlcoder.animeschedule.core.result.AppError
 import rs.owlcoder.animeschedule.core.result.AppResult
 import rs.owlcoder.animeschedule.data.api.anilist.generated.AiringScheduleQuery
+import rs.owlcoder.animeschedule.data.api.anilist.generated.AnimeDetailByMalQuery
 import rs.owlcoder.animeschedule.data.api.anilist.generated.AnimeDetailQuery
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -49,6 +50,22 @@ class AniListRemoteDataSource @Inject constructor(
         return try {
             val response = apolloClient.query(
                 AnimeDetailQuery(id = com.apollographql.apollo.api.Optional.present(id))
+            ).execute()
+            if (response.hasErrors()) {
+                return AppResult.Error(AppError.GraphQL(response.errors!!.first().message))
+            }
+            val media = response.data?.Media
+                ?: return AppResult.Error(AppError.NoCache)
+            AppResult.Success(media)
+        } catch (e: ApolloException) {
+            AppResult.Error(AppError.Network(e.message))
+        }
+    }
+
+    suspend fun getAnimeDetailByMalId(malId: Int): AppResult<AnimeDetailByMalQuery.Media> {
+        return try {
+            val response = apolloClient.query(
+                AnimeDetailByMalQuery(idMal = com.apollographql.apollo.api.Optional.present(malId))
             ).execute()
             if (response.hasErrors()) {
                 return AppResult.Error(AppError.GraphQL(response.errors!!.first().message))

@@ -142,8 +142,8 @@ fun MyListScreen(
                     items(uiState.entries, key = { it.animeId }) { entry ->
                         MyListEntryCard(
                             entry = entry,
-                            title = entry.animeId.toString(),
-                            coverImageUrl = null,
+                            title = entry.title.ifEmpty { entry.animeId.toString() },
+                            coverImageUrl = entry.coverImageUrl,
                             onCardClick = { onAnimeClick(entry.animeId) },
                             onIncrementEpisode = { viewModel.incrementEpisode(entry.animeId) },
                             onEditStatus = { editingAnimeId = entry.animeId },

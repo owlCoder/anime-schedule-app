@@ -50,7 +50,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import coil3.compose.AsyncImage
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -96,6 +98,7 @@ fun SettingsScreen(
                 ProfileCard(
                     isLoggedIn = uiState.isLoggedIn,
                     username = uiState.username,
+                    avatarUrl = uiState.avatarUrl,
                     onLogin = { authViewModel.launchMalLogin(context) },
                     onLogout = { authViewModel.logout() }
                 )
@@ -174,6 +177,7 @@ fun SettingsScreen(
 private fun ProfileCard(
     isLoggedIn: Boolean,
     username: String,
+    avatarUrl: String,
     onLogin: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -192,19 +196,25 @@ private fun ProfileCard(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(CircleShape)
-                    .background(
-                        if (isLoggedIn) MaterialTheme.colorScheme.primaryContainer
-                        else MaterialTheme.colorScheme.surfaceVariant
-                    ),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Default.AccountCircle,
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = if (isLoggedIn) MaterialTheme.colorScheme.onPrimaryContainer
-                    else MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (isLoggedIn && avatarUrl.isNotEmpty()) {
+                    AsyncImage(
+                        model = avatarUrl,
+                        contentDescription = username,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(56.dp).clip(CircleShape)
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.AccountCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp),
+                        tint = if (isLoggedIn) MaterialTheme.colorScheme.onPrimaryContainer
+                        else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             Spacer(Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {

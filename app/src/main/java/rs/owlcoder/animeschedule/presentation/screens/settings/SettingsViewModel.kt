@@ -17,6 +17,7 @@ data class SettingsUiState(
     val timezoneId: String = "",
     val isLoggedIn: Boolean = false,
     val username: String = "",
+    val avatarUrl: String = "",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val notificationsEnabled: Boolean = true
 )
@@ -30,12 +31,14 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsRepository.userPreferencesFlow,
         authRepository.isLoggedIn,
-        authRepository.username
-    ) { prefs, loggedIn, username ->
+        authRepository.username,
+        authRepository.avatarUrl
+    ) { prefs, loggedIn, username, avatarUrl ->
         SettingsUiState(
             timezoneId = prefs.timezoneId,
             isLoggedIn = loggedIn,
             username = username,
+            avatarUrl = avatarUrl,
             themeMode = prefs.themeMode,
             notificationsEnabled = prefs.notificationsEnabled
         )

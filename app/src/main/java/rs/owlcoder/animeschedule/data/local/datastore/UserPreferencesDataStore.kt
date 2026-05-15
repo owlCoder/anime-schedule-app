@@ -19,6 +19,7 @@ class UserPreferencesDataStore @Inject constructor(
         val TIMEZONE_ID = stringPreferencesKey("timezone_id")
         val MAL_LOGGED_IN = booleanPreferencesKey("mal_logged_in")
         val MAL_USERNAME = stringPreferencesKey("mal_username")
+        val MAL_AVATAR_URL = stringPreferencesKey("mal_avatar_url")
         val LAST_SYNC = longPreferencesKey("last_schedule_sync_epoch")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
@@ -29,6 +30,7 @@ class UserPreferencesDataStore @Inject constructor(
             timezoneId = prefs[Keys.TIMEZONE_ID] ?: "",
             malLoggedIn = prefs[Keys.MAL_LOGGED_IN] ?: false,
             malUsername = prefs[Keys.MAL_USERNAME] ?: "",
+            malAvatarUrl = prefs[Keys.MAL_AVATAR_URL] ?: "",
             lastScheduleSyncEpoch = prefs[Keys.LAST_SYNC] ?: 0L,
             themeMode = runCatching { ThemeMode.valueOf(prefs[Keys.THEME_MODE] ?: "") }.getOrDefault(ThemeMode.SYSTEM),
             notificationsEnabled = prefs[Keys.NOTIFICATIONS_ENABLED] ?: true
@@ -39,10 +41,11 @@ class UserPreferencesDataStore @Inject constructor(
         dataStore.edit { it[Keys.TIMEZONE_ID] = timezoneId }
     }
 
-    suspend fun setMalLoggedIn(loggedIn: Boolean, username: String = "") {
+    suspend fun setMalLoggedIn(loggedIn: Boolean, username: String = "", avatarUrl: String = "") {
         dataStore.edit {
             it[Keys.MAL_LOGGED_IN] = loggedIn
             it[Keys.MAL_USERNAME] = username
+            it[Keys.MAL_AVATAR_URL] = avatarUrl
         }
     }
 

@@ -3,6 +3,7 @@ package rs.owlcoder.animeschedule.data.mapper
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import rs.owlcoder.animeschedule.data.api.anilist.generated.AiringScheduleQuery
+import rs.owlcoder.animeschedule.data.api.anilist.generated.AnimeDetailByMalQuery
 import rs.owlcoder.animeschedule.data.api.anilist.generated.AnimeDetailQuery
 import rs.owlcoder.animeschedule.data.local.db.AiringEpisodeEntity
 import rs.owlcoder.animeschedule.data.local.db.AnimeDetailEntity
@@ -30,6 +31,56 @@ fun AiringScheduleQuery.AiringSchedule.toEntity(nowEpoch: Long): AiringEpisodeEn
     )
 }
 
+fun AnimeDetailByMalQuery.Media.toEntity(nowEpoch: Long, malId: Int): AnimeDetailEntity {
+    val studiosJson = studios?.edges?.filterNotNull()?.map { edge ->
+        mapOf(
+            "id" to (edge.node?.id?.toString() ?: ""),
+            "name" to (edge.node?.name ?: ""),
+            "isMain" to (edge.isMain?.toString() ?: "false")
+        )
+    }?.let { kotlinx.serialization.json.Json.encodeToString(it) }
+
+    val relationsJson = relations?.edges?.filterNotNull()?.map { edge ->
+        mapOf(
+            "id" to (edge.node?.id?.toString() ?: ""),
+            "title" to (edge.node?.title?.romaji ?: ""),
+            "coverUrl" to (edge.node?.coverImage?.medium ?: ""),
+            "format" to (edge.node?.format?.rawValue ?: ""),
+            "status" to (edge.node?.status?.rawValue ?: ""),
+            "relation" to (edge.relationType?.rawValue ?: "")
+        )
+    }?.let { kotlinx.serialization.json.Json.encodeToString(it) }
+
+    return AnimeDetailEntity(
+        animeId = id,
+        malId = malId,
+        titleRomaji = title?.romaji,
+        titleEnglish = title?.english,
+        titleNative = title?.native,
+        coverImageUrl = coverImage?.extraLarge ?: coverImage?.large,
+        coverColor = coverImage?.color,
+        bannerImageUrl = bannerImage,
+        description = description,
+        genres = genres?.filterNotNull() ?: emptyList(),
+        averageScore = averageScore,
+        meanScore = meanScore,
+        episodes = episodes,
+        duration = duration,
+        status = status?.rawValue,
+        format = format?.rawValue,
+        season = season?.rawValue,
+        seasonYear = seasonYear,
+        nextAiringEpisode = nextAiringEpisode?.episode,
+        nextAiringAt = nextAiringEpisode?.airingAt?.toLong(),
+        studiosJson = studiosJson,
+        relationsJson = relationsJson,
+        trailerSite = trailer?.site,
+        trailerId = trailer?.id,
+        siteUrl = siteUrl,
+        cachedAtEpochSeconds = nowEpoch
+    )
+}
+
 fun AnimeDetailQuery.Media.toEntity(nowEpoch: Long): AnimeDetailEntity {
     val studiosJson = studios?.edges?.filterNotNull()?.map { edge ->
         mapOf(
@@ -52,6 +103,7 @@ fun AnimeDetailQuery.Media.toEntity(nowEpoch: Long): AnimeDetailEntity {
 
     return AnimeDetailEntity(
         animeId = id,
+        malId = null,
         titleRomaji = title?.romaji,
         titleEnglish = title?.english,
         titleNative = title?.native,
