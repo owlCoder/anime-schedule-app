@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -53,7 +56,7 @@ private val items = listOf(
 private val PillShape = RoundedCornerShape(28.dp)
 
 @Composable
-fun AnimeBottomBar(navController: NavController) {
+fun AnimeBottomBar(navController: NavController, unreadCount: Int = 0) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
@@ -94,6 +97,7 @@ fun AnimeBottomBar(navController: NavController) {
                     TgNavItem(
                         item = item,
                         selected = currentRoute == item.screen.route,
+                        badge = if (item.screen == Screen.Notifications && unreadCount > 0) unreadCount else 0,
                         onClick = {
                             if (currentRoute != item.screen.route) {
                                 navController.navigate(item.screen.route) {
@@ -115,6 +119,7 @@ fun AnimeBottomBar(navController: NavController) {
 private fun TgNavItem(
     item: BottomNavItem,
     selected: Boolean,
+    badge: Int = 0,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -135,12 +140,32 @@ private fun TgNavItem(
                     else Color.Transparent
                 )
         )
-        Icon(
-            imageVector = item.icon,
-            contentDescription = item.label,
-            modifier = Modifier.size(26.dp),
-            tint = if (selected) MaterialTheme.colorScheme.primary
-                   else MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = item.icon,
+                contentDescription = item.label,
+                modifier = Modifier.size(26.dp),
+                tint = if (selected) MaterialTheme.colorScheme.primary
+                       else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (badge > 0) {
+                val badgeLabel = if (badge > 9) "9+" else badge.toString()
+                Box(
+                    modifier = Modifier
+                        .size(16.dp)
+                        .align(Alignment.TopEnd)
+                        .offset(x = 6.dp, y = (-6).dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = badgeLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White
+                    )
+                }
+            }
+        }
     }
 }

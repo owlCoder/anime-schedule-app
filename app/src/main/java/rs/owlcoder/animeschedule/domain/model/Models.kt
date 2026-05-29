@@ -90,3 +90,14 @@ data class AnimeSearchResult(
     val totalEpisodes: Int?,
     val userListEntry: MalListEntry?
 )
+
+data class AppNotification(
+    val id: Int,
+    val animeId: Int,
+    val title: String,
+    val episode: Int,
+    val coverImageUrl: String?,
+    val airingAtEpochSeconds: Long,
+    val isRead: Boolean,
+    val createdAtEpochSeconds: Long
+)

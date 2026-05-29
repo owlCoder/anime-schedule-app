@@ -25,6 +25,8 @@ import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferences
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
+import rs.owlcoder.animeschedule.data.work.AiringNotificationWorker
+import rs.owlcoder.animeschedule.domain.usecase.GetUnreadCountUseCase
 import rs.owlcoder.animeschedule.presentation.navigation.AnimeBottomBar
 import rs.owlcoder.animeschedule.presentation.navigation.AnimeNavHost
 import rs.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
@@ -39,6 +41,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var prefsDataStore: UserPreferencesDataStore
 
+    @Inject
+    lateinit var getUnreadCountUseCase: GetUnreadCountUseCase
+
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { /* permission result — no action needed, user decided */ }
@@ -47,10 +52,12 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        AiringNotificationWorker.schedule(this)
         requestNotificationPermissionIfNeeded()
         intent?.let { handleOAuthIntent(it) }
         setContent {
             val prefs by prefsDataStore.userPreferencesFlow.collectAsState(initial = UserPreferences())
+            val unreadCount by getUnreadCountUseCase().collectAsState(initial = 0)
             AnimeScheduleTheme(themeMode = prefs.themeMode, accentColor = prefs.accentColor) {
                 val navController = rememberNavController()
                 Scaffold(
@@ -59,7 +66,7 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
                         AnimeNavHost(navController, Modifier.fillMaxSize())
                         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-                            AnimeBottomBar(navController)
+                            AnimeBottomBar(navController, unreadCount = unreadCount)
                         }
                     }
                 }

@@ -1,4 +1,34 @@
 # Add project specific ProGuard rules here.
+
+# errorprone annotations used by tink (androidx.security.crypto dependency)
+-dontwarn com.google.errorprone.annotations.**
+
+# OkHttp / Okio
+-dontwarn okhttp3.**
+-dontwarn okio.**
+
+# Retrofit
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class retrofit2.** { *; }
+-keepclassmembernames interface * {
+    @retrofit2.http.* <methods>;
+}
+
+# Kotlinx Serialization
+-keepattributes *Annotation*, InnerClasses
+-dontnote kotlinx.serialization.AnnotationsKt
+-keep,includedescriptorclasses class rs.owlcoder.animeschedule.**$$serializer { *; }
+-keepclassmembers class rs.owlcoder.animeschedule.** {
+    *** Companion;
+}
+-keepclasseswithmembers class rs.owlcoder.animeschedule.** {
+    kotlinx.serialization.KSerializer serializer(...);
+}
+
+# Keep line numbers for crash reports
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 # You can control the set of applied configuration files using the
 # proguardFiles setting in build.gradle.
 #

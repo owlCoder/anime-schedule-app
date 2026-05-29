@@ -3,13 +3,26 @@ package rs.owlcoder.animeschedule.data.mapper
 import kotlinx.serialization.json.Json
 import rs.owlcoder.animeschedule.data.local.db.AiringEpisodeEntity
 import rs.owlcoder.animeschedule.data.local.db.AnimeDetailEntity
+import rs.owlcoder.animeschedule.data.local.db.NotificationEntity
 import rs.owlcoder.animeschedule.domain.model.AiringEpisode
 import rs.owlcoder.animeschedule.domain.model.AnimeDetail
+import rs.owlcoder.animeschedule.domain.model.AppNotification
 import rs.owlcoder.animeschedule.domain.model.MalListEntry
 import rs.owlcoder.animeschedule.domain.model.RelatedAnime
 import rs.owlcoder.animeschedule.domain.model.Studio
 
 private val json = Json { ignoreUnknownKeys = true }
+
+fun NotificationEntity.toDomain(): AppNotification = AppNotification(
+    id = id,
+    animeId = animeId,
+    title = title,
+    episode = episode,
+    coverImageUrl = coverImageUrl,
+    airingAtEpochSeconds = airingAtEpochSeconds,
+    isRead = isRead,
+    createdAtEpochSeconds = createdAtEpochSeconds
+)
 
 fun AiringEpisodeEntity.toDomain(malListEntry: MalListEntry? = null): AiringEpisode = AiringEpisode(
     airingId = airingId,

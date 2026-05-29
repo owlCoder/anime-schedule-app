@@ -8,9 +8,10 @@ import androidx.room.TypeConverters
     entities = [
         AiringEpisodeEntity::class,
         AnimeDetailEntity::class,
-        MalListEntryEntity::class
+        MalListEntryEntity::class,
+        NotificationEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -18,4 +19,5 @@ abstract class AnimeScheduleDatabase : RoomDatabase() {
     abstract fun airingEpisodeDao(): AiringEpisodeDao
     abstract fun animeDetailDao(): AnimeDetailDao
     abstract fun malListEntryDao(): MalListEntryDao
+    abstract fun notificationDao(): NotificationDao
 }

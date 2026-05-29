@@ -9,6 +9,7 @@ import rs.owlcoder.animeschedule.data.local.datastore.UserPreferences
 import rs.owlcoder.animeschedule.domain.model.AiringEpisode
 import rs.owlcoder.animeschedule.domain.model.AnimeDetail
 import rs.owlcoder.animeschedule.domain.model.AnimeSearchResult
+import rs.owlcoder.animeschedule.domain.model.AppNotification
 import rs.owlcoder.animeschedule.domain.model.MalListEntry
 import rs.owlcoder.animeschedule.domain.model.MalListUpdate
 import rs.owlcoder.animeschedule.domain.model.ScheduleDay
@@ -52,4 +53,12 @@ interface SettingsRepository {
 
 interface SearchRepository {
     suspend fun searchAnime(query: String, page: Int = 0): AppResult<List<AnimeSearchResult>>
+}
+
+interface NotificationRepository {
+    fun getAll(): Flow<List<AppNotification>>
+    fun getUnreadCount(): Flow<Int>
+    suspend fun markRead(id: Int)
+    suspend fun markAllRead()
+    suspend fun createNotification(episode: AiringEpisode)
 }

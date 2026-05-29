@@ -52,7 +52,9 @@ fun AnimeNavHost(navController: NavHostController, modifier: Modifier = Modifier
             })
         }
         composable(Screen.Notifications.route) {
-            NotificationsScreen()
+            NotificationsScreen(onAnimeClick = { animeId ->
+                navController.navigate(Screen.Detail.createRoute(animeId))
+            })
         }
         composable(Screen.Settings.route) {
             SettingsScreen(

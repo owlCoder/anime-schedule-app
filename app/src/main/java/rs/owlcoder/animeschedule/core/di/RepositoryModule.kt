@@ -7,12 +7,14 @@ import dagger.hilt.components.SingletonComponent
 import rs.owlcoder.animeschedule.data.repository.AnimeDetailRepositoryImpl
 import rs.owlcoder.animeschedule.data.repository.AuthRepositoryImpl
 import rs.owlcoder.animeschedule.data.repository.MalRepositoryImpl
+import rs.owlcoder.animeschedule.data.repository.NotificationRepositoryImpl
 import rs.owlcoder.animeschedule.data.repository.ScheduleRepositoryImpl
 import rs.owlcoder.animeschedule.data.repository.SearchRepositoryImpl
 import rs.owlcoder.animeschedule.data.repository.SettingsRepositoryImpl
 import rs.owlcoder.animeschedule.domain.repository.AnimeDetailRepository
 import rs.owlcoder.animeschedule.domain.repository.AuthRepository
 import rs.owlcoder.animeschedule.domain.repository.MalRepository
+import rs.owlcoder.animeschedule.domain.repository.NotificationRepository
 import rs.owlcoder.animeschedule.domain.repository.ScheduleRepository
 import rs.owlcoder.animeschedule.domain.repository.SearchRepository
 import rs.owlcoder.animeschedule.domain.repository.SettingsRepository
@@ -27,4 +29,5 @@ abstract class RepositoryModule {
     @Binds @Singleton abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
     @Binds @Singleton abstract fun bindSettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository
     @Binds @Singleton abstract fun bindSearchRepository(impl: SearchRepositoryImpl): SearchRepository
+    @Binds @Singleton abstract fun bindNotificationRepository(impl: NotificationRepositoryImpl): NotificationRepository
 }

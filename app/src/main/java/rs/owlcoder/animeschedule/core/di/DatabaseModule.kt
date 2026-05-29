@@ -11,6 +11,7 @@ import rs.owlcoder.animeschedule.data.local.db.AiringEpisodeDao
 import rs.owlcoder.animeschedule.data.local.db.AnimeDetailDao
 import rs.owlcoder.animeschedule.data.local.db.AnimeScheduleDatabase
 import rs.owlcoder.animeschedule.data.local.db.MalListEntryDao
+import rs.owlcoder.animeschedule.data.local.db.NotificationDao
 import javax.inject.Singleton
 
 @Module
@@ -25,4 +26,5 @@ object DatabaseModule {
     @Provides fun provideAiringEpisodeDao(db: AnimeScheduleDatabase): AiringEpisodeDao = db.airingEpisodeDao()
     @Provides fun provideAnimeDetailDao(db: AnimeScheduleDatabase): AnimeDetailDao = db.animeDetailDao()
     @Provides fun provideMalListEntryDao(db: AnimeScheduleDatabase): MalListEntryDao = db.malListEntryDao()
+    @Provides fun provideNotificationDao(db: AnimeScheduleDatabase): NotificationDao = db.notificationDao()
 }
