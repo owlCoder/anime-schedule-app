@@ -25,7 +25,6 @@ import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferences
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
-import rs.owlcoder.animeschedule.data.work.AiringNotificationWorker
 import rs.owlcoder.animeschedule.domain.usecase.GetUnreadCountUseCase
 import rs.owlcoder.animeschedule.presentation.navigation.AnimeBottomBar
 import rs.owlcoder.animeschedule.presentation.navigation.AnimeNavHost
@@ -52,7 +51,6 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        AiringNotificationWorker.schedule(this)
         requestNotificationPermissionIfNeeded()
         intent?.let { handleOAuthIntent(it) }
         setContent {
