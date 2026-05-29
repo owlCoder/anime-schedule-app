@@ -156,6 +156,16 @@ fun SettingsScreen(
             item {
                 SectionCard {
                     SettingsRow(
+                        icon = Icons.Default.Notifications,
+                        iconColor = Color(0xFFE65100),
+                        title = "Testiraj notifikacije",
+                        subtitle = "Pokreni provjeru epizoda odmah",
+                        onClick = {
+                            rs.owlcoder.animeschedule.data.work.AiringNotificationWorker.runNow(context)
+                        }
+                    )
+                    SettingsDivider()
+                    SettingsRow(
                         icon = Icons.Default.Update,
                         iconColor = Color(0xFF00897B),
                         title = "Istorija promena",

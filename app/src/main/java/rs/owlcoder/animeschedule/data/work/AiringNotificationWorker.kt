@@ -8,9 +8,11 @@ import android.content.pm.PackageManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
@@ -39,22 +41,27 @@ class AiringNotificationWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         return try {
             val prefs = userPreferencesDataStore.userPreferencesFlow.first()
-            if (!prefs.notificationsEnabled) return Result.success()
+            if (!prefs.notificationsEnabled) {
+                Log.d(TAG, "Notifications disabled, skipping")
+                return Result.success()
+            }
 
             val now = System.currentTimeMillis() / 1000L
-            val windowStart = now - 900L // 15 minutes ago
+            // On first run (no existing notifications), check last 24h to catch up
+            // On subsequent runs, check last 16 minutes (slight overlap with 15min period)
+            val existingIds = notificationDao.getAllIds().toSet()
+            val windowStart = if (existingIds.isEmpty()) now - 86400L else now - 960L
 
             val recentEpisodes = airingEpisodeDao
                 .getAiringEpisodesInRange(windowStart, now)
                 .first()
 
-            if (recentEpisodes.isEmpty()) return Result.success()
-
             val malEntries = malListEntryDao.getAll().first()
             val malIds = malEntries.map { it.malId }.toSet()
 
-            val existingIds = notificationDao.getAllIds().toSet()
+            Log.d(TAG, "episodes in window=${recentEpisodes.size}, malIds=${malIds.size}, existingNotifs=${existingIds.size}")
 
+            var created = 0
             for (episode in recentEpisodes) {
                 val episodeMalId = episode.malId ?: continue
                 if (episodeMalId !in malIds) continue
@@ -72,16 +79,14 @@ class AiringNotificationWorker @AssistedInject constructor(
                         createdAtEpochSeconds = now
                     )
                 )
-
-                sendSystemNotification(
-                    id = episode.airingId,
-                    title = episode.title,
-                    episode = episode.episode
-                )
+                sendSystemNotification(id = episode.airingId, title = episode.title, episode = episode.episode)
+                created++
             }
 
+            Log.d(TAG, "Created $created new notifications")
             Result.success()
         } catch (e: Exception) {
+            Log.e(TAG, "Worker failed", e)
             if (runAttemptCount < 3) Result.retry() else Result.failure()
         }
     }
@@ -114,6 +119,7 @@ class AiringNotificationWorker @AssistedInject constructor(
     companion object {
         const val CHANNEL_ID = "airing_episodes"
         private const val WORK_NAME = "airing_notification_worker"
+        private const val TAG = "AiringNotifWorker"
 
         fun schedule(context: Context) {
             val request = PeriodicWorkRequestBuilder<AiringNotificationWorker>(
@@ -122,9 +128,14 @@ class AiringNotificationWorker @AssistedInject constructor(
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 WORK_NAME,
-                ExistingPeriodicWorkPolicy.KEEP,
+                ExistingPeriodicWorkPolicy.UPDATE,
                 request
             )
+        }
+
+        fun runNow(context: Context) {
+            val request = OneTimeWorkRequestBuilder<AiringNotificationWorker>().build()
+            WorkManager.getInstance(context).enqueue(request)
         }
     }
 }
