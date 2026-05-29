@@ -64,7 +64,8 @@ fun AnimeBottomBar(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.navigationBars)
+            .windowInsetsPadding(WindowInsets.navigationBars),
+        contentAlignment = Alignment.BottomCenter
     ) {
         Box(
             modifier = Modifier

@@ -10,9 +10,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -52,9 +55,13 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 Scaffold(
                     contentWindowInsets = WindowInsets(0, 0, 0, 0),
-                    bottomBar = { AnimeBottomBar(navController) }
                 ) { innerPadding ->
-                    AnimeNavHost(navController, Modifier.padding(innerPadding))
+                    Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+                        AnimeNavHost(navController, Modifier.fillMaxSize())
+                        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                            AnimeBottomBar(navController)
+                        }
+                    }
                 }
             }
         }
