@@ -11,6 +11,7 @@ import rs.owlcoder.animeschedule.data.local.secure.SecureTokenStore
 import rs.owlcoder.animeschedule.domain.repository.AuthRepository
 import rs.owlcoder.animeschedule.domain.usecase.HandleMalCallbackUseCase
 import rs.owlcoder.animeschedule.domain.usecase.LoginWithMalUseCase
+import rs.owlcoder.animeschedule.domain.usecase.RefreshMalListUseCase
 import javax.inject.Inject
 
 @HiltViewModel
@@ -18,7 +19,8 @@ class AuthViewModel @Inject constructor(
     private val secureTokenStore: SecureTokenStore,
     private val loginWithMalUseCase: LoginWithMalUseCase,
     private val handleMalCallbackUseCase: HandleMalCallbackUseCase,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val refreshMalListUseCase: RefreshMalListUseCase
 ) : ViewModel() {
 
     val isLoggedIn = authRepository.isLoggedIn
@@ -43,7 +45,9 @@ class AuthViewModel @Inject constructor(
         }
         viewModelScope.launch {
             val success = handleMalCallbackUseCase(code, verifier)
-            if (!success) {
+            if (success) {
+                launch { refreshMalListUseCase(force = true) }
+            } else {
                 Log.e("AuthViewModel", "Token exchange failed for code=$code")
             }
         }
