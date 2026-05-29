@@ -29,7 +29,7 @@ interface MalRepository {
     fun getUserList(): Flow<AppResult<List<MalListEntry>>>
     suspend fun updateListEntry(animeId: Int, update: MalListUpdate): AppResult<Unit>
     suspend fun incrementEpisode(animeId: Int): AppResult<Unit>
-    suspend fun refreshUserList()
+    suspend fun refreshUserList(force: Boolean = false)
 }
 
 interface AuthRepository {

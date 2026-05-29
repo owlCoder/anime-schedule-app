@@ -15,11 +15,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,11 +42,15 @@ fun AiringEpisodeCard(
     isLoggedIn: Boolean,
     onCardClick: () -> Unit,
     onIncrementEpisode: () -> Unit,
+    onEditStatus: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val accentColor = episode.coverColor?.let {
         runCatching { Color(android.graphics.Color.parseColor(it)) }.getOrNull()
     } ?: MaterialTheme.colorScheme.primary
+
+    val hasListEntry = episode.malListEntry != null
+    val isWatching = episode.malListEntry?.status == WatchStatus.WATCHING
 
     Card(
         modifier = modifier.clickable(onClick = onCardClick),
@@ -59,7 +64,6 @@ fun AiringEpisodeCard(
                 .padding(end = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left accent strip
             Box(
                 Modifier
                     .width(3.dp)
@@ -68,7 +72,6 @@ fun AiringEpisodeCard(
                     .background(accentColor)
             )
             Spacer(Modifier.width(10.dp))
-            // Cover image
             AsyncImage(
                 model = episode.coverImageUrl,
                 contentDescription = null,
@@ -78,7 +81,6 @@ fun AiringEpisodeCard(
                     .clip(RoundedCornerShape(8.dp))
             )
             Spacer(Modifier.width(12.dp))
-            // Info
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -116,12 +118,34 @@ fun AiringEpisodeCard(
                     }
                 }
             }
-            if (isLoggedIn && episode.malListEntry?.status == WatchStatus.WATCHING) {
-                FilledTonalIconButton(
-                    onClick = onIncrementEpisode,
-                    modifier = Modifier.size(36.dp)
+            if (isLoggedIn) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "+1", modifier = Modifier.size(18.dp))
+                    if (isWatching) {
+                        FilledTonalIconButton(
+                            onClick = onIncrementEpisode,
+                            modifier = Modifier.size(34.dp)
+                        ) {
+                            Text(
+                                "+1",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                            )
+                        }
+                    }
+                    if (hasListEntry) {
+                        FilledTonalIconButton(
+                            onClick = onEditStatus,
+                            modifier = Modifier.size(34.dp),
+                            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = "Uredi", modifier = Modifier.size(16.dp))
+                        }
+                    }
                 }
             }
         }

@@ -15,14 +15,17 @@ import rs.owlcoder.animeschedule.core.result.AppResult
 import rs.owlcoder.animeschedule.domain.model.AiringEpisode
 import rs.owlcoder.animeschedule.domain.model.ScheduleDay
 import rs.owlcoder.animeschedule.domain.repository.SettingsRepository
+import rs.owlcoder.animeschedule.domain.model.MalListUpdate
 import rs.owlcoder.animeschedule.domain.usecase.GetTodayScheduleUseCase
 import rs.owlcoder.animeschedule.domain.usecase.GetTomorrowScheduleUseCase
 import rs.owlcoder.animeschedule.domain.usecase.GetWeekScheduleUseCase
 import rs.owlcoder.animeschedule.domain.usecase.IncrementEpisodeUseCase
 import rs.owlcoder.animeschedule.domain.usecase.RefreshScheduleUseCase
+import rs.owlcoder.animeschedule.domain.usecase.UpdateMalListEntryUseCase
+import java.time.LocalDate
 import javax.inject.Inject
 
-enum class ScheduleTab(val label: String) { TODAY("Danas"), TOMORROW("Sutra"), WEEK("Ova nedelja") }
+enum class ScheduleTab(val label: String) { TODAY("Danas"), TOMORROW("Sutra"), WEEK("Nedelja") }
 
 data class ScheduleUiState(
     val todayEpisodes: List<AiringEpisode> = emptyList(),
@@ -31,7 +34,8 @@ data class ScheduleUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val isLoggedIn: Boolean = false,
-    val selectedTab: ScheduleTab = ScheduleTab.TODAY
+    val selectedTab: ScheduleTab = ScheduleTab.TODAY,
+    val selectedWeekDay: LocalDate = LocalDate.now()
 )
 
 @HiltViewModel
@@ -41,11 +45,13 @@ class ScheduleViewModel @Inject constructor(
     private val getWeekScheduleUseCase: GetWeekScheduleUseCase,
     private val refreshScheduleUseCase: RefreshScheduleUseCase,
     private val incrementEpisodeUseCase: IncrementEpisodeUseCase,
+    private val updateMalListEntryUseCase: UpdateMalListEntryUseCase,
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _selectedTab = MutableStateFlow(ScheduleTab.TODAY)
     private val _isLoading = MutableStateFlow(true)
+    private val _selectedWeekDay = MutableStateFlow(LocalDate.now())
 
     val uiState: StateFlow<ScheduleUiState> = settingsRepository.userPreferencesFlow
         .flatMapLatest { prefs ->
@@ -64,15 +70,18 @@ class ScheduleViewModel @Inject constructor(
                     isLoading = loading,
                     error = if (today is AppResult.Error) "Greška pri učitavanju rasporeda" else null,
                     isLoggedIn = prefs.malLoggedIn,
-                    selectedTab = tab
+                    selectedTab = tab,
+                    selectedWeekDay = _selectedWeekDay.value
                 )
-            }
+            }.combine(_selectedWeekDay) { state, day -> state.copy(selectedWeekDay = day) }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ScheduleUiState())
 
     init { refresh() }
 
     fun selectTab(tab: ScheduleTab) = _selectedTab.update { tab }
+
+    fun selectWeekDay(date: LocalDate) = _selectedWeekDay.update { date }
 
     fun refresh() {
         viewModelScope.launch {
@@ -85,5 +94,9 @@ class ScheduleViewModel @Inject constructor(
 
     fun incrementEpisode(animeId: Int) {
         viewModelScope.launch { incrementEpisodeUseCase(animeId) }
+    }
+
+    fun updateEntry(animeId: Int, update: MalListUpdate) {
+        viewModelScope.launch { updateMalListEntryUseCase(animeId, update) }
     }
 }

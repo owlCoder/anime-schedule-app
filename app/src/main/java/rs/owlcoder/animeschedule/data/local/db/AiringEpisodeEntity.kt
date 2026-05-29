@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class AiringEpisodeEntity(
     @PrimaryKey val airingId: Int,
     val animeId: Int,
+    val malId: Int? = null,
     val episode: Int,
     val airingAtEpochSeconds: Long,
     val title: String,

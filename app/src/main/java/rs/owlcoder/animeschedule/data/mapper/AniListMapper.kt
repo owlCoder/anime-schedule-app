@@ -29,6 +29,7 @@ fun AiringScheduleQuery.AiringSchedule.toEntity(nowEpoch: Long): AiringEpisodeEn
     return AiringEpisodeEntity(
         airingId = id,
         animeId = media.id,
+        malId = media.idMal,
         episode = episode,
         airingAtEpochSeconds = airingAt.toLong(),
         title = media.title?.english ?: media.title?.romaji ?: "Unknown",

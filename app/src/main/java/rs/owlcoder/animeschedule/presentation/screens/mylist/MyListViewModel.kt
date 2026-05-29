@@ -65,7 +65,7 @@ class MyListViewModel @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MyListUiState())
 
     init {
-        refresh()
+        refreshIfStale()
     }
 
     fun setSearchQuery(query: String) = _searchQuery.update { query }
@@ -74,7 +74,15 @@ class MyListViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _isLoading.value = true
-            runCatching { refreshMalListUseCase() }
+            runCatching { refreshMalListUseCase(force = true) }
+            _isLoading.value = false
+        }
+    }
+
+    private fun refreshIfStale() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            runCatching { refreshMalListUseCase(force = false) }
             _isLoading.value = false
         }
     }

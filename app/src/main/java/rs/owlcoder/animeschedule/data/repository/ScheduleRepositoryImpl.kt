@@ -48,8 +48,8 @@ class ScheduleRepositoryImpl @Inject constructor(
             airingEpisodeDao.getAiringEpisodesInRange(from, to),
             malListEntryDao.getAll()
         ) { episodes, malEntries ->
-            val malMap = malEntries.associate { it.animeId to it.toDomain() }
-            val domainEpisodes = episodes.map { it.toDomain(malMap[it.animeId]) }
+            val malMap = malEntries.associate { it.malId to it.toDomain() }
+            val domainEpisodes = episodes.map { it.toDomain(it.malId?.let { mid -> malMap[mid] }) }
             val grouped = domainEpisodes.groupBy { epochSecondsToLocalDate(it.airingAtEpochSeconds, zoneId) }
             AppResult.Success(
                 grouped.entries.sortedBy { it.key }.map { ScheduleDay(it.key, it.value) }
@@ -81,7 +81,7 @@ class ScheduleRepositoryImpl @Inject constructor(
             airingEpisodeDao.getAiringEpisodesInRange(from, to),
             malListEntryDao.getAll()
         ) { episodes, malEntries ->
-            val malMap = malEntries.associate { it.animeId to it.toDomain() }
-            AppResult.Success(episodes.map { it.toDomain(malMap[it.animeId]) })
+            val malMap = malEntries.associate { it.malId to it.toDomain() }
+            AppResult.Success(episodes.map { it.toDomain(it.malId?.let { mid -> malMap[mid] }) })
         }
 }

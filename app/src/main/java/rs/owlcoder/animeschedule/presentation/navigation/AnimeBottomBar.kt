@@ -87,7 +87,7 @@ fun AnimeBottomBar(navController: NavController) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 items.forEach { item ->
@@ -123,7 +123,7 @@ private fun TgNavItem(
     Box(
         modifier = modifier
             .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
-            .padding(vertical = 6.dp),
+            .padding(vertical = 4.dp),
         contentAlignment = Alignment.Center
     ) {
         Box(

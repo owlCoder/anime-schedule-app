@@ -22,5 +22,5 @@ class IncrementEpisodeUseCase @Inject constructor(private val malRepository: Mal
 }
 
 class RefreshMalListUseCase @Inject constructor(private val malRepository: MalRepository) {
-    suspend operator fun invoke() = malRepository.refreshUserList()
+    suspend operator fun invoke(force: Boolean = false) = malRepository.refreshUserList(force)
 }

@@ -1,5 +1,6 @@
 package rs.owlcoder.animeschedule.presentation.screens.settings
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,11 +34,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import rs.owlcoder.animeschedule.BuildConfig
+import rs.owlcoder.animeschedule.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +48,7 @@ fun AboutScreen(onBack: () -> Unit) {
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = { Text("O aplikaciji", style = MaterialTheme.typography.titleLarge) },
+                title = { },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Nazad")
@@ -55,7 +56,7 @@ fun AboutScreen(onBack: () -> Unit) {
                 },
                 windowInsets = WindowInsets.statusBars,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -65,147 +66,144 @@ fun AboutScreen(onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp),
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(12.dp))
 
-            // App icon — gradient background + calendar icon
+            // App icon
             Box(
                 modifier = Modifier
-                    .size(96.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(22.dp))
             ) {
-                Icon(
-                    Icons.Default.CalendarMonth,
-                    contentDescription = null,
-                    modifier = Modifier.size(52.dp),
-                    tint = androidx.compose.ui.graphics.Color.White
+                Image(
+                    painter = painterResource(R.drawable.ic_app_icon),
+                    contentDescription = "App icon",
+                    modifier = Modifier.fillMaxSize()
                 )
             }
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(14.dp))
 
             Text(
                 "Anime Schedule",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
+            Spacer(Modifier.height(3.dp))
             Text(
                 "Verzija ${BuildConfig.VERSION_NAME}",
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(Modifier.height(28.dp))
 
-            // Description card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Text(
-                    "Aplikacija prikazuje raspored emitovanja anime serija u tvojoj vremenskoj zoni i omogućava upravljanje MAL listom bez reklama.",
-                    modifier = Modifier.padding(16.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
+            // Main info card
+            AboutSection(modifier = Modifier.padding(horizontal = 16.dp)) {
+                AboutRow(label = "Verzija", value = BuildConfig.VERSION_NAME)
+                AboutDivider()
+                AboutRow(label = "Build", value = BuildConfig.VERSION_CODE.toString())
+                AboutDivider()
+                AboutRow(label = "Platforma", value = "Android 12+")
+                AboutDivider()
+                AboutRow(label = "Paket", value = "rs.owlcoder.animeschedule")
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
 
             // Data sources
-            InfoSectionCard(title = "Izvori podataka") {
-                InfoRow("Raspored emitovanja", "AniList GraphQL API")
-                InfoDivider()
-                InfoRow("Lista anime-a", "MyAnimeList API v2")
-                InfoDivider()
-                InfoRow("Rezervni podaci", "Jikan REST API")
-                InfoDivider()
-                InfoRow("Autorizacija", "OAuth 2.0 + PKCE")
+            AboutSectionHeader("Izvori podataka", modifier = Modifier.padding(horizontal = 16.dp))
+            Spacer(Modifier.height(6.dp))
+            AboutSection(modifier = Modifier.padding(horizontal = 16.dp)) {
+                AboutRow(label = "Raspored", value = "AniList GraphQL API")
+                AboutDivider()
+                AboutRow(label = "Anime lista", value = "MyAnimeList API v2")
+                AboutDivider()
+                AboutRow(label = "Rezervni", value = "Jikan REST API")
+                AboutDivider()
+                AboutRow(label = "Prijava", value = "OAuth 2.0 + PKCE")
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
 
             // Tech stack
-            InfoSectionCard(title = "Tehnologije") {
-                InfoRow("Platforma", "Android 12+")
-                InfoDivider()
-                InfoRow("Jezik", "Kotlin")
-                InfoDivider()
-                InfoRow("UI", "Jetpack Compose + Material 3")
-                InfoDivider()
-                InfoRow("Arhitektura", "MVVM + Clean Architecture")
+            AboutSectionHeader("Tehnologije", modifier = Modifier.padding(horizontal = 16.dp))
+            Spacer(Modifier.height(6.dp))
+            AboutSection(modifier = Modifier.padding(horizontal = 16.dp)) {
+                AboutRow(label = "Jezik", value = "Kotlin")
+                AboutDivider()
+                AboutRow(label = "UI", value = "Jetpack Compose")
+                AboutDivider()
+                AboutRow(label = "Arhitektura", value = "MVVM + Clean")
+                AboutDivider()
+                AboutRow(label = "DI", value = "Hilt")
+                AboutDivider()
+                AboutRow(label = "DB", value = "Room")
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(32.dp))
 
+            Text(
+                "Made with ♥ by owlcoder",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(4.dp))
             Text(
                 "© 2026 Danijel",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.outline,
                 textAlign = TextAlign.Center
             )
-            Text(
-                "rs.owlcoder.animeschedule",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.6f),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(96.dp))
         }
     }
 }
 
 @Composable
-private fun InfoSectionCard(title: String, content: @Composable () -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            title,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 4.dp, bottom = 6.dp)
-        )
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                content()
-            }
+private fun AboutSectionHeader(title: String, modifier: Modifier = Modifier) {
+    Text(
+        text = title.uppercase(),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        letterSpacing = androidx.compose.ui.unit.TextUnit(1.2f, androidx.compose.ui.unit.TextUnitType.Sp),
+        modifier = modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+private fun AboutSection(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Column {
+            content()
         }
     }
 }
 
 @Composable
-private fun InfoDivider() {
+private fun AboutDivider() {
     HorizontalDivider(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.padding(start = 16.dp),
         thickness = 0.5.dp,
         color = MaterialTheme.colorScheme.outlineVariant
     )
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
+private fun AboutRow(label: String, value: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 11.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -217,8 +215,7 @@ private fun InfoRow(label: String, value: String) {
         Text(
             value,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Medium
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

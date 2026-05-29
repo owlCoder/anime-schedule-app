@@ -16,6 +16,8 @@ import rs.owlcoder.animeschedule.domain.repository.MalRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val MAL_LIST_CACHE_TTL_MS = 60 * 60 * 1000L // 1h
+
 @Singleton
 class MalRepositoryImpl @Inject constructor(
     private val malApiService: MalApiService,
@@ -23,6 +25,8 @@ class MalRepositoryImpl @Inject constructor(
     private val malAuthManager: MalAuthManager,
     private val prefsDataStore: UserPreferencesDataStore
 ) : MalRepository {
+
+    private var lastRefreshMs: Long = 0L
 
     override fun getUserList(): Flow<AppResult<List<MalListEntry>>> =
         malListEntryDao.getAll().map { entities ->
@@ -57,7 +61,9 @@ class MalRepositoryImpl @Inject constructor(
         return updateListEntry(animeId, MalListUpdate(episodesWatched = newEpisodes))
     }
 
-    override suspend fun refreshUserList() {
+    override suspend fun refreshUserList(force: Boolean) {
+        val now = System.currentTimeMillis()
+        if (!force && (now - lastRefreshMs) < MAL_LIST_CACHE_TTL_MS) return
         var offset = 0
         val allEntities = mutableListOf<rs.owlcoder.animeschedule.data.local.db.MalListEntryEntity>()
         while (true) {
@@ -70,6 +76,7 @@ class MalRepositoryImpl @Inject constructor(
         if (allEntities.isNotEmpty()) {
             malListEntryDao.deleteAll()
             malListEntryDao.upsertAll(allEntities)
+            lastRefreshMs = now
         }
     }
 

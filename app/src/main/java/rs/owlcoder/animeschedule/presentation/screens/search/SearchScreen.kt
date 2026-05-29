@@ -192,7 +192,7 @@ fun SearchScreen(
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)
                         )
                     }
-                    item { Spacer(Modifier.height(16.dp)) }
+                    item { Spacer(Modifier.height(96.dp)) }
                 }
             }
         }

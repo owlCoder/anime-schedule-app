@@ -10,7 +10,7 @@ import androidx.room.TypeConverters
         AnimeDetailEntity::class,
         MalListEntryEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
