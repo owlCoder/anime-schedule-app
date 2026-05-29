@@ -3,6 +3,7 @@ package rs.owlcoder.animeschedule.domain.repository
 import android.net.Uri
 import kotlinx.coroutines.flow.Flow
 import rs.owlcoder.animeschedule.core.result.AppResult
+import rs.owlcoder.animeschedule.data.local.datastore.AccentColor
 import rs.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferences
 import rs.owlcoder.animeschedule.domain.model.AiringEpisode
@@ -45,6 +46,7 @@ interface SettingsRepository {
     suspend fun setTimezoneId(timezoneId: String)
     suspend fun setThemeMode(mode: ThemeMode)
     suspend fun setNotificationsEnabled(enabled: Boolean)
+    suspend fun setAccentColor(color: AccentColor)
     fun getEffectiveZoneId(prefs: UserPreferences): ZoneId
 }
 

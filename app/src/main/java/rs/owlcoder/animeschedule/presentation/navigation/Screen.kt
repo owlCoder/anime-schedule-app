@@ -7,6 +7,7 @@ sealed class Screen(val route: String) {
     data object Notifications : Screen("notifications")
     data object Settings : Screen("settings")
     data object About : Screen("about")
+    data object Changelog : Screen("changelog")
     data class Detail(val animeId: Int = 0) : Screen("detail/{animeId}") {
         companion object {
             const val ROUTE = "detail/{animeId}"

@@ -22,8 +22,14 @@ type Page {
   ): [AiringSchedule]
   media(
     id: Int
+    search: String
     type: MediaType
     sort: [MediaSort]
+    status: MediaStatus
+    format: MediaFormat
+    season: MediaSeason
+    seasonYear: Int
+    isAdult: Boolean
   ): [Media]
 }
 
@@ -44,6 +50,7 @@ type AiringSchedule {
 
 type Media {
   id: Int!
+  idMal: Int
   title: MediaTitle
   coverImage: MediaCoverImage
   bannerImage: String

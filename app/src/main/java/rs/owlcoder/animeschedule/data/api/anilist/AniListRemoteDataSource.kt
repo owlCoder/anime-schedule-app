@@ -8,6 +8,7 @@ import rs.owlcoder.animeschedule.core.result.AppResult
 import rs.owlcoder.animeschedule.data.api.anilist.generated.AiringScheduleQuery
 import rs.owlcoder.animeschedule.data.api.anilist.generated.AnimeDetailByMalQuery
 import rs.owlcoder.animeschedule.data.api.anilist.generated.AnimeDetailQuery
+import rs.owlcoder.animeschedule.data.api.anilist.generated.AnimeSearchQuery
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -56,6 +57,31 @@ class AniListRemoteDataSource @Inject constructor(
             }
             val media = response.data?.Media
                 ?: return AppResult.Error(AppError.NoCache)
+            AppResult.Success(media)
+        } catch (e: ApolloException) {
+            AppResult.Error(AppError.Network(e.message))
+        }
+    }
+
+    suspend fun searchAnime(
+        query: String,
+        page: Int = 1,
+        perPage: Int = 20
+    ): AppResult<List<AnimeSearchQuery.Medium>> {
+        return try {
+            val response = apolloClient.query(
+                AnimeSearchQuery(
+                    search = com.apollographql.apollo.api.Optional.present(query),
+                    page = com.apollographql.apollo.api.Optional.present(page),
+                    perPage = com.apollographql.apollo.api.Optional.present(perPage)
+                )
+            ).execute()
+            if (response.hasErrors()) {
+                return AppResult.Error(AppError.GraphQL(response.errors!!.first().message))
+            }
+            val media = response.data?.Page?.media
+                ?.filterNotNull()
+                ?: emptyList()
             AppResult.Success(media)
         } catch (e: ApolloException) {
             AppResult.Error(AppError.Network(e.message))

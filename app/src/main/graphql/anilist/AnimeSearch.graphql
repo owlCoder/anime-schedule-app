@@ -1,0 +1,26 @@
+query AnimeSearchQuery($search: String, $page: Int, $perPage: Int) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo {
+      hasNextPage
+      currentPage
+    }
+    media(search: $search, type: ANIME, sort: [POPULARITY_DESC]) {
+      id
+      idMal
+      title {
+        romaji
+        english
+        native
+      }
+      coverImage {
+        large
+        color
+      }
+      format
+      seasonYear
+      meanScore
+      episodes
+      status
+    }
+  }
+}

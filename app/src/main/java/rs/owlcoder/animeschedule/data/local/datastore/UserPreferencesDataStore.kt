@@ -23,6 +23,7 @@ class UserPreferencesDataStore @Inject constructor(
         val LAST_SYNC = longPreferencesKey("last_schedule_sync_epoch")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+        val ACCENT_COLOR = stringPreferencesKey("accent_color")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = dataStore.data.map { prefs ->
@@ -33,7 +34,8 @@ class UserPreferencesDataStore @Inject constructor(
             malAvatarUrl = prefs[Keys.MAL_AVATAR_URL] ?: "",
             lastScheduleSyncEpoch = prefs[Keys.LAST_SYNC] ?: 0L,
             themeMode = runCatching { ThemeMode.valueOf(prefs[Keys.THEME_MODE] ?: "") }.getOrDefault(ThemeMode.SYSTEM),
-            notificationsEnabled = prefs[Keys.NOTIFICATIONS_ENABLED] ?: true
+            notificationsEnabled = prefs[Keys.NOTIFICATIONS_ENABLED] ?: true,
+            accentColor = runCatching { AccentColor.valueOf(prefs[Keys.ACCENT_COLOR] ?: "") }.getOrDefault(AccentColor.TELEGRAM_BLUE)
         )
     }
 
@@ -59,5 +61,9 @@ class UserPreferencesDataStore @Inject constructor(
 
     suspend fun setNotificationsEnabled(enabled: Boolean) {
         dataStore.edit { it[Keys.NOTIFICATIONS_ENABLED] = enabled }
+    }
+
+    suspend fun setAccentColor(color: AccentColor) {
+        dataStore.edit { it[Keys.ACCENT_COLOR] = color.name }
     }
 }

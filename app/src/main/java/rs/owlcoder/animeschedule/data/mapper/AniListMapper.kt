@@ -5,10 +5,24 @@ import kotlinx.serialization.json.Json
 import rs.owlcoder.animeschedule.data.api.anilist.generated.AiringScheduleQuery
 import rs.owlcoder.animeschedule.data.api.anilist.generated.AnimeDetailByMalQuery
 import rs.owlcoder.animeschedule.data.api.anilist.generated.AnimeDetailQuery
+import rs.owlcoder.animeschedule.data.api.anilist.generated.AnimeSearchQuery
 import rs.owlcoder.animeschedule.data.local.db.AiringEpisodeEntity
 import rs.owlcoder.animeschedule.data.local.db.AnimeDetailEntity
+import rs.owlcoder.animeschedule.domain.model.AnimeSearchResult
 
 private val json = Json { ignoreUnknownKeys = true }
+
+fun AnimeSearchQuery.Medium.toSearchResult(): AnimeSearchResult = AnimeSearchResult(
+    malId = id,
+    title = title?.romaji ?: title?.english ?: "Unknown",
+    titleEnglish = title?.english?.takeIf { it != title?.romaji },
+    coverImageUrl = coverImage?.large,
+    type = format?.rawValue,
+    year = seasonYear?.toString(),
+    meanScore = meanScore?.toDouble(),
+    totalEpisodes = episodes,
+    userListEntry = null
+)
 
 fun AiringScheduleQuery.AiringSchedule.toEntity(nowEpoch: Long): AiringEpisodeEntity? {
     val media = media ?: return null

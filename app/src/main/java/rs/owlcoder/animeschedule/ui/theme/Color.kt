@@ -10,11 +10,11 @@ val TgBackground = Color(0xFFF1F1F3)
 val TgCard = Color(0xFFFFFFFF)
 val TgDivider = Color(0xFFE8E8EA)
 
-// Dark
+// Dark (AMOLED)
 val TgBlueDarkMode = Color(0xFF2AABEE)
-val TgSurfaceDark = Color(0xFF212121)
-val TgBackgroundDark = Color(0xFF181818)
-val TgCardDark = Color(0xFF2A2A2A)
+val TgSurfaceDark = Color(0xFF0D0D0D)
+val TgBackgroundDark = Color(0xFF000000)
+val TgCardDark = Color(0xFF141414)
 
 // Legacy (keep for Material fallback)
 val Purple80 = Color(0xFFD0BCFF)

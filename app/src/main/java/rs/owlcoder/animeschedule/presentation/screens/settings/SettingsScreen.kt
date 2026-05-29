@@ -1,19 +1,26 @@
 package rs.owlcoder.animeschedule.presentation.screens.settings
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -21,24 +28,30 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AutoMode
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.filled.Update
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -52,11 +65,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import coil3.compose.AsyncImage
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil3.compose.AsyncImage
+import rs.owlcoder.animeschedule.data.local.datastore.AccentColor
 import rs.owlcoder.animeschedule.data.local.datastore.ThemeMode
+import rs.owlcoder.animeschedule.ui.theme.accentPrimary
 import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,14 +79,13 @@ import java.time.ZoneId
 fun SettingsScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
-    onNavigateToAbout: () -> Unit = {}
+    onNavigateToAbout: () -> Unit = {},
+    onNavigateToChangelog: () -> Unit = {}
 ) {
     val uiState by settingsViewModel.uiState.collectAsState()
     val context = LocalContext.current
     var showTimezonePicker by remember { mutableStateOf(false) }
     var showThemePicker by remember { mutableStateOf(false) }
-
-    val bgColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -84,7 +98,7 @@ fun SettingsScreen(
                 )
             )
         },
-        containerColor = bgColor
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -92,7 +106,6 @@ fun SettingsScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
-            // --- Profile header card ---
             item {
                 Spacer(Modifier.height(16.dp))
                 ProfileCard(
@@ -105,7 +118,6 @@ fun SettingsScreen(
                 Spacer(Modifier.height(16.dp))
             }
 
-            // --- Izgled ---
             item {
                 SectionCard {
                     SettingsRow(
@@ -140,9 +152,16 @@ fun SettingsScreen(
                 Spacer(Modifier.height(16.dp))
             }
 
-            // --- Informacije ---
             item {
                 SectionCard {
+                    SettingsRow(
+                        icon = Icons.Default.Update,
+                        iconColor = Color(0xFF00897B),
+                        title = "Istorija promena",
+                        subtitle = "Šta je novo u aplikaciji",
+                        onClick = onNavigateToChangelog
+                    )
+                    SettingsDivider()
                     SettingsRow(
                         icon = Icons.Default.Info,
                         iconColor = Color(0xFF039BE5),
@@ -165,11 +184,165 @@ fun SettingsScreen(
     }
 
     if (showThemePicker) {
-        ThemePickerDialog(
-            current = uiState.themeMode,
-            onDismiss = { showThemePicker = false },
-            onConfirm = { settingsViewModel.setThemeMode(it); showThemePicker = false }
+        ThemeBottomSheet(
+            currentTheme = uiState.themeMode,
+            currentAccent = uiState.accentColor,
+            onThemeChange = { settingsViewModel.setThemeMode(it) },
+            onAccentChange = { settingsViewModel.setAccentColor(it) },
+            onDismiss = { showThemePicker = false }
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ThemeBottomSheet(
+    currentTheme: ThemeMode,
+    currentAccent: AccentColor,
+    onThemeChange: (ThemeMode) -> Unit,
+    onAccentChange: (AccentColor) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState()
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+        ) {
+            Text(
+                "Izgled",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
+
+            Text(
+                "Tema",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
+            val themeOptions = listOf(
+                Triple(ThemeMode.SYSTEM, "Sistemska", Icons.Default.AutoMode),
+                Triple(ThemeMode.LIGHT,  "Svetla",    Icons.Default.LightMode),
+                Triple(ThemeMode.DARK,   "Tamna",     Icons.Default.DarkMode)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                themeOptions.forEach { (mode, label, icon) ->
+                    val selected = currentTheme == mode
+                    val borderColor by animateColorAsState(
+                        if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                        label = "borderColor"
+                    )
+                    val iconTint by animateColorAsState(
+                        if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        label = "iconTint"
+                    )
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(
+                                width = if (selected) 2.dp else 1.dp,
+                                color = borderColor,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .background(
+                                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                                else MaterialTheme.colorScheme.surfaceVariant
+                            )
+                            .clickable { onThemeChange(mode) }
+                            .padding(vertical = 14.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                icon,
+                                contentDescription = null,
+                                tint = iconTint,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Text(
+                                label,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                                color = if (selected) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            Text(
+                "Boja akcenta",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+
+            val accentOptions = listOf(
+                AccentColor.TELEGRAM_BLUE to "Plava",
+                AccentColor.PURPLE        to "Ljubičasta",
+                AccentColor.GREEN         to "Zelena",
+                AccentColor.ORANGE        to "Narandžasta",
+                AccentColor.PINK          to "Roze",
+                AccentColor.RED           to "Crvena"
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                accentOptions.forEach { (accent, name) ->
+                    val selected = currentAccent == accent
+                    val color = accentPrimary(accent)
+                    val size by animateDpAsState(
+                        if (selected) 44.dp else 36.dp,
+                        animationSpec = spring(),
+                        label = "accentSize"
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(size)
+                            .clip(CircleShape)
+                            .background(color)
+                            .then(
+                                if (selected) Modifier.border(3.dp, Color.White.copy(alpha = 0.6f), CircleShape)
+                                else Modifier
+                            )
+                            .clickable { onAccentChange(accent) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (selected) {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = name,
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(32.dp))
+        }
     }
 }
 
@@ -211,8 +384,7 @@ private fun ProfileCard(
                         Icons.Default.AccountCircle,
                         contentDescription = null,
                         modifier = Modifier.size(32.dp),
-                        tint = if (isLoggedIn) MaterialTheme.colorScheme.onPrimaryContainer
-                        else MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -227,7 +399,7 @@ private fun ProfileCard(
                     if (isLoggedIn) "Ulogovan" else "Nije ulogovan",
                     style = MaterialTheme.typography.bodySmall,
                     color = if (isLoggedIn) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant
+                            else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             if (isLoggedIn) {
@@ -267,14 +439,14 @@ private fun ProfileCard(
                         Icon(
                             Icons.Default.Login,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
                             "Prijavi se",
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -296,12 +468,10 @@ private fun SectionCard(content: @Composable () -> Unit) {
 
 @Composable
 private fun SettingsDivider() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 68.dp)
-            .height(0.5.dp)
-            .background(MaterialTheme.colorScheme.outlineVariant)
+    HorizontalDivider(
+        modifier = Modifier.fillMaxWidth(),
+        thickness = 0.5.dp,
+        color = MaterialTheme.colorScheme.outlineVariant
     )
 }
 
@@ -380,42 +550,7 @@ private fun IconBadge(icon: ImageVector, color: Color) {
     }
 }
 
-@Composable
-private fun ThemePickerDialog(
-    current: ThemeMode,
-    onDismiss: () -> Unit,
-    onConfirm: (ThemeMode) -> Unit
-) {
-    var selected by remember { mutableStateOf(current) }
-    val options = listOf(
-        ThemeMode.SYSTEM to "Sistemska",
-        ThemeMode.LIGHT to "Svetla",
-        ThemeMode.DARK to "Tamna"
-    )
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Izaberi temu") },
-        text = {
-            Column {
-                options.forEach { (mode, label) ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable { selected = mode }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(selected = selected == mode, onClick = { selected = mode })
-                        Text(label, modifier = Modifier.padding(start = 8.dp))
-                    }
-                }
-            }
-        },
-        confirmButton = { TextButton(onClick = { onConfirm(selected) }) { Text("Potvrdi") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Otkaži") } }
-    )
-}
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TimezonePickerDialog(
     currentTimezoneId: String,
@@ -426,31 +561,81 @@ private fun TimezonePickerDialog(
         ZoneId.getAvailableZoneIds().sorted().filter { !it.startsWith("Etc/") || it == "Etc/UTC" }
     }
     var selected by remember { mutableStateOf(currentTimezoneId.ifEmpty { ZoneId.systemDefault().id }) }
+    val sheetState = rememberModalBottomSheetState()
+    val initialIndex = remember(zones, selected) { zones.indexOf(selected).coerceAtLeast(0) }
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
 
-    AlertDialog(
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
-        title = { Text("Izaberi vremensku zonu") },
-        text = {
-            LazyColumn(Modifier.height(400.dp)) {
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Vremenska zona",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                TextButton(onClick = { onConfirm(selected) }) {
+                    Text("Potvrdi")
+                }
+            }
+
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(420.dp)
+            ) {
                 items(zones) { zone ->
+                    val isSelected = selected == zone
+                    val bgColor by animateColorAsState(
+                        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                        else Color.Transparent,
+                        label = "zoneBg"
+                    )
                     Row(
-                        Modifier
+                        modifier = Modifier
                             .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(bgColor)
                             .clickable { selected = zone }
-                            .padding(vertical = 4.dp),
+                            .padding(horizontal = 12.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        RadioButton(selected = selected == zone, onClick = { selected = zone })
                         Text(
                             zone,
-                            modifier = Modifier.padding(start = 8.dp),
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurface,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            modifier = Modifier.weight(1f)
                         )
+                        if (isSelected) {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }
-        },
-        confirmButton = { TextButton(onClick = { onConfirm(selected) }) { Text("Potvrdi") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Otkaži") } }
-    )
+
+            Spacer(Modifier.height(8.dp))
+        }
+    }
 }

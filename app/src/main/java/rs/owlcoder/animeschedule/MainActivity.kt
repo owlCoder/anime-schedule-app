@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
         intent?.let { handleOAuthIntent(it) }
         setContent {
             val prefs by prefsDataStore.userPreferencesFlow.collectAsState(initial = UserPreferences())
-            AnimeScheduleTheme(themeMode = prefs.themeMode) {
+            AnimeScheduleTheme(themeMode = prefs.themeMode, accentColor = prefs.accentColor) {
                 val navController = rememberNavController()
                 Scaffold(
                     contentWindowInsets = WindowInsets(0, 0, 0, 0),

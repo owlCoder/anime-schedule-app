@@ -14,6 +14,7 @@ import rs.owlcoder.animeschedule.core.result.AppResult
 import rs.owlcoder.animeschedule.domain.model.MalListEntry
 import rs.owlcoder.animeschedule.domain.model.MalListUpdate
 import rs.owlcoder.animeschedule.domain.model.WatchStatus
+import rs.owlcoder.animeschedule.domain.repository.AuthRepository
 import rs.owlcoder.animeschedule.domain.usecase.GetMalUserListUseCase
 import rs.owlcoder.animeschedule.domain.usecase.IncrementEpisodeUseCase
 import rs.owlcoder.animeschedule.domain.usecase.RefreshMalListUseCase
@@ -23,6 +24,7 @@ import javax.inject.Inject
 data class MyListUiState(
     val entries: List<MalListEntry> = emptyList(),
     val isLoading: Boolean = false,
+    val isLoggedIn: Boolean = false,
     val error: String? = null,
     val searchQuery: String = "",
     val activeFilter: WatchStatus = WatchStatus.WATCHING
@@ -33,7 +35,8 @@ class MyListViewModel @Inject constructor(
     getMalUserListUseCase: GetMalUserListUseCase,
     private val updateMalListEntryUseCase: UpdateMalListEntryUseCase,
     private val incrementEpisodeUseCase: IncrementEpisodeUseCase,
-    private val refreshMalListUseCase: RefreshMalListUseCase
+    private val refreshMalListUseCase: RefreshMalListUseCase,
+    authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -44,8 +47,9 @@ class MyListViewModel @Inject constructor(
         getMalUserListUseCase(),
         _searchQuery,
         _activeFilter,
-        _isLoading
-    ) { result, query, filter, loading ->
+        _isLoading,
+        authRepository.isLoggedIn
+    ) { result, query, filter, loading, loggedIn ->
         val allEntries = (result as? AppResult.Success)?.data ?: emptyList()
         val filtered = allEntries
             .filter { it.status == filter }
@@ -53,6 +57,7 @@ class MyListViewModel @Inject constructor(
         MyListUiState(
             entries = filtered,
             isLoading = loading,
+            isLoggedIn = loggedIn,
             error = if (result is AppResult.Error) "Greška pri učitavanju liste" else null,
             searchQuery = query,
             activeFilter = filter

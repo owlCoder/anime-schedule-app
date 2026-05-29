@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import rs.owlcoder.animeschedule.data.local.datastore.AccentColor
 import rs.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import rs.owlcoder.animeschedule.domain.repository.AuthRepository
 import rs.owlcoder.animeschedule.domain.repository.SettingsRepository
@@ -19,7 +20,8 @@ data class SettingsUiState(
     val username: String = "",
     val avatarUrl: String = "",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val notificationsEnabled: Boolean = true
+    val notificationsEnabled: Boolean = true,
+    val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE
 )
 
 @HiltViewModel
@@ -40,7 +42,8 @@ class SettingsViewModel @Inject constructor(
             username = username,
             avatarUrl = avatarUrl,
             themeMode = prefs.themeMode,
-            notificationsEnabled = prefs.notificationsEnabled
+            notificationsEnabled = prefs.notificationsEnabled,
+            accentColor = prefs.accentColor
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
@@ -54,5 +57,9 @@ class SettingsViewModel @Inject constructor(
 
     fun setNotificationsEnabled(enabled: Boolean) {
         viewModelScope.launch { settingsRepository.setNotificationsEnabled(enabled) }
+    }
+
+    fun setAccentColor(color: AccentColor) {
+        viewModelScope.launch { settingsRepository.setAccentColor(color) }
     }
 }

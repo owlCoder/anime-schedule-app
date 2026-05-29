@@ -2,6 +2,7 @@ package rs.owlcoder.animeschedule.presentation.screens.schedule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -54,14 +55,14 @@ fun AiringEpisodeCard(
     ) {
         Row(
             modifier = Modifier
-                .height(100.dp)
+                .height(96.dp)
                 .padding(end = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Left accent strip
             Box(
                 Modifier
-                    .width(4.dp)
+                    .width(3.dp)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp))
                     .background(accentColor)
@@ -73,16 +74,16 @@ fun AiringEpisodeCard(
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(56.dp, 80.dp)
+                    .size(56.dp, 76.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .align(Alignment.CenterVertically)
             )
             Spacer(Modifier.width(12.dp))
             // Info
             Column(
-                Modifier
+                modifier = Modifier
                     .weight(1f)
-                    .padding(vertical = 10.dp)
+                    .padding(vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
                     episode.title,
@@ -90,24 +91,20 @@ fun AiringEpisodeCard(
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2
                 )
-                Spacer(Modifier.height(3.dp))
                 Text(
-                    "Epizoda ${episode.episode}",
+                    "Ep. ${episode.episode}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(Modifier.height(3.dp))
                 CountdownText(episode.airingAtEpochSeconds)
                 if (episode.genres.isNotEmpty()) {
-                    Spacer(Modifier.height(4.dp))
-                    Row {
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         episode.genres.take(2).forEach { genre ->
                             Box(
                                 modifier = Modifier
-                                    .padding(end = 4.dp)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                                    .padding(horizontal = 7.dp, vertical = 2.dp)
                             ) {
                                 Text(
                                     genre,
@@ -119,13 +116,12 @@ fun AiringEpisodeCard(
                     }
                 }
             }
-            // +1 button
             if (isLoggedIn && episode.malListEntry?.status == WatchStatus.WATCHING) {
                 FilledTonalIconButton(
                     onClick = onIncrementEpisode,
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "+1 epizoda", modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Add, contentDescription = "+1", modifier = Modifier.size(18.dp))
                 }
             }
         }
