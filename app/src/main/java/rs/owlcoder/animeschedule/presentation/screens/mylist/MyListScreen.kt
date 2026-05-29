@@ -43,7 +43,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import rs.owlcoder.animeschedule.domain.model.WatchStatus
+import rs.owlcoder.animeschedule.presentation.components.EmptyState
 import rs.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 
 private val statusTabs = listOf(
@@ -130,13 +132,12 @@ fun MyListScreen(
             onRefresh = { viewModel.refresh() },
             modifier = Modifier.padding(innerPadding)
         ) {
-            if (uiState.entries.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        "Nema anime u kategoriji \"${uiState.activeFilter.displayName}\"",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            if (uiState.entries.isEmpty() && !uiState.isLoading) {
+                EmptyState(
+                    icon = Icons.AutoMirrored.Filled.FormatListBulleted,
+                    title = "Nema anime",
+                    subtitle = "Nema anime u kategoriji \"${uiState.activeFilter.displayName}\""
+                )
             } else {
                 LazyColumn(Modifier.fillMaxSize()) {
                     items(uiState.entries, key = { it.animeId }) { entry ->

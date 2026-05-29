@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import rs.owlcoder.animeschedule.presentation.components.EmptyState
 import rs.owlcoder.animeschedule.presentation.components.ErrorBanner
 import rs.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 
@@ -172,14 +173,16 @@ fun SearchScreen(
                     CircularProgressIndicator()
                 }
                 uiState.error != null -> ErrorBanner(uiState.error!!)
-                uiState.noResults -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Nema rezultata za \"$localQuery\"",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                localQuery.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Pretraži po naslovu anime",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+                uiState.noResults -> EmptyState(
+                    icon = Icons.Default.Search,
+                    title = "Nema rezultata",
+                    subtitle = "Nije pronađen nijedan anime za \"$localQuery\""
+                )
+                localQuery.isEmpty() -> EmptyState(
+                    icon = Icons.Default.Search,
+                    title = "Pretraži anime",
+                    subtitle = "Unesite naslov da pronađete anime"
+                )
                 else -> LazyColumn(Modifier.fillMaxSize()) {
                     items(uiState.results, key = { it.malId }) { result ->
                         SearchResultCard(

@@ -52,8 +52,13 @@ fun AiringEpisodeCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(modifier = Modifier.height(100.dp)) {
-            // Accent strip
+        Row(
+            modifier = Modifier
+                .height(100.dp)
+                .padding(end = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left accent strip
             Box(
                 Modifier
                     .width(4.dp)
@@ -77,7 +82,7 @@ fun AiringEpisodeCard(
             Column(
                 Modifier
                     .weight(1f)
-                    .padding(vertical = 12.dp)
+                    .padding(vertical = 10.dp)
             ) {
                 Text(
                     episode.title,
@@ -91,7 +96,7 @@ fun AiringEpisodeCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(3.dp))
                 CountdownText(episode.airingAtEpochSeconds)
                 if (episode.genres.isNotEmpty()) {
                     Spacer(Modifier.height(4.dp))
@@ -118,10 +123,7 @@ fun AiringEpisodeCard(
             if (isLoggedIn && episode.malListEntry?.status == WatchStatus.WATCHING) {
                 FilledTonalIconButton(
                     onClick = onIncrementEpisode,
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically)
-                        .padding(end = 10.dp)
-                        .size(36.dp)
+                    modifier = Modifier.size(36.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "+1 epizoda", modifier = Modifier.size(18.dp))
                 }

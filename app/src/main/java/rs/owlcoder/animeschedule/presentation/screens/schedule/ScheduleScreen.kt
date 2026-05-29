@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import rs.owlcoder.animeschedule.presentation.components.EmptyState
 import rs.owlcoder.animeschedule.presentation.components.ErrorBanner
 import rs.owlcoder.animeschedule.presentation.components.LoadingShimmer
 import java.time.format.DateTimeFormatter
@@ -127,9 +130,11 @@ private fun EpisodeList(
     onIncrementEpisode: (rs.owlcoder.animeschedule.domain.model.AiringEpisode) -> Unit
 ) {
     if (episodes.isEmpty()) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Nema epizoda za ovaj period", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+        EmptyState(
+            icon = Icons.Default.CalendarMonth,
+            title = "Nema epizoda",
+            subtitle = "Nema emitovanja za ovaj period"
+        )
         return
     }
     LazyColumn(Modifier.fillMaxSize()) {

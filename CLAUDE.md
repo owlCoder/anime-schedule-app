@@ -14,7 +14,7 @@ Use minimal context by default.
 
 Native Android anime schedule app.
 
-Goal: show today/tomorrow/week anime airing schedule in the user’s timezone and allow MyAnimeList login/list updates from one ad-free app.
+Goal: show today/tomorrow/week anime airing schedule in the user's timezone and allow MyAnimeList login/list updates from one ad-free app.
 
 ## Recommended Stack
 
@@ -23,19 +23,18 @@ Goal: show today/tomorrow/week anime airing schedule in the user’s timezone an
 * UI: Jetpack Compose + Material 3/Material You latest UI
 * Architecture: MVVM + Clean Architecture
 * Async/state: Coroutines, Flow, StateFlow
-* Networking: Ktor Client or Retrofit + OkHttp
+* Networking: Retrofit + OkHttp
 * GraphQL: Apollo Kotlin for AniList
-* Local cache: Room
+* Local cache: Room (version 2, fallbackToDestructiveMigration)
 * Settings: DataStore Preferences
 * DI: Hilt
-* Images: Coil
+* Images: Coil 3
 * Background work: WorkManager
 * Auth: OAuth 2.0 Authorization Code + PKCE via Chrome Custom Tabs
 * Secure storage: AndroidX Security Crypto / EncryptedSharedPreferences
-* Serialization: Kotlinx Serialization or Moshi
+* Serialization: Kotlinx Serialization
 * Build: Gradle Kotlin DSL + Version Catalog
 * Min SDK: 26+
-
 
 ## Core Rules
 
@@ -96,8 +95,6 @@ Assume every external API is rate-limited.
 
 ## Architecture Boundaries
 
-Use this structure unless the existing project already defines a better one.
-
 ```text
 app/
   presentation/
@@ -105,8 +102,6 @@ app/
   data/
   core/
 ```
-
-Rules:
 
 * Presentation owns Compose screens, navigation, ViewModels, and UI state.
 * Domain owns models, repository interfaces, and use cases.
@@ -116,45 +111,79 @@ Rules:
 * Keep Room entities out of UI.
 * Map remote/local models to domain models before presentation.
 
-## MVP Scope
+## What Is Already Built
 
-Implement first:
+### Navigation (5 tabs)
+`Screen`: Schedule, Search, MyList, Notifications, Settings, About, Detail
 
-* Today schedule
-* Tomorrow schedule
-* This week schedule
-* Anime details
-* Settings with timezone override
-* MAL OAuth login/logout
-* MAL list read
-* MAL status/episode/score update where API supports it
-* Quick `+1 episode` action
-* Offline cache and clear error states
+### Screens
+| Screen | File | Notes |
+|---|---|---|
+| Schedule | `ScheduleScreen.kt` | Today/Tomorrow/Week tabs, PullToRefresh |
+| Search | `SearchScreen.kt` | Local query state + debounced VM query |
+| MyList | `MyListScreen.kt` | Tabs by WatchStatus, auto-refresh on init |
+| Notifications | `NotificationsScreen.kt` | Placeholder with EmptyState |
+| Settings | `SettingsScreen.kt` | Profile card (MAL avatar), theme, timezone, notifications |
+| About | `AboutScreen.kt` | App info, data sources |
+| Detail | `AnimeDetailScreen.kt` | Hero banner, MAL list edit FAB |
 
-Defer:
+### Components
+* `AiringEpisodeCard` — accent color strip, cover, countdown, +1 button
+* `MyListEntryCard` — cover image, episode count, status chip
+* `SearchResultCard` — cover, meta, add/edit button
+* `EmptyState` — shared icon + title + subtitle for all empty states
+* `ListStatusBottomSheet` — status/episode/score editor
+* `ErrorBanner`, `LoadingShimmer`, `CountdownText`
 
-* Social features
-* Recommendations
-* Comments/reviews
-* Custom accounts outside MAL OAuth
-* Multi-platform/iOS unless explicitly requested
+### Key Implementation Details
+
+**MAL OAuth PKCE**
+* Method: `plain` (not S256) — MAL does not support S256 correctly
+* PKCE verifier stored in `EncryptedSharedPreferences` (survives Activity recreation)
+* Redirect URI must NOT be double-encoded: use `@Field(encoded=true)` + `URLEncoder.encode()` before passing
+
+**Anime Detail ID resolution**
+* Schedule/search clicks pass AniList media ID → `AnimeDetailQuery($id)`
+* My List clicks pass MAL ID → try `AnimeDetailQuery($id)` first, fall back to `AnimeDetailByMalQuery($idMal)`
+* `AnimeDetailEntity` has both `animeId` (AniList) and `malId` (nullable MAL ID)
+* Detail flow is reactive: `combine(animeDetailDao.getById, malListEntryDao.observeByAnimeId)` — updates immediately after MAL list edit
+
+**Room DB**
+* Version 2, `fallbackToDestructiveMigration` (dev mode — no migration scripts needed)
+* Tables: `airing_episodes`, `anime_details` (has `malId` index), `mal_list_entries`
+
+**GraphQL schema**
+* `schema.graphqls` has `Media(id: Int, idMal: Int, type: MediaType)` — both params supported
+* Two queries: `AnimeDetailQuery` (by AniList id) and `AnimeDetailByMalQuery` (by idMal)
+
+**Edge-to-edge insets**
+* Root Scaffold: `contentWindowInsets = WindowInsets(0,0,0,0)`
+* Each TopAppBar: `windowInsets = WindowInsets.statusBars`
+* Bottom navbar: `windowInsetsPadding(WindowInsets.navigationBars)` inside floating pill
+
+**Theme**
+* `ThemeMode`: SYSTEM / LIGHT / DARK stored in DataStore
+* Telegram-inspired color palette in `Color.kt`
+
+### Pending / Not Yet Done
+* In-app notifications system (Room entity, WorkManager, badge on navbar)
+* Settings: language support (Serbian/English), changelog screen
+* Settings dialogs: iOS-style bottom sheet pickers (currently AlertDialog)
+* MyList: title/cover comes from Room cache — already working after refresh
+* About screen: bottom text clipped on small screens (needs scroll)
 
 ## Build and Checks
 
-Before finishing a coding task, run the smallest relevant checks.
-
-Prefer:
-
 ```powershell
-.\gradlew.bat test
 .\gradlew.bat assembleDebug
 ```
 
-For Linux/macOS:
-
 ```bash
-./gradlew test
 ./gradlew assembleDebug
 ```
 
-If checks cannot run, state exactly why and what remains unverified.
+Requires `local.properties` (not in git):
+```
+MAL_CLIENT_ID=...
+MAL_REDIRECT_URI=rs.owlcoder.animeschedule://oauth
+```
