@@ -14,12 +14,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -115,9 +115,18 @@ fun MyListEntryCard(
                 if (entry.status == WatchStatus.WATCHING) {
                     FilledTonalIconButton(
                         onClick = onIncrementEpisode,
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(36.dp),
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "+1", modifier = Modifier.size(18.dp))
+                        Text(
+                            "+1",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
                 FilledTonalIconButton(

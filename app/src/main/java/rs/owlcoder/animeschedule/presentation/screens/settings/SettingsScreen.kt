@@ -62,6 +62,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -297,45 +298,60 @@ private fun ThemeBottomSheet(
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
+            val isDark = MaterialTheme.colorScheme.background.luminance() < 0.05f
             val accentOptions = listOf(
                 AccentColor.TELEGRAM_BLUE to "Plava",
                 AccentColor.PURPLE        to "Ljubičasta",
                 AccentColor.GREEN         to "Zelena",
                 AccentColor.ORANGE        to "Narandžasta",
                 AccentColor.PINK          to "Roze",
-                AccentColor.RED           to "Crvena"
+                AccentColor.RED           to "Crvena",
+                AccentColor.CYAN          to "Cijan",
+                AccentColor.INDIGO        to "Indigo",
+                AccentColor.TEAL          to "Teal",
+                AccentColor.YELLOW        to "Žuta",
+                AccentColor.DEEP_PURPLE   to "Duboka ljubičasta"
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                accentOptions.forEach { (accent, name) ->
-                    val selected = currentAccent == accent
-                    val color = accentPrimary(accent)
-                    val size by animateDpAsState(
-                        if (selected) 44.dp else 36.dp,
-                        animationSpec = spring(),
-                        label = "accentSize"
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(size)
-                            .clip(CircleShape)
-                            .background(color)
-                            .then(
-                                if (selected) Modifier.border(3.dp, Color.White.copy(alpha = 0.6f), CircleShape)
-                                else Modifier
-                            )
-                            .clickable { onAccentChange(accent) },
-                        contentAlignment = Alignment.Center
+            val rows = accentOptions.chunked(6)
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                rows.forEach { rowItems ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        if (selected) {
-                            Icon(
-                                Icons.Default.Check,
-                                contentDescription = name,
-                                tint = Color.White,
-                                modifier = Modifier.size(18.dp)
+                        rowItems.forEach { (accent, name) ->
+                            val selected = currentAccent == accent
+                            val color = accentPrimary(accent, dark = isDark)
+                            val size by animateDpAsState(
+                                if (selected) 44.dp else 36.dp,
+                                animationSpec = spring(),
+                                label = "accentSize"
                             )
+                            Box(
+                                modifier = Modifier
+                                    .size(size)
+                                    .clip(CircleShape)
+                                    .background(color)
+                                    .then(
+                                        if (selected) Modifier.border(3.dp, Color.White.copy(alpha = 0.6f), CircleShape)
+                                        else Modifier
+                                    )
+                                    .clickable { onAccentChange(accent) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (selected) {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = name,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        }
+                        // Fill remaining spots in last row for even spacing
+                        repeat(6 - rowItems.size) {
+                            Spacer(Modifier.size(36.dp))
                         }
                     }
                 }

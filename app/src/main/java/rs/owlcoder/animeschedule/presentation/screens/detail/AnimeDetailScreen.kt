@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -106,7 +105,7 @@ fun AnimeDetailScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White,
                     shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.navigationBarsPadding()
+                    modifier = Modifier.padding(bottom = 80.dp)
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = "Uredi listu")
                 }

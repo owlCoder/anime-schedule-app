@@ -9,13 +9,18 @@ import androidx.compose.ui.graphics.Color
 import rs.owlcoder.animeschedule.data.local.datastore.AccentColor
 import rs.owlcoder.animeschedule.data.local.datastore.ThemeMode
 
-fun accentPrimary(accent: AccentColor): Color = when (accent) {
-    AccentColor.TELEGRAM_BLUE -> Color(0xFF2AABEE)
-    AccentColor.PURPLE        -> Color(0xFF7C4DFF)
-    AccentColor.GREEN         -> Color(0xFF00C853)
-    AccentColor.ORANGE        -> Color(0xFFFF6D00)
-    AccentColor.PINK          -> Color(0xFFE91E8C)
-    AccentColor.RED           -> Color(0xFFE53935)
+fun accentPrimary(accent: AccentColor, dark: Boolean = false): Color = when (accent) {
+    AccentColor.TELEGRAM_BLUE -> if (dark) Color(0xFF1A8FCC) else Color(0xFF2AABEE)
+    AccentColor.PURPLE        -> if (dark) Color(0xFF6A3FDD) else Color(0xFF8B5CF6)
+    AccentColor.GREEN         -> if (dark) Color(0xFF00A846) else Color(0xFF22C55E)
+    AccentColor.ORANGE        -> if (dark) Color(0xFFD45A00) else Color(0xFFF97316)
+    AccentColor.PINK          -> if (dark) Color(0xFFC41570) else Color(0xFFEC4899)
+    AccentColor.RED           -> if (dark) Color(0xFFCC2222) else Color(0xFFEF4444)
+    AccentColor.CYAN          -> if (dark) Color(0xFF0891B2) else Color(0xFF06B6D4)
+    AccentColor.INDIGO        -> if (dark) Color(0xFF3730A3) else Color(0xFF4F46E5)
+    AccentColor.TEAL          -> if (dark) Color(0xFF0D7A6A) else Color(0xFF14B8A6)
+    AccentColor.YELLOW        -> if (dark) Color(0xFFB48000) else Color(0xFFEAB308)
+    AccentColor.DEEP_PURPLE   -> if (dark) Color(0xFF5B1FA8) else Color(0xFF7C3AED)
 }
 
 private fun darkColors(primary: Color) = darkColorScheme(
@@ -91,7 +96,7 @@ fun AnimeScheduleTheme(
         ThemeMode.SYSTEM -> systemDark
     }
 
-    val primary = accentPrimary(accentColor)
+    val primary = accentPrimary(accentColor, dark = darkTheme)
     val colorScheme = if (darkTheme) darkColors(primary) else lightColors(primary)
 
     MaterialTheme(

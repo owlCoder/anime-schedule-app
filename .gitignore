@@ -20,6 +20,8 @@ gradle/wrapper/gradle-wrapper.jar
 # Local config — never commit
 local.properties
 keystore.properties
+*.jks
+*.keystore
 
 # AI assistant folders — keep local only
 .claude/

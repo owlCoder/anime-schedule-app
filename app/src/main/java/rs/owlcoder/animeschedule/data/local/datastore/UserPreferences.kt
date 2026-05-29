@@ -8,7 +8,12 @@ enum class AccentColor {
     GREEN,
     ORANGE,
     PINK,
-    RED
+    RED,
+    CYAN,
+    INDIGO,
+    TEAL,
+    YELLOW,
+    DEEP_PURPLE
 }
 
 data class UserPreferences(

@@ -126,12 +126,17 @@ fun AiringEpisodeCard(
                     if (isWatching) {
                         FilledTonalIconButton(
                             onClick = onIncrementEpisode,
-                            modifier = Modifier.size(34.dp)
+                            modifier = Modifier.size(34.dp),
+                            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
                         ) {
                             Text(
                                 "+1",
                                 style = MaterialTheme.typography.labelSmall,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }

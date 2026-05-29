@@ -40,13 +40,30 @@ android {
         )
     }
 
+    signingConfigs {
+        create("release") {
+            val keystorePath = localProperties.getProperty("KEYSTORE_PATH") ?: ""
+            val keystorePass = localProperties.getProperty("KEYSTORE_PASSWORD") ?: ""
+            val keyAlias = localProperties.getProperty("KEY_ALIAS") ?: "animeschedule"
+            val keyPass = localProperties.getProperty("KEY_PASSWORD") ?: keystorePass
+            if (keystorePath.isNotEmpty()) {
+                storeFile = file(keystorePath)
+                storePassword = keystorePass
+                this.keyAlias = keyAlias
+                keyPassword = keyPass
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
