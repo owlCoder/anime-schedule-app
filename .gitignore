@@ -21,9 +21,10 @@ gradle/wrapper/gradle-wrapper.jar
 local.properties
 keystore.properties
 
-# AI assistant folders
+# AI assistant folders — keep local only
 .claude/
 .claudeignore
+CLAUDE.md
 
 # Planning / scratch files
 plan.md
