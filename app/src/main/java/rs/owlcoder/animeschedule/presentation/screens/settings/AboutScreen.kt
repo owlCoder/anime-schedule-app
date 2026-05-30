@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import rs.owlcoder.animeschedule.BuildConfig
 import rs.owlcoder.animeschedule.R
+import rs.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -160,7 +161,7 @@ fun AboutScreen(onBack: () -> Unit) {
                 color = MaterialTheme.colorScheme.outline,
                 textAlign = TextAlign.Center
             )
-            Spacer(Modifier.height(96.dp))
+            run { val h = LocalNavBarHeight.current; Spacer(Modifier.height(h + 8.dp)) }
         }
     }
 }

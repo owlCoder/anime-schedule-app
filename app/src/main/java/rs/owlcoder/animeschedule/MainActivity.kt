@@ -15,6 +15,10 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import rs.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import androidx.compose.ui.Alignment
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -136,6 +140,11 @@ class MainActivity : AppCompatActivity() {
                             navController.navigate(Screen.Detail.createRoute(animeId))
                         }
                     }
+                    val density = LocalDensity.current
+                    val navBarHeightState = androidx.compose.runtime.remember {
+                        mutableStateOf(androidx.compose.ui.unit.Dp(0f))
+                    }
+                    CompositionLocalProvider(LocalNavBarHeight provides navBarHeightState.value) {
                     Scaffold(
                         contentWindowInsets = WindowInsets(0, 0, 0, 0),
                     ) { innerPadding ->
@@ -149,10 +158,18 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 }
                             )
-                            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .onGloballyPositioned { coords ->
+                                        val h = with(density) { coords.size.height.toDp() }
+                                        if (h != navBarHeightState.value) navBarHeightState.value = h
+                                    }
+                            ) {
                                 AnimeBottomBar(navController, unreadCount = unreadCount)
                             }
                         }
+                    }
                     }
                 }
             }

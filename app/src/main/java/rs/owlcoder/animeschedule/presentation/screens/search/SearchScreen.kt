@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import rs.owlcoder.animeschedule.R
 import rs.owlcoder.animeschedule.presentation.components.EmptyState
+import rs.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import rs.owlcoder.animeschedule.presentation.components.ErrorBanner
 import rs.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 
@@ -194,7 +195,7 @@ fun SearchScreen(
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)
                         )
                     }
-                    item { Spacer(Modifier.height(96.dp)) }
+                    item { val h = LocalNavBarHeight.current; Spacer(Modifier.height(h + 8.dp)) }
                 }
             }
         }

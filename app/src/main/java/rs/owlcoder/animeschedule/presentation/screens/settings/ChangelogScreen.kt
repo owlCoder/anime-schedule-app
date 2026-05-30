@@ -43,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import rs.owlcoder.animeschedule.R
+import rs.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 
 private data class ChangelogEntry(
     val version: String,
@@ -125,7 +126,7 @@ fun ChangelogScreen(onBack: () -> Unit) {
                 ChangelogCard(entry = entry, expandedByDefault = index == 0)
                 Spacer(Modifier.height(10.dp))
             }
-            item { Spacer(Modifier.height(96.dp)) }
+            item { val h = LocalNavBarHeight.current; Spacer(Modifier.height(h + 8.dp)) }
         }
     }
 }

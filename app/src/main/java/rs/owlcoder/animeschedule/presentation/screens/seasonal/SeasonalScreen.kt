@@ -70,6 +70,7 @@ import rs.owlcoder.animeschedule.R
 import rs.owlcoder.animeschedule.domain.model.AnimeSeason
 import rs.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
 import rs.owlcoder.animeschedule.presentation.components.EmptyState
+import rs.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import rs.owlcoder.animeschedule.presentation.components.LoadingShimmer
 
 private val FORMAT_LABELS = mapOf(
@@ -175,7 +176,7 @@ fun SeasonalScreen(
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
                         )
                     }
-                    item { Spacer(Modifier.height(96.dp)) }
+                    item { val h = LocalNavBarHeight.current; Spacer(Modifier.height(h + 8.dp)) }
                 }
             }
         }

@@ -93,18 +93,29 @@ fun AiringEpisodeCard(
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2
                 )
-                val epLine = episode.malListEntry?.let { entry ->
+                episode.malListEntry?.let { entry ->
                     val total = episode.totalEpisodes?.let { "/$it" } ?: ""
-                    "Odgledano: ${entry.episodesWatched}$total"
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(accentColor.copy(alpha = 0.15f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            "Odgledano: ${entry.episodesWatched}$total",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = accentColor
+                        )
+                    }
                 } ?: run {
                     val total = episode.totalEpisodes?.let { "/${it}" } ?: ""
-                    "Ep. ${episode.episode}$total"
+                    Text(
+                        "Ep. ${episode.episode}$total",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-                Text(
-                    epLine,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
                 CountdownText(episode.airingAtEpochSeconds)
                 if (episode.genres.isNotEmpty()) {
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {

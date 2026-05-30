@@ -9,6 +9,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import rs.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
@@ -82,13 +84,20 @@ fun NotificationsScreen(
         NotifTab(R.string.notif_tab_read, Icons.Default.MarkEmailRead)
     )
 
+    val navBarHeight = LocalNavBarHeight.current
+
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
                 TopAppBar(
-                    title = { Text(stringResource(R.string.notif_screen_title), style = MaterialTheme.typography.titleLarge) },
+                    title = {
+                        Text(
+                            stringResource(R.string.notif_screen_title),
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    },
                     windowInsets = WindowInsets.statusBars,
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surface
@@ -179,7 +188,9 @@ fun NotificationsScreen(
                     }
                 }
                 Box(
-                    Modifier.fillMaxWidth().height(0.5.dp)
+                    Modifier
+                        .fillMaxWidth()
+                        .height(0.5.dp)
                         .background(MaterialTheme.colorScheme.outlineVariant)
                 )
             }
@@ -203,9 +214,11 @@ fun NotificationsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                    horizontal = 12.dp,
-                    vertical = 8.dp
+                contentPadding = PaddingValues(
+                    start = 12.dp,
+                    end = 12.dp,
+                    top = 8.dp,
+                    bottom = navBarHeight + 8.dp
                 )
             ) {
                 items(list, key = { it.id }) { notification ->
@@ -217,7 +230,6 @@ fun NotificationsScreen(
                         }
                     )
                 }
-                item { Spacer(modifier = Modifier.height(96.dp)) }
             }
         }
     }
@@ -228,27 +240,27 @@ private fun NotificationCard(
     notification: AppNotification,
     onClick: () -> Unit
 ) {
-    val cardBg = if (!notification.isRead)
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.06f)
-    else
-        MaterialTheme.colorScheme.surface
+    val isUnread = !notification.isRead
+    val surface = MaterialTheme.colorScheme.surface
+    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(cardBg)
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (isUnread) primaryContainer.copy(alpha = 0.35f) else surface)
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Cover slika
         AsyncImage(
             model = notification.coverImageUrl,
-            contentDescription = notification.title,
+            contentDescription = null,
             modifier = Modifier
-                .size(width = 48.dp, height = 64.dp)
-                .clip(RoundedCornerShape(8.dp)),
+                .size(width = 52.dp, height = 70.dp)
+                .clip(RoundedCornerShape(10.dp)),
             contentScale = ContentScale.Crop
         )
 
@@ -256,34 +268,47 @@ private fun NotificationCard(
 
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+            verticalArrangement = Arrangement.spacedBy(3.dp)
         ) {
             Text(
                 text = notification.title,
-                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (isUnread) FontWeight.SemiBold else FontWeight.Normal,
                 maxLines = 2,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Text(
-                text = "Epizoda ${notification.episode}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // Epizoda chip
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(horizontal = 7.dp, vertical = 2.dp)
+            ) {
+                Text(
+                    text = "Ep. ${notification.episode}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             Text(
                 text = relativeTime(notification.createdAtEpochSeconds),
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline
             )
         }
 
-        if (!notification.isRead) {
-            Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // Unread dot ili checkmark placeholder za spacing
+        if (isUnread) {
             Box(
                 modifier = Modifier
-                    .size(8.dp)
+                    .size(10.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary)
             )
+        } else {
+            Spacer(modifier = Modifier.size(10.dp))
         }
     }
 }

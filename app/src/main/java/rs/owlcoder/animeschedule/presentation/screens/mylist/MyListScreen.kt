@@ -60,6 +60,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import rs.owlcoder.animeschedule.R
 import rs.owlcoder.animeschedule.domain.model.WatchStatus
 import rs.owlcoder.animeschedule.presentation.components.EmptyState
+import rs.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import rs.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 import rs.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 
@@ -202,7 +203,7 @@ fun MyListScreen(
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
                         )
                     }
-                    item { Spacer(Modifier.height(96.dp)) }
+                    item { val h = LocalNavBarHeight.current; Spacer(Modifier.height(h + 8.dp)) }
                 }
             }
         }
