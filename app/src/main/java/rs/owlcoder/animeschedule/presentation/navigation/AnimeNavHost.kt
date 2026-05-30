@@ -16,6 +16,7 @@ import rs.owlcoder.animeschedule.presentation.screens.mylist.MyListScreen
 import rs.owlcoder.animeschedule.presentation.screens.notifications.NotificationsScreen
 import rs.owlcoder.animeschedule.presentation.screens.schedule.ScheduleScreen
 import rs.owlcoder.animeschedule.presentation.screens.search.SearchScreen
+import rs.owlcoder.animeschedule.presentation.screens.seasonal.SeasonalScreen
 import rs.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import rs.owlcoder.animeschedule.presentation.screens.settings.AboutScreen
 import rs.owlcoder.animeschedule.presentation.screens.settings.ChangelogScreen
@@ -53,6 +54,11 @@ fun AnimeNavHost(
         }
         composable(Screen.MyList.route) {
             MyListScreen(onAnimeClick = { animeId ->
+                navController.navigate(Screen.Detail.createRoute(animeId))
+            })
+        }
+        composable(Screen.Seasonal.route) {
+            SeasonalScreen(onAnimeClick = { animeId ->
                 navController.navigate(Screen.Detail.createRoute(animeId))
             })
         }

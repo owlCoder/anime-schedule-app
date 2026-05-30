@@ -9,6 +9,9 @@ import rs.owlcoder.animeschedule.data.api.anilist.generated.AiringScheduleQuery
 import rs.owlcoder.animeschedule.data.api.anilist.generated.AnimeDetailByMalQuery
 import rs.owlcoder.animeschedule.data.api.anilist.generated.AnimeDetailQuery
 import rs.owlcoder.animeschedule.data.api.anilist.generated.AnimeSearchQuery
+import rs.owlcoder.animeschedule.data.api.anilist.generated.SeasonalAnimeQuery
+import rs.owlcoder.animeschedule.data.api.anilist.generated.type.MediaSeason
+import rs.owlcoder.animeschedule.data.api.anilist.generated.type.MediaSort
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -83,6 +86,41 @@ class AniListRemoteDataSource @Inject constructor(
                 ?.filterNotNull()
                 ?: emptyList()
             AppResult.Success(media)
+        } catch (e: ApolloException) {
+            AppResult.Error(AppError.Network(e.message))
+        }
+    }
+
+    suspend fun getSeasonalAnime(
+        season: MediaSeason,
+        year: Int,
+        sort: MediaSort = MediaSort.POPULARITY_DESC,
+        page: Int = 1,
+        perPage: Int = 50
+    ): AppResult<List<SeasonalAnimeQuery.Medium>> {
+        return try {
+            val allResults = mutableListOf<SeasonalAnimeQuery.Medium>()
+            var currentPage = page
+            var hasNextPage = true
+            while (hasNextPage) {
+                val response = apolloClient.query(
+                    SeasonalAnimeQuery(
+                        season = com.apollographql.apollo.api.Optional.present(season),
+                        seasonYear = com.apollographql.apollo.api.Optional.present(year),
+                        page = com.apollographql.apollo.api.Optional.present(currentPage),
+                        perPage = com.apollographql.apollo.api.Optional.present(perPage),
+                        sort = com.apollographql.apollo.api.Optional.present(listOf(sort))
+                    )
+                ).execute()
+                if (response.hasErrors()) {
+                    return AppResult.Error(AppError.GraphQL(response.errors!!.first().message))
+                }
+                val pageData = response.data?.Page ?: break
+                pageData.media?.filterNotNull()?.let { allResults.addAll(it) }
+                hasNextPage = pageData.pageInfo?.hasNextPage == true && currentPage < 4
+                currentPage++
+            }
+            AppResult.Success(allResults)
         } catch (e: ApolloException) {
             AppResult.Error(AppError.Network(e.message))
         }

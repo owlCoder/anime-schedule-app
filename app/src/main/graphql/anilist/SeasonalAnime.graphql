@@ -1,0 +1,29 @@
+query SeasonalAnimeQuery($season: MediaSeason, $seasonYear: Int, $page: Int, $perPage: Int, $sort: [MediaSort]) {
+  Page(page: $page, perPage: $perPage) {
+    pageInfo {
+      hasNextPage
+      currentPage
+    }
+    media(season: $season, seasonYear: $seasonYear, type: ANIME, sort: $sort) {
+      id
+      idMal
+      title {
+        romaji
+        english
+        native
+      }
+      coverImage {
+        large
+        color
+      }
+      genres
+      format
+      status
+      episodes
+      seasonYear
+      season
+      averageScore
+      meanScore
+    }
+  }
+}

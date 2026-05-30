@@ -84,7 +84,7 @@ class AiringNotificationWorker @AssistedInject constructor(
                         createdAtEpochSeconds = now
                     )
                 )
-                sendSystemNotification(id = episode.airingId, title = episode.title, episode = episode.episode)
+                sendSystemNotification(id = episode.airingId, animeId = episode.animeId, title = episode.title, episode = episode.episode)
                 created++
             }
 
@@ -96,14 +96,17 @@ class AiringNotificationWorker @AssistedInject constructor(
         }
     }
 
-    private fun sendSystemNotification(id: Int, title: String, episode: Int) {
+    private fun sendSystemNotification(id: Int, animeId: Int, title: String, episode: Int) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
         ) return
 
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
+        val intent = android.net.Uri.parse("rs.owlcoder.animeschedule://detail/$animeId")
+            .let { uri ->
+                Intent(Intent.ACTION_VIEW, uri, context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
+            }
         val pendingIntent = PendingIntent.getActivity(
             context, id, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE

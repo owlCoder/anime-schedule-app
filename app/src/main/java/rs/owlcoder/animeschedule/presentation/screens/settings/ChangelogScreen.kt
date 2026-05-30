@@ -120,7 +120,7 @@ fun ChangelogScreen(onBack: () -> Unit) {
                 ChangelogCard(entry = entry, expandedByDefault = index == 0)
                 Spacer(Modifier.height(10.dp))
             }
-            item { Spacer(Modifier.height(24.dp)) }
+            item { Spacer(Modifier.height(96.dp)) }
         }
     }
 }

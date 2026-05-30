@@ -48,6 +48,14 @@
                     android:scheme="rs.owlcoder.animeschedule"
                     android:host="oauth" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="rs.owlcoder.animeschedule"
+                    android:host="detail" />
+            </intent-filter>
         </activity>
     </application>
 

@@ -24,10 +24,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CalendarViewWeek
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material.icons.filled.Upcoming
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -77,6 +81,7 @@ fun ScheduleScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var editingAnimeId by remember { mutableStateOf<Int?>(null) }
+    var showFilterSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let { snackbarHostState.showSnackbar(it) }
@@ -93,7 +98,25 @@ fun ScheduleScreen(
                     windowInsets = WindowInsets.statusBars,
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surface
-                    )
+                    ),
+                    actions = {
+                        IconButton(onClick = { showFilterSheet = true }) {
+                            BadgedBox(
+                                badge = {
+                                    if (uiState.filter.isActive) Badge()
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Default.FilterList,
+                                    contentDescription = "Filteri",
+                                    tint = if (uiState.filter.isActive)
+                                        MaterialTheme.colorScheme.primary
+                                    else
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
                 )
                 Box(
                     Modifier.fillMaxWidth().height(0.5.dp)
@@ -183,6 +206,20 @@ fun ScheduleScreen(
             currentEntry = ep?.malListEntry,
             onDismiss = { editingAnimeId = null },
             onConfirm = { animeId, update -> viewModel.updateEntry(animeId, update) }
+        )
+    }
+
+    if (showFilterSheet) {
+        ScheduleFilterSheet(
+            filter = uiState.filter,
+            availableGenres = uiState.availableGenres,
+            availableFormats = uiState.availableFormats,
+            isLoggedIn = uiState.isLoggedIn,
+            onOnlyMyListChange = { viewModel.setOnlyMyList(it) },
+            onGenreToggle = { viewModel.toggleGenre(it) },
+            onFormatToggle = { viewModel.toggleFormat(it) },
+            onClear = { viewModel.clearFilter() },
+            onDismiss = { showFilterSheet = false }
         )
     }
 }

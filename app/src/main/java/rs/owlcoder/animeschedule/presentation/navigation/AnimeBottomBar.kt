@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
@@ -48,6 +49,7 @@ data class BottomNavItem(
 private val items = listOf(
     BottomNavItem(Screen.Schedule, "Raspored", Icons.Default.CalendarMonth),
     BottomNavItem(Screen.Search, "Pretraga", Icons.Default.Search),
+    BottomNavItem(Screen.Seasonal, "Sezona", Icons.Default.AutoAwesome),
     BottomNavItem(Screen.MyList, "Lista", Icons.AutoMirrored.Filled.FormatListBulleted),
     BottomNavItem(Screen.Notifications, "Obaveštenja", Icons.Default.Notifications),
     BottomNavItem(Screen.Settings, "Podešavanja", Icons.Default.Settings)
@@ -90,7 +92,7 @@ fun AnimeBottomBar(navController: NavController, unreadCount: Int = 0) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 items.forEach { item ->

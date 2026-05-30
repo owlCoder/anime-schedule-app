@@ -23,8 +23,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
-import androidx.compose.ui.platform.LocalContext
+import rs.owlcoder.animeschedule.presentation.navigation.Screen
 import androidx.core.content.ContextCompat
 import android.content.res.Configuration
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -34,7 +35,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import rs.owlcoder.animeschedule.core.locale.LocaleHelper
-import rs.owlcoder.animeschedule.data.local.datastore.UserPreferences
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
 import rs.owlcoder.animeschedule.domain.usecase.GetUnreadCountUseCase
 import rs.owlcoder.animeschedule.presentation.navigation.AnimeBottomBar
@@ -130,6 +130,12 @@ class MainActivity : AppCompatActivity() {
                     )
                 } else {
                     val navController = rememberNavController()
+                    LaunchedEffect(navController) {
+                        pendingDeepLinkAnimeId?.let { animeId ->
+                            pendingDeepLinkAnimeId = null
+                            navController.navigate(Screen.Detail.createRoute(animeId))
+                        }
+                    }
                     Scaffold(
                         contentWindowInsets = WindowInsets(0, 0, 0, 0),
                     ) { innerPadding ->
@@ -140,7 +146,6 @@ class MainActivity : AppCompatActivity() {
                                 onRestartForLanguage = { lang ->
                                     scope.launch {
                                         prefsDataStore.setAppLanguage(lang)
-                                        // LocalContext is re-wrapped via effectiveLanguage → no Activity restart needed
                                     }
                                 }
                             )
@@ -160,12 +165,21 @@ class MainActivity : AppCompatActivity() {
         handleOAuthIntent(intent)
     }
 
+    var pendingDeepLinkAnimeId: Int? = null
+        private set
+
     private fun handleOAuthIntent(intent: Intent) {
         val data = intent.data ?: return
-        if (data.scheme == "rs.owlcoder.animeschedule" && data.host == "oauth") {
-            val code = data.getQueryParameter("code") ?: return
-            val state = data.getQueryParameter("state")
-            authViewModel.handleCallback(code, state)
+        when {
+            data.scheme == "rs.owlcoder.animeschedule" && data.host == "oauth" -> {
+                val code = data.getQueryParameter("code") ?: return
+                val state = data.getQueryParameter("state")
+                authViewModel.handleCallback(code, state)
+            }
+            data.scheme == "rs.owlcoder.animeschedule" && data.host == "detail" -> {
+                val animeId = data.lastPathSegment?.toIntOrNull() ?: return
+                pendingDeepLinkAnimeId = animeId
+            }
         }
     }
 

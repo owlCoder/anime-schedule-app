@@ -10,6 +10,7 @@ import rs.owlcoder.animeschedule.data.repository.MalRepositoryImpl
 import rs.owlcoder.animeschedule.data.repository.NotificationRepositoryImpl
 import rs.owlcoder.animeschedule.data.repository.ScheduleRepositoryImpl
 import rs.owlcoder.animeschedule.data.repository.SearchRepositoryImpl
+import rs.owlcoder.animeschedule.data.repository.SeasonalRepositoryImpl
 import rs.owlcoder.animeschedule.data.repository.SettingsRepositoryImpl
 import rs.owlcoder.animeschedule.domain.repository.AnimeDetailRepository
 import rs.owlcoder.animeschedule.domain.repository.AuthRepository
@@ -17,6 +18,7 @@ import rs.owlcoder.animeschedule.domain.repository.MalRepository
 import rs.owlcoder.animeschedule.domain.repository.NotificationRepository
 import rs.owlcoder.animeschedule.domain.repository.ScheduleRepository
 import rs.owlcoder.animeschedule.domain.repository.SearchRepository
+import rs.owlcoder.animeschedule.domain.repository.SeasonalRepository
 import rs.owlcoder.animeschedule.domain.repository.SettingsRepository
 import javax.inject.Singleton
 
@@ -30,4 +32,5 @@ abstract class RepositoryModule {
     @Binds @Singleton abstract fun bindSettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository
     @Binds @Singleton abstract fun bindSearchRepository(impl: SearchRepositoryImpl): SearchRepository
     @Binds @Singleton abstract fun bindNotificationRepository(impl: NotificationRepositoryImpl): NotificationRepository
+    @Binds @Singleton abstract fun bindSeasonalRepository(impl: SeasonalRepositoryImpl): SeasonalRepository
 }

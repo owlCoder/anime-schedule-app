@@ -8,12 +8,14 @@ import rs.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import rs.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferences
 import rs.owlcoder.animeschedule.domain.model.AiringEpisode
+import rs.owlcoder.animeschedule.domain.model.AnimeSeason
 import rs.owlcoder.animeschedule.domain.model.AnimeDetail
 import rs.owlcoder.animeschedule.domain.model.AnimeSearchResult
 import rs.owlcoder.animeschedule.domain.model.AppNotification
 import rs.owlcoder.animeschedule.domain.model.MalListEntry
 import rs.owlcoder.animeschedule.domain.model.MalListUpdate
 import rs.owlcoder.animeschedule.domain.model.ScheduleDay
+import rs.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
 import java.time.ZoneId
 
 interface ScheduleRepository {
@@ -56,6 +58,10 @@ interface SettingsRepository {
 
 interface SearchRepository {
     suspend fun searchAnime(query: String, page: Int = 0): AppResult<List<AnimeSearchResult>>
+}
+
+interface SeasonalRepository {
+    suspend fun getSeasonalAnime(season: AnimeSeason, year: Int): AppResult<List<SeasonalAnimeItem>>
 }
 
 interface NotificationRepository {
