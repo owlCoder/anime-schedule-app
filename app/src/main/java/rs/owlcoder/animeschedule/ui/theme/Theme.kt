@@ -1,10 +1,15 @@
 package rs.owlcoder.animeschedule.ui.theme
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import rs.owlcoder.animeschedule.data.local.datastore.AccentColor
 import rs.owlcoder.animeschedule.data.local.datastore.ThemeMode
@@ -84,6 +89,51 @@ private fun Color.compositeOver(background: Color): Color {
 }
 
 @Composable
+private fun ColorScheme.animated(): ColorScheme {
+    val spec = tween<Color>(durationMillis = 350, easing = FastOutSlowInEasing)
+    val primary by animateColorAsState(primary, spec, label = "primary")
+    val onPrimary by animateColorAsState(onPrimary, spec, label = "onPrimary")
+    val primaryContainer by animateColorAsState(primaryContainer, spec, label = "primaryContainer")
+    val onPrimaryContainer by animateColorAsState(onPrimaryContainer, spec, label = "onPrimaryContainer")
+    val secondary by animateColorAsState(secondary, spec, label = "secondary")
+    val onSecondary by animateColorAsState(onSecondary, spec, label = "onSecondary")
+    val secondaryContainer by animateColorAsState(secondaryContainer, spec, label = "secondaryContainer")
+    val background by animateColorAsState(background, spec, label = "background")
+    val onBackground by animateColorAsState(onBackground, spec, label = "onBackground")
+    val surface by animateColorAsState(surface, spec, label = "surface")
+    val onSurface by animateColorAsState(onSurface, spec, label = "onSurface")
+    val surfaceVariant by animateColorAsState(surfaceVariant, spec, label = "surfaceVariant")
+    val onSurfaceVariant by animateColorAsState(onSurfaceVariant, spec, label = "onSurfaceVariant")
+    val outline by animateColorAsState(outline, spec, label = "outline")
+    val outlineVariant by animateColorAsState(outlineVariant, spec, label = "outlineVariant")
+    val error by animateColorAsState(error, spec, label = "error")
+    val onError by animateColorAsState(onError, spec, label = "onError")
+    val errorContainer by animateColorAsState(errorContainer, spec, label = "errorContainer")
+    val onErrorContainer by animateColorAsState(onErrorContainer, spec, label = "onErrorContainer")
+    return copy(
+        primary = primary,
+        onPrimary = onPrimary,
+        primaryContainer = primaryContainer,
+        onPrimaryContainer = onPrimaryContainer,
+        secondary = secondary,
+        onSecondary = onSecondary,
+        secondaryContainer = secondaryContainer,
+        background = background,
+        onBackground = onBackground,
+        surface = surface,
+        onSurface = onSurface,
+        surfaceVariant = surfaceVariant,
+        onSurfaceVariant = onSurfaceVariant,
+        outline = outline,
+        outlineVariant = outlineVariant,
+        error = error,
+        onError = onError,
+        errorContainer = errorContainer,
+        onErrorContainer = onErrorContainer,
+    )
+}
+
+@Composable
 fun AnimeScheduleTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
@@ -97,7 +147,7 @@ fun AnimeScheduleTheme(
     }
 
     val primary = accentPrimary(accentColor, dark = darkTheme)
-    val colorScheme = if (darkTheme) darkColors(primary) else lightColors(primary)
+    val colorScheme = (if (darkTheme) darkColors(primary) else lightColors(primary)).animated()
 
     MaterialTheme(
         colorScheme = colorScheme,

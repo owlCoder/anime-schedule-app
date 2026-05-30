@@ -67,6 +67,9 @@ import rs.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import rs.owlcoder.animeschedule.presentation.screens.settings.notifOffsetLabel
 import rs.owlcoder.animeschedule.ui.theme.accentPrimary
 
+// Returns EN or SR text based on selected language (used during onboarding before locale is applied)
+private fun AppLanguage.t(en: String, sr: String): String = if (this == AppLanguage.ENGLISH) en else sr
+
 @Composable
 fun OnboardingScreen(
     onComplete: () -> Unit,
@@ -94,22 +97,24 @@ fun OnboardingScreen(
             modifier = Modifier.weight(1f)
         ) { page ->
             when (page) {
-                0 -> WelcomePage()
-                1 -> LanguagePickerPage(
+                0 -> LanguagePickerPage(
                     selectedLanguage = selectedLanguage,
                     onLanguageChange = onLanguageChange
                 )
+                1 -> WelcomePage(lang = selectedLanguage)
                 2 -> ThemePickerPage(
                     selectedTheme = selectedTheme,
                     selectedAccent = selectedAccent,
                     onThemeChange = onThemeChange,
-                    onAccentChange = onAccentChange
+                    onAccentChange = onAccentChange,
+                    lang = selectedLanguage
                 )
-                3 -> FeaturesPage()
-                4 -> NotificationsPage(onSettingsChange = onNotifSettingsChange)
+                3 -> FeaturesPage(lang = selectedLanguage)
+                4 -> NotificationsPage(onSettingsChange = onNotifSettingsChange, lang = selectedLanguage)
                 5 -> MalLoginPage(
                     onLogin = onLogin,
-                    onComplete = onComplete
+                    onComplete = onComplete,
+                    lang = selectedLanguage
                 )
             }
         }
@@ -136,7 +141,7 @@ fun OnboardingScreen(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = if (isLastPage) "Počni" else "Dalje",
+                    text = if (isLastPage) selectedLanguage.t("Start", "Počni") else selectedLanguage.t("Next", "Dalje"),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(vertical = 4.dp)
@@ -150,7 +155,7 @@ fun OnboardingScreen(
                     onClick = { scope.launch { pagerState.animateScrollToPage(currentPage - 1) } }
                 ) {
                     Text(
-                        text = "Nazad",
+                        text = selectedLanguage.t("Back", "Nazad"),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -193,7 +198,7 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
 // ── Page 0: Welcome ──────────────────────────────────────────────────────────
 
 @Composable
-private fun WelcomePage() {
+private fun WelcomePage(lang: AppLanguage) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -218,7 +223,7 @@ private fun WelcomePage() {
         Spacer(Modifier.height(32.dp))
 
         Text(
-            text = "Dobrodošao u\nAnime Schedule",
+            text = lang.t("Welcome to\nAnime Schedule", "Dobrodošao u\nAnime Schedule"),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
@@ -228,7 +233,10 @@ private fun WelcomePage() {
         Spacer(Modifier.height(16.dp))
 
         Text(
-            text = "Prati raspored emitovanja anime serija u realnom vremenu i upravljaj MyAnimeList listom bez reklama.",
+            text = lang.t(
+                "Track anime airing schedules in real time and manage your MyAnimeList without ads.",
+                "Prati raspored emitovanja anime serija u realnom vremenu i upravljaj MyAnimeList listom bez reklama."
+            ),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -331,7 +339,8 @@ private fun ThemePickerPage(
     selectedTheme: ThemeMode,
     selectedAccent: AccentColor,
     onThemeChange: (ThemeMode) -> Unit,
-    onAccentChange: (AccentColor) -> Unit
+    onAccentChange: (AccentColor) -> Unit,
+    lang: AppLanguage
 ) {
     val isDark = isSystemInDarkTheme()
 
@@ -343,7 +352,7 @@ private fun ThemePickerPage(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Izaberi temu",
+            text = lang.t("Choose a theme", "Izaberi temu"),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
@@ -352,7 +361,7 @@ private fun ThemePickerPage(
         Spacer(Modifier.height(4.dp))
 
         Text(
-            text = "Uvek možeš promeniti u podešavanjima",
+            text = lang.t("You can always change this in Settings", "Uvek možeš promeniti u podešavanjima"),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -360,9 +369,9 @@ private fun ThemePickerPage(
         Spacer(Modifier.height(24.dp))
 
         val themeOptions = listOf(
-            Triple(ThemeMode.SYSTEM, "Sistemska", Icons.Default.AutoMode),
-            Triple(ThemeMode.LIGHT,  "Svetla",    Icons.Default.LightMode),
-            Triple(ThemeMode.DARK,   "Tamna",     Icons.Default.DarkMode)
+            Triple(ThemeMode.SYSTEM, lang.t("System", "Sistemska"), Icons.Default.AutoMode),
+            Triple(ThemeMode.LIGHT,  lang.t("Light", "Svetla"),     Icons.Default.LightMode),
+            Triple(ThemeMode.DARK,   lang.t("Dark", "Tamna"),       Icons.Default.DarkMode)
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -422,7 +431,7 @@ private fun ThemePickerPage(
         Spacer(Modifier.height(28.dp))
 
         Text(
-            text = "Boja akcenta",
+            text = lang.t("Accent color", "Boja akcenta"),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -480,7 +489,7 @@ private fun ThemePickerPage(
 // ── Page 2: Features ─────────────────────────────────────────────────────────
 
 @Composable
-private fun FeaturesPage() {
+private fun FeaturesPage(lang: AppLanguage) {
     data class Feature(
         val icon: ImageVector,
         val title: String,
@@ -490,23 +499,23 @@ private fun FeaturesPage() {
     val features = listOf(
         Feature(
             icon = Icons.Default.CalendarMonth,
-            title = "Raspored emitovanja",
-            subtitle = "Danas, sutra i ova nedelja u tvojoj vremenskoj zoni"
+            title = lang.t("Airing schedule", "Raspored emitovanja"),
+            subtitle = lang.t("Today, tomorrow and this week in your time zone", "Danas, sutra i ova nedelja u tvojoj vremenskoj zoni")
         ),
         Feature(
             icon = Icons.Default.FormatListBulleted,
-            title = "Moja MAL lista",
-            subtitle = "Pregledaj i ažuriraj svoju MyAnimeList listu"
+            title = lang.t("My MAL list", "Moja MAL lista"),
+            subtitle = lang.t("Browse and update your MyAnimeList list", "Pregledaj i ažuriraj svoju MyAnimeList listu")
         ),
         Feature(
             icon = Icons.Default.Notifications,
-            title = "Obaveštenja",
-            subtitle = "Automatska obaveštenja kada nova epizoda izađe"
+            title = lang.t("Notifications", "Obaveštenja"),
+            subtitle = lang.t("Automatic notifications when a new episode airs", "Automatska obaveštenja kada nova epizoda izađe")
         ),
         Feature(
             icon = Icons.Default.Search,
-            title = "Pretraga anime",
-            subtitle = "Pretraži bilo koji anime i dodaj ga na listu"
+            title = lang.t("Search anime", "Pretraga anime"),
+            subtitle = lang.t("Search any anime and add it to your list", "Pretraži bilo koji anime i dodaj ga na listu")
         )
     )
 
@@ -518,7 +527,7 @@ private fun FeaturesPage() {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Šta sve možeš",
+            text = lang.t("What you can do", "Šta sve možeš"),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
@@ -576,7 +585,8 @@ private val notifOffsetOptions = listOf(-30, -15, -5, 0, 5, 15, 30, 60)
 
 @Composable
 private fun NotificationsPage(
-    onSettingsChange: (enabled: Boolean, offsetMinutes: Int) -> Unit
+    onSettingsChange: (enabled: Boolean, offsetMinutes: Int) -> Unit,
+    lang: AppLanguage
 ) {
     var enabled by remember { mutableStateOf(true) }
     var selectedOffset by remember { mutableIntStateOf(0) }
@@ -606,7 +616,7 @@ private fun NotificationsPage(
         Spacer(Modifier.height(20.dp))
 
         Text(
-            "Obaveštenja",
+            lang.t("Notifications", "Obaveštenja"),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
@@ -615,7 +625,7 @@ private fun NotificationsPage(
         Spacer(Modifier.height(4.dp))
 
         Text(
-            "Obavesti me kada nova epizoda izađe",
+            lang.t("Notify me when a new episode airs", "Obavesti me kada nova epizoda izađe"),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -632,7 +642,7 @@ private fun NotificationsPage(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "Uključi obaveštenja",
+                lang.t("Enable notifications", "Uključi obaveštenja"),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
@@ -649,7 +659,7 @@ private fun NotificationsPage(
         Spacer(Modifier.height(16.dp))
 
         Text(
-            "KADA DA STIGNE",
+            lang.t("WHEN TO NOTIFY", "KADA DA STIGNE"),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             letterSpacing = androidx.compose.ui.unit.TextUnit(1.2f, androidx.compose.ui.unit.TextUnitType.Sp),
@@ -715,7 +725,8 @@ private fun NotificationsPage(
 @Composable
 private fun MalLoginPage(
     onLogin: (Context) -> Unit,
-    onComplete: () -> Unit
+    onComplete: () -> Unit,
+    lang: AppLanguage
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
 
@@ -727,7 +738,7 @@ private fun MalLoginPage(
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "Prijavi se na MyAnimeList",
+            text = lang.t("Sign in to MyAnimeList", "Prijavi se na MyAnimeList"),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
@@ -737,7 +748,7 @@ private fun MalLoginPage(
         Spacer(Modifier.height(8.dp))
 
         Text(
-            text = "Opciono — možeš se prijaviti i kasnije u podešavanjima",
+            text = lang.t("Optional — you can sign in later in Settings", "Opciono — možeš se prijaviti i kasnije u podešavanjima"),
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -780,7 +791,7 @@ private fun MalLoginPage(
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = "Prijavi se na MAL",
+                text = lang.t("Sign in to MAL", "Prijavi se na MAL"),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(vertical = 4.dp)
@@ -791,7 +802,7 @@ private fun MalLoginPage(
 
         TextButton(onClick = onComplete) {
             Text(
-                text = "Preskoči, prijavi se kasnije",
+                text = lang.t("Skip, sign in later", "Preskoči, prijavi se kasnije"),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

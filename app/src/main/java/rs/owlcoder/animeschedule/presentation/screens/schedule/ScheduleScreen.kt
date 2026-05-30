@@ -50,6 +50,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.res.stringResource
+import rs.owlcoder.animeschedule.R
 import rs.owlcoder.animeschedule.domain.model.AiringEpisode
 import rs.owlcoder.animeschedule.domain.model.ScheduleDay
 import rs.owlcoder.animeschedule.presentation.components.EmptyState
@@ -87,7 +89,7 @@ fun ScheduleScreen(
         topBar = {
             Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
                 TopAppBar(
-                    title = { Text("Raspored", style = MaterialTheme.typography.titleLarge) },
+                    title = { Text(stringResource(R.string.schedule_title), style = MaterialTheme.typography.titleLarge) },
                     windowInsets = WindowInsets.statusBars,
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surface
@@ -97,12 +99,17 @@ fun ScheduleScreen(
                     Modifier.fillMaxWidth().height(0.5.dp)
                         .background(MaterialTheme.colorScheme.outlineVariant)
                 )
+                val tabLabels = mapOf(
+                    ScheduleTab.TODAY to stringResource(R.string.schedule_tab_today),
+                    ScheduleTab.TOMORROW to stringResource(R.string.schedule_tab_tomorrow),
+                    ScheduleTab.WEEK to stringResource(R.string.schedule_tab_week)
+                )
                 IosSegmentedTabs(
                     tabs = ScheduleTab.entries,
                     selected = uiState.selectedTab,
                     onSelect = { viewModel.selectTab(it) },
                     icon = { tabIcons[it]!! },
-                    label = { it.label },
+                    label = { tabLabels[it]!! },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp, vertical = 10.dp)
@@ -323,8 +330,8 @@ private fun EpisodeList(
     if (episodes.isEmpty()) {
         EmptyState(
             icon = Icons.Default.CalendarMonth,
-            title = "Nema epizoda",
-            subtitle = "Nema emitovanja za ovaj period"
+            title = stringResource(R.string.schedule_empty_title),
+            subtitle = stringResource(R.string.schedule_empty_subtitle)
         )
         return
     }

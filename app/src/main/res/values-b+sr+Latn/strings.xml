@@ -94,6 +94,7 @@
 
     <!-- My list screen -->
     <string name="mylist_title">Moja lista</string>
+    <string name="mylist_search_placeholder">Pretraži moju listu</string>
     <string name="mylist_empty_title">Lista je prazna</string>
     <string name="mylist_empty_subtitle">Dodaj anime iz rasporeda ili pretrage</string>
     <string name="mylist_not_logged_in_title">Nisi prijavljen</string>
@@ -119,6 +120,67 @@
     <string name="detail_next_episode">Sledeća epizoda</string>
     <string name="detail_watch_trailer">Pogledaj trejler</string>
     <string name="detail_open_mal">Otvori na MAL</string>
+
+    <!-- Changelog screen -->
+    <string name="changelog_title">Istorija promena</string>
+    <string name="changelog_version_prefix">Verzija %s</string>
+
+    <!-- Changelog entries SR -->
+    <string name="cl_154_1">Promena jezika bez restarta aplikacije</string>
+    <string name="cl_154_2">Odabir jezika premešten na prvi korak onboardinga</string>
+    <string name="cl_154_3">Ispravka flash ekrana pri pokretanju</string>
+    <string name="cl_154_4">Animacija prelaza boja pri promeni teme</string>
+    <string name="cl_154_5">Svi ekrani koriste lokalizovane stringove</string>
+    <string name="cl_154_date">Maj 2026</string>
+
+    <string name="cl_11_1">Novi ekran za podešavanje teme i boje akcenta</string>
+    <string name="cl_11_2">AMOLED crna tema za bolju uštedu baterije</string>
+    <string name="cl_11_3">Navbar pill sa blur efektom i aktivnim stanjem ikonica</string>
+    <string name="cl_11_4">Ekran istorije promena</string>
+    <string name="cl_11_5">Redizajn ekrana O aplikaciji</string>
+    <string name="cl_11_6">Popravka vizuelnih grešaka u podešavanjima</string>
+    <string name="cl_11_date">Maj 2026</string>
+
+    <string name="cl_104_1">Popravka avatara koji se nije osvežavao nakon ponovne prijave</string>
+    <string name="cl_104_2">Uklonjen neiskorišćen kod u prezentacionom sloju</string>
+    <string name="cl_104_3">Stabilizacija OAuth toka za MAL prijavu</string>
+    <string name="cl_104_date">April 2026</string>
+
+    <string name="cl_103_1">Dodato edge-to-edge prikazivanje sadržaja</string>
+    <string name="cl_103_2">Popravka ID rezolucije za anime detalje (AniList ↔ MAL)</string>
+    <string name="cl_103_3">Reaktivni tok za MAL listu — ažuriranja odmah vidljiva</string>
+    <string name="cl_103_date">Mart 2026</string>
+
+    <string name="cl_102_1">Podrška za vremensku zonu u podešavanjima</string>
+    <string name="cl_102_2">Prikaz rasporeda u lokalnoj vremenskoj zoni korisnika</string>
+    <string name="cl_102_3">Dodati prazni ekrani za sve tabove</string>
+    <string name="cl_102_date">Februar 2026</string>
+
+    <string name="cl_101_1">Inicijalna podrška za MyAnimeList OAuth 2.0 + PKCE</string>
+    <string name="cl_101_2">Pretraga anime-a putem AniList GraphQL API-ja</string>
+    <string name="cl_101_3">Osnovna navigacija sa 5 tabova</string>
+    <string name="cl_101_date">Januar 2026</string>
+
+    <string name="cl_100_1">Prvo javno izdanje</string>
+    <string name="cl_100_2">Raspored emitovanja anime serija za danas, sutra i nedelju</string>
+    <string name="cl_100_3">Prikaz u vremenskoj zoni uređaja</string>
+    <string name="cl_100_date">Decembar 2025</string>
+
+    <!-- About screen -->
+    <string name="about_version_label">Verzija</string>
+    <string name="about_build_label">Build</string>
+    <string name="about_platform_label">Platforma</string>
+    <string name="about_package_label">Paket</string>
+    <string name="about_section_data_sources">Izvori podataka</string>
+    <string name="about_section_tech">Tehnologije</string>
+    <string name="about_data_schedule">Raspored</string>
+    <string name="about_data_list">Anime lista</string>
+    <string name="about_data_fallback">Rezervni</string>
+    <string name="about_data_auth">Prijava</string>
+    <string name="about_tech_language">Jezik</string>
+    <string name="about_tech_ui">UI</string>
+    <string name="about_tech_arch">Arhitektura</string>
+    <string name="about_version_prefix">Verzija %s</string>
 
     <!-- Common -->
     <string name="common_retry">Pokušaj ponovo</string>

@@ -37,10 +37,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import rs.owlcoder.animeschedule.R
 import rs.owlcoder.animeschedule.domain.model.AppNotification
 import rs.owlcoder.animeschedule.presentation.components.EmptyState
 import java.time.Instant
@@ -62,7 +64,7 @@ fun NotificationsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Obaveštenja", style = MaterialTheme.typography.titleLarge) },
+                title = { Text(stringResource(R.string.notif_screen_title), style = MaterialTheme.typography.titleLarge) },
                 windowInsets = WindowInsets.statusBars,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -72,7 +74,7 @@ fun NotificationsScreen(
                         IconButton(onClick = { viewModel.markAllRead() }) {
                             Icon(
                                 imageVector = Icons.Default.DoneAll,
-                                contentDescription = "Označi sve kao pročitano",
+                                contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -84,8 +86,8 @@ fun NotificationsScreen(
         if (notifications.isEmpty()) {
             EmptyState(
                 icon = Icons.Default.Notifications,
-                title = "Nema obaveštenja",
-                subtitle = "Ovde će se pojavljivati obaveštenja o novim epizodama",
+                title = stringResource(R.string.notif_screen_empty_title),
+                subtitle = stringResource(R.string.notif_screen_empty_subtitle),
                 modifier = Modifier.padding(innerPadding)
             )
         } else {

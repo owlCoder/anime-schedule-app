@@ -94,6 +94,7 @@
 
     <!-- My list screen -->
     <string name="mylist_title">My List</string>
+    <string name="mylist_search_placeholder">Search my list</string>
     <string name="mylist_empty_title">List is empty</string>
     <string name="mylist_empty_subtitle">Add anime from the schedule or search</string>
     <string name="mylist_not_logged_in_title">Not signed in</string>
@@ -119,6 +120,67 @@
     <string name="detail_next_episode">Next episode</string>
     <string name="detail_watch_trailer">Watch trailer</string>
     <string name="detail_open_mal">Open on MAL</string>
+
+    <!-- Changelog screen -->
+    <string name="changelog_title">Changelog</string>
+    <string name="changelog_version_prefix">Version %s</string>
+
+    <!-- Changelog entries EN -->
+    <string name="cl_154_1">Language switching without app restart</string>
+    <string name="cl_154_2">Language picker moved to first onboarding step</string>
+    <string name="cl_154_3">Fixed onboarding flash on startup</string>
+    <string name="cl_154_4">Smooth theme color transition animation</string>
+    <string name="cl_154_5">All screens now use localized strings</string>
+    <string name="cl_154_date">May 2026</string>
+
+    <string name="cl_11_1">New theme and accent color picker screen</string>
+    <string name="cl_11_2">AMOLED dark theme for better battery saving</string>
+    <string name="cl_11_3">Navbar pill with blur effect and active icon state</string>
+    <string name="cl_11_4">Changelog screen</string>
+    <string name="cl_11_5">Redesigned About screen</string>
+    <string name="cl_11_6">Fixed visual bugs in settings</string>
+    <string name="cl_11_date">May 2026</string>
+
+    <string name="cl_104_1">Fixed avatar not refreshing after re-login</string>
+    <string name="cl_104_2">Removed unused code in presentation layer</string>
+    <string name="cl_104_3">Stabilized OAuth flow for MAL login</string>
+    <string name="cl_104_date">April 2026</string>
+
+    <string name="cl_103_1">Added edge-to-edge content display</string>
+    <string name="cl_103_2">Fixed ID resolution for anime details (AniList ↔ MAL)</string>
+    <string name="cl_103_3">Reactive flow for MAL list — updates visible immediately</string>
+    <string name="cl_103_date">March 2026</string>
+
+    <string name="cl_102_1">Timezone support in settings</string>
+    <string name="cl_102_2">Schedule displayed in user\'s local timezone</string>
+    <string name="cl_102_3">Added empty states for all tabs</string>
+    <string name="cl_102_date">February 2026</string>
+
+    <string name="cl_101_1">Initial MyAnimeList OAuth 2.0 + PKCE support</string>
+    <string name="cl_101_2">Anime search via AniList GraphQL API</string>
+    <string name="cl_101_3">Basic navigation with 5 tabs</string>
+    <string name="cl_101_date">January 2026</string>
+
+    <string name="cl_100_1">First public release</string>
+    <string name="cl_100_2">Anime airing schedule for today, tomorrow and week</string>
+    <string name="cl_100_3">Display in device timezone</string>
+    <string name="cl_100_date">December 2025</string>
+
+    <!-- About screen -->
+    <string name="about_version_label">Version</string>
+    <string name="about_build_label">Build</string>
+    <string name="about_platform_label">Platform</string>
+    <string name="about_package_label">Package</string>
+    <string name="about_section_data_sources">Data sources</string>
+    <string name="about_section_tech">Technologies</string>
+    <string name="about_data_schedule">Schedule</string>
+    <string name="about_data_list">Anime list</string>
+    <string name="about_data_fallback">Fallback</string>
+    <string name="about_data_auth">Sign-in</string>
+    <string name="about_tech_language">Language</string>
+    <string name="about_tech_ui">UI</string>
+    <string name="about_tech_arch">Architecture</string>
+    <string name="about_version_prefix">Version %s</string>
 
     <!-- Common -->
     <string name="common_retry">Retry</string>

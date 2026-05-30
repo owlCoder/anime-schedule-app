@@ -48,10 +48,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import rs.owlcoder.animeschedule.R
 import rs.owlcoder.animeschedule.presentation.components.CountdownText
 import rs.owlcoder.animeschedule.presentation.components.ErrorBanner
 import rs.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
@@ -84,7 +86,7 @@ fun AnimeDetailScreen(
                         ) {
                             Icon(
                                 Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Nazad",
+                                contentDescription = null,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -250,7 +252,7 @@ fun AnimeDetailScreen(
                         ) {
                             Column(Modifier.padding(20.dp)) {
                                 Text(
-                                    "Opis",
+                                    stringResource(R.string.detail_synopsis),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold
                                 )
@@ -279,7 +281,7 @@ fun AnimeDetailScreen(
                         ) {
                             Column(Modifier.padding(20.dp)) {
                                 Text(
-                                    "Studio",
+                                    stringResource(R.string.detail_studios),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold
                                 )

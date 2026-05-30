@@ -25,7 +25,7 @@ import rs.owlcoder.animeschedule.domain.usecase.UpdateMalListEntryUseCase
 import java.time.LocalDate
 import javax.inject.Inject
 
-enum class ScheduleTab(val label: String) { TODAY("Danas"), TOMORROW("Sutra"), WEEK("Nedelja") }
+enum class ScheduleTab { TODAY, TOMORROW, WEEK }
 
 data class ScheduleUiState(
     val todayEpisodes: List<AiringEpisode> = emptyList(),

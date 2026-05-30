@@ -4,7 +4,7 @@
     android:viewportWidth="96"
     android:viewportHeight="96">
 
-    <!-- Dark background fill -->
+    <!-- Background -->
     <path
         android:fillColor="#0F0F1A"
         android:pathData="M0,0h96v96h-96z" />
@@ -13,80 +13,24 @@
         android:fillAlpha="0.35"
         android:pathData="M0,0h96v96h-96z" />
 
-    <!-- Screen/display shape -->
+    <!-- "A" left stroke -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,72 L33,28 L48,60 L35,60 L31,72 Z" />
+
+    <!-- "A" right stroke -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,60 L63,28 L76,72 L62,72 L58,60 Z" />
+
+    <!-- "A" crossbar -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M37,54 L59,54 L56,46 L40,46 Z" />
+
+    <!-- Blue dot accent bottom center -->
     <path
         android:fillColor="#2AABEE"
-        android:fillAlpha="0.18"
-        android:pathData="M16,22 Q16,17 21,17 L75,17 Q80,17 80,22 L80,74 Q80,79 75,79 L21,79 Q16,79 16,74 Z" />
-
-    <!-- Screen border -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#2AABEE"
-        android:strokeWidth="2"
-        android:pathData="M16,22 Q16,17 21,17 L75,17 Q80,17 80,22 L80,74 Q80,79 75,79 L21,79 Q16,79 16,74 Z" />
-
-    <!-- Title bar separator -->
-    <path
-        android:strokeColor="#2AABEE"
-        android:strokeWidth="1"
-        android:strokeAlpha="0.5"
-        android:pathData="M16,30 L80,30" />
-
-    <!-- Dot in title bar -->
-    <path
-        android:fillColor="#2AABEE"
-        android:pathData="M26,26 m-2.5,0 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0" />
-
-    <!-- Row 1 thumbnail -->
-    <path
-        android:fillColor="#2AABEE"
-        android:fillAlpha="0.7"
-        android:pathData="M22,36 Q22,34 24,34 L34,34 Q36,34 36,36 L36,46 Q36,48 34,48 L24,48 Q22,48 22,46 Z" />
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.2"
-        android:strokeLineCap="round"
-        android:pathData="M40,38 L72,38" />
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="1.6"
-        android:strokeAlpha="0.4"
-        android:strokeLineCap="round"
-        android:pathData="M40,44 L60,44" />
-
-    <!-- Row 2 thumbnail -->
-    <path
-        android:fillColor="#2AABEE"
-        android:fillAlpha="0.7"
-        android:pathData="M22,53 Q22,51 24,51 L34,51 Q36,51 36,53 L36,63 Q36,65 34,65 L24,65 Q22,65 22,63 Z" />
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.2"
-        android:strokeLineCap="round"
-        android:pathData="M40,55 L72,55" />
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="1.6"
-        android:strokeAlpha="0.4"
-        android:strokeLineCap="round"
-        android:pathData="M40,61 L55,61" />
-
-    <!-- Row 3 thumbnail -->
-    <path
-        android:fillColor="#2AABEE"
-        android:fillAlpha="0.7"
-        android:pathData="M22,70 Q22,68 24,68 L34,68 Q36,68 36,70 L36,76 Q36,78 34,78 L24,78 Q22,78 22,76 Z" />
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.2"
-        android:strokeLineCap="round"
-        android:pathData="M40,71 L72,71" />
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="1.6"
-        android:strokeAlpha="0.4"
-        android:strokeLineCap="round"
-        android:pathData="M40,76 L62,76" />
+        android:pathData="M48,77 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
 
 </vector>

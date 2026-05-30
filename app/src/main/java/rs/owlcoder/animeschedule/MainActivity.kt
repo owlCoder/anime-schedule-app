@@ -23,11 +23,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.key
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import android.content.res.Configuration
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import rs.owlcoder.animeschedule.core.locale.LocaleHelper
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferences
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
@@ -54,14 +59,31 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission()
     ) { /* permission result — no action needed, user decided */ }
 
+    private var currentLanguage: rs.owlcoder.animeschedule.data.local.datastore.AppLanguage? = null
+
+    fun applyLocale(language: rs.owlcoder.animeschedule.data.local.datastore.AppLanguage) {
+        if (currentLanguage == language) return
+        currentLanguage = language
+        val locale = LocaleHelper.resolveLocale(language)
+        val config = Configuration(resources.configuration)
+        config.setLocale(locale)
+        @Suppress("DEPRECATION")
+        resources.updateConfiguration(config, resources.displayMetrics)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         requestNotificationPermissionIfNeeded()
         intent?.let { handleOAuthIntent(it) }
+
+        // Read prefs synchronously on main thread to avoid onboarding flash.
+        // DataStore reads from disk only on first access; subsequent calls are instant from cache.
+        val initialPrefs = runBlocking { prefsDataStore.userPreferencesFlow.first() }
+
         setContent {
-            val prefs by prefsDataStore.userPreferencesFlow.collectAsState(initial = UserPreferences())
+            val prefs by prefsDataStore.userPreferencesFlow.collectAsState(initial = initialPrefs)
             val unreadCount by getUnreadCountUseCase().collectAsState(initial = 0)
             val scope = rememberCoroutineScope()
 
@@ -73,7 +95,11 @@ class MainActivity : AppCompatActivity() {
 
             val effectiveTheme = if (prefs.onboardingDone) prefs.themeMode else pendingTheme
             val effectiveAccent = if (prefs.onboardingDone) prefs.accentColor else pendingAccent
+            val effectiveLanguage = if (prefs.onboardingDone) prefs.appLanguage else pendingLanguage
 
+            applyLocale(effectiveLanguage)
+
+            key(effectiveLanguage) {
             AnimeScheduleTheme(themeMode = effectiveTheme, accentColor = effectiveAccent) {
                 if (!prefs.onboardingDone) {
                     OnboardingScreen(
@@ -96,7 +122,6 @@ class MainActivity : AppCompatActivity() {
                         onAccentChange = { pendingAccent = it },
                         onLanguageChange = { lang ->
                             pendingLanguage = lang
-                            LocaleHelper.applyLanguage(lang)
                         },
                         onNotifSettingsChange = { enabled, offset ->
                             pendingNotifEnabled = enabled
@@ -115,7 +140,7 @@ class MainActivity : AppCompatActivity() {
                                 onRestartForLanguage = { lang ->
                                     scope.launch {
                                         prefsDataStore.setAppLanguage(lang)
-                                        LocaleHelper.applyLanguage(lang)
+                                        // LocalContext is re-wrapped via effectiveLanguage → no Activity restart needed
                                     }
                                 }
                             )
@@ -126,6 +151,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+            } // key(effectiveLanguage)
         }
     }
 

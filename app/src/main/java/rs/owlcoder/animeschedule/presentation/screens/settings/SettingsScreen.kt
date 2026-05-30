@@ -68,10 +68,12 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import rs.owlcoder.animeschedule.R
 import rs.owlcoder.animeschedule.data.local.datastore.AccentColor
 import rs.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import rs.owlcoder.animeschedule.data.local.datastore.ThemeMode
@@ -98,7 +100,7 @@ fun SettingsScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = { Text("Podešavanja", style = MaterialTheme.typography.titleLarge) },
+                title = { Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.titleLarge) },
                 windowInsets = WindowInsets.statusBars,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -130,40 +132,35 @@ fun SettingsScreen(
                     SettingsRow(
                         icon = Icons.Default.DarkMode,
                         iconColor = Color(0xFF5C6BC0),
-                        title = "Tema",
+                        title = stringResource(R.string.settings_theme),
                         subtitle = when (uiState.themeMode) {
-                            ThemeMode.SYSTEM -> "Sistemska"
-                            ThemeMode.LIGHT -> "Svetla"
-                            ThemeMode.DARK -> "Tamna"
+                            ThemeMode.SYSTEM -> stringResource(R.string.settings_theme_system)
+                            ThemeMode.LIGHT -> stringResource(R.string.settings_theme_light)
+                            ThemeMode.DARK -> stringResource(R.string.settings_theme_dark)
                         },
                         onClick = { showThemePicker = true }
                     )
                     SettingsDivider()
+                    val notifSubtitle = if (uiState.notificationsEnabled)
+                        "${stringResource(R.string.settings_notifications_on)} · ${notifOffsetLabel(uiState.notificationOffsetMinutes)}"
+                    else
+                        stringResource(R.string.settings_notifications_off)
                     SettingsRow(
                         icon = Icons.Default.Notifications,
                         iconColor = Color(0xFFE53935),
-                        title = "Notifikacije",
-                        subtitle = buildString {
-                            append(if (uiState.notificationsEnabled) "Uključene" else "Isključene")
-                            if (uiState.notificationsEnabled) {
-                                append(" · ")
-                                append(notifOffsetLabel(uiState.notificationOffsetMinutes))
-                            }
-                        },
+                        title = stringResource(R.string.settings_notifications),
+                        subtitle = notifSubtitle,
                         onClick = { showNotifPicker = true }
                     )
                     SettingsDivider()
                     SettingsRow(
                         icon = Icons.Default.Translate,
                         iconColor = Color(0xFF1565C0),
-                        title = when (uiState.appLanguage) {
-                            AppLanguage.ENGLISH -> "Language"
-                            else -> "Jezik"
-                        },
+                        title = stringResource(R.string.settings_language),
                         subtitle = when (uiState.appLanguage) {
-                            AppLanguage.ENGLISH -> "English"
-                            AppLanguage.SERBIAN_LATIN -> "Srpski (latinica)"
-                            AppLanguage.SYSTEM -> "Sistemski / System"
+                            AppLanguage.ENGLISH -> stringResource(R.string.settings_language_english)
+                            AppLanguage.SERBIAN_LATIN -> stringResource(R.string.settings_language_serbian)
+                            AppLanguage.SYSTEM -> stringResource(R.string.settings_language_system)
                         },
                         onClick = { showLanguagePicker = true }
                     )
@@ -171,7 +168,7 @@ fun SettingsScreen(
                     SettingsRow(
                         icon = Icons.Default.Schedule,
                         iconColor = Color(0xFF43A047),
-                        title = "Vremenska zona",
+                        title = stringResource(R.string.settings_timezone),
                         subtitle = uiState.timezoneId.ifEmpty { ZoneId.systemDefault().id },
                         onClick = { showTimezonePicker = true }
                     )
@@ -184,16 +181,16 @@ fun SettingsScreen(
                     SettingsRow(
                         icon = Icons.Default.Update,
                         iconColor = Color(0xFF00897B),
-                        title = "Istorija promena",
-                        subtitle = "Šta je novo u aplikaciji",
+                        title = stringResource(R.string.settings_changelog),
+                        subtitle = stringResource(R.string.settings_changelog_subtitle),
                         onClick = onNavigateToChangelog
                     )
                     SettingsDivider()
                     SettingsRow(
                         icon = Icons.Default.Info,
                         iconColor = Color(0xFF039BE5),
-                        title = "O aplikaciji",
-                        subtitle = "Verzija, podaci, kontakt",
+                        title = stringResource(R.string.settings_about),
+                        subtitle = stringResource(R.string.settings_about_subtitle),
                         onClick = onNavigateToAbout
                     )
                 }
@@ -265,23 +262,23 @@ private fun ThemeBottomSheet(
                 .windowInsetsPadding(WindowInsets.navigationBars)
         ) {
             Text(
-                "Izgled",
+                stringResource(R.string.appearance_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 20.dp)
             )
 
             Text(
-                "Tema",
+                stringResource(R.string.appearance_theme_label),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
             val themeOptions = listOf(
-                Triple(ThemeMode.SYSTEM, "Sistemska", Icons.Default.AutoMode),
-                Triple(ThemeMode.LIGHT,  "Svetla",    Icons.Default.LightMode),
-                Triple(ThemeMode.DARK,   "Tamna",     Icons.Default.DarkMode)
+                Triple(ThemeMode.SYSTEM, stringResource(R.string.settings_theme_system), Icons.Default.AutoMode),
+                Triple(ThemeMode.LIGHT,  stringResource(R.string.settings_theme_light),  Icons.Default.LightMode),
+                Triple(ThemeMode.DARK,   stringResource(R.string.settings_theme_dark),   Icons.Default.DarkMode)
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -339,7 +336,7 @@ private fun ThemeBottomSheet(
             Spacer(Modifier.height(24.dp))
 
             Text(
-                "Boja akcenta",
+                stringResource(R.string.appearance_accent_label),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -458,7 +455,7 @@ private fun ProfileCard(
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    if (isLoggedIn) "Ulogovan" else "Nije ulogovan",
+                    if (isLoggedIn) stringResource(R.string.profile_logged_in) else stringResource(R.string.profile_not_logged_in),
                     style = MaterialTheme.typography.bodySmall,
                     color = if (isLoggedIn) MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.onSurfaceVariant
@@ -482,7 +479,7 @@ private fun ProfileCard(
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            "Odjavi",
+                            stringResource(R.string.profile_logout),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -506,7 +503,7 @@ private fun ProfileCard(
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            "Prijavi se",
+                            stringResource(R.string.profile_login),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -616,13 +613,13 @@ private fun TimezonePickerDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Vremenska zona",
+                    stringResource(R.string.timezone_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
                 TextButton(onClick = { onConfirm(selected) }) {
-                    Text("Potvrdi")
+                    Text(stringResource(R.string.timezone_confirm))
                 }
             }
 
@@ -677,11 +674,12 @@ private fun TimezonePickerDialog(
 
 private val notifOffsetOptions = listOf(-30, -15, -5, 0, 5, 15, 30, 60)
 
+@Composable
 fun notifOffsetLabel(minutes: Int): String = when {
-    minutes < 0  -> "${-minutes} min pre emitovanja"
-    minutes == 0 -> "Odmah pri emitovanju"
-    minutes < 60 -> "$minutes min posle emitovanja"
-    else         -> "${minutes / 60}h posle emitovanja"
+    minutes < 0  -> stringResource(R.string.notif_offset_before, -minutes)
+    minutes == 0 -> stringResource(R.string.notif_offset_immediate)
+    minutes < 60 -> stringResource(R.string.notif_offset_after_min, minutes)
+    else         -> stringResource(R.string.notif_offset_after_hour, minutes / 60)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -707,7 +705,7 @@ private fun NotifBottomSheet(
                 .windowInsetsPadding(WindowInsets.navigationBars)
         ) {
             Text(
-                "Notifikacije",
+                stringResource(R.string.settings_notifications),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -722,7 +720,7 @@ private fun NotifBottomSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Uključi obaveštenja",
+                    stringResource(R.string.onboarding_notif_enable),
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.weight(1f)
                 )
@@ -732,13 +730,13 @@ private fun NotifBottomSheet(
             if (enabled) {
                 Spacer(Modifier.height(20.dp))
                 Text(
-                    "Vreme obaveštenja",
+                    stringResource(R.string.notif_offset_title),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Text(
-                    "Kada da stigne obaveštenje u odnosu na emitovanje",
+                    stringResource(R.string.notif_offset_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 12.dp)
@@ -794,9 +792,9 @@ fun LanguageBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState()
     val options = listOf(
-        AppLanguage.SYSTEM to "Sistemski / System",
-        AppLanguage.ENGLISH to "English",
-        AppLanguage.SERBIAN_LATIN to "Srpski (latinica)"
+        AppLanguage.SYSTEM to stringResource(R.string.settings_language_system),
+        AppLanguage.ENGLISH to stringResource(R.string.settings_language_english),
+        AppLanguage.SERBIAN_LATIN to stringResource(R.string.settings_language_serbian)
     )
 
     ModalBottomSheet(
@@ -811,7 +809,7 @@ fun LanguageBottomSheet(
                 .windowInsetsPadding(WindowInsets.navigationBars)
         ) {
             Text(
-                "Jezik / Language",
+                stringResource(R.string.settings_language),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 20.dp)

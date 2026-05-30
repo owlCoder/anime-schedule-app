@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -94,7 +95,7 @@ fun AboutScreen(onBack: () -> Unit) {
             )
             Spacer(Modifier.height(3.dp))
             Text(
-                "Verzija ${BuildConfig.VERSION_NAME}",
+                stringResource(R.string.about_version_prefix, BuildConfig.VERSION_NAME),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -103,41 +104,41 @@ fun AboutScreen(onBack: () -> Unit) {
 
             // Main info card
             AboutSection(modifier = Modifier.padding(horizontal = 16.dp)) {
-                AboutRow(label = "Verzija", value = BuildConfig.VERSION_NAME)
+                AboutRow(label = stringResource(R.string.about_version_label), value = BuildConfig.VERSION_NAME)
                 AboutDivider()
-                AboutRow(label = "Build", value = BuildConfig.VERSION_CODE.toString())
+                AboutRow(label = stringResource(R.string.about_build_label), value = BuildConfig.VERSION_CODE.toString())
                 AboutDivider()
-                AboutRow(label = "Platforma", value = "Android 12+")
+                AboutRow(label = stringResource(R.string.about_platform_label), value = "Android 12+")
                 AboutDivider()
-                AboutRow(label = "Paket", value = "rs.owlcoder.animeschedule")
+                AboutRow(label = stringResource(R.string.about_package_label), value = "rs.owlcoder.animeschedule")
             }
 
             Spacer(Modifier.height(10.dp))
 
             // Data sources
-            AboutSectionHeader("Izvori podataka", modifier = Modifier.padding(horizontal = 16.dp))
+            AboutSectionHeader(stringResource(R.string.about_section_data_sources), modifier = Modifier.padding(horizontal = 16.dp))
             Spacer(Modifier.height(6.dp))
             AboutSection(modifier = Modifier.padding(horizontal = 16.dp)) {
-                AboutRow(label = "Raspored", value = "AniList GraphQL API")
+                AboutRow(label = stringResource(R.string.about_data_schedule), value = "AniList GraphQL API")
                 AboutDivider()
-                AboutRow(label = "Anime lista", value = "MyAnimeList API v2")
+                AboutRow(label = stringResource(R.string.about_data_list), value = "MyAnimeList API v2")
                 AboutDivider()
-                AboutRow(label = "Rezervni", value = "Jikan REST API")
+                AboutRow(label = stringResource(R.string.about_data_fallback), value = "Jikan REST API")
                 AboutDivider()
-                AboutRow(label = "Prijava", value = "OAuth 2.0 + PKCE")
+                AboutRow(label = stringResource(R.string.about_data_auth), value = "OAuth 2.0 + PKCE")
             }
 
             Spacer(Modifier.height(10.dp))
 
             // Tech stack
-            AboutSectionHeader("Tehnologije", modifier = Modifier.padding(horizontal = 16.dp))
+            AboutSectionHeader(stringResource(R.string.about_section_tech), modifier = Modifier.padding(horizontal = 16.dp))
             Spacer(Modifier.height(6.dp))
             AboutSection(modifier = Modifier.padding(horizontal = 16.dp)) {
-                AboutRow(label = "Jezik", value = "Kotlin")
+                AboutRow(label = stringResource(R.string.about_tech_language), value = "Kotlin")
                 AboutDivider()
-                AboutRow(label = "UI", value = "Jetpack Compose")
+                AboutRow(label = stringResource(R.string.about_tech_ui), value = "Jetpack Compose")
                 AboutDivider()
-                AboutRow(label = "Arhitektura", value = "MVVM + Clean")
+                AboutRow(label = stringResource(R.string.about_tech_arch), value = "MVVM + Clean")
                 AboutDivider()
                 AboutRow(label = "DI", value = "Hilt")
                 AboutDivider()

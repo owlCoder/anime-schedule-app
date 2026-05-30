@@ -46,9 +46,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import rs.owlcoder.animeschedule.R
 import rs.owlcoder.animeschedule.presentation.components.EmptyState
 import rs.owlcoder.animeschedule.presentation.components.ErrorBanner
 import rs.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
@@ -73,7 +75,7 @@ fun SearchScreen(
         topBar = {
             Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
                 TopAppBar(
-                    title = { Text("Pretraga", style = MaterialTheme.typography.titleLarge) },
+                    title = { Text(stringResource(R.string.search_title), style = MaterialTheme.typography.titleLarge) },
                     windowInsets = WindowInsets.statusBars,
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surface
@@ -91,7 +93,7 @@ fun SearchScreen(
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .onFocusChanged { fs -> if (fs.isFocused && localQuery.isEmpty()) showRecent = true },
-                    placeholder = { Text("Pretraži anime bazu MAL") },
+                    placeholder = { Text(stringResource(R.string.search_placeholder)) },
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(20.dp))
                     },
@@ -102,7 +104,7 @@ fun SearchScreen(
                                 viewModel.setQuery("")
                                 showRecent = true
                             }) {
-                                Icon(Icons.Default.Close, contentDescription = "Obriši", modifier = Modifier.size(18.dp))
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.search_clear_recent), modifier = Modifier.size(18.dp))
                             }
                         }
                     },
@@ -139,12 +141,12 @@ fun SearchScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    "Nedavne pretrage",
+                                    stringResource(R.string.search_recent),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.weight(1f)
                                 )
-                                TextButton(onClick = { viewModel.clearRecentSearches() }) { Text("Obriši") }
+                                TextButton(onClick = { viewModel.clearRecentSearches() }) { Text(stringResource(R.string.search_clear_recent)) }
                             }
                         }
                         items(recentSearches) { recent ->
@@ -175,13 +177,13 @@ fun SearchScreen(
                 uiState.error != null -> ErrorBanner(uiState.error!!)
                 uiState.noResults -> EmptyState(
                     icon = Icons.Default.Search,
-                    title = "Nema rezultata",
-                    subtitle = "Nije pronađen nijedan anime za \"$localQuery\""
+                    title = stringResource(R.string.search_no_results_title),
+                    subtitle = stringResource(R.string.search_no_results_subtitle)
                 )
                 localQuery.isEmpty() -> EmptyState(
                     icon = Icons.Default.Search,
-                    title = "Pretraži anime",
-                    subtitle = "Unesite naslov da pronađete anime"
+                    title = stringResource(R.string.search_empty_title),
+                    subtitle = stringResource(R.string.search_empty_subtitle)
                 )
                 else -> LazyColumn(Modifier.fillMaxSize()) {
                     items(uiState.results, key = { it.anilistId }) { result ->

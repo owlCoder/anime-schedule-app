@@ -51,11 +51,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import rs.owlcoder.animeschedule.R
 import rs.owlcoder.animeschedule.domain.model.WatchStatus
 import rs.owlcoder.animeschedule.presentation.components.EmptyState
 import rs.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
@@ -92,7 +94,7 @@ fun MyListScreen(
         topBar = {
             Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
                 TopAppBar(
-                    title = { Text("Moja lista", style = MaterialTheme.typography.titleLarge) },
+                    title = { Text(stringResource(R.string.mylist_title), style = MaterialTheme.typography.titleLarge) },
                     windowInsets = WindowInsets.statusBars,
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surface
@@ -105,12 +107,12 @@ fun MyListScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                         .clip(RoundedCornerShape(12.dp)),
-                    placeholder = { Text("Pretraži moju listu") },
+                    placeholder = { Text(stringResource(R.string.mylist_search_placeholder)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     trailingIcon = {
                         if (uiState.searchQuery.isNotEmpty()) {
                             IconButton(onClick = { viewModel.setSearchQuery("") }) {
-                                Icon(Icons.Default.Close, contentDescription = "Obriši")
+                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.search_clear_recent))
                             }
                         }
                     },
@@ -182,8 +184,8 @@ fun MyListScreen(
             if (uiState.entries.isEmpty() && !uiState.isLoading) {
                 EmptyState(
                     icon = Icons.AutoMirrored.Filled.FormatListBulleted,
-                    title = "Nema anime",
-                    subtitle = "Nema anime u kategoriji \"${uiState.activeFilter.displayName}\""
+                    title = stringResource(R.string.mylist_empty_title),
+                    subtitle = stringResource(R.string.mylist_empty_subtitle)
                 )
             } else {
                 LazyColumn(Modifier.fillMaxSize()) {
@@ -246,13 +248,13 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
                 )
             }
             Text(
-                "Prijavi se na MyAnimeList",
+                stringResource(R.string.mylist_not_logged_in_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
             Text(
-                "Potrebna je prijava da bi mogao da vidiš i upravljaš svojom anime listom.",
+                stringResource(R.string.mylist_not_logged_in_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -276,7 +278,7 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        "Prijavi se",
+                        stringResource(R.string.profile_login),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary
                     )

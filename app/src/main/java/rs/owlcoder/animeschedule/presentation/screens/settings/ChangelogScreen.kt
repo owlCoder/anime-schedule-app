@@ -39,72 +39,52 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import rs.owlcoder.animeschedule.R
 
 private data class ChangelogEntry(
     val version: String,
-    val date: String,
-    val changes: List<String>
+    val dateRes: Int,
+    val changeRes: List<Int>
 )
 
-private val changelog = listOf(
+private val changelogEntries = listOf(
+    ChangelogEntry(
+        version = "1.2.54",
+        dateRes = R.string.cl_154_date,
+        changeRes = listOf(R.string.cl_154_1, R.string.cl_154_2, R.string.cl_154_3, R.string.cl_154_4, R.string.cl_154_5)
+    ),
     ChangelogEntry(
         version = "1.1",
-        date = "Maj 2026",
-        changes = listOf(
-            "Novi ekran za podešavanje teme i boje akcenta",
-            "AMOLED crna tema za bolju uštedu baterije",
-            "Navbar pill sa blur efektom i aktivnim stanjem ikonica",
-            "Ekran istorije promena",
-            "Redizajn ekrana O aplikaciji",
-            "Popravka vizuelnih grešaka u podešavanjima"
-        )
+        dateRes = R.string.cl_11_date,
+        changeRes = listOf(R.string.cl_11_1, R.string.cl_11_2, R.string.cl_11_3, R.string.cl_11_4, R.string.cl_11_5, R.string.cl_11_6)
     ),
     ChangelogEntry(
         version = "1.0.4",
-        date = "April 2026",
-        changes = listOf(
-            "Popravka avatara koji se nije osvežavao nakon ponovne prijave",
-            "Uklonjen neiskorišćen kod u prezentacionom sloju",
-            "Stabilizacija OAuth toka za MAL prijavu"
-        )
+        dateRes = R.string.cl_104_date,
+        changeRes = listOf(R.string.cl_104_1, R.string.cl_104_2, R.string.cl_104_3)
     ),
     ChangelogEntry(
         version = "1.0.3",
-        date = "Mart 2026",
-        changes = listOf(
-            "Dodato edge-to-edge prikazivanje sadržaja",
-            "Popravka ID rezolucije za anime detalje (AniList ↔ MAL)",
-            "Reaktivni tok za MAL listu — ažuriranja odmah vidljiva"
-        )
+        dateRes = R.string.cl_103_date,
+        changeRes = listOf(R.string.cl_103_1, R.string.cl_103_2, R.string.cl_103_3)
     ),
     ChangelogEntry(
         version = "1.0.2",
-        date = "Februar 2026",
-        changes = listOf(
-            "Podrška za vremensku zonu u podešavanjima",
-            "Prikaz rasporeda u lokalnoj vremenskoj zoni korisnika",
-            "Dodati prazni ekrani za sve tabove"
-        )
+        dateRes = R.string.cl_102_date,
+        changeRes = listOf(R.string.cl_102_1, R.string.cl_102_2, R.string.cl_102_3)
     ),
     ChangelogEntry(
         version = "1.0.1",
-        date = "Januar 2026",
-        changes = listOf(
-            "Inicijalna podrška za MyAnimeList OAuth 2.0 + PKCE",
-            "Pretraga anime-a putem AniList GraphQL API-ja",
-            "Osnovna navigacija sa 5 tabova"
-        )
+        dateRes = R.string.cl_101_date,
+        changeRes = listOf(R.string.cl_101_1, R.string.cl_101_2, R.string.cl_101_3)
     ),
     ChangelogEntry(
         version = "1.0.0",
-        date = "Decembar 2025",
-        changes = listOf(
-            "Prvo javno izdanje",
-            "Raspored emitovanja anime serija za danas, sutra i nedelju",
-            "Prikaz u vremenskoj zoni uređaja"
-        )
+        dateRes = R.string.cl_100_date,
+        changeRes = listOf(R.string.cl_100_1, R.string.cl_100_2, R.string.cl_100_3)
     )
 )
 
@@ -115,10 +95,10 @@ fun ChangelogScreen(onBack: () -> Unit) {
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = { Text("Istorija promena", style = MaterialTheme.typography.titleLarge) },
+                title = { Text(stringResource(R.string.changelog_title), style = MaterialTheme.typography.titleLarge) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Nazad")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
                 },
                 windowInsets = WindowInsets.statusBars,
@@ -136,7 +116,7 @@ fun ChangelogScreen(onBack: () -> Unit) {
                 .padding(horizontal = 16.dp)
         ) {
             item { Spacer(Modifier.height(12.dp)) }
-            itemsIndexed(changelog) { index, entry ->
+            itemsIndexed(changelogEntries) { index, entry ->
                 ChangelogCard(entry = entry, expandedByDefault = index == 0)
                 Spacer(Modifier.height(10.dp))
             }
@@ -164,13 +144,13 @@ private fun ChangelogCard(entry: ChangelogEntry, expandedByDefault: Boolean) {
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        "Verzija ${entry.version}",
+                        stringResource(R.string.changelog_version_prefix, entry.version),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        entry.date,
+                        stringResource(entry.dateRes),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -189,7 +169,7 @@ private fun ChangelogCard(entry: ChangelogEntry, expandedByDefault: Boolean) {
                 exit = shrinkVertically()
             ) {
                 Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 14.dp)) {
-                    entry.changes.forEach { change ->
+                    entry.changeRes.forEach { resId ->
                         Row(
                             modifier = Modifier.padding(vertical = 3.dp),
                             verticalAlignment = Alignment.Top
@@ -201,7 +181,7 @@ private fun ChangelogCard(entry: ChangelogEntry, expandedByDefault: Boolean) {
                                 modifier = Modifier.width(16.dp)
                             )
                             Text(
-                                change,
+                                stringResource(resId),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
