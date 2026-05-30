@@ -1,6 +1,7 @@
 package rs.owlcoder.animeschedule
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -28,7 +29,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import rs.owlcoder.animeschedule.core.locale.LocaleHelper
 import rs.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferences
@@ -56,6 +59,22 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { /* permission result — no action needed, user decided */ }
 
+    // Read language synchronously before Activity inflation so strings load in the right locale.
+    // SharedPreferences is used here because DataStore cannot be read synchronously and Hilt
+    // is not yet initialized at attachBaseContext time.
+    override fun attachBaseContext(newBase: Context) {
+        val language = LocaleHelper.readLanguageSync(newBase)
+        super.attachBaseContext(LocaleHelper.wrapContext(newBase, language))
+    }
+
+    private fun restartActivity() {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        startActivity(intent)
+        finish()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -66,10 +85,6 @@ class MainActivity : ComponentActivity() {
             val prefs by prefsDataStore.userPreferencesFlow.collectAsState(initial = UserPreferences())
             val unreadCount by getUnreadCountUseCase().collectAsState(initial = 0)
             val scope = rememberCoroutineScope()
-
-            LaunchedEffect(prefs.appLanguage) {
-                LocaleHelper.applyLanguage(prefs.appLanguage)
-            }
 
             var pendingTheme by rememberSaveable { mutableStateOf(prefs.themeMode) }
             var pendingAccent by rememberSaveable { mutableStateOf(prefs.accentColor) }
@@ -92,6 +107,8 @@ class MainActivity : ComponentActivity() {
                                 prefsDataStore.setNotificationsEnabled(pendingNotifEnabled)
                                 prefsDataStore.setNotificationOffset(pendingNotifOffset)
                                 prefsDataStore.setOnboardingDone()
+                                // Persist language for attachBaseContext on next start
+                                LocaleHelper.saveLanguageSync(this@MainActivity, pendingLanguage)
                             }
                         },
                         onLogin = { context -> authViewModel.launchMalLogin(context) },
@@ -100,10 +117,7 @@ class MainActivity : ComponentActivity() {
                         selectedLanguage = pendingLanguage,
                         onThemeChange = { pendingTheme = it },
                         onAccentChange = { pendingAccent = it },
-                        onLanguageChange = {
-                            pendingLanguage = it
-                            LocaleHelper.applyLanguage(it)
-                        },
+                        onLanguageChange = { pendingLanguage = it },
                         onNotifSettingsChange = { enabled, offset ->
                             pendingNotifEnabled = enabled
                             pendingNotifOffset = offset
@@ -115,7 +129,11 @@ class MainActivity : ComponentActivity() {
                         contentWindowInsets = WindowInsets(0, 0, 0, 0),
                     ) { innerPadding ->
                         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-                            AnimeNavHost(navController, Modifier.fillMaxSize())
+                            AnimeNavHost(
+                                navController = navController,
+                                modifier = Modifier.fillMaxSize(),
+                                onRestartForLanguage = { restartActivity() }
+                            )
                             Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                                 AnimeBottomBar(navController, unreadCount = unreadCount)
                             }

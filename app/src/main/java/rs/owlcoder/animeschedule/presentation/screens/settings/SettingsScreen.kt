@@ -82,7 +82,8 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
     onNavigateToAbout: () -> Unit = {},
-    onNavigateToChangelog: () -> Unit = {}
+    onNavigateToChangelog: () -> Unit = {},
+    onRestartForLanguage: () -> Unit = {}
 ) {
     val uiState by settingsViewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -202,7 +203,12 @@ fun SettingsScreen(
     if (showLanguagePicker) {
         LanguageBottomSheet(
             currentLanguage = uiState.appLanguage,
-            onSelect = { settingsViewModel.setAppLanguage(it); showLanguagePicker = false },
+            onSelect = { lang ->
+                showLanguagePicker = false
+                settingsViewModel.setAppLanguage(lang)
+                rs.owlcoder.animeschedule.core.locale.LocaleHelper.saveLanguageSync(context, lang)
+                onRestartForLanguage()
+            },
             onDismiss = { showLanguagePicker = false }
         )
     }

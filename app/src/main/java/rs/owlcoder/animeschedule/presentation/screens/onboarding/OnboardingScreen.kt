@@ -634,6 +634,7 @@ private fun NotificationsPage(
             Text(
                 "Uključi obaveštenja",
                 style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f)
             )
             Switch(

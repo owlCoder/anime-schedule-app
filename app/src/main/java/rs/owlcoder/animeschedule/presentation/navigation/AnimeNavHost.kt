@@ -26,7 +26,11 @@ private val slidePopEnter = slideInHorizontally(initialOffsetX = { -it / 3 }) + 
 private val slidePopExit = slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
 
 @Composable
-fun AnimeNavHost(navController: NavHostController, modifier: Modifier = Modifier) {
+fun AnimeNavHost(
+    navController: NavHostController,
+    modifier: Modifier = Modifier,
+    onRestartForLanguage: () -> Unit = {}
+) {
     NavHost(
         navController = navController,
         startDestination = Screen.Schedule.route,
@@ -59,7 +63,8 @@ fun AnimeNavHost(navController: NavHostController, modifier: Modifier = Modifier
         composable(Screen.Settings.route) {
             SettingsScreen(
                 onNavigateToAbout = { navController.navigate(Screen.About.route) },
-                onNavigateToChangelog = { navController.navigate(Screen.Changelog.route) }
+                onNavigateToChangelog = { navController.navigate(Screen.Changelog.route) },
+                onRestartForLanguage = onRestartForLanguage
             )
         }
         composable(
