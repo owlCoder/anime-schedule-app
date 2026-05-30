@@ -24,6 +24,7 @@ data class UserPreferences(
     val lastScheduleSyncEpoch: Long = 0L,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val notificationsEnabled: Boolean = true,
+    val notificationOffsetMinutes: Int = 0,
     val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
     val onboardingDone: Boolean = false
 )

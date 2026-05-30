@@ -29,6 +29,10 @@ class SettingsRepositoryImpl @Inject constructor(
         prefsDataStore.setNotificationsEnabled(enabled)
     }
 
+    override suspend fun setNotificationOffset(minutes: Int) {
+        prefsDataStore.setNotificationOffset(minutes)
+    }
+
     override suspend fun setAccentColor(color: AccentColor) {
         prefsDataStore.setAccentColor(color)
     }

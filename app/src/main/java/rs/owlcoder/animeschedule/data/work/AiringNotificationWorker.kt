@@ -47,13 +47,18 @@ class AiringNotificationWorker @AssistedInject constructor(
             }
 
             val now = System.currentTimeMillis() / 1000L
+            val offsetSeconds = prefs.notificationOffsetMinutes * 60L
             // On first run (no existing notifications), check last 24h to catch up
             // On subsequent runs, check last 16 minutes (slight overlap with 15min period)
             val existingIds = notificationDao.getAllIds().toSet()
             val windowStart = if (existingIds.isEmpty()) now - 86400L else now - 960L
+            // Apply offset: positive = notify after airing, negative = notify before
+            // We query episodes whose (airingAt + offset) falls within our window
+            val adjustedNow = now - offsetSeconds
+            val adjustedStart = windowStart - offsetSeconds
 
             val recentEpisodes = airingEpisodeDao
-                .getAiringEpisodesInRange(windowStart, now)
+                .getAiringEpisodesInRange(adjustedStart, adjustedNow)
                 .first()
 
             val malEntries = malListEntryDao.getAll().first()

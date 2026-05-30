@@ -47,6 +47,7 @@ interface SettingsRepository {
     suspend fun setTimezoneId(timezoneId: String)
     suspend fun setThemeMode(mode: ThemeMode)
     suspend fun setNotificationsEnabled(enabled: Boolean)
+    suspend fun setNotificationOffset(minutes: Int)
     suspend fun setAccentColor(color: AccentColor)
     fun getEffectiveZoneId(prefs: UserPreferences): ZoneId
 }

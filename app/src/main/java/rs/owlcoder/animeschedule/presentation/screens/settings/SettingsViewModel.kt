@@ -21,6 +21,7 @@ data class SettingsUiState(
     val avatarUrl: String = "",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val notificationsEnabled: Boolean = true,
+    val notificationOffsetMinutes: Int = 0,
     val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE
 )
 
@@ -43,6 +44,7 @@ class SettingsViewModel @Inject constructor(
             avatarUrl = avatarUrl,
             themeMode = prefs.themeMode,
             notificationsEnabled = prefs.notificationsEnabled,
+            notificationOffsetMinutes = prefs.notificationOffsetMinutes,
             accentColor = prefs.accentColor
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
@@ -57,6 +59,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setNotificationsEnabled(enabled: Boolean) {
         viewModelScope.launch { settingsRepository.setNotificationsEnabled(enabled) }
+    }
+
+    fun setNotificationOffset(minutes: Int) {
+        viewModelScope.launch { settingsRepository.setNotificationOffset(minutes) }
     }
 
     fun setAccentColor(color: AccentColor) {

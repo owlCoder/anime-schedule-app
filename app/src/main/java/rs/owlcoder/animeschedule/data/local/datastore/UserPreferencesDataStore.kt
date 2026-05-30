@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +24,9 @@ class UserPreferencesDataStore @Inject constructor(
         val LAST_SYNC = longPreferencesKey("last_schedule_sync_epoch")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+        val NOTIFICATION_OFFSET = intPreferencesKey("notification_offset_minutes")
         val ACCENT_COLOR = stringPreferencesKey("accent_color")
+        val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = dataStore.data.map { prefs ->
@@ -35,7 +38,9 @@ class UserPreferencesDataStore @Inject constructor(
             lastScheduleSyncEpoch = prefs[Keys.LAST_SYNC] ?: 0L,
             themeMode = runCatching { ThemeMode.valueOf(prefs[Keys.THEME_MODE] ?: "") }.getOrDefault(ThemeMode.SYSTEM),
             notificationsEnabled = prefs[Keys.NOTIFICATIONS_ENABLED] ?: true,
-            accentColor = runCatching { AccentColor.valueOf(prefs[Keys.ACCENT_COLOR] ?: "") }.getOrDefault(AccentColor.TELEGRAM_BLUE)
+            notificationOffsetMinutes = prefs[Keys.NOTIFICATION_OFFSET] ?: 0,
+            accentColor = runCatching { AccentColor.valueOf(prefs[Keys.ACCENT_COLOR] ?: "") }.getOrDefault(AccentColor.TELEGRAM_BLUE),
+            onboardingDone = prefs[Keys.ONBOARDING_DONE] ?: false
         )
     }
 
@@ -63,7 +68,15 @@ class UserPreferencesDataStore @Inject constructor(
         dataStore.edit { it[Keys.NOTIFICATIONS_ENABLED] = enabled }
     }
 
+    suspend fun setNotificationOffset(minutes: Int) {
+        dataStore.edit { it[Keys.NOTIFICATION_OFFSET] = minutes }
+    }
+
     suspend fun setAccentColor(color: AccentColor) {
         dataStore.edit { it[Keys.ACCENT_COLOR] = color.name }
+    }
+
+    suspend fun setOnboardingDone() {
+        dataStore.edit { it[Keys.ONBOARDING_DONE] = true }
     }
 }
