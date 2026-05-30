@@ -28,18 +28,27 @@ class AnimeDetailRepositoryImpl @Inject constructor(
 ) : AnimeDetailRepository {
 
     override fun getAnimeDetail(animeId: Int): Flow<AppResult<AnimeDetail>> = flow {
-        // Ensure data is in cache (fetch if missing/stale)
         ensureDetailCached(animeId)
 
-        // Now combine reactive Room flows so edits to MAL list refresh UI instantly
+        // Resolve the canonical AnimeDetailEntity (may be stored under AniList or MAL ID)
+        val resolved = animeDetailDao.getByIdOnce(animeId) ?: animeDetailDao.getByMalId(animeId)
+
+        if (resolved == null) {
+            emit(AppResult.Error(AppError.NoCache) as AppResult<AnimeDetail>)
+            return@flow
+        }
+
+        // Use malId from entity to look up MAL list entry — mal_list_entries stores MAL IDs
+        val malObservable = resolved.malId?.let { malListEntryDao.observeByMalId(it) }
+            ?: malListEntryDao.observeByAnimeId(animeId)
+
         combine(
-            animeDetailDao.getById(animeId),
-            malListEntryDao.observeByAnimeId(animeId)
+            animeDetailDao.getById(resolved.animeId),
+            malObservable
         ) { entity, malEntity ->
-            val resolved = entity ?: animeDetailDao.getByMalId(animeId)
+            val detail = entity ?: resolved
             val malEntry = malEntity?.toDomain()
-            if (resolved != null) AppResult.Success(resolved.toDomain(malEntry))
-            else AppResult.Error(AppError.NoCache) as AppResult<AnimeDetail>
+            AppResult.Success(detail.toDomain(malEntry)) as AppResult<AnimeDetail>
         }.collect { emit(it) }
     }
 

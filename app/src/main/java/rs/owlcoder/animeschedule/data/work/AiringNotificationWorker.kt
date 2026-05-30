@@ -62,7 +62,9 @@ class AiringNotificationWorker @AssistedInject constructor(
                 .first()
 
             val malEntries = malListEntryDao.getAll().first()
-            val malIds = malEntries.map { it.malId }.toSet()
+            val malIds = malEntries
+                .filter { it.status == "watching" }
+                .map { it.malId }.toSet()
 
             Log.d(TAG, "episodes in window=${recentEpisodes.size}, malIds=${malIds.size}, existingNotifs=${existingIds.size}")
 

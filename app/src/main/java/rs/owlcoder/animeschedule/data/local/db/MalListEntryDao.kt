@@ -16,6 +16,9 @@ interface MalListEntryDao {
     @Query("SELECT * FROM mal_list_entries WHERE animeId = :animeId")
     fun observeByAnimeId(animeId: Int): Flow<MalListEntryEntity?>
 
+    @Query("SELECT * FROM mal_list_entries WHERE malId = :malId")
+    fun observeByMalId(malId: Int): Flow<MalListEntryEntity?>
+
     @Upsert
     suspend fun upsert(entity: MalListEntryEntity)
 
