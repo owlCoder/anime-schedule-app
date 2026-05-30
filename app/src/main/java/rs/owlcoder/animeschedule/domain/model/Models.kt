@@ -15,6 +15,7 @@ data class MalListEntry(
 data class AiringEpisode(
     val airingId: Int,
     val animeId: Int,
+    val malId: Int?,
     val episode: Int,
     val airingAtEpochSeconds: Long,
     val title: String,
@@ -47,6 +48,7 @@ data class Studio(val id: Int, val name: String, val isMain: Boolean)
 
 data class AnimeDetail(
     val animeId: Int,
+    val malId: Int?,
     val titleRomaji: String?,
     val titleEnglish: String?,
     val titleNative: String?,

@@ -41,6 +41,7 @@ class DetailViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DetailUiState())
 
     fun updateListEntry(update: MalListUpdate) {
-        viewModelScope.launch { updateMalListEntryUseCase(animeId, update) }
+        val malId = uiState.value.detail?.malId ?: uiState.value.detail?.malListEntry?.animeId ?: return
+        viewModelScope.launch { updateMalListEntryUseCase(malId, update) }
     }
 }

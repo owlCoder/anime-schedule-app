@@ -80,7 +80,7 @@ fun ScheduleScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    var editingAnimeId by remember { mutableStateOf<Int?>(null) }
+    var editingEpisode by remember { mutableStateOf<AiringEpisode?>(null) }
     var showFilterSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.error) {
@@ -167,15 +167,15 @@ fun ScheduleScreen(
                         episodes = uiState.todayEpisodes,
                         isLoggedIn = uiState.isLoggedIn,
                         onCardClick = { onAnimeClick(it.animeId) },
-                        onIncrementEpisode = { viewModel.incrementEpisode(it.animeId) },
-                        onEditStatus = { editingAnimeId = it.animeId }
+                        onIncrementEpisode = { it.malId?.let { mid -> viewModel.incrementEpisode(mid) } },
+                        onEditStatus = { editingEpisode = it }
                     )
                     ScheduleTab.TOMORROW -> EpisodeList(
                         episodes = uiState.tomorrowEpisodes,
                         isLoggedIn = uiState.isLoggedIn,
                         onCardClick = { onAnimeClick(it.animeId) },
-                        onIncrementEpisode = { viewModel.incrementEpisode(it.animeId) },
-                        onEditStatus = { editingAnimeId = it.animeId }
+                        onIncrementEpisode = { it.malId?.let { mid -> viewModel.incrementEpisode(mid) } },
+                        onEditStatus = { editingEpisode = it }
                     )
                     ScheduleTab.WEEK -> {
                         val dayEpisodes = uiState.weekDays
@@ -185,8 +185,8 @@ fun ScheduleScreen(
                             episodes = dayEpisodes,
                             isLoggedIn = uiState.isLoggedIn,
                             onCardClick = { onAnimeClick(it.animeId) },
-                            onIncrementEpisode = { viewModel.incrementEpisode(it.animeId) },
-                            onEditStatus = { editingAnimeId = it.animeId }
+                            onIncrementEpisode = { it.malId?.let { mid -> viewModel.incrementEpisode(mid) } },
+                            onEditStatus = { editingEpisode = it }
                         )
                     }
                 }
@@ -194,18 +194,12 @@ fun ScheduleScreen(
         }
     }
 
-    if (editingAnimeId != null) {
-        val ep = when (uiState.selectedTab) {
-            ScheduleTab.TODAY -> uiState.todayEpisodes
-            ScheduleTab.TOMORROW -> uiState.tomorrowEpisodes
-            ScheduleTab.WEEK -> uiState.weekDays.flatMap { it.episodes }
-        }.find { it.animeId == editingAnimeId }
-
+    editingEpisode?.malId?.let { malId ->
         ListStatusBottomSheet(
-            animeId = editingAnimeId!!,
-            currentEntry = ep?.malListEntry,
-            onDismiss = { editingAnimeId = null },
-            onConfirm = { animeId, update -> viewModel.updateEntry(animeId, update) }
+            animeId = malId,
+            currentEntry = editingEpisode?.malListEntry,
+            onDismiss = { editingEpisode = null },
+            onConfirm = { id, update -> viewModel.updateEntry(id, update) }
         )
     }
 

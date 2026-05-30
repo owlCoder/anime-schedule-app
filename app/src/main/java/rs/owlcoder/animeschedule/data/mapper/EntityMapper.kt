@@ -27,6 +27,7 @@ fun NotificationEntity.toDomain(): AppNotification = AppNotification(
 fun AiringEpisodeEntity.toDomain(malListEntry: MalListEntry? = null): AiringEpisode = AiringEpisode(
     airingId = airingId,
     animeId = animeId,
+    malId = malId,
     episode = episode,
     airingAtEpochSeconds = airingAtEpochSeconds,
     title = title,
@@ -71,6 +72,7 @@ fun AnimeDetailEntity.toDomain(malListEntry: MalListEntry? = null): AnimeDetail 
 
     return AnimeDetail(
         animeId = animeId,
+        malId = malId,
         titleRomaji = titleRomaji,
         titleEnglish = titleEnglish,
         titleNative = titleNative,

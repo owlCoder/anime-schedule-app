@@ -119,7 +119,7 @@ fun AnimeDetailQuery.Media.toEntity(nowEpoch: Long): AnimeDetailEntity {
 
     return AnimeDetailEntity(
         animeId = id,
-        malId = null,
+        malId = idMal,
         titleRomaji = title?.romaji,
         titleEnglish = title?.english,
         titleNative = title?.native,
