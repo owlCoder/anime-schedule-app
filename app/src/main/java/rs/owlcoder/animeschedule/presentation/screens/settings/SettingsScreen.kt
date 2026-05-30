@@ -36,6 +36,8 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
@@ -83,13 +85,13 @@ fun SettingsScreen(
     authViewModel: AuthViewModel = hiltViewModel(),
     onNavigateToAbout: () -> Unit = {},
     onNavigateToChangelog: () -> Unit = {},
-    onRestartForLanguage: () -> Unit = {}
+    onRestartForLanguage: (AppLanguage) -> Unit = {}
 ) {
     val uiState by settingsViewModel.uiState.collectAsState()
     val context = LocalContext.current
     var showTimezonePicker by remember { mutableStateOf(false) }
     var showThemePicker by remember { mutableStateOf(false) }
-    var showNotifOffsetPicker by remember { mutableStateOf(false) }
+    var showNotifPicker by remember { mutableStateOf(false) }
     var showLanguagePicker by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -137,37 +139,37 @@ fun SettingsScreen(
                         onClick = { showThemePicker = true }
                     )
                     SettingsDivider()
-                    SettingsRowSwitch(
+                    SettingsRow(
                         icon = Icons.Default.Notifications,
                         iconColor = Color(0xFFE53935),
                         title = "Notifikacije",
-                        subtitle = if (uiState.notificationsEnabled) "Uključene" else "Isključene",
-                        checked = uiState.notificationsEnabled,
-                        onCheckedChange = { settingsViewModel.setNotificationsEnabled(it) }
+                        subtitle = buildString {
+                            append(if (uiState.notificationsEnabled) "Uključene" else "Isključene")
+                            if (uiState.notificationsEnabled) {
+                                append(" · ")
+                                append(notifOffsetLabel(uiState.notificationOffsetMinutes))
+                            }
+                        },
+                        onClick = { showNotifPicker = true }
                     )
                     SettingsDivider()
                     SettingsRow(
-                        icon = Icons.Default.Notifications,
-                        iconColor = Color(0xFFFF7043),
-                        title = "Vreme obaveštenja",
-                        subtitle = notifOffsetLabel(uiState.notificationOffsetMinutes),
-                        onClick = { showNotifOffsetPicker = true }
-                    )
-                    SettingsDivider()
-                    SettingsRow(
-                        icon = Icons.Default.Language,
+                        icon = Icons.Default.Translate,
                         iconColor = Color(0xFF1565C0),
-                        title = "Jezik / Language",
+                        title = when (uiState.appLanguage) {
+                            AppLanguage.ENGLISH -> "Language"
+                            else -> "Jezik"
+                        },
                         subtitle = when (uiState.appLanguage) {
                             AppLanguage.ENGLISH -> "English"
                             AppLanguage.SERBIAN_LATIN -> "Srpski (latinica)"
-                            AppLanguage.SYSTEM -> "Sistemski"
+                            AppLanguage.SYSTEM -> "Sistemski / System"
                         },
                         onClick = { showLanguagePicker = true }
                     )
                     SettingsDivider()
                     SettingsRow(
-                        icon = Icons.Default.Language,
+                        icon = Icons.Default.Schedule,
                         iconColor = Color(0xFF43A047),
                         title = "Vremenska zona",
                         subtitle = uiState.timezoneId.ifEmpty { ZoneId.systemDefault().id },
@@ -205,11 +207,19 @@ fun SettingsScreen(
             currentLanguage = uiState.appLanguage,
             onSelect = { lang ->
                 showLanguagePicker = false
-                settingsViewModel.setAppLanguage(lang)
-                rs.owlcoder.animeschedule.core.locale.LocaleHelper.saveLanguageSync(context, lang)
-                onRestartForLanguage()
+                onRestartForLanguage(lang)
             },
             onDismiss = { showLanguagePicker = false }
+        )
+    }
+
+    if (showNotifPicker) {
+        NotifBottomSheet(
+            enabled = uiState.notificationsEnabled,
+            currentOffset = uiState.notificationOffsetMinutes,
+            onEnabledChange = { settingsViewModel.setNotificationsEnabled(it) },
+            onOffsetSelect = { settingsViewModel.setNotificationOffset(it) },
+            onDismiss = { showNotifPicker = false }
         )
     }
 
@@ -228,14 +238,6 @@ fun SettingsScreen(
             onThemeChange = { settingsViewModel.setThemeMode(it) },
             onAccentChange = { settingsViewModel.setAccentColor(it) },
             onDismiss = { showThemePicker = false }
-        )
-    }
-
-    if (showNotifOffsetPicker) {
-        NotifOffsetBottomSheet(
-            currentOffset = uiState.notificationOffsetMinutes,
-            onSelect = { settingsViewModel.setNotificationOffset(it); showNotifOffsetPicker = false },
-            onDismiss = { showNotifOffsetPicker = false }
         )
     }
 }
@@ -353,7 +355,7 @@ private fun ThemeBottomSheet(
                 AccentColor.RED           to "Crvena",
                 AccentColor.CYAN          to "Cijan",
                 AccentColor.INDIGO        to "Indigo",
-                AccentColor.TEAL          to "Teal",
+                AccentColor.TEAL         to "Teal",
                 AccentColor.YELLOW        to "Žuta",
                 AccentColor.DEEP_PURPLE   to "Duboka ljubičasta"
             )
@@ -394,7 +396,6 @@ private fun ThemeBottomSheet(
                                 }
                             }
                         }
-                        // Fill remaining spots in last row for even spacing
                         repeat(6 - rowItems.size) {
                             Spacer(Modifier.size(36.dp))
                         }
@@ -565,35 +566,6 @@ private fun SettingsRow(
 }
 
 @Composable
-private fun SettingsRowSwitch(
-    icon: ImageVector,
-    iconColor: Color,
-    title: String,
-    subtitle: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconBadge(icon = icon, color = iconColor)
-        Spacer(Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
-    }
-}
-
-@Composable
 private fun IconBadge(icon: ImageVector, color: Color) {
     Box(
         modifier = Modifier
@@ -701,7 +673,7 @@ private fun TimezonePickerDialog(
     }
 }
 
-// ── Notification offset helpers ───────────────────────────────────────────────
+// ── Notification helpers ──────────────────────────────────────────────────────
 
 private val notifOffsetOptions = listOf(-30, -15, -5, 0, 5, 15, 30, 60)
 
@@ -714,9 +686,11 @@ fun notifOffsetLabel(minutes: Int): String = when {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun NotifOffsetBottomSheet(
+private fun NotifBottomSheet(
+    enabled: Boolean,
     currentOffset: Int,
-    onSelect: (Int) -> Unit,
+    onEnabledChange: (Boolean) -> Unit,
+    onOffsetSelect: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
@@ -733,49 +707,75 @@ private fun NotifOffsetBottomSheet(
                 .windowInsetsPadding(WindowInsets.navigationBars)
         ) {
             Text(
-                "Vreme obaveštenja",
+                "Notifikacije",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 6.dp)
-            )
-            Text(
-                "Kada da stigne obaveštenje u odnosu na emitovanje",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 20.dp)
+                modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            notifOffsetOptions.forEach { minutes ->
-                val isSelected = minutes == currentOffset
-                val bgColor by animateColorAsState(
-                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
-                                  else MaterialTheme.colorScheme.surface,
-                    label = "offsetBg"
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Uključi obaveštenja",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.weight(1f)
                 )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(bgColor)
-                        .clickable { onSelect(minutes) }
-                        .padding(horizontal = 12.dp, vertical = 13.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        notifOffsetLabel(minutes),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (isSelected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurface,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        modifier = Modifier.weight(1f)
+                Switch(checked = enabled, onCheckedChange = onEnabledChange)
+            }
+
+            if (enabled) {
+                Spacer(Modifier.height(20.dp))
+                Text(
+                    "Vreme obaveštenja",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    "Kada da stigne obaveštenje u odnosu na emitovanje",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
+                notifOffsetOptions.forEach { minutes ->
+                    val isSelected = minutes == currentOffset
+                    val bgColor by animateColorAsState(
+                        targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+                                      else MaterialTheme.colorScheme.surface,
+                        label = "offsetBg"
                     )
-                    if (isSelected) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(bgColor)
+                            .clickable { onOffsetSelect(minutes) }
+                            .padding(horizontal = 12.dp, vertical = 13.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            notifOffsetLabel(minutes),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurface,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            modifier = Modifier.weight(1f)
                         )
+                        if (isSelected) {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }

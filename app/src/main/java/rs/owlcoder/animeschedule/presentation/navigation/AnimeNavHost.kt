@@ -16,6 +16,7 @@ import rs.owlcoder.animeschedule.presentation.screens.mylist.MyListScreen
 import rs.owlcoder.animeschedule.presentation.screens.notifications.NotificationsScreen
 import rs.owlcoder.animeschedule.presentation.screens.schedule.ScheduleScreen
 import rs.owlcoder.animeschedule.presentation.screens.search.SearchScreen
+import rs.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import rs.owlcoder.animeschedule.presentation.screens.settings.AboutScreen
 import rs.owlcoder.animeschedule.presentation.screens.settings.ChangelogScreen
 import rs.owlcoder.animeschedule.presentation.screens.settings.SettingsScreen
@@ -29,7 +30,7 @@ private val slidePopExit = slideOutHorizontally(targetOffsetX = { it }) + fadeOu
 fun AnimeNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    onRestartForLanguage: () -> Unit = {}
+    onRestartForLanguage: (AppLanguage) -> Unit = {}
 ) {
     NavHost(
         navController = navController,

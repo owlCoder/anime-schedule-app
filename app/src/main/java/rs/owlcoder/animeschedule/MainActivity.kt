@@ -1,7 +1,6 @@
 package rs.owlcoder.animeschedule
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Alignment
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,11 +27,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import rs.owlcoder.animeschedule.core.locale.LocaleHelper
-import rs.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferences
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
 import rs.owlcoder.animeschedule.domain.usecase.GetUnreadCountUseCase
@@ -59,22 +54,6 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { /* permission result — no action needed, user decided */ }
 
-    // Read language synchronously before Activity inflation so strings load in the right locale.
-    // SharedPreferences is used here because DataStore cannot be read synchronously and Hilt
-    // is not yet initialized at attachBaseContext time.
-    override fun attachBaseContext(newBase: Context) {
-        val language = LocaleHelper.readLanguageSync(newBase)
-        super.attachBaseContext(LocaleHelper.wrapContext(newBase, language))
-    }
-
-    private fun restartActivity() {
-        val intent = Intent(this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        startActivity(intent)
-        finish()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -92,7 +71,6 @@ class MainActivity : ComponentActivity() {
             var pendingNotifEnabled by rememberSaveable { mutableStateOf(true) }
             var pendingNotifOffset by rememberSaveable { mutableStateOf(0) }
 
-            // Sync pending values from prefs on first load (before onboarding is shown)
             val effectiveTheme = if (prefs.onboardingDone) prefs.themeMode else pendingTheme
             val effectiveAccent = if (prefs.onboardingDone) prefs.accentColor else pendingAccent
 
@@ -107,8 +85,7 @@ class MainActivity : ComponentActivity() {
                                 prefsDataStore.setNotificationsEnabled(pendingNotifEnabled)
                                 prefsDataStore.setNotificationOffset(pendingNotifOffset)
                                 prefsDataStore.setOnboardingDone()
-                                // Persist language for attachBaseContext on next start
-                                LocaleHelper.saveLanguageSync(this@MainActivity, pendingLanguage)
+                                LocaleHelper.applyLanguage(pendingLanguage)
                             }
                         },
                         onLogin = { context -> authViewModel.launchMalLogin(context) },
@@ -117,7 +94,10 @@ class MainActivity : ComponentActivity() {
                         selectedLanguage = pendingLanguage,
                         onThemeChange = { pendingTheme = it },
                         onAccentChange = { pendingAccent = it },
-                        onLanguageChange = { pendingLanguage = it },
+                        onLanguageChange = { lang ->
+                            pendingLanguage = lang
+                            LocaleHelper.applyLanguage(lang)
+                        },
                         onNotifSettingsChange = { enabled, offset ->
                             pendingNotifEnabled = enabled
                             pendingNotifOffset = offset
@@ -132,7 +112,12 @@ class MainActivity : ComponentActivity() {
                             AnimeNavHost(
                                 navController = navController,
                                 modifier = Modifier.fillMaxSize(),
-                                onRestartForLanguage = { restartActivity() }
+                                onRestartForLanguage = { lang ->
+                                    scope.launch {
+                                        prefsDataStore.setAppLanguage(lang)
+                                        LocaleHelper.applyLanguage(lang)
+                                    }
+                                }
                             )
                             Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                                 AnimeBottomBar(navController, unreadCount = unreadCount)
