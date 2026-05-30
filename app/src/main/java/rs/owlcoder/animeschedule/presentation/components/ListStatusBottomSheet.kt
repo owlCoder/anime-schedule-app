@@ -6,10 +6,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -58,13 +64,36 @@ fun ListStatusBottomSheet(
                 }
             }
             Spacer(Modifier.height(16.dp))
-            OutlinedTextField(
-                value = episodesText,
-                onValueChange = { if (it.all { c -> c.isDigit() }) episodesText = it },
-                label = { Text("Epizode") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
-            )
+            ) {
+                FilledTonalIconButton(
+                    onClick = {
+                        val current = episodesText.toIntOrNull() ?: 0
+                        if (current > 0) episodesText = (current - 1).toString()
+                    },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(Icons.Default.Remove, contentDescription = "Smanji epizodu")
+                }
+                OutlinedTextField(
+                    value = episodesText,
+                    onValueChange = { if (it.all { c -> c.isDigit() }) episodesText = it },
+                    label = { Text("Epizode") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
+                )
+                FilledTonalIconButton(
+                    onClick = {
+                        val current = episodesText.toIntOrNull() ?: 0
+                        episodesText = (current + 1).toString()
+                    },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Povećaj epizodu")
+                }
+            }
             Spacer(Modifier.height(16.dp))
             Text("Ocena: ${score.toInt()}")
             Slider(value = score, onValueChange = { score = it }, valueRange = 0f..10f, steps = 9)

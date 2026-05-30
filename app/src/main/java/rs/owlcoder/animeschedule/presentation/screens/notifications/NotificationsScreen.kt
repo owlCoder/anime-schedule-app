@@ -207,7 +207,9 @@ fun NotificationsScreen(
                 icon = Icons.Default.Notifications,
                 title = emptyTitle,
                 subtitle = if (selectedTab == 0) stringResource(R.string.notif_screen_empty_subtitle) else "",
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .padding(bottom = navBarHeight)
             )
         } else {
             LazyColumn(

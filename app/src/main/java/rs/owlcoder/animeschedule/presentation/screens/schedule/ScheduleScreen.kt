@@ -83,6 +83,7 @@ fun ScheduleScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var editingEpisode by remember { mutableStateOf<AiringEpisode?>(null) }
     var showFilterSheet by remember { mutableStateOf(false) }
+    val navBarHeight = LocalNavBarHeight.current
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let { snackbarHostState.showSnackbar(it) }
@@ -100,7 +101,12 @@ fun ScheduleScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.padding(bottom = navBarHeight)
+            )
+        },
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
