@@ -86,6 +86,16 @@ fun ScheduleScreen(
     LaunchedEffect(uiState.error) {
         uiState.error?.let { snackbarHostState.showSnackbar(it) }
     }
+    LaunchedEffect(Unit) {
+        viewModel.incrementEvent.collect { event ->
+            when (event) {
+                is ScheduleViewModel.IncrementEvent.Success ->
+                    snackbarHostState.showSnackbar("✓ Epizoda označena kao odgledana")
+                is ScheduleViewModel.IncrementEvent.Error ->
+                    snackbarHostState.showSnackbar("Greška — pokušaj ponovo")
+            }
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),

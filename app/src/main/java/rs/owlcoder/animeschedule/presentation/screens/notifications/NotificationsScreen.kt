@@ -1,13 +1,18 @@
 package rs.owlcoder.animeschedule.presentation.screens.notifications
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,6 +25,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.MarkEmailRead
+import androidx.compose.material.icons.filled.MarkEmailUnread
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,10 +39,13 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +60,12 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
+private data class NotifTab(
+    val labelRes: Int,
+    val icon: ImageVector,
+    val badge: Int = 0
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationsScreen(
@@ -57,48 +73,142 @@ fun NotificationsScreen(
     viewModel: NotificationsViewModel = hiltViewModel()
 ) {
     val notifications by viewModel.notifications.collectAsState()
-    val unreadCount = notifications.count { !it.isRead }
+    val unread = notifications.filter { !it.isRead }
+    val read = notifications.filter { it.isRead }
+    var selectedTab by remember { mutableIntStateOf(0) }
+
+    val tabs = listOf(
+        NotifTab(R.string.notif_tab_unread, Icons.Default.MarkEmailUnread, unread.size),
+        NotifTab(R.string.notif_tab_read, Icons.Default.MarkEmailRead)
+    )
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.notif_screen_title), style = MaterialTheme.typography.titleLarge) },
-                windowInsets = WindowInsets.statusBars,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                actions = {
-                    if (unreadCount > 0) {
-                        IconButton(onClick = { viewModel.markAllRead() }) {
-                            Icon(
-                                imageVector = Icons.Default.DoneAll,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
+            Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.notif_screen_title), style = MaterialTheme.typography.titleLarge) },
+                    windowInsets = WindowInsets.statusBars,
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    actions = {
+                        if (unread.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.markAllRead() }) {
+                                Icon(
+                                    imageVector = Icons.Default.DoneAll,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                )
+                // iOS-style segmented pill — isti stil kao Schedule ekran
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(3.dp)
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        tabs.forEachIndexed { index, tab ->
+                            val isSelected = index == selectedTab
+                            val bgColor by animateColorAsState(
+                                targetValue = if (isSelected) MaterialTheme.colorScheme.surface
+                                              else MaterialTheme.colorScheme.surfaceVariant,
+                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                label = "notif_tab_bg"
                             )
+                            val contentColor by animateColorAsState(
+                                targetValue = if (isSelected) MaterialTheme.colorScheme.primary
+                                              else MaterialTheme.colorScheme.onSurfaceVariant,
+                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                label = "notif_tab_fg"
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(bgColor)
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null,
+                                        onClick = { selectedTab = index }
+                                    )
+                                    .padding(vertical = 7.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Box {
+                                        Icon(
+                                            imageVector = tab.icon,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp),
+                                            tint = contentColor
+                                        )
+                                        if (tab.badge > 0) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(8.dp)
+                                                    .align(Alignment.TopEnd)
+                                                    .clip(CircleShape)
+                                                    .background(MaterialTheme.colorScheme.primary)
+                                            )
+                                        }
+                                    }
+                                    val label = if (tab.badge > 0)
+                                        "${stringResource(tab.labelRes)} (${tab.badge})"
+                                    else
+                                        stringResource(tab.labelRes)
+                                    Text(
+                                        text = label,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                        color = contentColor
+                                    )
+                                }
+                            }
                         }
                     }
                 }
-            )
+                Box(
+                    Modifier.fillMaxWidth().height(0.5.dp)
+                        .background(MaterialTheme.colorScheme.outlineVariant)
+                )
+            }
         }
     ) { innerPadding ->
-        if (notifications.isEmpty()) {
+        val list = if (selectedTab == 0) unread else read
+        val emptyTitle = if (selectedTab == 0)
+            stringResource(R.string.notif_empty_unread)
+        else
+            stringResource(R.string.notif_empty_read)
+
+        if (list.isEmpty()) {
             EmptyState(
                 icon = Icons.Default.Notifications,
-                title = stringResource(R.string.notif_screen_empty_title),
-                subtitle = stringResource(R.string.notif_screen_empty_subtitle),
+                title = emptyTitle,
+                subtitle = if (selectedTab == 0) stringResource(R.string.notif_screen_empty_subtitle) else "",
                 modifier = Modifier.padding(innerPadding)
             )
         } else {
             LazyColumn(
-                modifier = Modifier.padding(innerPadding),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(
                     horizontal = 12.dp,
                     vertical = 8.dp
                 )
             ) {
-                items(notifications, key = { it.id }) { notification ->
+                items(list, key = { it.id }) { notification ->
                     NotificationCard(
                         notification = notification,
                         onClick = {
@@ -107,9 +217,7 @@ fun NotificationsScreen(
                         }
                     )
                 }
-                item {
-                    Spacer(modifier = Modifier.height(96.dp))
-                }
+                item { Spacer(modifier = Modifier.height(96.dp)) }
             }
         }
     }

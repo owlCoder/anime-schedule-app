@@ -5,15 +5,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import rs.owlcoder.animeschedule.core.result.AppResult
+import rs.owlcoder.animeschedule.core.result.AppError
 import rs.owlcoder.animeschedule.data.work.AiringNotificationWorker
 import rs.owlcoder.animeschedule.domain.model.AiringEpisode
 import rs.owlcoder.animeschedule.domain.model.ScheduleDay
@@ -82,6 +85,13 @@ class ScheduleViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(true)
     private val _selectedWeekDay = MutableStateFlow(LocalDate.now())
     private val _filter = MutableStateFlow(ScheduleFilter())
+
+    sealed interface IncrementEvent {
+        data object Success : IncrementEvent
+        data object Error : IncrementEvent
+    }
+    private val _incrementEvent = Channel<IncrementEvent>(Channel.BUFFERED)
+    val incrementEvent = _incrementEvent.receiveAsFlow()
 
     val uiState: StateFlow<ScheduleUiState> = settingsRepository.userPreferencesFlow
         .flatMapLatest { prefs ->
@@ -154,8 +164,13 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
-    fun incrementEpisode(animeId: Int) {
-        viewModelScope.launch { incrementEpisodeUseCase(animeId) }
+    fun incrementEpisode(malId: Int) {
+        viewModelScope.launch {
+            val result = incrementEpisodeUseCase(malId)
+            _incrementEvent.send(
+                if (result is AppResult.Success) IncrementEvent.Success else IncrementEvent.Error
+            )
+        }
     }
 
     fun updateEntry(animeId: Int, update: MalListUpdate) {

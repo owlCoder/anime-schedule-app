@@ -5,6 +5,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -16,6 +18,10 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import coil3.ImageLoader
+import coil3.request.ImageRequest
+import coil3.request.allowHardware
+import coil3.toBitmap
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
@@ -86,7 +92,14 @@ class AiringNotificationWorker @AssistedInject constructor(
                         createdAtEpochSeconds = now
                     )
                 )
-                sendSystemNotification(id = episode.airingId, animeId = episode.animeId, title = episode.title, episode = episode.episode)
+                val cover = episode.coverImageUrl?.let { loadBitmap(it) }
+                sendSystemNotification(
+                    id = episode.airingId,
+                    animeId = episode.animeId,
+                    title = episode.title,
+                    episode = episode.episode,
+                    cover = cover
+                )
                 created++
             }
 
@@ -98,7 +111,16 @@ class AiringNotificationWorker @AssistedInject constructor(
         }
     }
 
-    private fun sendSystemNotification(id: Int, animeId: Int, title: String, episode: Int) {
+    private suspend fun loadBitmap(url: String): Bitmap? = runCatching {
+        val loader = ImageLoader(context)
+        val request = ImageRequest.Builder(context)
+            .data(url)
+            .allowHardware(false)
+            .build()
+        loader.execute(request).image?.toBitmap()
+    }.getOrNull()
+
+    private fun sendSystemNotification(id: Int, animeId: Int, title: String, episode: Int, cover: Bitmap?) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
             != PackageManager.PERMISSION_GRANTED
         ) return
@@ -114,16 +136,25 @@ class AiringNotificationWorker @AssistedInject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(title)
             .setContentText("Epizoda $episode je dostupna")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
-            .build()
 
-        NotificationManagerCompat.from(context).notify(id, notification)
+        if (cover != null) {
+            builder
+                .setLargeIcon(cover)
+                .setStyle(
+                    NotificationCompat.BigPictureStyle()
+                        .bigPicture(cover)
+                        .bigLargeIcon(null as Bitmap?)
+                )
+        }
+
+        NotificationManagerCompat.from(context).notify(id, builder.build())
     }
 
     companion object {

@@ -93,8 +93,15 @@ fun AiringEpisodeCard(
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2
                 )
+                val epLine = episode.malListEntry?.let { entry ->
+                    val total = episode.totalEpisodes?.let { "/$it" } ?: ""
+                    "Odgledano: ${entry.episodesWatched}$total"
+                } ?: run {
+                    val total = episode.totalEpisodes?.let { "/${it}" } ?: ""
+                    "Ep. ${episode.episode}$total"
+                }
                 Text(
-                    "Ep. ${episode.episode}",
+                    epLine,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

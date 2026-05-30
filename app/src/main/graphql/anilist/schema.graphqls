@@ -70,6 +70,7 @@ type Media {
   trailer: MediaTrailer
   siteUrl: String
   type: MediaType
+  isAdult: Boolean
 }
 
 type MediaTitle {

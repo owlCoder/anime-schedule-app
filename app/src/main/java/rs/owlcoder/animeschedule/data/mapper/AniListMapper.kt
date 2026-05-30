@@ -9,10 +9,11 @@ import rs.owlcoder.animeschedule.data.api.anilist.generated.AnimeSearchQuery
 import rs.owlcoder.animeschedule.data.local.db.AiringEpisodeEntity
 import rs.owlcoder.animeschedule.data.local.db.AnimeDetailEntity
 import rs.owlcoder.animeschedule.domain.model.AnimeSearchResult
+import rs.owlcoder.animeschedule.domain.model.MalListEntry
 
 private val json = Json { ignoreUnknownKeys = true }
 
-fun AnimeSearchQuery.Medium.toSearchResult(): AnimeSearchResult = AnimeSearchResult(
+fun AnimeSearchQuery.Medium.toSearchResult(existingEntry: MalListEntry? = null): AnimeSearchResult = AnimeSearchResult(
     anilistId = id,
     malId = idMal,
     title = title?.romaji ?: title?.english ?: "Unknown",
@@ -22,7 +23,7 @@ fun AnimeSearchQuery.Medium.toSearchResult(): AnimeSearchResult = AnimeSearchRes
     year = seasonYear?.toString(),
     meanScore = meanScore?.toDouble(),
     totalEpisodes = episodes,
-    userListEntry = null
+    userListEntry = existingEntry
 )
 
 fun AiringScheduleQuery.AiringSchedule.toEntity(nowEpoch: Long): AiringEpisodeEntity? {

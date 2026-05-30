@@ -138,6 +138,10 @@
     <string name="notif_screen_title">Obaveštenja</string>
     <string name="notif_screen_empty_title">Nema obaveštenja</string>
     <string name="notif_screen_empty_subtitle">Bićeš obavešten kada nove epizode izađu</string>
+    <string name="notif_tab_unread">Nepročitano</string>
+    <string name="notif_tab_read">Pročitano</string>
+    <string name="notif_empty_unread">Nema nepročitanih obaveštenja</string>
+    <string name="notif_empty_read">Nema pročitanih obaveštenja</string>
 
     <!-- Notification channel -->
     <string name="notif_channel_name">Nove epizode</string>

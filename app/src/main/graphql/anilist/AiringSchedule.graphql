@@ -15,6 +15,7 @@ query AiringScheduleQuery($page: Int, $perPage: Int, $airingAt_greater: Int, $ai
       media {
         id
         idMal
+        isAdult
         title {
           romaji
           english
