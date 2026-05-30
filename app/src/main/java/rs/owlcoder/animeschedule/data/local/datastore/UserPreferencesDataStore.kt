@@ -27,6 +27,7 @@ class UserPreferencesDataStore @Inject constructor(
         val NOTIFICATION_OFFSET = intPreferencesKey("notification_offset_minutes")
         val ACCENT_COLOR = stringPreferencesKey("accent_color")
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
+        val APP_LANGUAGE = stringPreferencesKey("app_language")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = dataStore.data.map { prefs ->
@@ -40,7 +41,8 @@ class UserPreferencesDataStore @Inject constructor(
             notificationsEnabled = prefs[Keys.NOTIFICATIONS_ENABLED] ?: true,
             notificationOffsetMinutes = prefs[Keys.NOTIFICATION_OFFSET] ?: 0,
             accentColor = runCatching { AccentColor.valueOf(prefs[Keys.ACCENT_COLOR] ?: "") }.getOrDefault(AccentColor.TELEGRAM_BLUE),
-            onboardingDone = prefs[Keys.ONBOARDING_DONE] ?: false
+            onboardingDone = prefs[Keys.ONBOARDING_DONE] ?: false,
+            appLanguage = runCatching { AppLanguage.valueOf(prefs[Keys.APP_LANGUAGE] ?: "") }.getOrDefault(AppLanguage.SYSTEM)
         )
     }
 
@@ -78,5 +80,9 @@ class UserPreferencesDataStore @Inject constructor(
 
     suspend fun setOnboardingDone() {
         dataStore.edit { it[Keys.ONBOARDING_DONE] = true }
+    }
+
+    suspend fun setAppLanguage(language: AppLanguage) {
+        dataStore.edit { it[Keys.APP_LANGUAGE] = language.name }
     }
 }

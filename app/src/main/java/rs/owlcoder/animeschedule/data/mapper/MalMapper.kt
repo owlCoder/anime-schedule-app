@@ -42,6 +42,7 @@ fun MalAnimeNode.toSearchResult(existingEntry: MalListEntry? = null): AnimeSearc
         )
     } ?: existingEntry
     return AnimeSearchResult(
+        anilistId = 0,
         malId = id,
         title = title,
         titleEnglish = alternativeTitles?.en,

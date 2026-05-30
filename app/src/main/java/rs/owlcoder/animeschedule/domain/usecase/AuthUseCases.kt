@@ -4,7 +4,7 @@ import rs.owlcoder.animeschedule.domain.repository.AuthRepository
 import javax.inject.Inject
 
 class LoginWithMalUseCase @Inject constructor(private val authRepository: AuthRepository) {
-    operator fun invoke() = authRepository.buildAuthUri()
+    operator fun invoke() = authRepository.buildAuthUri() // returns Triple<Uri, verifier, state>
 }
 
 class HandleMalCallbackUseCase @Inject constructor(private val authRepository: AuthRepository) {

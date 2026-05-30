@@ -16,6 +16,8 @@ enum class AccentColor {
     DEEP_PURPLE
 }
 
+enum class AppLanguage { SYSTEM, ENGLISH, SERBIAN_LATIN }
+
 data class UserPreferences(
     val timezoneId: String = "",
     val malLoggedIn: Boolean = false,
@@ -26,5 +28,6 @@ data class UserPreferences(
     val notificationsEnabled: Boolean = true,
     val notificationOffsetMinutes: Int = 0,
     val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
-    val onboardingDone: Boolean = false
+    val onboardingDone: Boolean = false,
+    val appLanguage: AppLanguage = AppLanguage.SYSTEM
 )

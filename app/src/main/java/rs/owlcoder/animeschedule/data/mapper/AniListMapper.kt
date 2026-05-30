@@ -13,7 +13,8 @@ import rs.owlcoder.animeschedule.domain.model.AnimeSearchResult
 private val json = Json { ignoreUnknownKeys = true }
 
 fun AnimeSearchQuery.Medium.toSearchResult(): AnimeSearchResult = AnimeSearchResult(
-    malId = id,
+    anilistId = id,
+    malId = idMal,
     title = title?.romaji ?: title?.english ?: "Unknown",
     titleEnglish = title?.english?.takeIf { it != title?.romaji },
     coverImageUrl = coverImage?.large,

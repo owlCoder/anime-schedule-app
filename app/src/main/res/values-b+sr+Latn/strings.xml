@@ -1,0 +1,128 @@
+<resources>
+    <string name="app_name">AnimeSchedule</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Podešavanja</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Sistemska</string>
+    <string name="settings_theme_light">Svetla</string>
+    <string name="settings_theme_dark">Tamna</string>
+    <string name="settings_notifications">Notifikacije</string>
+    <string name="settings_notifications_on">Uključene</string>
+    <string name="settings_notifications_off">Isključene</string>
+    <string name="settings_notif_timing">Vreme obaveštenja</string>
+    <string name="settings_language">Jezik / Language</string>
+    <string name="settings_language_system">Sistemski</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_serbian">Srpski (latinica)</string>
+    <string name="settings_timezone">Vremenska zona</string>
+    <string name="settings_changelog">Istorija promena</string>
+    <string name="settings_changelog_subtitle">Šta je novo u aplikaciji</string>
+    <string name="settings_about">O aplikaciji</string>
+    <string name="settings_about_subtitle">Verzija, podaci, kontakt</string>
+
+    <!-- Profile card -->
+    <string name="profile_logged_in">Ulogovan</string>
+    <string name="profile_not_logged_in">Nije ulogovan</string>
+    <string name="profile_logout">Odjavi</string>
+    <string name="profile_login">Prijavi se</string>
+
+    <!-- Appearance bottom sheet -->
+    <string name="appearance_title">Izgled</string>
+    <string name="appearance_theme_label">Tema</string>
+    <string name="appearance_accent_label">Boja akcenta</string>
+
+    <!-- Timezone picker -->
+    <string name="timezone_title">Vremenska zona</string>
+    <string name="timezone_confirm">Potvrdi</string>
+
+    <!-- Notification offset -->
+    <string name="notif_offset_title">Vreme obaveštenja</string>
+    <string name="notif_offset_subtitle">Kada da stigne obaveštenje u odnosu na emitovanje</string>
+    <string name="notif_offset_immediate">Odmah pri emitovanju</string>
+    <string name="notif_offset_before">%d min pre emitovanja</string>
+    <string name="notif_offset_after_min">%d min posle emitovanja</string>
+    <string name="notif_offset_after_hour">%dh posle emitovanja</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Dobrodošao u\nAnime Schedule</string>
+    <string name="onboarding_welcome_body">Prati raspored emitovanja anime serija u realnom vremenu i upravljaj MyAnimeList listom bez reklama.</string>
+    <string name="onboarding_language_title">Jezik / Language</string>
+    <string name="onboarding_language_subtitle">Uvek možeš promeniti u podešavanjima</string>
+    <string name="onboarding_theme_title">Izaberi temu</string>
+    <string name="onboarding_theme_subtitle">Uvek možeš promeniti u podešavanjima</string>
+    <string name="onboarding_features_title">Šta sve možeš</string>
+    <string name="onboarding_notif_title">Obaveštenja</string>
+    <string name="onboarding_notif_subtitle">Obavesti me kada nova epizoda izađe</string>
+    <string name="onboarding_notif_enable">Uključi obaveštenja</string>
+    <string name="onboarding_notif_when">KADA DA STIGNE</string>
+    <string name="onboarding_mal_title">Prijavi se na MyAnimeList</string>
+    <string name="onboarding_mal_subtitle">Opciono — možeš se prijaviti i kasnije u podešavanjima</string>
+    <string name="onboarding_mal_button">Prijavi se na MAL</string>
+    <string name="onboarding_mal_skip">Preskoči, prijavi se kasnije</string>
+    <string name="onboarding_next">Dalje</string>
+    <string name="onboarding_back">Nazad</string>
+    <string name="onboarding_start">Počni</string>
+
+    <!-- Features page -->
+    <string name="feature_schedule_title">Raspored emitovanja</string>
+    <string name="feature_schedule_body">Danas, sutra i ova nedelja u tvojoj vremenskoj zoni</string>
+    <string name="feature_mylist_title">Moja MAL lista</string>
+    <string name="feature_mylist_body">Pregledaj i ažuriraj svoju MyAnimeList listu</string>
+    <string name="feature_notif_title">Obaveštenja</string>
+    <string name="feature_notif_body">Automatska obaveštenja kada nova epizoda izađe</string>
+    <string name="feature_search_title">Pretraga anime</string>
+    <string name="feature_search_body">Pretraži bilo koji anime i dodaj ga na listu</string>
+
+    <!-- Schedule screen -->
+    <string name="schedule_title">Raspored</string>
+    <string name="schedule_tab_today">Danas</string>
+    <string name="schedule_tab_tomorrow">Sutra</string>
+    <string name="schedule_tab_week">Nedelja</string>
+    <string name="schedule_empty_title">Nema anime danas</string>
+    <string name="schedule_empty_subtitle">Trenutno se ništa ne emituje</string>
+
+    <!-- Search screen -->
+    <string name="search_title">Pretraga</string>
+    <string name="search_placeholder">Pretraži anime…</string>
+    <string name="search_empty_title">Pretraži anime</string>
+    <string name="search_empty_subtitle">Unesite naslov da pronađete anime</string>
+    <string name="search_no_results_title">Nema rezultata</string>
+    <string name="search_no_results_subtitle">Pokušaj sa drugačijim naslovom</string>
+    <string name="search_recent">Nedavne pretrage</string>
+    <string name="search_clear_recent">Obriši</string>
+
+    <!-- My list screen -->
+    <string name="mylist_title">Moja lista</string>
+    <string name="mylist_empty_title">Lista je prazna</string>
+    <string name="mylist_empty_subtitle">Dodaj anime iz rasporeda ili pretrage</string>
+    <string name="mylist_not_logged_in_title">Nisi prijavljen</string>
+    <string name="mylist_not_logged_in_subtitle">Prijavi se na MyAnimeList da vidiš svoju listu</string>
+
+    <!-- Notifications screen -->
+    <string name="notif_screen_title">Obaveštenja</string>
+    <string name="notif_screen_empty_title">Nema obaveštenja</string>
+    <string name="notif_screen_empty_subtitle">Bićeš obavešten kada nove epizode izađu</string>
+
+    <!-- Notification channel -->
+    <string name="notif_channel_name">Nove epizode</string>
+
+    <!-- Detail screen -->
+    <string name="detail_episodes">Epizode</string>
+    <string name="detail_score">Ocena</string>
+    <string name="detail_status">Status</string>
+    <string name="detail_format">Format</string>
+    <string name="detail_season">Sezona</string>
+    <string name="detail_studios">Studiji</string>
+    <string name="detail_related">Povezano</string>
+    <string name="detail_synopsis">Sinopsis</string>
+    <string name="detail_next_episode">Sledeća epizoda</string>
+    <string name="detail_watch_trailer">Pogledaj trejler</string>
+    <string name="detail_open_mal">Otvori na MAL</string>
+
+    <!-- Common -->
+    <string name="common_retry">Pokušaj ponovo</string>
+    <string name="common_loading">Učitavanje…</string>
+    <string name="common_error_generic">Nešto je pošlo naopako</string>
+    <string name="common_offline">Offline — prikazuju se keširani podaci</string>
+</resources>

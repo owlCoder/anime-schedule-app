@@ -4,6 +4,7 @@ import android.net.Uri
 import kotlinx.coroutines.flow.Flow
 import rs.owlcoder.animeschedule.core.result.AppResult
 import rs.owlcoder.animeschedule.data.local.datastore.AccentColor
+import rs.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import rs.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferences
 import rs.owlcoder.animeschedule.domain.model.AiringEpisode
@@ -37,7 +38,7 @@ interface AuthRepository {
     val isLoggedIn: Flow<Boolean>
     val username: Flow<String>
     val avatarUrl: Flow<String>
-    fun buildAuthUri(): Pair<Uri, String>
+    fun buildAuthUri(): Triple<Uri, String, String>
     suspend fun handleOAuthCallback(code: String, verifier: String): Boolean
     suspend fun logout()
 }
@@ -49,6 +50,7 @@ interface SettingsRepository {
     suspend fun setNotificationsEnabled(enabled: Boolean)
     suspend fun setNotificationOffset(minutes: Int)
     suspend fun setAccentColor(color: AccentColor)
+    suspend fun setAppLanguage(language: AppLanguage)
     fun getEffectiveZoneId(prefs: UserPreferences): ZoneId
 }
 

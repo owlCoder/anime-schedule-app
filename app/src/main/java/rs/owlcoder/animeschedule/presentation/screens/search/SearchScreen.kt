@@ -184,10 +184,10 @@ fun SearchScreen(
                     subtitle = "Unesite naslov da pronađete anime"
                 )
                 else -> LazyColumn(Modifier.fillMaxSize()) {
-                    items(uiState.results, key = { it.malId }) { result ->
+                    items(uiState.results, key = { it.anilistId }) { result ->
                         SearchResultCard(
                             result = result,
-                            onCardClick = { onAnimeClick(result.malId); viewModel.onSearchSubmit(localQuery) },
+                            onCardClick = { onAnimeClick(result.anilistId); viewModel.onSearchSubmit(localQuery) },
                             onEditStatus = { editingResult = result },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)
                         )
@@ -199,11 +199,13 @@ fun SearchScreen(
     }
 
     editingResult?.let { result ->
-        ListStatusBottomSheet(
-            animeId = result.malId,
-            currentEntry = result.userListEntry,
-            onDismiss = { editingResult = null },
-            onConfirm = { animeId, update -> viewModel.updateListEntry(animeId, update) }
-        )
+        result.malId?.let { malId ->
+            ListStatusBottomSheet(
+                animeId = malId,
+                currentEntry = result.userListEntry,
+                onDismiss = { editingResult = null },
+                onConfirm = { animeId, update -> viewModel.updateListEntry(animeId, update) }
+            )
+        }
     }
 }

@@ -80,7 +80,8 @@ data class MalListUpdate(
 )
 
 data class AnimeSearchResult(
-    val malId: Int,
+    val anilistId: Int,
+    val malId: Int?,
     val title: String,
     val titleEnglish: String?,
     val coverImageUrl: String?,

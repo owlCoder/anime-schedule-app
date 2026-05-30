@@ -71,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import rs.owlcoder.animeschedule.data.local.datastore.AccentColor
+import rs.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import rs.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import rs.owlcoder.animeschedule.ui.theme.accentPrimary
 import java.time.ZoneId
@@ -88,6 +89,7 @@ fun SettingsScreen(
     var showTimezonePicker by remember { mutableStateOf(false) }
     var showThemePicker by remember { mutableStateOf(false) }
     var showNotifOffsetPicker by remember { mutableStateOf(false) }
+    var showLanguagePicker by remember { mutableStateOf(false) }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -153,6 +155,18 @@ fun SettingsScreen(
                     SettingsDivider()
                     SettingsRow(
                         icon = Icons.Default.Language,
+                        iconColor = Color(0xFF1565C0),
+                        title = "Jezik / Language",
+                        subtitle = when (uiState.appLanguage) {
+                            AppLanguage.ENGLISH -> "English"
+                            AppLanguage.SERBIAN_LATIN -> "Srpski (latinica)"
+                            AppLanguage.SYSTEM -> "Sistemski"
+                        },
+                        onClick = { showLanguagePicker = true }
+                    )
+                    SettingsDivider()
+                    SettingsRow(
+                        icon = Icons.Default.Language,
                         iconColor = Color(0xFF43A047),
                         title = "Vremenska zona",
                         subtitle = uiState.timezoneId.ifEmpty { ZoneId.systemDefault().id },
@@ -183,6 +197,14 @@ fun SettingsScreen(
                 Spacer(Modifier.height(24.dp))
             }
         }
+    }
+
+    if (showLanguagePicker) {
+        LanguageBottomSheet(
+            currentLanguage = uiState.appLanguage,
+            onSelect = { settingsViewModel.setAppLanguage(it); showLanguagePicker = false },
+            onDismiss = { showLanguagePicker = false }
+        )
     }
 
     if (showTimezonePicker) {
@@ -735,6 +757,78 @@ private fun NotifOffsetBottomSheet(
                 ) {
                     Text(
                         notifOffsetLabel(minutes),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (isSelected) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LanguageBottomSheet(
+    currentLanguage: AppLanguage,
+    onSelect: (AppLanguage) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState()
+    val options = listOf(
+        AppLanguage.SYSTEM to "Sistemski / System",
+        AppLanguage.ENGLISH to "English",
+        AppLanguage.SERBIAN_LATIN to "Srpski (latinica)"
+    )
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+        ) {
+            Text(
+                "Jezik / Language",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
+
+            options.forEach { (language, label) ->
+                val isSelected = currentLanguage == language
+                val bgColor by animateColorAsState(
+                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+                                  else MaterialTheme.colorScheme.surface,
+                    label = "langBg"
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(bgColor)
+                        .clickable { onSelect(language) }
+                        .padding(horizontal = 12.dp, vertical = 13.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        label,
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (isSelected) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.onSurface,

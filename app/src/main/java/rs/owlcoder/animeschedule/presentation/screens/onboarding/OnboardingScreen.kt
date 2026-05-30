@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import rs.owlcoder.animeschedule.R
 import rs.owlcoder.animeschedule.data.local.datastore.AccentColor
+import rs.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import rs.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import rs.owlcoder.animeschedule.presentation.screens.settings.notifOffsetLabel
 import rs.owlcoder.animeschedule.ui.theme.accentPrimary
@@ -72,14 +73,16 @@ fun OnboardingScreen(
     onLogin: (Context) -> Unit,
     selectedTheme: ThemeMode,
     selectedAccent: AccentColor,
+    selectedLanguage: AppLanguage,
     onThemeChange: (ThemeMode) -> Unit,
     onAccentChange: (AccentColor) -> Unit,
+    onLanguageChange: (AppLanguage) -> Unit,
     onNotifSettingsChange: (enabled: Boolean, offsetMinutes: Int) -> Unit = { _, _ -> }
 ) {
-    val pagerState = rememberPagerState(pageCount = { 5 })
+    val pagerState = rememberPagerState(pageCount = { 6 })
     val scope = rememberCoroutineScope()
     val currentPage = pagerState.currentPage
-    val isLastPage = currentPage == 4
+    val isLastPage = currentPage == 5
 
     Column(
         modifier = Modifier
@@ -92,15 +95,19 @@ fun OnboardingScreen(
         ) { page ->
             when (page) {
                 0 -> WelcomePage()
-                1 -> ThemePickerPage(
+                1 -> LanguagePickerPage(
+                    selectedLanguage = selectedLanguage,
+                    onLanguageChange = onLanguageChange
+                )
+                2 -> ThemePickerPage(
                     selectedTheme = selectedTheme,
                     selectedAccent = selectedAccent,
                     onThemeChange = onThemeChange,
                     onAccentChange = onAccentChange
                 )
-                2 -> FeaturesPage()
-                3 -> NotificationsPage(onSettingsChange = onNotifSettingsChange)
-                4 -> MalLoginPage(
+                3 -> FeaturesPage()
+                4 -> NotificationsPage(onSettingsChange = onNotifSettingsChange)
+                5 -> MalLoginPage(
                     onLogin = onLogin,
                     onComplete = onComplete
                 )
@@ -113,7 +120,7 @@ fun OnboardingScreen(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            PageIndicator(currentPage = currentPage, pageCount = 5)
+            PageIndicator(currentPage = currentPage, pageCount = 6)
 
             Spacer(Modifier.height(16.dp))
 
@@ -229,7 +236,95 @@ private fun WelcomePage() {
     }
 }
 
-// ── Page 1: Theme Picker ─────────────────────────────────────────────────────
+// ── Page 1: Language Picker ──────────────────────────────────────────────────
+
+@Composable
+private fun LanguagePickerPage(
+    selectedLanguage: AppLanguage,
+    onLanguageChange: (AppLanguage) -> Unit
+) {
+    val options = listOf(
+        AppLanguage.SYSTEM to "Sistemski / System",
+        AppLanguage.ENGLISH to "English",
+        AppLanguage.SERBIAN_LATIN to "Srpski (latinica)"
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Jezik / Language",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Spacer(Modifier.height(4.dp))
+
+        Text(
+            text = "Uvek možeš promeniti u podešavanjima",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(Modifier.height(28.dp))
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surface)
+        ) {
+            options.forEachIndexed { index, (language, label) ->
+                val isSelected = selectedLanguage == language
+                val bgColor by animateColorAsState(
+                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+                                  else MaterialTheme.colorScheme.surface,
+                    label = "langBg"
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(bgColor)
+                        .clickable { onLanguageChange(language) }
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (isSelected) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+                if (index < options.lastIndex) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(0.5.dp)
+                            .background(MaterialTheme.colorScheme.outlineVariant)
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── Page 2: Theme Picker ─────────────────────────────────────────────────────
 
 @Composable
 private fun ThemePickerPage(

@@ -1,5 +1,6 @@
 package rs.owlcoder.animeschedule.core.network
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 
 suspend fun <T> withRetry(
@@ -9,9 +10,11 @@ suspend fun <T> withRetry(
     block: suspend () -> T
 ): T {
     var currentDelay = initialDelayMs
-    repeat(maxAttempts - 1) { attempt ->
+    repeat(maxAttempts - 1) {
         try {
             return block()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             delay(currentDelay)
             currentDelay = (currentDelay * factor).toLong()

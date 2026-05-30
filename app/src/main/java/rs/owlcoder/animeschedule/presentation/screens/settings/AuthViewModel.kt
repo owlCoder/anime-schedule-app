@@ -27,20 +27,27 @@ class AuthViewModel @Inject constructor(
     val username = authRepository.username
 
     fun launchMalLogin(context: Context) {
-        val (uri, verifier) = loginWithMalUseCase()
-        // Store verifier in EncryptedSharedPreferences — survives Activity recreation
+        val (uri, verifier, state) = loginWithMalUseCase()
+        // Store verifier and state in EncryptedSharedPreferences — survives Activity recreation
         // when Chrome Custom Tab returns (new Activity instance, SavedStateHandle is gone)
         secureTokenStore.savePkceVerifier(verifier)
+        secureTokenStore.saveOAuthState(state)
         val customTab = CustomTabsIntent.Builder()
             .setShowTitle(true)
             .build()
         customTab.launchUrl(context, uri)
     }
 
-    fun handleCallback(code: String) {
+    fun handleCallback(code: String, returnedState: String?) {
         val verifier = secureTokenStore.getPkceVerifier()
+        val expectedState = secureTokenStore.getOAuthState()
         if (verifier == null) {
             Log.e("AuthViewModel", "PKCE verifier missing — cannot complete OAuth flow")
+            return
+        }
+        if (returnedState == null || returnedState != expectedState) {
+            Log.e("AuthViewModel", "OAuth state mismatch — possible CSRF attack, aborting")
+            secureTokenStore.clearPkceVerifier()
             return
         }
         viewModelScope.launch {

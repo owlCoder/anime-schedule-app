@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import rs.owlcoder.animeschedule.data.local.datastore.AccentColor
+import rs.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import rs.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import rs.owlcoder.animeschedule.domain.repository.AuthRepository
 import rs.owlcoder.animeschedule.domain.repository.SettingsRepository
@@ -22,7 +23,8 @@ data class SettingsUiState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val notificationsEnabled: Boolean = true,
     val notificationOffsetMinutes: Int = 0,
-    val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE
+    val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
+    val appLanguage: AppLanguage = AppLanguage.SYSTEM
 )
 
 @HiltViewModel
@@ -45,7 +47,8 @@ class SettingsViewModel @Inject constructor(
             themeMode = prefs.themeMode,
             notificationsEnabled = prefs.notificationsEnabled,
             notificationOffsetMinutes = prefs.notificationOffsetMinutes,
-            accentColor = prefs.accentColor
+            accentColor = prefs.accentColor,
+            appLanguage = prefs.appLanguage
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
 
@@ -67,5 +70,9 @@ class SettingsViewModel @Inject constructor(
 
     fun setAccentColor(color: AccentColor) {
         viewModelScope.launch { settingsRepository.setAccentColor(color) }
+    }
+
+    fun setAppLanguage(language: AppLanguage) {
+        viewModelScope.launch { settingsRepository.setAppLanguage(language) }
     }
 }

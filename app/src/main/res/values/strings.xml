@@ -1,3 +1,128 @@
 <resources>
     <string name="app_name">AnimeSchedule</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_notifications_on">Enabled</string>
+    <string name="settings_notifications_off">Disabled</string>
+    <string name="settings_notif_timing">Notification timing</string>
+    <string name="settings_language">Language / Jezik</string>
+    <string name="settings_language_system">System</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_serbian">Serbian (Latin)</string>
+    <string name="settings_timezone">Time zone</string>
+    <string name="settings_changelog">Changelog</string>
+    <string name="settings_changelog_subtitle">What\'s new in the app</string>
+    <string name="settings_about">About</string>
+    <string name="settings_about_subtitle">Version, sources, contact</string>
+
+    <!-- Profile card -->
+    <string name="profile_logged_in">Logged in</string>
+    <string name="profile_not_logged_in">Not logged in</string>
+    <string name="profile_logout">Log out</string>
+    <string name="profile_login">Sign in</string>
+
+    <!-- Appearance bottom sheet -->
+    <string name="appearance_title">Appearance</string>
+    <string name="appearance_theme_label">Theme</string>
+    <string name="appearance_accent_label">Accent color</string>
+
+    <!-- Timezone picker -->
+    <string name="timezone_title">Time zone</string>
+    <string name="timezone_confirm">Confirm</string>
+
+    <!-- Notification offset -->
+    <string name="notif_offset_title">Notification timing</string>
+    <string name="notif_offset_subtitle">When to receive a notification relative to air time</string>
+    <string name="notif_offset_immediate">At air time</string>
+    <string name="notif_offset_before">%d min before air time</string>
+    <string name="notif_offset_after_min">%d min after air time</string>
+    <string name="notif_offset_after_hour">%dh after air time</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_welcome_title">Welcome to\nAnime Schedule</string>
+    <string name="onboarding_welcome_body">Track anime airing schedules in real time and manage your MyAnimeList without ads.</string>
+    <string name="onboarding_language_title">Language / Jezik</string>
+    <string name="onboarding_language_subtitle">You can always change this in Settings</string>
+    <string name="onboarding_theme_title">Choose a theme</string>
+    <string name="onboarding_theme_subtitle">You can always change this in Settings</string>
+    <string name="onboarding_features_title">What you can do</string>
+    <string name="onboarding_notif_title">Notifications</string>
+    <string name="onboarding_notif_subtitle">Notify me when a new episode airs</string>
+    <string name="onboarding_notif_enable">Enable notifications</string>
+    <string name="onboarding_notif_when">WHEN TO NOTIFY</string>
+    <string name="onboarding_mal_title">Sign in to MyAnimeList</string>
+    <string name="onboarding_mal_subtitle">Optional — you can sign in later in Settings</string>
+    <string name="onboarding_mal_button">Sign in to MAL</string>
+    <string name="onboarding_mal_skip">Skip, sign in later</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_back">Back</string>
+    <string name="onboarding_start">Start</string>
+
+    <!-- Features page -->
+    <string name="feature_schedule_title">Airing schedule</string>
+    <string name="feature_schedule_body">Today, tomorrow and this week in your time zone</string>
+    <string name="feature_mylist_title">My MAL list</string>
+    <string name="feature_mylist_body">Browse and update your MyAnimeList list</string>
+    <string name="feature_notif_title">Notifications</string>
+    <string name="feature_notif_body">Automatic notifications when a new episode airs</string>
+    <string name="feature_search_title">Search anime</string>
+    <string name="feature_search_body">Search any anime and add it to your list</string>
+
+    <!-- Schedule screen -->
+    <string name="schedule_title">Schedule</string>
+    <string name="schedule_tab_today">Today</string>
+    <string name="schedule_tab_tomorrow">Tomorrow</string>
+    <string name="schedule_tab_week">Week</string>
+    <string name="schedule_empty_title">No anime today</string>
+    <string name="schedule_empty_subtitle">Nothing is airing right now</string>
+
+    <!-- Search screen -->
+    <string name="search_title">Search</string>
+    <string name="search_placeholder">Search anime…</string>
+    <string name="search_empty_title">Search anime</string>
+    <string name="search_empty_subtitle">Enter a title to find anime</string>
+    <string name="search_no_results_title">No results</string>
+    <string name="search_no_results_subtitle">Try a different title</string>
+    <string name="search_recent">Recent searches</string>
+    <string name="search_clear_recent">Clear</string>
+
+    <!-- My list screen -->
+    <string name="mylist_title">My List</string>
+    <string name="mylist_empty_title">List is empty</string>
+    <string name="mylist_empty_subtitle">Add anime from the schedule or search</string>
+    <string name="mylist_not_logged_in_title">Not signed in</string>
+    <string name="mylist_not_logged_in_subtitle">Sign in to MyAnimeList to see your list</string>
+
+    <!-- Notifications screen -->
+    <string name="notif_screen_title">Notifications</string>
+    <string name="notif_screen_empty_title">No notifications</string>
+    <string name="notif_screen_empty_subtitle">You\'ll be notified when new episodes air</string>
+
+    <!-- Notification channel -->
+    <string name="notif_channel_name">New episodes</string>
+
+    <!-- Detail screen -->
+    <string name="detail_episodes">Episodes</string>
+    <string name="detail_score">Score</string>
+    <string name="detail_status">Status</string>
+    <string name="detail_format">Format</string>
+    <string name="detail_season">Season</string>
+    <string name="detail_studios">Studios</string>
+    <string name="detail_related">Related</string>
+    <string name="detail_synopsis">Synopsis</string>
+    <string name="detail_next_episode">Next episode</string>
+    <string name="detail_watch_trailer">Watch trailer</string>
+    <string name="detail_open_mal">Open on MAL</string>
+
+    <!-- Common -->
+    <string name="common_retry">Retry</string>
+    <string name="common_loading">Loading…</string>
+    <string name="common_error_generic">Something went wrong</string>
+    <string name="common_offline">Offline — showing cached data</string>
 </resources>

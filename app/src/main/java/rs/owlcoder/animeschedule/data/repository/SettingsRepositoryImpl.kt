@@ -2,6 +2,7 @@ package rs.owlcoder.animeschedule.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import rs.owlcoder.animeschedule.data.local.datastore.AccentColor
+import rs.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import rs.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferences
 import rs.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
@@ -35,6 +36,10 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setAccentColor(color: AccentColor) {
         prefsDataStore.setAccentColor(color)
+    }
+
+    override suspend fun setAppLanguage(language: AppLanguage) {
+        prefsDataStore.setAppLanguage(language)
     }
 
     override fun getEffectiveZoneId(prefs: UserPreferences): ZoneId =

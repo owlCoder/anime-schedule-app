@@ -45,7 +45,7 @@ class SecureTokenStore @Inject constructor(
             .apply()
     }
 
-    // PKCE verifier must survive Activity recreation (Chrome Custom Tab returns to new Activity instance)
+    // PKCE verifier and OAuth state must survive Activity recreation
     fun savePkceVerifier(verifier: String) {
         prefs.edit().putString(KEY_PKCE_VERIFIER, verifier).apply()
     }
@@ -53,13 +53,20 @@ class SecureTokenStore @Inject constructor(
     fun getPkceVerifier(): String? = prefs.getString(KEY_PKCE_VERIFIER, null)
 
     fun clearPkceVerifier() {
-        prefs.edit().remove(KEY_PKCE_VERIFIER).apply()
+        prefs.edit().remove(KEY_PKCE_VERIFIER).remove(KEY_OAUTH_STATE).apply()
     }
+
+    fun saveOAuthState(state: String) {
+        prefs.edit().putString(KEY_OAUTH_STATE, state).apply()
+    }
+
+    fun getOAuthState(): String? = prefs.getString(KEY_OAUTH_STATE, null)
 
     companion object {
         private const val KEY_ACCESS = "mal_access_token"
         private const val KEY_REFRESH = "mal_refresh_token"
         private const val KEY_EXPIRES_AT = "mal_expires_at"
         private const val KEY_PKCE_VERIFIER = "mal_pkce_verifier"
+        private const val KEY_OAUTH_STATE = "mal_oauth_state"
     }
 }

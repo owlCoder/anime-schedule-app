@@ -25,10 +25,10 @@ class AuthRepositoryImpl @Inject constructor(
     override val avatarUrl: Flow<String> =
         prefsDataStore.userPreferencesFlow.map { it.malAvatarUrl }
 
-    override fun buildAuthUri(): Pair<Uri, String> {
+    override fun buildAuthUri(): Triple<Uri, String, String> {
         val verifier = PkceGenerator.generateCodeVerifier()
         val state = PkceGenerator.generateState()
-        return malAuthManager.buildAuthorizationUri(verifier, state) to verifier
+        return Triple(malAuthManager.buildAuthorizationUri(verifier, state), verifier, state)
     }
 
     override suspend fun handleOAuthCallback(code: String, verifier: String): Boolean =
