@@ -64,15 +64,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import rs.owlcoder.animeschedule.R
 import rs.owlcoder.animeschedule.domain.model.AnimeSeason
 import rs.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
 import rs.owlcoder.animeschedule.presentation.components.EmptyState
 import rs.owlcoder.animeschedule.presentation.components.LoadingShimmer
 
 private val FORMAT_LABELS = mapOf(
-    "TV" to "TV", "TV_SHORT" to "TV Short", "MOVIE" to "Film",
-    "SPECIAL" to "Specijal", "OVA" to "OVA", "ONA" to "ONA", "MUSIC" to "Music"
+    "TV" to "TV", "TV_SHORT" to "TV Short", "MOVIE" to "Movie",
+    "SPECIAL" to "Special", "OVA" to "OVA", "ONA" to "ONA", "MUSIC" to "Music"
 )
+
+@StringRes
+private fun AnimeSeason.labelRes(): Int = when (this) {
+    AnimeSeason.WINTER -> R.string.season_winter
+    AnimeSeason.SPRING -> R.string.season_spring
+    AnimeSeason.SUMMER -> R.string.season_summer
+    AnimeSeason.FALL   -> R.string.season_fall
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,7 +102,7 @@ fun SeasonalScreen(
                 TopAppBar(
                     title = {
                         Text(
-                            "${uiState.season.displayName} ${uiState.year}",
+                            "${stringResource(uiState.season.labelRes())} ${uiState.year}",
                             style = MaterialTheme.typography.titleLarge
                         )
                     },
@@ -104,7 +115,7 @@ fun SeasonalScreen(
                             val (prev, prevYear) = prevSeason(uiState.season, uiState.year)
                             viewModel.setSeason(prev, prevYear)
                         }) {
-                            Icon(Icons.AutoMirrored.Filled.NavigateBefore, contentDescription = "Prethodna sezona")
+                            Icon(Icons.AutoMirrored.Filled.NavigateBefore, contentDescription = null)
                         }
                     },
                     actions = {
@@ -112,13 +123,13 @@ fun SeasonalScreen(
                             val (next, nextYear) = nextSeason(uiState.season, uiState.year)
                             viewModel.setSeason(next, nextYear)
                         }) {
-                            Icon(Icons.AutoMirrored.Filled.NavigateNext, contentDescription = "Sledeća sezona")
+                            Icon(Icons.AutoMirrored.Filled.NavigateNext, contentDescription = null)
                         }
                         IconButton(onClick = { showFilterSheet = true }) {
                             BadgedBox(badge = { if (uiState.filter.isActive) Badge() }) {
                                 Icon(
                                     Icons.Default.FilterList,
-                                    contentDescription = "Filteri",
+                                    contentDescription = stringResource(R.string.seasonal_filter_title),
                                     tint = if (uiState.filter.isActive)
                                         MaterialTheme.colorScheme.primary
                                     else
@@ -146,13 +157,13 @@ fun SeasonalScreen(
                 uiState.isLoading -> LoadingShimmer()
                 uiState.error != null -> EmptyState(
                     icon = Icons.Default.AutoAwesome,
-                    title = "Greška",
+                    title = stringResource(R.string.seasonal_error_title),
                     subtitle = uiState.error ?: ""
                 )
                 uiState.filteredItems.isEmpty() -> EmptyState(
                     icon = Icons.Default.AutoAwesome,
-                    title = "Nema rezultata",
-                    subtitle = "Pokušaj drugačije filtere"
+                    title = stringResource(R.string.seasonal_empty_title),
+                    subtitle = stringResource(R.string.seasonal_empty_subtitle)
                 )
                 else -> LazyColumn(Modifier.fillMaxSize()) {
                     items(uiState.filteredItems, key = { it.anilistId }) { item ->
@@ -224,7 +235,7 @@ private fun SeasonTabRow(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = s.displayName,
+                    text = stringResource(s.labelRes()),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     color = textColor
@@ -323,13 +334,13 @@ private fun SeasonalFilterSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Filteri", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                TextButton(onClick = onClear) { Text("Resetuj") }
+                Text(stringResource(R.string.seasonal_filter_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                TextButton(onClick = onClear) { Text(stringResource(R.string.seasonal_filter_reset)) }
             }
             HorizontalDivider()
             Spacer(Modifier.height(12.dp))
 
-            Text("Sortiraj po", style = MaterialTheme.typography.labelMedium,
+            Text(stringResource(R.string.seasonal_sort_label), style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(8.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -337,7 +348,7 @@ private fun SeasonalFilterSheet(
                     FilterChip(
                         selected = filter.sortOrder == order,
                         onClick = { onSortChange(order) },
-                        label = { Text(order.label) }
+                        label = { Text(stringResource(order.labelRes)) }
                     )
                 }
             }
@@ -346,7 +357,7 @@ private fun SeasonalFilterSheet(
                 Spacer(Modifier.height(16.dp))
                 HorizontalDivider()
                 Spacer(Modifier.height(12.dp))
-                Text("Format", style = MaterialTheme.typography.labelMedium,
+                Text("Format", style = MaterialTheme.typography.labelMedium,  // format is a proper noun, same in all languages
                     color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -364,7 +375,7 @@ private fun SeasonalFilterSheet(
                 Spacer(Modifier.height(16.dp))
                 HorizontalDivider()
                 Spacer(Modifier.height(12.dp))
-                Text("Žanr", style = MaterialTheme.typography.labelMedium,
+                Text(stringResource(R.string.filter_genre), style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {

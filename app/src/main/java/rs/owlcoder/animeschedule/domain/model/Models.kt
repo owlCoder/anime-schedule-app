@@ -92,8 +92,8 @@ data class AnimeSearchResult(
     val userListEntry: MalListEntry?
 )
 
-enum class AnimeSeason(val displayName: String) {
-    WINTER("Zima"), SPRING("Proleće"), SUMMER("Leto"), FALL("Jesen")
+enum class AnimeSeason {
+    WINTER, SPRING, SUMMER, FALL
 }
 
 data class SeasonalAnimeItem(

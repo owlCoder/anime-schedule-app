@@ -74,6 +74,40 @@
     <string name="feature_search_title">Search anime</string>
     <string name="feature_search_body">Search any anime and add it to your list</string>
 
+    <!-- Bottom navigation -->
+    <string name="nav_schedule">Schedule</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_seasonal">Season</string>
+    <string name="nav_mylist">My List</string>
+    <string name="nav_notifications">Notifications</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Season names -->
+    <string name="season_winter">Winter</string>
+    <string name="season_spring">Spring</string>
+    <string name="season_summer">Summer</string>
+    <string name="season_fall">Fall</string>
+
+    <!-- Filter sheet (shared) -->
+    <string name="filter_title">Filters</string>
+    <string name="filter_reset">Reset</string>
+    <string name="filter_genre">Genre</string>
+    <string name="filter_format">Format</string>
+    <string name="filter_only_my_list">My list only</string>
+    <string name="filter_only_my_list_subtitle">Show only anime from your MAL list</string>
+
+    <!-- Seasonal screen -->
+    <string name="seasonal_title">Season</string>
+    <string name="seasonal_empty_title">No results</string>
+    <string name="seasonal_empty_subtitle">Try different filters</string>
+    <string name="seasonal_error_title">Error</string>
+    <string name="seasonal_filter_title">Filters</string>
+    <string name="seasonal_filter_reset">Reset</string>
+    <string name="seasonal_sort_label">Sort by</string>
+    <string name="seasonal_sort_popularity">Popularity</string>
+    <string name="seasonal_sort_score">Score</string>
+    <string name="seasonal_sort_title">Title</string>
+
     <!-- Schedule screen -->
     <string name="schedule_title">Schedule</string>
     <string name="schedule_tab_today">Today</string>
@@ -126,6 +160,13 @@
     <string name="changelog_version_prefix">Version %s</string>
 
     <!-- Changelog entries EN -->
+    <string name="cl_152_1">Seasonal anime browser — browse current and past seasons</string>
+    <string name="cl_152_2">Schedule filters — filter by genre, format, or your MAL list</string>
+    <string name="cl_152_3">Tapping a notification now opens the anime detail directly</string>
+    <string name="cl_152_4">Fixed last changelog entry being hidden behind the navbar</string>
+    <string name="cl_152_5">Notifications now refresh immediately after schedule sync</string>
+    <string name="cl_152_date">May 2026</string>
+
     <string name="cl_154_1">Language switching without app restart</string>
     <string name="cl_154_2">Language picker moved to first onboarding step</string>
     <string name="cl_154_3">Fixed onboarding flash on startup</string>

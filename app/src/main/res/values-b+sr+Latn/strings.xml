@@ -74,6 +74,40 @@
     <string name="feature_search_title">Pretraga anime</string>
     <string name="feature_search_body">Pretraži bilo koji anime i dodaj ga na listu</string>
 
+    <!-- Bottom navigation -->
+    <string name="nav_schedule">Raspored</string>
+    <string name="nav_search">Pretraga</string>
+    <string name="nav_seasonal">Sezona</string>
+    <string name="nav_mylist">Lista</string>
+    <string name="nav_notifications">Obaveštenja</string>
+    <string name="nav_settings">Podešavanja</string>
+
+    <!-- Season names -->
+    <string name="season_winter">Zima</string>
+    <string name="season_spring">Proleće</string>
+    <string name="season_summer">Leto</string>
+    <string name="season_fall">Jesen</string>
+
+    <!-- Filter sheet (shared) -->
+    <string name="filter_title">Filteri</string>
+    <string name="filter_reset">Resetuj</string>
+    <string name="filter_genre">Žanr</string>
+    <string name="filter_format">Format</string>
+    <string name="filter_only_my_list">Samo moja lista</string>
+    <string name="filter_only_my_list_subtitle">Prikaži samo anime sa MAL liste</string>
+
+    <!-- Seasonal screen -->
+    <string name="seasonal_title">Sezona</string>
+    <string name="seasonal_empty_title">Nema rezultata</string>
+    <string name="seasonal_empty_subtitle">Pokušaj drugačije filtere</string>
+    <string name="seasonal_error_title">Greška</string>
+    <string name="seasonal_filter_title">Filteri</string>
+    <string name="seasonal_filter_reset">Resetuj</string>
+    <string name="seasonal_sort_label">Sortiraj po</string>
+    <string name="seasonal_sort_popularity">Popularnost</string>
+    <string name="seasonal_sort_score">Ocena</string>
+    <string name="seasonal_sort_title">Naziv</string>
+
     <!-- Schedule screen -->
     <string name="schedule_title">Raspored</string>
     <string name="schedule_tab_today">Danas</string>
@@ -126,6 +160,13 @@
     <string name="changelog_version_prefix">Verzija %s</string>
 
     <!-- Changelog entries SR -->
+    <string name="cl_152_1">Sezonski pregled — pregledaj anime po sezonama</string>
+    <string name="cl_152_2">Filteri na rasporedu — filtriraj po žanru, formatu ili MAL listi</string>
+    <string name="cl_152_3">Klik na notifikaciju otvara detalje anime-a direktno</string>
+    <string name="cl_152_4">Ispravka poslednjeg unosa u changelogu koji je bio skriven iza navbara</string>
+    <string name="cl_152_5">Notifikacije se osvežavaju odmah nakon sinhronizacije rasporeda</string>
+    <string name="cl_152_date">Maj 2026</string>
+
     <string name="cl_154_1">Promena jezika bez restarta aplikacije</string>
     <string name="cl_154_2">Odabir jezika premešten na prvi korak onboardinga</string>
     <string name="cl_154_3">Ispravka flash ekrana pri pokretanju</string>

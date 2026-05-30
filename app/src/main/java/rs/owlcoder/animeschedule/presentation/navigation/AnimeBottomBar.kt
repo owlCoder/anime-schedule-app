@@ -16,10 +16,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.MovieFilter
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -36,23 +37,25 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import rs.owlcoder.animeschedule.R
 
 data class BottomNavItem(
     val screen: Screen,
-    val label: String,
+    @StringRes val labelRes: Int,
     val icon: ImageVector
 )
 
 private val items = listOf(
-    BottomNavItem(Screen.Schedule, "Raspored", Icons.Default.CalendarMonth),
-    BottomNavItem(Screen.Search, "Pretraga", Icons.Default.Search),
-    BottomNavItem(Screen.Seasonal, "Sezona", Icons.Default.AutoAwesome),
-    BottomNavItem(Screen.MyList, "Lista", Icons.AutoMirrored.Filled.FormatListBulleted),
-    BottomNavItem(Screen.Notifications, "Obaveštenja", Icons.Default.Notifications),
-    BottomNavItem(Screen.Settings, "Podešavanja", Icons.Default.Settings)
+    BottomNavItem(Screen.Schedule, R.string.nav_schedule, Icons.Default.CalendarMonth),
+    BottomNavItem(Screen.Search, R.string.nav_search, Icons.Default.Search),
+    BottomNavItem(Screen.Seasonal, R.string.nav_seasonal, Icons.Default.MovieFilter),
+    BottomNavItem(Screen.MyList, R.string.nav_mylist, Icons.AutoMirrored.Filled.FormatListBulleted),
+    BottomNavItem(Screen.Notifications, R.string.nav_notifications, Icons.Default.Notifications),
+    BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Default.Settings)
 )
 
 private val PillShape = RoundedCornerShape(28.dp)
@@ -145,7 +148,7 @@ private fun TgNavItem(
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = item.icon,
-                contentDescription = item.label,
+                contentDescription = stringResource(item.labelRes),
                 modifier = Modifier.size(26.dp),
                 tint = if (selected) MaterialTheme.colorScheme.primary
                        else MaterialTheme.colorScheme.onSurfaceVariant

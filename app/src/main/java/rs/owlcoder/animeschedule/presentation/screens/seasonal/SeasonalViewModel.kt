@@ -16,10 +16,10 @@ import java.time.LocalDate
 import java.time.Month
 import javax.inject.Inject
 
-enum class SeasonalSortOrder(val label: String) {
-    POPULARITY("Popularnost"),
-    SCORE("Ocena"),
-    TITLE("Naziv")
+enum class SeasonalSortOrder(@androidx.annotation.StringRes val labelRes: Int) {
+    POPULARITY(rs.owlcoder.animeschedule.R.string.seasonal_sort_popularity),
+    SCORE(rs.owlcoder.animeschedule.R.string.seasonal_sort_score),
+    TITLE(rs.owlcoder.animeschedule.R.string.seasonal_sort_title)
 }
 
 data class SeasonalFilter(

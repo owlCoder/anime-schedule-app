@@ -24,8 +24,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import rs.owlcoder.animeschedule.R
 
 private val FORMAT_LABELS = mapOf(
     "TV" to "TV",
@@ -70,12 +72,12 @@ fun ScheduleFilterSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Filteri",
+                    stringResource(R.string.filter_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 TextButton(onClick = onClear) {
-                    Text("Resetuj")
+                    Text(stringResource(R.string.filter_reset))
                 }
             }
 
@@ -91,12 +93,12 @@ fun ScheduleFilterSheet(
                 ) {
                     Column {
                         Text(
-                            "Samo moja lista",
+                            stringResource(R.string.filter_only_my_list),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            "Prikaži samo anime sa MAL liste",
+                            stringResource(R.string.filter_only_my_list_subtitle),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -113,7 +115,7 @@ fun ScheduleFilterSheet(
 
             if (availableFormats.isNotEmpty()) {
                 Text(
-                    "Format",
+                    stringResource(R.string.filter_format),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold
@@ -138,7 +140,7 @@ fun ScheduleFilterSheet(
 
             if (availableGenres.isNotEmpty()) {
                 Text(
-                    "Žanr",
+                    stringResource(R.string.filter_genre),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold
