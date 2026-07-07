@@ -13,7 +13,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.owlcoder.animeschedule.presentation.screens.detail.AnimeDetailScreen
 import com.owlcoder.animeschedule.presentation.screens.mylist.MyListScreen
-import com.owlcoder.animeschedule.presentation.screens.notifications.NotificationsScreen
 import com.owlcoder.animeschedule.presentation.screens.schedule.ScheduleScreen
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import com.owlcoder.animeschedule.presentation.screens.settings.SettingsScreen
@@ -49,11 +48,6 @@ fun AnimeNavHost(
         }
         composable(Screen.MyList.route) {
             MyListScreen(onAnimeClick = { animeId ->
-                navController.navigate(Screen.Detail.createRoute(animeId))
-            })
-        }
-        composable(Screen.Notifications.route) {
-            NotificationsScreen(onAnimeClick = { animeId ->
                 navController.navigate(Screen.Detail.createRoute(animeId))
             })
         }

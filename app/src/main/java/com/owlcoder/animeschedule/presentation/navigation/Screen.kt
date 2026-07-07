@@ -4,7 +4,6 @@ sealed class Screen(val route: String) {
     data object Schedule : Screen("schedule")
     data object Search : Screen("search")
     data object MyList : Screen("mylist")
-    data object Notifications : Screen("notifications")
     data object Settings : Screen("settings")
     data class Detail(val animeId: Int = 0) : Screen("detail/{animeId}") {
         companion object {
