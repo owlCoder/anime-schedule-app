@@ -31,6 +31,10 @@ CLAUDE.md
 # Planning / scratch files
 plan.md
 
+# Play Store working files — local only, not part of the repo
+play-store-assets/screenshot-*.png
+play-store-assets/PLAY-STORE-CHECKLIST.md
+
 # OS
 .DS_Store
 Thumbs.db
