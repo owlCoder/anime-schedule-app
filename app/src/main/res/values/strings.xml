@@ -118,6 +118,7 @@
     <string name="schedule_edit_status_action">Edit status</string>
     <string name="schedule_section_today">Today</string>
     <string name="schedule_section_tomorrow">Tomorrow</string>
+    <string name="schedule_section_recently_changed">Recently changed</string>
     <string name="schedule_section_this_week">This week</string>
     <string name="schedule_see_all">See all</string>
     <string name="schedule_hero_action_watched">Watched +1</string>

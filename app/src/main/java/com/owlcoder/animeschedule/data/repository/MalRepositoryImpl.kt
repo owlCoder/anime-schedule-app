@@ -47,7 +47,11 @@ class MalRepositoryImpl @Inject constructor(
                     existing.copy(
                         status = update.status?.malValue ?: existing.status,
                         numEpisodesWatched = update.episodesWatched ?: existing.numEpisodesWatched,
-                        score = update.score ?: existing.score
+                        score = update.score ?: existing.score,
+                        // Stamp the local edit time immediately so the "recently changed" home
+                        // section reflects this update right away, instead of waiting for the
+                        // next full list sync to pull MAL's own updated_at back down.
+                        updatedAt = java.time.Instant.now().toString()
                     )
                 )
             }

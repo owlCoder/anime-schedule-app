@@ -28,7 +28,8 @@ fun MalListEntryEntity.toDomain(): MalListEntry = MalListEntry(
     status = WatchStatus.fromMal(status),
     episodesWatched = numEpisodesWatched,
     score = score,
-    totalEpisodes = totalEpisodes
+    totalEpisodes = totalEpisodes,
+    updatedAt = updatedAt
 )
 
 fun MalAnimeNode.toSearchResult(existingEntry: MalListEntry? = null): AnimeSearchResult {

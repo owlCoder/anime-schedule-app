@@ -78,6 +78,7 @@ import androidx.compose.ui.res.stringResource
 import coil3.compose.AsyncImage
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AiringEpisode
+import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.presentation.components.CountdownText
 import com.owlcoder.animeschedule.presentation.components.EmptyState
 import com.owlcoder.animeschedule.presentation.components.GlassButton
@@ -259,7 +260,9 @@ fun ScheduleScreen(
                         }
                     },
                     onEditStatus = { editingEpisode = it },
-                    onSeeAll = { title, episodes -> seeAllSection = title to episodes }
+                    onSeeAll = { title, episodes -> seeAllSection = title to episodes },
+                    onRecentEntryClick = { onAnimeClick(it.animeId) },
+                    onIncrementEntry = { entry -> viewModel.incrementEpisode(entry.animeId) }
                 )
             }
         }
@@ -416,12 +419,15 @@ private fun TodayHomeContent(
     onCardClick: (AiringEpisode) -> Unit,
     onIncrementEpisode: (AiringEpisode) -> Unit,
     onEditStatus: (AiringEpisode) -> Unit,
-    onSeeAll: (title: String, episodes: List<AiringEpisode>) -> Unit
+    onSeeAll: (title: String, episodes: List<AiringEpisode>) -> Unit,
+    onRecentEntryClick: (MalListEntry) -> Unit = {},
+    onIncrementEntry: (MalListEntry) -> Unit = {}
 ) {
     val heroEpisodes = (uiState.todayEpisodes.ifEmpty { uiState.tomorrowEpisodes }).take(5)
     val weekEpisodes = uiState.weekDays.flatMap { it.episodes }
     val todayTitle = stringResource(R.string.schedule_section_today)
     val tomorrowTitle = stringResource(R.string.schedule_section_tomorrow)
+    val recentlyChangedTitle = stringResource(R.string.schedule_section_recently_changed)
     val weekTitle = stringResource(R.string.schedule_section_this_week)
 
     if (heroEpisodes.isEmpty() && uiState.todayEpisodes.isEmpty() && uiState.tomorrowEpisodes.isEmpty() && weekEpisodes.isEmpty()) {
@@ -471,6 +477,17 @@ private fun TodayHomeContent(
                     onSeeAll = { onSeeAll(tomorrowTitle, uiState.tomorrowEpisodes) },
                     pendingIncrementIds = uiState.pendingIncrementIds,
                     onIncrementEpisode = onIncrementEpisode
+                )
+            }
+        }
+        if (uiState.recentlyChangedEntries.isNotEmpty()) {
+            item {
+                RecentlyChangedSection(
+                    title = recentlyChangedTitle,
+                    entries = uiState.recentlyChangedEntries,
+                    pendingIncrementIds = uiState.pendingIncrementIds,
+                    onCardClick = onRecentEntryClick,
+                    onIncrementEntry = onIncrementEntry
                 )
             }
         }
@@ -930,6 +947,144 @@ private fun MiniEpisodeCard(
                                 )
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * "Recently changed" section: MAL Watching-status titles sorted by most-recently-updated,
+ * surfaced on the Schedule home even when they're not airing today/tomorrow — a recent
+ * progress edit is a strong signal the user is actively watching that title right now.
+ */
+@Composable
+private fun RecentlyChangedSection(
+    title: String,
+    entries: List<MalListEntry>,
+    pendingIncrementIds: Set<Int>,
+    onCardClick: (MalListEntry) -> Unit,
+    onIncrementEntry: (MalListEntry) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            items(entries, key = { it.animeId }) { entry ->
+                RecentEntryCard(
+                    entry = entry,
+                    onClick = { onCardClick(entry) },
+                    isIncrementing = entry.animeId in pendingIncrementIds,
+                    onIncrementEpisode = { onIncrementEntry(entry) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecentEntryCard(
+    entry: MalListEntry,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier.width(140.dp),
+    isIncrementing: Boolean = false,
+    onIncrementEpisode: () -> Unit = {}
+) {
+    Column(
+        modifier = modifier.clickable(onClick = onClick),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        AsyncImage(
+            model = entry.coverImageUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(3f / 4f)
+                .clip(MaterialTheme.shapes.medium)
+        )
+        Text(
+            text = entry.title,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 2.dp)
+        )
+        val total = entry.totalEpisodes
+        val progress = total?.takeIf { it > 0 }
+            ?.let { (entry.episodesWatched.toFloat() / it.toFloat()).coerceIn(0f, 1f) }
+        Column(
+            modifier = Modifier.padding(horizontal = 2.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "${entry.episodesWatched}",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1
+                )
+                if (total != null) {
+                    Text(
+                        text = "$total",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                if (progress != null) {
+                    androidx.compose.material3.LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(4.dp)
+                            .clip(PillShape),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                        strokeCap = androidx.compose.material3.ProgressIndicatorDefaults.LinearStrokeCap
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(22.dp)
+                        .clip(PillShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .clickable(enabled = !isIncrementing, onClick = onIncrementEpisode),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isIncrementing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(11.dp),
+                            strokeWidth = 1.5.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = stringResource(R.string.schedule_hero_action_watched),
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }

@@ -9,7 +9,11 @@ data class MalListEntry(
     val status: WatchStatus,
     val episodesWatched: Int,
     val score: Int,
-    val totalEpisodes: Int?
+    val totalEpisodes: Int?,
+    /** ISO-8601 timestamp of the entry's last update on MAL (episode progress, status, score
+     *  change, etc.) — drives the Schedule home "Recently changed" section. Null for entries
+     *  synthesized outside the MAL list sync (e.g. search results before the user adds them). */
+    val updatedAt: String? = null
 )
 
 data class AiringEpisode(

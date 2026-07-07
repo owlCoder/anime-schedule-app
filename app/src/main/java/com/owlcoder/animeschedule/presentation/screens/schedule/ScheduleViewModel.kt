@@ -20,9 +20,12 @@ import com.owlcoder.animeschedule.core.result.AppResult
 import com.owlcoder.animeschedule.core.result.AppError
 import com.owlcoder.animeschedule.data.work.AiringNotificationWorker
 import com.owlcoder.animeschedule.domain.model.AiringEpisode
+import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.ScheduleDay
+import com.owlcoder.animeschedule.domain.model.WatchStatus
 import com.owlcoder.animeschedule.domain.repository.SettingsRepository
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
+import com.owlcoder.animeschedule.domain.usecase.GetMalUserListUseCase
 import com.owlcoder.animeschedule.domain.usecase.GetTodayScheduleUseCase
 import com.owlcoder.animeschedule.domain.usecase.GetTomorrowScheduleUseCase
 import com.owlcoder.animeschedule.domain.usecase.GetUnreadCountUseCase
@@ -30,7 +33,25 @@ import com.owlcoder.animeschedule.domain.usecase.GetWeekScheduleUseCase
 import com.owlcoder.animeschedule.domain.usecase.IncrementEpisodeUseCase
 import com.owlcoder.animeschedule.domain.usecase.RefreshScheduleUseCase
 import com.owlcoder.animeschedule.domain.usecase.UpdateMalListEntryUseCase
+import java.time.Instant
+import java.time.format.DateTimeParseException
 import javax.inject.Inject
+
+/** Parses MAL's ISO-8601 updated_at (offset form, e.g. "2026-07-07T10:15:00+00:00") or our own
+ *  locally-stamped Instant.toString() form — returns null if unparseable/absent rather than
+ *  throwing, since this only drives a "recently changed" sort, not anything critical. */
+private fun String?.toInstantOrNull(): Instant? {
+    if (this.isNullOrBlank()) return null
+    return try {
+        Instant.parse(this)
+    } catch (_: DateTimeParseException) {
+        try {
+            java.time.OffsetDateTime.parse(this).toInstant()
+        } catch (_: DateTimeParseException) {
+            null
+        }
+    }
+}
 
 data class ScheduleFilter(
     val onlyMyList: Boolean = false,
@@ -55,7 +76,10 @@ data class ScheduleUiState(
     val availableGenres: List<String> = emptyList(),
     val availableFormats: List<String> = emptyList(),
     val pendingIncrementIds: Set<Int> = emptySet(),
-    val unreadNotificationCount: Int = 0
+    val unreadNotificationCount: Int = 0,
+    /** Watching-status MAL entries, most-recently-updated first — surfaces "you were just
+     *  watching this" titles on the Schedule home even when they're not airing today/tomorrow. */
+    val recentlyChangedEntries: List<MalListEntry> = emptyList()
 )
 
 private fun List<AiringEpisode>.applyFilter(filter: ScheduleFilter): List<AiringEpisode> {
@@ -82,6 +106,7 @@ class ScheduleViewModel @Inject constructor(
     private val incrementEpisodeUseCase: IncrementEpisodeUseCase,
     private val updateMalListEntryUseCase: UpdateMalListEntryUseCase,
     private val getUnreadCountUseCase: GetUnreadCountUseCase,
+    private val getMalUserListUseCase: GetMalUserListUseCase,
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
@@ -135,6 +160,14 @@ class ScheduleViewModel @Inject constructor(
             }
             .combine(_pendingIncrementIds) { state, pending -> state.copy(pendingIncrementIds = pending) }
             .combine(getUnreadCountUseCase()) { state, unread -> state.copy(unreadNotificationCount = unread) }
+            .combine(getMalUserListUseCase()) { state, listResult ->
+                val entries = (listResult as? AppResult.Success)?.data ?: emptyList()
+                val recentlyChanged = entries
+                    .filter { it.status == WatchStatus.WATCHING }
+                    .sortedByDescending { it.updatedAt.toInstantOrNull() ?: Instant.EPOCH }
+                    .take(10)
+                state.copy(recentlyChangedEntries = recentlyChanged)
+            }
             .combine(_hasLoadedOnce) { state, loadedOnce ->
                 state.copy(isInitialLoad = state.isLoading && !loadedOnce)
             }

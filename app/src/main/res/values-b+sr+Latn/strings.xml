@@ -118,6 +118,7 @@
     <string name="schedule_edit_status_action">Uredi status</string>
     <string name="schedule_section_today">Danas</string>
     <string name="schedule_section_tomorrow">Sutra</string>
+    <string name="schedule_section_recently_changed">Nedavno menjano</string>
     <string name="schedule_section_this_week">Ove nedelje</string>
     <string name="schedule_see_all">Vidi sve</string>
     <string name="schedule_hero_action_watched">Odgledano +1</string>
