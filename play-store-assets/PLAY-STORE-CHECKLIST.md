@@ -19,9 +19,10 @@
 
 - `animeschedule-icon-512.png` — 512×512 app icon (Play Console → Store presence → Main store listing)
 - `animeschedule-feature-1024x500.png` — 1024×500 feature graphic
-- Screenshots — **not generated yet**; Play Console requires at least 2 phone screenshots
-  (min 320px, max 3840px on the long edge). Capture from the app itself (`adb exec-out screencap`)
-  once you've picked the screens to showcase (e.g. Schedule home, Detail, Seasonal, MyList).
+- `screenshot-1-schedule.png` / `screenshot-2-settings.png` / `screenshot-3-detail.png` /
+  `screenshot-4-seasonal.png` — phone screenshots (captured on a 1280×2856 emulator, well above
+  Play's min 320px requirement). Covers Schedule home, Settings, Detail, and the Seasonal browser.
+  Add MyList/Search if you want more coverage — same `adb exec-out screencap -p` approach.
 - Regenerate icon/feature graphic anytime with: `python play-store-assets/generate_assets.py`
   (requires Pillow: `pip install pillow`).
 
@@ -49,6 +50,5 @@
    or a separate one — this app is `com.owlcoder.animeschedule`, not `rs.tapizlabs.*`, so it can
    go under either account depending on how you want it organized.
 2. Enable GitHub Pages (or otherwise host `PRIVACY.md` publicly) and get the URL.
-3. Take a few in-app screenshots for the listing.
-4. Upload the AAB, paste the listing text, upload graphics + screenshots, fill the Data safety
+3. Upload the AAB, paste the listing text, upload graphics + screenshots, fill the Data safety
    form, submit for review.
