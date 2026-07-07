@@ -1,16 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Deep dark navy base -->
-    <path
-        android:fillColor="#0F0F1A"
-        android:pathData="M0,0h108v108h-108z" />
-    <!-- Subtle blue tint -->
-    <path
-        android:fillColor="#1A237E"
-        android:fillAlpha="0.35"
-        android:pathData="M0,0h108v108h-108z" />
+
+    <!-- Base: brand violet/indigo diagonal gradient for depth (Tapiz Admin launcher
+         convention — solid brand tile — but violet instead of cyan). -->
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="0"
+                android:endX="108"
+                android:endY="108">
+                <item android:offset="0.0" android:color="#FF8B5CF6" />
+                <item android:offset="1.0" android:color="#FF5B21B6" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Soft radial glow from the top-left so the surface reads like a lit tile. -->
+    <path android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="34"
+                android:centerY="30"
+                android:gradientRadius="86">
+                <item android:offset="0.0" android:color="#5CFFFFFF" />
+                <item android:offset="0.55" android:color="#1FFFFFFF" />
+                <item android:offset="1.0" android:color="#00FFFFFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
 </vector>

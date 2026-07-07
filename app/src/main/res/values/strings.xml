@@ -3,10 +3,9 @@
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
-    <string name="settings_theme">Theme</string>
-    <string name="settings_theme_system">System</string>
-    <string name="settings_theme_light">Light</string>
-    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_section_account">Account</string>
+    <string name="settings_section_preferences">Preferences</string>
+    <string name="settings_section_info">Info</string>
     <string name="settings_notifications">Notifications</string>
     <string name="settings_notifications_on">Enabled</string>
     <string name="settings_notifications_off">Disabled</string>
@@ -26,11 +25,9 @@
     <string name="profile_not_logged_in">Not logged in</string>
     <string name="profile_logout">Log out</string>
     <string name="profile_login">Sign in</string>
-
-    <!-- Appearance bottom sheet -->
-    <string name="appearance_title">Appearance</string>
-    <string name="appearance_theme_label">Theme</string>
-    <string name="appearance_accent_label">Accent color</string>
+    <string name="profile_stat_entries">Titles</string>
+    <string name="profile_stat_episodes">Episodes</string>
+    <string name="profile_stat_hours">Hours</string>
 
     <!-- Timezone picker -->
     <string name="timezone_title">Time zone</string>
@@ -115,6 +112,25 @@
     <string name="schedule_tab_week">Week</string>
     <string name="schedule_empty_title">No anime today</string>
     <string name="schedule_empty_subtitle">Nothing is airing right now</string>
+    <string name="schedule_watched_progress">Watched: %1$d%2$s</string>
+    <string name="schedule_episode_label">Ep. %1$d%2$s</string>
+    <string name="schedule_episode_number_short">#%1$d</string>
+    <string name="schedule_edit_status_action">Edit status</string>
+    <string name="schedule_section_today">Today</string>
+    <string name="schedule_section_tomorrow">Tomorrow</string>
+    <string name="schedule_section_this_week">This week</string>
+    <string name="schedule_see_all">See all</string>
+    <string name="schedule_hero_action_watched">Watched +1</string>
+    <string name="schedule_hero_action_details">Details</string>
+    <string name="schedule_notifications_action">Notifications</string>
+
+    <!-- Toast messages -->
+    <string name="toast_episode_marked">Episode marked as watched</string>
+    <string name="toast_update_error">Something went wrong — try again</string>
+
+    <!-- Splash / initial load -->
+    <string name="splash_eyebrow">Loading your schedule</string>
+    <string name="splash_title">Getting today\'s episodes ready…</string>
 
     <!-- Search screen -->
     <string name="search_title">Search</string>
@@ -133,6 +149,14 @@
     <string name="mylist_empty_subtitle">Add anime from the schedule or search</string>
     <string name="mylist_not_logged_in_title">Not signed in</string>
     <string name="mylist_not_logged_in_subtitle">Sign in to MyAnimeList to see your list</string>
+
+    <!-- Watch status labels (WatchStatus enum) -->
+    <string name="watch_status_watching">Watching</string>
+    <string name="watch_status_completed">Completed</string>
+    <string name="watch_status_on_hold">On hold</string>
+    <string name="watch_status_dropped">Dropped</string>
+    <string name="watch_status_plan_to_watch">Plan to watch</string>
+    <string name="watch_status_not_in_list">Not in list</string>
 
     <!-- Notifications screen -->
     <string name="notif_screen_title">Notifications</string>
@@ -158,12 +182,34 @@
     <string name="detail_next_episode">Next episode</string>
     <string name="detail_watch_trailer">Watch trailer</string>
     <string name="detail_open_mal">Open on MAL</string>
+    <string name="detail_add_to_list">Add to list</string>
+
+    <!-- Related anime relation types -->
+    <string name="relation_prequel">Prequel</string>
+    <string name="relation_sequel">Sequel</string>
+    <string name="relation_side_story">Side story</string>
+    <string name="relation_spin_off">Spin-off</string>
+    <string name="relation_alternative">Alternative</string>
+    <string name="relation_summary">Summary</string>
+    <string name="relation_adaptation">Adaptation</string>
+    <string name="relation_parent">Parent story</string>
+    <string name="relation_compilation">Compilation</string>
 
     <!-- Changelog screen -->
     <string name="changelog_title">Changelog</string>
     <string name="changelog_version_prefix">Version %s</string>
 
     <!-- Changelog entries EN -->
+    <string name="cl_201_1">New app branding — updated icon and "AS" logo mark</string>
+    <string name="cl_201_2">Animated loading splash screen on app start</string>
+    <string name="cl_201_3">Redesigned bottom navigation bar</string>
+    <string name="cl_201_4">Search and notifications now open as quick overlays instead of separate screens</string>
+    <string name="cl_201_5">Reworked "Add to list" screen — more compact, with an episode limit</string>
+    <string name="cl_201_6">New glass-style buttons across the app</string>
+    <string name="cl_201_7">Home screen polish — auto-scrolling highlights, working "See all", refreshed icons</string>
+    <string name="cl_201_8">More compact notification settings</string>
+    <string name="cl_201_date">July 2026</string>
+
     <string name="cl_152_1">Seasonal anime browser — browse current and past seasons</string>
     <string name="cl_152_2">Schedule filters — filter by genre, format, or your MAL list</string>
     <string name="cl_152_3">Tapping a notification now opens the anime detail directly</string>
@@ -212,6 +258,10 @@
     <string name="cl_100_date">December 2025</string>
 
     <!-- About screen -->
+    <string name="cd_back">Back</string>
+    <string name="cd_edit_list_status">Edit list status</string>
+    <string name="cd_expand">Expand</string>
+    <string name="cd_collapse">Collapse</string>
     <string name="about_version_label">Version</string>
     <string name="about_build_label">Build</string>
     <string name="about_platform_label">Platform</string>
@@ -226,10 +276,23 @@
     <string name="about_tech_ui">UI</string>
     <string name="about_tech_arch">Architecture</string>
     <string name="about_version_prefix">Version %s</string>
+    <string name="about_logo_monogram">AS</string>
+    <string name="about_tagline">Track anime airing schedules, all in one place</string>
+    <string name="about_footer_copyright">© %d owlcoder. All rights reserved.</string>
 
     <!-- Common -->
     <string name="common_retry">Retry</string>
     <string name="common_loading">Loading…</string>
     <string name="common_error_generic">Something went wrong</string>
     <string name="common_offline">Offline — showing cached data</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_save">Save</string>
+
+    <!-- List status bottom sheet -->
+    <string name="list_status_title">Edit status</string>
+    <string name="list_status_episodes_label">Episodes</string>
+    <string name="list_status_decrease_episode">Decrease episode</string>
+    <string name="list_status_increase_episode">Increase episode</string>
+    <string name="list_status_score_label">Score: %s</string>
+    <string name="list_status_score_unrated">—</string>
 </resources>

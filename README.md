@@ -64,7 +64,7 @@ Requires `local.properties` (not committed to git):
 
 ```properties
 MAL_CLIENT_ID=your_mal_client_id
-MAL_REDIRECT_URI=rs.owlcoder.animeschedule://oauth
+MAL_REDIRECT_URI=com.owlcoder.animeschedule://oauth
 
 # Release signing
 KEYSTORE_PATH=/path/to/keystore.jks

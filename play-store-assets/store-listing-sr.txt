@@ -1,0 +1,20 @@
+Naziv aplikacije
+AnimeSchedule
+
+Kratak opis
+Prati raspored emitovanja anime serija, odbrojavanje do epizoda i svoju MyAnimeList listu.
+
+Kompletan opis
+AnimeSchedule je nativna Android aplikacija za praćenje rasporeda emitovanja anime serija, zasnovana na AniList podacima uživo, sa opcionom MyAnimeList prijavom za praćenje lične liste.
+
+Funkcionalnosti:
+• Raspored za danas / sutra / ovu nedelju, sa odbrojavanjem uživo do emitovanja svake epizode
+• Sezonski pregled anime naslova — pregled trenutne i prošlih sezona sa filterima po žanru/formatu
+• Prijava putem MyAnimeList naloga za pregled svoje liste, napretka gledanja i ocena
+• "+1" dugme za brzo označavanje sledeće epizode kao odgledane, sa automatskim predlogom za ocenu i status "Završeno" kada se serija završi
+• Obaveštenja o emitovanju, sa podesivim vremenom (odmah, ili odabrani period pre/posle emitovanja)
+• Pretraga celog AniList kataloga i direktno dodavanje naslova na listu
+• Podrška za engleski i srpski (latinica) jezik, promena bez ponovnog pokretanja aplikacije
+• Tamna tema, moderan interfejs
+
+Prijava putem MyAnimeList je opciona — raspored i sezonski pregled u potpunosti rade i bez naloga. Nekomercijalna, bez reklama, otvorenog koda.

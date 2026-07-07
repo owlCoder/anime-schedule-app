@@ -18,11 +18,11 @@
 # Kotlinx Serialization
 -keepattributes *Annotation*, InnerClasses
 -dontnote kotlinx.serialization.AnnotationsKt
--keep,includedescriptorclasses class rs.owlcoder.animeschedule.**$$serializer { *; }
--keepclassmembers class rs.owlcoder.animeschedule.** {
+-keep,includedescriptorclasses class com.owlcoder.animeschedule.**$$serializer { *; }
+-keepclassmembers class com.owlcoder.animeschedule.** {
     *** Companion;
 }
--keepclasseswithmembers class rs.owlcoder.animeschedule.** {
+-keepclasseswithmembers class com.owlcoder.animeschedule.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
 

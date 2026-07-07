@@ -1,28 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- "A" left stroke -->
+    <!--
+      AnimeSchedule mark: an "AS" monogram — a bold "A" with a raised, superscript-style
+      "S" to its upper-right. Clean WHITE glyph on the brand violet background tile,
+      matching the Tapiz Admin launcher's white-on-brand convention. A faint dark
+      drop-shadow layer sits under the glyph for depth. All artwork stays within the
+      adaptive-icon safe zone (~x/y 21..87).
+    -->
+
+    <!-- Shadow layer: same glyph, dark + translucent, nudged down-right ~1.5u. -->
+    <group android:translateX="1.5" android:translateY="1.6">
+        <path
+            android:fillColor="#40000000"
+            android:fillType="evenOdd"
+            android:pathData="M40,30 L58,30 L72,78 L61,78 L57.5,66 L40.5,66 L37,78 L26,78 Z M43.7,56 L54.3,56 L49,37.5 Z" />
+        <path
+            android:fillColor="#40000000"
+            android:pathData="M62,32 C62,28.5 65.2,26 70.2,26 C73.9,26 76.7,27.4 78.6,29.6 L74.8,33.4 C73.6,32.1 71.9,31.1 70.1,31.1 C68.1,31.1 66.9,32 66.9,33.2 C66.9,34.6 68.3,35.1 71.2,35.9 C75.6,37 78.8,38.6 78.8,43 C78.8,47 75.4,49.9 70.2,49.9 C66.1,49.9 62.9,48.3 60.8,45.7 L64.7,41.9 C66.1,43.6 68,44.7 70.3,44.7 C72.5,44.7 73.8,43.8 73.8,42.4 C73.8,41 72.6,40.4 69.2,39.6 C64.9,38.5 62,36.7 62,32 Z" />
+    </group>
+
+    <!-- "A": bold triangular monogram stroke with a hollow crossbar cut (evenOdd). -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M27,76 L40,32 L54,64 L41,64 L37,76 Z" />
+        android:fillType="evenOdd"
+        android:pathData="M40,30 L58,30 L72,78 L61,78 L57.5,66 L40.5,66 L37,78 L26,78 Z M43.7,56 L54.3,56 L49,37.5 Z" />
 
-    <!-- "A" right stroke -->
+    <!-- "S": compact, raised to the upper-right (superscript feel). -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,64 L68,32 L81,76 L67,76 L63,64 Z" />
-
-    <!-- "A" crossbar fill cover (gap) -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M43,58 L65,58 L62,50 L46,50 Z" />
-
-    <!-- Dot accent under — small circle bottom center -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.5"
-        android:pathData="M54,80 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
-
+        android:pathData="M62,32 C62,28.5 65.2,26 70.2,26 C73.9,26 76.7,27.4 78.6,29.6 L74.8,33.4 C73.6,32.1 71.9,31.1 70.1,31.1 C68.1,31.1 66.9,32 66.9,33.2 C66.9,34.6 68.3,35.1 71.2,35.9 C75.6,37 78.8,38.6 78.8,43 C78.8,47 75.4,49.9 70.2,49.9 C66.1,49.9 62.9,48.3 60.8,45.7 L64.7,41.9 C66.1,43.6 68,44.7 70.3,44.7 C72.5,44.7 73.8,43.8 73.8,42.4 C73.8,41 72.6,40.4 69.2,39.6 C64.9,38.5 62,36.7 62,32 Z" />
 </vector>

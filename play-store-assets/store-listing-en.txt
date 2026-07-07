@@ -1,0 +1,20 @@
+App name
+AnimeSchedule
+
+Short description
+Track anime airing schedules, episode countdowns, and your MyAnimeList progress.
+
+Full description
+AnimeSchedule is a native Android app for tracking anime airing schedules, built around AniList's live schedule data with an optional MyAnimeList login for personal list tracking.
+
+Features:
+• Today / Tomorrow / This week schedule, with a live countdown to each episode's airing time
+• Seasonal anime browser — browse current and past seasons with genre/format filters
+• Sign in with your MyAnimeList account to see your list, watch progress, and score
+• One-tap "+1" to mark the next episode watched, with an automatic prompt to rate and mark a series Completed when you finish its finale
+• Airing notifications, with configurable timing (immediately, or a chosen offset before/after airing)
+• Search across AniList's full catalog and add titles straight to your list
+• English and Serbian (Latin) language support, switchable without restarting the app
+• Dark theme, modern UI
+
+Sign-in with MyAnimeList is optional — the schedule and seasonal browser work fully without an account. Non-commercial, ad-free, open-source.

@@ -1,36 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="96dp"
-    android:height="96dp"
-    android:viewportWidth="96"
-    android:viewportHeight="96">
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
 
-    <!-- Background -->
-    <path
-        android:fillColor="#0F0F1A"
-        android:pathData="M0,0h96v96h-96z" />
-    <path
-        android:fillColor="#1A237E"
-        android:fillAlpha="0.35"
-        android:pathData="M0,0h96v96h-96z" />
+    <!-- Self-contained in-app mark: a violet-gradient rounded tile with the "AS"
+         monogram glyph (bold "A" + raised superscript "S"), matching the launcher
+         foreground. Reads on both light and dark container tiles. -->
+    <path android:pathData="M18,26 L90,26 A8,8 0 0 1 98,34 L98,74 A8,8 0 0 1 90,82 L18,82 A8,8 0 0 1 10,74 L10,34 A8,8 0 0 1 18,26 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="10"
+                android:startY="26"
+                android:endX="98"
+                android:endY="82">
+                <item android:offset="0.0" android:color="#FF8B5CF6" />
+                <item android:offset="1.0" android:color="#FF5B21B6" />
+            </gradient>
+        </aapt:attr>
+    </path>
 
-    <!-- "A" left stroke -->
+    <!-- Top sheen highlight -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M20,72 L33,28 L48,60 L35,60 L31,72 Z" />
+        android:fillAlpha="0.14"
+        android:pathData="M18,26 L90,26 A8,8 0 0 1 98,34 L98,40 L10,40 L10,34 A8,8 0 0 1 18,26 Z" />
 
-    <!-- "A" right stroke -->
+    <!-- "A": bold triangular monogram stroke with a hollow crossbar cut (evenOdd). -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M48,60 L63,28 L76,72 L62,72 L58,60 Z" />
+        android:fillType="evenOdd"
+        android:pathData="M39,33 L57,33 L70,76 L60,76 L56.7,65 L39.3,65 L36,76 L26,76 Z M42.9,56 L53.1,56 L48,39.5 Z" />
 
-    <!-- "A" crossbar -->
+    <!-- "S": compact, raised to the upper-right (superscript feel). -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M37,54 L59,54 L56,46 L40,46 Z" />
-
-    <!-- Blue dot accent bottom center -->
-    <path
-        android:fillColor="#2AABEE"
-        android:pathData="M48,77 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
-
+        android:pathData="M61,35 C61,31.7 64.1,29.3 68.9,29.3 C72.5,29.3 75.2,30.6 77,32.7 L73.4,36.3 C72.2,35.1 70.6,34.1 68.9,34.1 C67,34.1 65.8,35 65.8,36.1 C65.8,37.4 67.1,37.9 69.9,38.6 C74.1,39.7 77.1,41.2 77.1,45.3 C77.1,49.1 73.9,51.8 68.9,51.8 C65,51.8 61.9,50.3 60,47.9 L63.6,44.3 C64.9,45.9 66.7,46.9 68.9,46.9 C71,46.9 72.2,46.1 72.2,44.7 C72.2,43.4 71.1,42.8 67.9,42 C63.8,41 61,39.3 61,35 Z" />
 </vector>

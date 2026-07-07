@@ -3,10 +3,9 @@
 
     <!-- Settings -->
     <string name="settings_title">Podešavanja</string>
-    <string name="settings_theme">Tema</string>
-    <string name="settings_theme_system">Sistemska</string>
-    <string name="settings_theme_light">Svetla</string>
-    <string name="settings_theme_dark">Tamna</string>
+    <string name="settings_section_account">Nalog</string>
+    <string name="settings_section_preferences">Podešavanja</string>
+    <string name="settings_section_info">Informacije</string>
     <string name="settings_notifications">Notifikacije</string>
     <string name="settings_notifications_on">Uključene</string>
     <string name="settings_notifications_off">Isključene</string>
@@ -26,11 +25,9 @@
     <string name="profile_not_logged_in">Nije ulogovan</string>
     <string name="profile_logout">Odjavi</string>
     <string name="profile_login">Prijavi se</string>
-
-    <!-- Appearance bottom sheet -->
-    <string name="appearance_title">Izgled</string>
-    <string name="appearance_theme_label">Tema</string>
-    <string name="appearance_accent_label">Boja akcenta</string>
+    <string name="profile_stat_entries">Naslova</string>
+    <string name="profile_stat_episodes">Epizoda</string>
+    <string name="profile_stat_hours">Sati</string>
 
     <!-- Timezone picker -->
     <string name="timezone_title">Vremenska zona</string>
@@ -115,6 +112,25 @@
     <string name="schedule_tab_week">Nedelja</string>
     <string name="schedule_empty_title">Nema anime danas</string>
     <string name="schedule_empty_subtitle">Trenutno se ništa ne emituje</string>
+    <string name="schedule_watched_progress">Odgledano: %1$d%2$s</string>
+    <string name="schedule_episode_label">Ep. %1$d%2$s</string>
+    <string name="schedule_episode_number_short">#%1$d</string>
+    <string name="schedule_edit_status_action">Uredi status</string>
+    <string name="schedule_section_today">Danas</string>
+    <string name="schedule_section_tomorrow">Sutra</string>
+    <string name="schedule_section_this_week">Ove nedelje</string>
+    <string name="schedule_see_all">Vidi sve</string>
+    <string name="schedule_hero_action_watched">Odgledano +1</string>
+    <string name="schedule_hero_action_details">Detalji</string>
+    <string name="schedule_notifications_action">Obaveštenja</string>
+
+    <!-- Toast messages -->
+    <string name="toast_episode_marked">Epizoda označena kao odgledana</string>
+    <string name="toast_update_error">Greška — pokušaj ponovo</string>
+
+    <!-- Splash / initial load -->
+    <string name="splash_eyebrow">Učitavanje rasporeda</string>
+    <string name="splash_title">Spremamo današnje epizode…</string>
 
     <!-- Search screen -->
     <string name="search_title">Pretraga</string>
@@ -133,6 +149,14 @@
     <string name="mylist_empty_subtitle">Dodaj anime iz rasporeda ili pretrage</string>
     <string name="mylist_not_logged_in_title">Nisi prijavljen</string>
     <string name="mylist_not_logged_in_subtitle">Prijavi se na MyAnimeList da vidiš svoju listu</string>
+
+    <!-- Watch status labels (WatchStatus enum) -->
+    <string name="watch_status_watching">Gledam</string>
+    <string name="watch_status_completed">Završeno</string>
+    <string name="watch_status_on_hold">Pauzirao</string>
+    <string name="watch_status_dropped">Dropovao</string>
+    <string name="watch_status_plan_to_watch">Planiram</string>
+    <string name="watch_status_not_in_list">Nije u listi</string>
 
     <!-- Notifications screen -->
     <string name="notif_screen_title">Obaveštenja</string>
@@ -158,12 +182,34 @@
     <string name="detail_next_episode">Sledeća epizoda</string>
     <string name="detail_watch_trailer">Pogledaj trejler</string>
     <string name="detail_open_mal">Otvori na MAL</string>
+    <string name="detail_add_to_list">Dodaj na listu</string>
+
+    <!-- Related anime relation types -->
+    <string name="relation_prequel">Prethodni deo</string>
+    <string name="relation_sequel">Nastavak</string>
+    <string name="relation_side_story">Sporedna priča</string>
+    <string name="relation_spin_off">Spin-off</string>
+    <string name="relation_alternative">Alternativa</string>
+    <string name="relation_summary">Rezime</string>
+    <string name="relation_adaptation">Adaptacija</string>
+    <string name="relation_parent">Glavna priča</string>
+    <string name="relation_compilation">Kompilacija</string>
 
     <!-- Changelog screen -->
     <string name="changelog_title">Istorija promena</string>
     <string name="changelog_version_prefix">Verzija %s</string>
 
     <!-- Changelog entries SR -->
+    <string name="cl_201_1">Novi brending aplikacije — nova ikonica i "AS" logo oznaka</string>
+    <string name="cl_201_2">Animirani loading ekran pri pokretanju aplikacije</string>
+    <string name="cl_201_3">Redizajnirana donja navigaciona traka</string>
+    <string name="cl_201_4">Pretraga i notifikacije se sada otvaraju kao brzi overlay umesto posebnih ekrana</string>
+    <string name="cl_201_5">Redizajniran ekran "Dodaj na listu" — kompaktniji, sa ograničenjem broja epizoda</string>
+    <string name="cl_201_6">Nova glass dugmad kroz celu aplikaciju</string>
+    <string name="cl_201_7">Doterana početna strana — auto-scroll istaknutih naslova, ispravljen "Prikaži sve", nove ikonice</string>
+    <string name="cl_201_8">Kompaktnija podešavanja notifikacija</string>
+    <string name="cl_201_date">Jul 2026</string>
+
     <string name="cl_152_1">Sezonski pregled — pregledaj anime po sezonama</string>
     <string name="cl_152_2">Filteri na rasporedu — filtriraj po žanru, formatu ili MAL listi</string>
     <string name="cl_152_3">Klik na notifikaciju otvara detalje anime-a direktno</string>
@@ -212,6 +258,10 @@
     <string name="cl_100_date">Decembar 2025</string>
 
     <!-- About screen -->
+    <string name="cd_back">Nazad</string>
+    <string name="cd_edit_list_status">Uredi status na listi</string>
+    <string name="cd_expand">Proširi</string>
+    <string name="cd_collapse">Skupi</string>
     <string name="about_version_label">Verzija</string>
     <string name="about_build_label">Build</string>
     <string name="about_platform_label">Platforma</string>
@@ -226,10 +276,23 @@
     <string name="about_tech_ui">UI</string>
     <string name="about_tech_arch">Arhitektura</string>
     <string name="about_version_prefix">Verzija %s</string>
+    <string name="about_logo_monogram">AS</string>
+    <string name="about_tagline">Prati raspored emitovanja anime serija na jednom mestu</string>
+    <string name="about_footer_copyright">© %d owlcoder. Sva prava zadržana.</string>
 
     <!-- Common -->
     <string name="common_retry">Pokušaj ponovo</string>
     <string name="common_loading">Učitavanje…</string>
     <string name="common_error_generic">Nešto je pošlo naopako</string>
     <string name="common_offline">Offline — prikazuju se keširani podaci</string>
+    <string name="common_cancel">Otkaži</string>
+    <string name="common_save">Sačuvaj</string>
+
+    <!-- List status bottom sheet -->
+    <string name="list_status_title">Uredi status</string>
+    <string name="list_status_episodes_label">Epizode</string>
+    <string name="list_status_decrease_episode">Smanji epizodu</string>
+    <string name="list_status_increase_episode">Povećaj epizodu</string>
+    <string name="list_status_score_label">Ocena: %s</string>
+    <string name="list_status_score_unrated">—</string>
 </resources>

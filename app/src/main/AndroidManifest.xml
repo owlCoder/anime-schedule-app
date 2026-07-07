@@ -45,7 +45,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:scheme="rs.owlcoder.animeschedule"
+                    android:scheme="com.owlcoder.animeschedule"
                     android:host="oauth" />
             </intent-filter>
             <intent-filter>
@@ -53,7 +53,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
-                    android:scheme="rs.owlcoder.animeschedule"
+                    android:scheme="com.owlcoder.animeschedule"
                     android:host="detail" />
             </intent-filter>
         </activity>

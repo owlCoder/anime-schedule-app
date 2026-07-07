@@ -16,15 +16,15 @@ val localProperties = Properties().apply {
 }
 
 android {
-    namespace = "rs.owlcoder.animeschedule"
+    namespace = "com.owlcoder.animeschedule"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "rs.owlcoder.animeschedule"
+        applicationId = "com.owlcoder.animeschedule"
         minSdk = 31
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.5.2"
+        versionCode = 5
+        versionName = "2.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -36,7 +36,7 @@ android {
         buildConfigField(
             "String",
             "MAL_REDIRECT_URI",
-            "\"${localProperties.getProperty("MAL_REDIRECT_URI", "rs.owlcoder.animeschedule://oauth")}\""
+            "\"${localProperties.getProperty("MAL_REDIRECT_URI", "com.owlcoder.animeschedule://oauth")}\""
         )
     }
 
@@ -89,7 +89,7 @@ android {
 
 apollo {
     service("anilist") {
-        packageName.set("rs.owlcoder.animeschedule.data.api.anilist.generated")
+        packageName.set("com.owlcoder.animeschedule.data.api.anilist.generated")
         schemaFile.set(file("src/main/graphql/anilist/schema.graphqls"))
         srcDir("src/main/graphql/anilist")
     }
