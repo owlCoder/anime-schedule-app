@@ -128,6 +128,8 @@
     <!-- Toast messages -->
     <string name="toast_episode_marked">Episode marked as watched</string>
     <string name="toast_update_error">Something went wrong — try again</string>
+    <string name="toast_status_saved">List updated</string>
+    <string name="toast_removed_from_list">Removed from list</string>
 
     <!-- Splash / initial load -->
     <string name="splash_eyebrow">Loading your schedule</string>
@@ -285,6 +287,11 @@
     <string name="common_retry">Retry</string>
     <string name="common_loading">Loading…</string>
     <string name="common_error_generic">Something went wrong</string>
+    <string name="error_load_details">Couldn\'t load details</string>
+    <string name="error_load_schedule">Couldn\'t load the schedule</string>
+    <string name="error_search">Search failed</string>
+    <string name="error_load_list">Couldn\'t load your list</string>
+    <string name="error_load_season">Couldn\'t load the season</string>
     <string name="common_offline">Offline — showing cached data</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_save">Save</string>
@@ -296,4 +303,6 @@
     <string name="list_status_increase_episode">Increase episode</string>
     <string name="list_status_score_label">Score: %s</string>
     <string name="list_status_score_unrated">—</string>
+    <string name="list_status_remove">Remove from list</string>
+    <string name="detail_login_cta">Sign in with MAL to track</string>
 </resources>

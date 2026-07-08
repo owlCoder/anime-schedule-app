@@ -63,12 +63,6 @@ data class MalPaging(
 )
 
 @Serializable
-data class MalSearchResponse(
-    val data: List<MalAnimeListItem>,
-    val paging: MalPaging? = null
-)
-
-@Serializable
 data class MalUserResponse(
     val id: Int,
     val name: String,

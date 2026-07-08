@@ -53,7 +53,9 @@ fun ListStatusBottomSheet(
     animeId: Int,
     currentEntry: MalListEntry?,
     onDismiss: () -> Unit,
-    onConfirm: (Int, MalListUpdate) -> Unit
+    onConfirm: (Int, MalListUpdate) -> Unit,
+    /** Shown only for entries already on the list; null hides the remove action. */
+    onRemove: ((Int) -> Unit)? = null
 ) {
     val sheetState = rememberModalBottomSheetState()
     val total = currentEntry?.totalEpisodes?.takeIf { it > 0 }
@@ -194,7 +196,9 @@ fun ListStatusBottomSheet(
                             animeId, MalListUpdate(
                                 status = selectedStatus,
                                 episodesWatched = clampEpisodes(episodesWatched),
-                                score = score.toInt().takeIf { it > 0 }
+                                // Always send the score — 0 clears the rating on MAL;
+                                // omitting it would make a rating impossible to remove.
+                                score = score.toInt()
                             )
                         )
                         onDismiss()
@@ -206,6 +210,24 @@ fun ListStatusBottomSheet(
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         color = contentColor
+                    )
+                }
+            }
+
+            if (currentEntry != null && onRemove != null) {
+                Spacer(Modifier.height(4.dp))
+                TextButton(
+                    onClick = {
+                        onRemove(animeId)
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth().height(44.dp),
+                    shape = PillShape
+                ) {
+                    Text(
+                        stringResource(R.string.list_status_remove),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
             }

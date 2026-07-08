@@ -66,11 +66,16 @@ class AniListRemoteDataSource @Inject constructor(
         }
     }
 
+    data class SearchPageResult(
+        val media: List<AnimeSearchQuery.Medium>,
+        val hasNextPage: Boolean
+    )
+
     suspend fun searchAnime(
         query: String,
         page: Int = 1,
         perPage: Int = 20
-    ): AppResult<List<AnimeSearchQuery.Medium>> {
+    ): AppResult<SearchPageResult> {
         return try {
             val response = apolloClient.query(
                 AnimeSearchQuery(
@@ -82,10 +87,13 @@ class AniListRemoteDataSource @Inject constructor(
             if (response.hasErrors()) {
                 return AppResult.Error(AppError.GraphQL(response.errors!!.first().message))
             }
-            val media = response.data?.Page?.media
-                ?.filterNotNull()
-                ?: emptyList()
-            AppResult.Success(media)
+            val pageData = response.data?.Page
+            AppResult.Success(
+                SearchPageResult(
+                    media = pageData?.media?.filterNotNull() ?: emptyList(),
+                    hasNextPage = pageData?.pageInfo?.hasNextPage == true
+                )
+            )
         } catch (e: ApolloException) {
             AppResult.Error(AppError.Network(e.message))
         }

@@ -128,6 +128,8 @@
     <!-- Toast messages -->
     <string name="toast_episode_marked">Epizoda označena kao odgledana</string>
     <string name="toast_update_error">Greška — pokušaj ponovo</string>
+    <string name="toast_status_saved">Lista ažurirana</string>
+    <string name="toast_removed_from_list">Uklonjeno sa liste</string>
 
     <!-- Splash / initial load -->
     <string name="splash_eyebrow">Učitavanje rasporeda</string>
@@ -285,6 +287,11 @@
     <string name="common_retry">Pokušaj ponovo</string>
     <string name="common_loading">Učitavanje…</string>
     <string name="common_error_generic">Nešto je pošlo naopako</string>
+    <string name="error_load_details">Greška pri učitavanju detalja</string>
+    <string name="error_load_schedule">Greška pri učitavanju rasporeda</string>
+    <string name="error_search">Greška pri pretrazi</string>
+    <string name="error_load_list">Greška pri učitavanju liste</string>
+    <string name="error_load_season">Greška pri učitavanju sezone</string>
     <string name="common_offline">Offline — prikazuju se keširani podaci</string>
     <string name="common_cancel">Otkaži</string>
     <string name="common_save">Sačuvaj</string>
@@ -296,4 +303,6 @@
     <string name="list_status_increase_episode">Povećaj epizodu</string>
     <string name="list_status_score_label">Ocena: %s</string>
     <string name="list_status_score_unrated">—</string>
+    <string name="list_status_remove">Ukloni sa liste</string>
+    <string name="detail_login_cta">Prijavi se na MAL da pratiš</string>
 </resources>

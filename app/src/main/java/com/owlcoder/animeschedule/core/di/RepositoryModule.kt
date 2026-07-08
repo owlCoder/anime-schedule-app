@@ -12,6 +12,8 @@ import com.owlcoder.animeschedule.data.repository.ScheduleRepositoryImpl
 import com.owlcoder.animeschedule.data.repository.SearchRepositoryImpl
 import com.owlcoder.animeschedule.data.repository.SeasonalRepositoryImpl
 import com.owlcoder.animeschedule.data.repository.SettingsRepositoryImpl
+import com.owlcoder.animeschedule.data.work.PendingUpdateScheduler
+import com.owlcoder.animeschedule.data.work.WorkManagerPendingUpdateScheduler
 import com.owlcoder.animeschedule.domain.repository.AnimeDetailRepository
 import com.owlcoder.animeschedule.domain.repository.AuthRepository
 import com.owlcoder.animeschedule.domain.repository.MalRepository
@@ -33,4 +35,5 @@ abstract class RepositoryModule {
     @Binds @Singleton abstract fun bindSearchRepository(impl: SearchRepositoryImpl): SearchRepository
     @Binds @Singleton abstract fun bindNotificationRepository(impl: NotificationRepositoryImpl): NotificationRepository
     @Binds @Singleton abstract fun bindSeasonalRepository(impl: SeasonalRepositoryImpl): SeasonalRepository
+    @Binds @Singleton abstract fun bindPendingUpdateScheduler(impl: WorkManagerPendingUpdateScheduler): PendingUpdateScheduler
 }

@@ -2,6 +2,7 @@ package com.owlcoder.animeschedule.data.local.db
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
@@ -25,6 +26,16 @@ interface MalListEntryDao {
     @Upsert
     suspend fun upsertAll(entities: List<MalListEntryEntity>)
 
+    @Query("DELETE FROM mal_list_entries WHERE animeId = :animeId")
+    suspend fun deleteByAnimeId(animeId: Int)
+
     @Query("DELETE FROM mal_list_entries")
     suspend fun deleteAll()
+
+    /** Atomically replaces the whole list so observers never see the emptied mid-state. */
+    @Transaction
+    suspend fun replaceAll(entities: List<MalListEntryEntity>) {
+        deleteAll()
+        upsertAll(entities)
+    }
 }

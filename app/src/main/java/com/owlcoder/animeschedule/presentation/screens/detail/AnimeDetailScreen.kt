@@ -55,6 +55,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,6 +71,7 @@ import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import com.owlcoder.animeschedule.presentation.components.GlassButton
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.displayName
+import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -77,17 +79,25 @@ import com.owlcoder.animeschedule.ui.theme.PillShape
 fun AnimeDetailScreen(
     onBack: () -> Unit,
     onAnimeClick: (Int) -> Unit = {},
-    viewModel: DetailViewModel = hiltViewModel()
+    viewModel: DetailViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     var showStatusSheet by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val toast = LocalToast.current
+    val savedMsg = stringResource(R.string.toast_status_saved)
+    val removedMsg = stringResource(R.string.toast_removed_from_list)
     val errorMsg = stringResource(R.string.toast_update_error)
 
     LaunchedEffect(Unit) {
-        viewModel.updateEvent.collect {
-            toast.error(errorMsg)
+        viewModel.updateEvent.collect { event ->
+            when (event) {
+                is DetailViewModel.UpdateEvent.Success -> toast.success(savedMsg)
+                is DetailViewModel.UpdateEvent.Removed -> toast.success(removedMsg)
+                is DetailViewModel.UpdateEvent.Error -> toast.error(errorMsg)
+            }
         }
     }
 
@@ -131,8 +141,8 @@ fun AnimeDetailScreen(
             ) {
                 CircularProgressIndicator()
             }
-            uiState.error != null -> Box(Modifier.padding(innerPadding)) {
-                ErrorBanner(uiState.error!!)
+            uiState.errorRes != null -> Box(Modifier.padding(innerPadding)) {
+                ErrorBanner(stringResource(uiState.errorRes!!))
             }
             else -> {
                 val detail = uiState.detail ?: return@Scaffold
@@ -226,7 +236,21 @@ fun AnimeDetailScreen(
 
                             val entry = detail.malListEntry
                             Spacer(Modifier.height(12.dp))
-                            if (entry != null) {
+                            if (!uiState.isLoggedIn) {
+                                // No MAL session — a tap on "Add to list" would just 401, so
+                                // offer the login flow instead.
+                                GlassButton(
+                                    onClick = { authViewModel.launchMalLogin(context) },
+                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 9.dp)
+                                ) { contentColor ->
+                                    Text(
+                                        stringResource(R.string.detail_login_cta),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = contentColor,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            } else if (entry != null) {
                                 Row(
                                     modifier = Modifier
                                         .clip(PillShape)
@@ -409,7 +433,8 @@ fun AnimeDetailScreen(
             animeId = uiState.detail!!.animeId,
             currentEntry = uiState.detail!!.malListEntry,
             onDismiss = { showStatusSheet = false },
-            onConfirm = { _, update -> viewModel.updateListEntry(update) }
+            onConfirm = { _, update -> viewModel.updateListEntry(update) },
+            onRemove = { viewModel.removeListEntry() }
         )
     }
 }

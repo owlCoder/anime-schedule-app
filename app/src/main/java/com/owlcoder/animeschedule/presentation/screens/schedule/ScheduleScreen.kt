@@ -114,10 +114,13 @@ fun ScheduleScreen(
     // used for manual edits — pre-filled to prompt a rating + a switch to Completed.
     var lastIncrementedEpisode by remember { mutableStateOf<AiringEpisode?>(null) }
     val markedMsg = stringResource(R.string.toast_episode_marked)
+    val savedMsg = stringResource(R.string.toast_status_saved)
+    val removedMsg = stringResource(R.string.toast_removed_from_list)
     val errorMsg = stringResource(R.string.toast_update_error)
 
-    LaunchedEffect(uiState.error) {
-        uiState.error?.let { toast.error(it) }
+    val scheduleErrorMsg = uiState.errorRes?.let { stringResource(it) }
+    LaunchedEffect(scheduleErrorMsg) {
+        scheduleErrorMsg?.let { toast.error(it) }
     }
     LaunchedEffect(Unit) {
         viewModel.incrementEvent.collect { event ->
@@ -143,6 +146,10 @@ fun ScheduleScreen(
                         )
                     }
                 }
+                is ScheduleViewModel.IncrementEvent.Updated ->
+                    toast.success(savedMsg)
+                is ScheduleViewModel.IncrementEvent.Removed ->
+                    toast.success(removedMsg)
                 is ScheduleViewModel.IncrementEvent.Error ->
                     toast.error(errorMsg)
             }
@@ -273,7 +280,8 @@ fun ScheduleScreen(
             animeId = malId,
             currentEntry = editingEpisode?.malListEntry,
             onDismiss = { editingEpisode = null },
-            onConfirm = { id, update -> viewModel.updateEntry(id, update) }
+            onConfirm = { id, update -> viewModel.updateEntry(id, update) },
+            onRemove = { id -> viewModel.removeEntry(id) }
         )
     }
 

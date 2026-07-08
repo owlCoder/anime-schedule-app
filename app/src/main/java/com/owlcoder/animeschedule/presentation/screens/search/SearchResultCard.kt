@@ -38,7 +38,8 @@ import com.owlcoder.animeschedule.ui.theme.PillShape
 fun SearchResultCard(
     result: AnimeSearchResult,
     onCardClick: () -> Unit,
-    onEditStatus: () -> Unit,
+    /** Null when the result has no MAL mapping — the edit/add action is hidden entirely. */
+    onEditStatus: (() -> Unit)?,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -100,7 +101,7 @@ fun SearchResultCard(
                         modifier = Modifier
                             .clip(PillShape)
                             .background(MaterialTheme.colorScheme.primaryContainer)
-                            .clickable(onClick = onEditStatus)
+                            .clickable(enabled = onEditStatus != null) { onEditStatus?.invoke() }
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
@@ -112,19 +113,21 @@ fun SearchResultCard(
                     }
                 }
             }
-            Spacer(Modifier.width(8.dp))
-            FilledTonalIconButton(
-                onClick = onEditStatus,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    if (result.userListEntry != null) Icons.Default.Edit else Icons.Default.Add,
-                    contentDescription = if (result.userListEntry != null)
-                        stringResource(R.string.cd_edit_list_status)
-                    else
-                        stringResource(R.string.detail_add_to_list),
-                    modifier = Modifier.size(20.dp)
-                )
+            if (onEditStatus != null) {
+                Spacer(Modifier.width(8.dp))
+                FilledTonalIconButton(
+                    onClick = onEditStatus,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        if (result.userListEntry != null) Icons.Default.Edit else Icons.Default.Add,
+                        contentDescription = if (result.userListEntry != null)
+                            stringResource(R.string.cd_edit_list_status)
+                        else
+                            stringResource(R.string.detail_add_to_list),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }

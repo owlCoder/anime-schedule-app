@@ -36,7 +36,7 @@ data class SeasonalUiState(
     val allItems: List<SeasonalAnimeItem> = emptyList(),
     val filteredItems: List<SeasonalAnimeItem> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null,
+    @androidx.annotation.StringRes val errorRes: Int? = null,
     val filter: SeasonalFilter = SeasonalFilter(),
     val availableGenres: List<String> = emptyList(),
     val availableFormats: List<String> = emptyList()
@@ -75,7 +75,7 @@ class SeasonalViewModel @Inject constructor(
     fun load(season: AnimeSeason? = null, year: Int? = null) {
         val targetSeason = season ?: _uiState.value.season
         val targetYear = year ?: _uiState.value.year
-        _uiState.update { it.copy(season = targetSeason, year = targetYear, isLoading = true, error = null) }
+        _uiState.update { it.copy(season = targetSeason, year = targetYear, isLoading = true, errorRes = null) }
         viewModelScope.launch {
             when (val result = getSeasonalAnimeUseCase(targetSeason, targetYear)) {
                 is AppResult.Success -> {
@@ -93,7 +93,9 @@ class SeasonalViewModel @Inject constructor(
                         )
                     }
                 }
-                is AppResult.Error -> _uiState.update { it.copy(isLoading = false, error = "Greška pri učitavanju sezone") }
+                is AppResult.Error -> _uiState.update {
+                    it.copy(isLoading = false, errorRes = com.owlcoder.animeschedule.R.string.error_load_season)
+                }
             }
         }
     }

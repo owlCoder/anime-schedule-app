@@ -111,11 +111,17 @@ fun MyListScreen(
     val editingEntry = uiState.entries.find { it.animeId == editingAnimeId }
     val context = androidx.compose.ui.platform.LocalContext.current
     val toast = LocalToast.current
+    val savedMsg = stringResource(R.string.toast_status_saved)
+    val removedMsg = stringResource(R.string.toast_removed_from_list)
     val errorMsg = stringResource(R.string.toast_update_error)
 
     LaunchedEffect(Unit) {
-        viewModel.updateEvent.collect {
-            toast.error(errorMsg)
+        viewModel.updateEvent.collect { event ->
+            when (event) {
+                is MyListViewModel.UpdateEvent.Success -> toast.success(savedMsg)
+                is MyListViewModel.UpdateEvent.Removed -> toast.success(removedMsg)
+                is MyListViewModel.UpdateEvent.Error -> toast.error(errorMsg)
+            }
         }
     }
 
@@ -288,7 +294,8 @@ fun MyListScreen(
             animeId = editingAnimeId!!,
             currentEntry = editingEntry,
             onDismiss = { editingAnimeId = null },
-            onConfirm = { animeId, update -> viewModel.updateEntry(animeId, update) }
+            onConfirm = { animeId, update -> viewModel.updateEntry(animeId, update) },
+            onRemove = { animeId -> viewModel.removeEntry(animeId) }
         )
     }
 }

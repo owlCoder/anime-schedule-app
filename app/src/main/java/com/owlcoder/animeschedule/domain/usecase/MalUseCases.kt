@@ -21,6 +21,11 @@ class IncrementEpisodeUseCase @Inject constructor(private val malRepository: Mal
         malRepository.incrementEpisode(animeId)
 }
 
+class RemoveMalListEntryUseCase @Inject constructor(private val malRepository: MalRepository) {
+    suspend operator fun invoke(animeId: Int): AppResult<Unit> =
+        malRepository.removeListEntry(animeId)
+}
+
 class RefreshMalListUseCase @Inject constructor(private val malRepository: MalRepository) {
     suspend operator fun invoke(force: Boolean = false) = malRepository.refreshUserList(force)
 }

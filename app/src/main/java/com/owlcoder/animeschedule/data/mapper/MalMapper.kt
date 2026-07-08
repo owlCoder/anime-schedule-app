@@ -2,7 +2,6 @@ package com.owlcoder.animeschedule.data.mapper
 
 import com.owlcoder.animeschedule.data.api.mal.dto.MalAnimeNode
 import com.owlcoder.animeschedule.data.local.db.MalListEntryEntity
-import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.WatchStatus
 
@@ -31,27 +30,3 @@ fun MalListEntryEntity.toDomain(): MalListEntry = MalListEntry(
     totalEpisodes = totalEpisodes,
     updatedAt = updatedAt
 )
-
-fun MalAnimeNode.toSearchResult(existingEntry: MalListEntry? = null): AnimeSearchResult {
-    val listEntry = myListStatus?.let {
-        MalListEntry(
-            animeId = id,
-            status = WatchStatus.fromMal(it.status),
-            episodesWatched = it.numEpisodesWatched,
-            score = it.score,
-            totalEpisodes = numEpisodes
-        )
-    } ?: existingEntry
-    return AnimeSearchResult(
-        anilistId = 0,
-        malId = id,
-        title = title,
-        titleEnglish = alternativeTitles?.en,
-        coverImageUrl = mainPicture?.large ?: mainPicture?.medium,
-        type = mediaType,
-        year = startDate?.take(4),
-        meanScore = mean,
-        totalEpisodes = numEpisodes,
-        userListEntry = listEntry
-    )
-}

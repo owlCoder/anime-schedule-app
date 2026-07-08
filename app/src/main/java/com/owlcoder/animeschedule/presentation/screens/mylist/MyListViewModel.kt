@@ -20,6 +20,7 @@ import com.owlcoder.animeschedule.domain.repository.AuthRepository
 import com.owlcoder.animeschedule.domain.usecase.GetMalUserListUseCase
 import com.owlcoder.animeschedule.domain.usecase.IncrementEpisodeUseCase
 import com.owlcoder.animeschedule.domain.usecase.RefreshMalListUseCase
+import com.owlcoder.animeschedule.domain.usecase.RemoveMalListEntryUseCase
 import com.owlcoder.animeschedule.domain.usecase.UpdateMalListEntryUseCase
 import javax.inject.Inject
 
@@ -27,7 +28,6 @@ data class MyListUiState(
     val entries: List<MalListEntry> = emptyList(),
     val isLoading: Boolean = false,
     val isLoggedIn: Boolean = false,
-    val error: String? = null,
     val searchQuery: String = "",
     val activeFilter: WatchStatus = WatchStatus.WATCHING,
     val pendingIncrementIds: Set<Int> = emptySet(),
@@ -40,6 +40,7 @@ data class MyListUiState(
 class MyListViewModel @Inject constructor(
     getMalUserListUseCase: GetMalUserListUseCase,
     private val updateMalListEntryUseCase: UpdateMalListEntryUseCase,
+    private val removeMalListEntryUseCase: RemoveMalListEntryUseCase,
     private val incrementEpisodeUseCase: IncrementEpisodeUseCase,
     private val refreshMalListUseCase: RefreshMalListUseCase,
     authRepository: AuthRepository
@@ -51,6 +52,8 @@ class MyListViewModel @Inject constructor(
     private val _pendingIncrementIds = MutableStateFlow<Set<Int>>(emptySet())
 
     sealed interface UpdateEvent {
+        data object Success : UpdateEvent
+        data object Removed : UpdateEvent
         data object Error : UpdateEvent
     }
     private val _updateEvent = Channel<UpdateEvent>(Channel.BUFFERED)
@@ -71,7 +74,6 @@ class MyListViewModel @Inject constructor(
             entries = filtered,
             isLoading = loading,
             isLoggedIn = loggedIn,
-            error = if (result is AppResult.Error) "Greška pri učitavanju liste" else null,
             searchQuery = query,
             activeFilter = filter,
             statusCounts = allEntries.groupingBy { it.status }.eachCount()
@@ -89,8 +91,11 @@ class MyListViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _isLoading.value = true
-            runCatching { refreshMalListUseCase(force = true) }
+            val synced = runCatching { refreshMalListUseCase(force = true) }.getOrDefault(false)
             _isLoading.value = false
+            // The user explicitly asked for a sync — a silent failure here looked like
+            // "pull-to-refresh does nothing", so surface it.
+            if (!synced) _updateEvent.send(UpdateEvent.Error)
         }
     }
 
@@ -105,9 +110,18 @@ class MyListViewModel @Inject constructor(
     fun updateEntry(animeId: Int, update: MalListUpdate) {
         viewModelScope.launch {
             val result = updateMalListEntryUseCase(animeId, update)
-            if (result is AppResult.Error) {
-                _updateEvent.send(UpdateEvent.Error)
-            }
+            _updateEvent.send(
+                if (result is AppResult.Success) UpdateEvent.Success else UpdateEvent.Error
+            )
+        }
+    }
+
+    fun removeEntry(animeId: Int) {
+        viewModelScope.launch {
+            val result = removeMalListEntryUseCase(animeId)
+            _updateEvent.send(
+                if (result is AppResult.Success) UpdateEvent.Removed else UpdateEvent.Error
+            )
         }
     }
 

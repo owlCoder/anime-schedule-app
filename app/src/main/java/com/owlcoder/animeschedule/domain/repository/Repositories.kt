@@ -15,6 +15,7 @@ import com.owlcoder.animeschedule.domain.model.AppNotification
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
 import com.owlcoder.animeschedule.domain.model.ScheduleDay
+import com.owlcoder.animeschedule.domain.model.SearchPage
 import com.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
 import java.time.ZoneId
 
@@ -33,7 +34,13 @@ interface MalRepository {
     fun getUserList(): Flow<AppResult<List<MalListEntry>>>
     suspend fun updateListEntry(animeId: Int, update: MalListUpdate): AppResult<Unit>
     suspend fun incrementEpisode(animeId: Int): AppResult<Unit>
-    suspend fun refreshUserList(force: Boolean = false)
+    suspend fun removeListEntry(animeId: Int): AppResult<Unit>
+    /** @return true when the sync completed (or was skipped as fresh); false when it failed
+     *  and the local cache was left untouched. */
+    suspend fun refreshUserList(force: Boolean = false): Boolean
+    /** Pushes offline-queued list mutations to MAL. @return true when the queue is empty
+     *  afterwards. */
+    suspend fun flushPendingUpdates(): Boolean
 }
 
 interface AuthRepository {
@@ -57,7 +64,7 @@ interface SettingsRepository {
 }
 
 interface SearchRepository {
-    suspend fun searchAnime(query: String, page: Int = 0): AppResult<List<AnimeSearchResult>>
+    suspend fun searchAnime(query: String, page: Int = 0): AppResult<SearchPage>
 }
 
 interface SeasonalRepository {

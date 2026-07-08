@@ -85,6 +85,12 @@ data class MalListUpdate(
     val score: Int? = null
 )
 
+/** One page of search results plus whether more pages exist — drives infinite scroll. */
+data class SearchPage(
+    val results: List<AnimeSearchResult>,
+    val hasNextPage: Boolean
+)
+
 data class AnimeSearchResult(
     val anilistId: Int,
     val malId: Int?,

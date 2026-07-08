@@ -121,10 +121,10 @@ fun SeasonalOverlay(
 
             when {
                 uiState.isLoading -> LoadingShimmer()
-                uiState.error != null -> EmptyState(
+                uiState.errorRes != null -> EmptyState(
                     icon = Icons.Default.AutoAwesome,
                     title = stringResource(R.string.seasonal_error_title),
-                    subtitle = uiState.error ?: ""
+                    subtitle = uiState.errorRes?.let { stringResource(it) } ?: ""
                 )
                 uiState.filteredItems.isEmpty() -> EmptyState(
                     icon = Icons.Default.AutoAwesome,

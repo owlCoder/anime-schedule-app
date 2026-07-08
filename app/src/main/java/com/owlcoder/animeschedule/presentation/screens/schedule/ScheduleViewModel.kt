@@ -1,6 +1,7 @@
 package com.owlcoder.animeschedule.presentation.screens.schedule
 
 import android.content.Context
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.core.result.AppResult
 import com.owlcoder.animeschedule.core.result.AppError
 import com.owlcoder.animeschedule.data.work.AiringNotificationWorker
@@ -32,6 +34,7 @@ import com.owlcoder.animeschedule.domain.usecase.GetUnreadCountUseCase
 import com.owlcoder.animeschedule.domain.usecase.GetWeekScheduleUseCase
 import com.owlcoder.animeschedule.domain.usecase.IncrementEpisodeUseCase
 import com.owlcoder.animeschedule.domain.usecase.RefreshScheduleUseCase
+import com.owlcoder.animeschedule.domain.usecase.RemoveMalListEntryUseCase
 import com.owlcoder.animeschedule.domain.usecase.UpdateMalListEntryUseCase
 import java.time.Instant
 import java.time.format.DateTimeParseException
@@ -70,7 +73,7 @@ data class ScheduleUiState(
      *  a pull-to-refresh sets [isLoading] but NOT this, so it shows the refresh spinner
      *  over existing content instead of the full-screen splash. */
     val isInitialLoad: Boolean = true,
-    val error: String? = null,
+    @StringRes val errorRes: Int? = null,
     val isLoggedIn: Boolean = false,
     val filter: ScheduleFilter = ScheduleFilter(),
     val availableGenres: List<String> = emptyList(),
@@ -105,6 +108,7 @@ class ScheduleViewModel @Inject constructor(
     private val refreshScheduleUseCase: RefreshScheduleUseCase,
     private val incrementEpisodeUseCase: IncrementEpisodeUseCase,
     private val updateMalListEntryUseCase: UpdateMalListEntryUseCase,
+    private val removeMalListEntryUseCase: RemoveMalListEntryUseCase,
     private val getUnreadCountUseCase: GetUnreadCountUseCase,
     private val getMalUserListUseCase: GetMalUserListUseCase,
     private val settingsRepository: SettingsRepository
@@ -119,6 +123,10 @@ class ScheduleViewModel @Inject constructor(
 
     sealed interface IncrementEvent {
         data object Success : IncrementEvent
+        /** A status-sheet save (not a "+1") went through — toasts "saved" instead of
+         *  "episode marked" and skips the finale-prompt logic tied to [Success]. */
+        data object Updated : IncrementEvent
+        data object Removed : IncrementEvent
         data object Error : IncrementEvent
     }
     private val _incrementEvent = Channel<IncrementEvent>(Channel.BUFFERED)
@@ -144,7 +152,7 @@ class ScheduleViewModel @Inject constructor(
                     tomorrowEpisodes = tomorrowList,
                     weekDays = weekList,
                     isLoading = loading,
-                    error = if (today is AppResult.Error) "Greška pri učitavanju rasporeda" else null,
+                    errorRes = if (today is AppResult.Error) R.string.error_load_schedule else null,
                     isLoggedIn = prefs.malLoggedIn,
                     availableGenres = genres,
                     availableFormats = formats
@@ -229,9 +237,18 @@ class ScheduleViewModel @Inject constructor(
     fun updateEntry(animeId: Int, update: MalListUpdate) {
         viewModelScope.launch {
             val result = updateMalListEntryUseCase(animeId, update)
-            if (result is AppResult.Error) {
-                _incrementEvent.send(IncrementEvent.Error)
-            }
+            _incrementEvent.send(
+                if (result is AppResult.Success) IncrementEvent.Updated else IncrementEvent.Error
+            )
+        }
+    }
+
+    fun removeEntry(animeId: Int) {
+        viewModelScope.launch {
+            val result = removeMalListEntryUseCase(animeId)
+            _incrementEvent.send(
+                if (result is AppResult.Success) IncrementEvent.Removed else IncrementEvent.Error
+            )
         }
     }
 }

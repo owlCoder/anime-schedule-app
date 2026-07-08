@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,6 +23,7 @@ class UserPreferencesDataStore @Inject constructor(
         val MAL_USERNAME = stringPreferencesKey("mal_username")
         val MAL_AVATAR_URL = stringPreferencesKey("mal_avatar_url")
         val LAST_SYNC = longPreferencesKey("last_schedule_sync_epoch")
+        val LAST_MAL_LIST_SYNC = longPreferencesKey("last_mal_list_sync_epoch_ms")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
         val NOTIFICATION_OFFSET = intPreferencesKey("notification_offset_minutes")
@@ -60,6 +62,15 @@ class UserPreferencesDataStore @Inject constructor(
 
     suspend fun setLastSyncEpoch(epoch: Long) {
         dataStore.edit { it[Keys.LAST_SYNC] = epoch }
+    }
+
+    // Persisted (not in-memory) so the MAL list cache TTL survives process death — otherwise
+    // every cold start re-downloaded the whole list.
+    suspend fun getLastMalListSyncEpochMs(): Long =
+        dataStore.data.first()[Keys.LAST_MAL_LIST_SYNC] ?: 0L
+
+    suspend fun setLastMalListSyncEpochMs(epochMs: Long) {
+        dataStore.edit { it[Keys.LAST_MAL_LIST_SYNC] = epochMs }
     }
 
     suspend fun setThemeMode(mode: ThemeMode) {

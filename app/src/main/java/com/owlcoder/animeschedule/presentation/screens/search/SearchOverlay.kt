@@ -64,6 +64,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
+import com.owlcoder.animeschedule.presentation.components.LocalToast
 
 /**
  * Command-palette style search overlay (à la the tapiz-lms `SearchOverlay`): a dimmed
@@ -86,6 +87,20 @@ fun SearchOverlay(
     var editingResult by remember { mutableStateOf<AnimeSearchResult?>(null) }
     val focusRequester = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
+    val toast = LocalToast.current
+    val savedMsg = stringResource(R.string.toast_status_saved)
+    val removedMsg = stringResource(R.string.toast_removed_from_list)
+    val errorMsg = stringResource(R.string.toast_update_error)
+
+    LaunchedEffect(Unit) {
+        viewModel.updateEvent.collect { event ->
+            when (event) {
+                is SearchViewModel.UpdateEvent.Success -> toast.success(savedMsg)
+                is SearchViewModel.UpdateEvent.Removed -> toast.success(removedMsg)
+                is SearchViewModel.UpdateEvent.Error -> toast.error(errorMsg)
+            }
+        }
+    }
 
     // Auto-focus + lift keyboard on open; reset query on close so next open is fresh.
     LaunchedEffect(visible) {
@@ -258,26 +273,47 @@ fun SearchOverlay(
                                     CircularProgressIndicator()
                                 }
                             }
-                            uiState.error != null -> item {
-                                CenteredHint(uiState.error!!)
+                            uiState.errorRes != null -> item {
+                                CenteredHint(stringResource(uiState.errorRes!!))
                             }
                             uiState.noResults -> item {
                                 CenteredHint(stringResource(R.string.search_no_results_subtitle))
                             }
-                            else -> items(uiState.results, key = { it.anilistId }) { result ->
-                                SearchResultCard(
-                                    result = result,
-                                    onCardClick = {
-                                        viewModel.onSearchSubmit(localQuery)
-                                        keyboard?.hide()
-                                        onDismiss()
-                                        onAnimeClick(result.anilistId)
-                                    },
-                                    onEditStatus = { editingResult = result },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 5.dp)
-                                )
+                            else -> {
+                                items(uiState.results, key = { it.anilistId }) { result ->
+                                    SearchResultCard(
+                                        result = result,
+                                        onCardClick = {
+                                            viewModel.onSearchSubmit(localQuery)
+                                            keyboard?.hide()
+                                            onDismiss()
+                                            onAnimeClick(result.anilistId)
+                                        },
+                                        // AniList entries without a MAL mapping can't be added to
+                                        // the MAL list — hide the action instead of a dead button.
+                                        onEditStatus = if (result.malId != null) {
+                                            { editingResult = result }
+                                        } else null,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 12.dp, vertical = 5.dp)
+                                    )
+                                }
+                                if (uiState.hasNextPage || uiState.isLoadingMore) {
+                                    item(key = "load_more") {
+                                        // Composing this footer means the user scrolled to the
+                                        // end — request the next page right away.
+                                        LaunchedEffect(uiState.results.size) {
+                                            viewModel.loadMore()
+                                        }
+                                        Box(
+                                            Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(Modifier.size(28.dp))
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -288,11 +324,17 @@ fun SearchOverlay(
 
     editingResult?.let { result ->
         result.malId?.let { malId ->
+            // Look the entry up in the live results so a reopened sheet reflects the
+            // just-saved state instead of the snapshot captured when it was tapped.
+            val liveEntry = uiState.results
+                .find { it.anilistId == result.anilistId }?.userListEntry
+                ?: result.userListEntry
             ListStatusBottomSheet(
                 animeId = malId,
-                currentEntry = result.userListEntry,
+                currentEntry = liveEntry,
                 onDismiss = { editingResult = null },
-                onConfirm = { animeId, update -> viewModel.updateListEntry(animeId, update) }
+                onConfirm = { animeId, update -> viewModel.updateListEntry(animeId, update) },
+                onRemove = { animeId -> viewModel.removeListEntry(animeId) }
             )
         }
     }
