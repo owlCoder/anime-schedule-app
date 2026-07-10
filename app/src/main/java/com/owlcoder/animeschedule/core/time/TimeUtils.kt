@@ -31,10 +31,14 @@ fun weekRangeUtc(zoneId: ZoneId = ZoneId.systemDefault()): Pair<Long, Long> {
     return start to end
 }
 
-fun formatAiringCountdown(airingAtEpochSeconds: Long, zoneId: ZoneId = ZoneId.systemDefault()): String {
+fun formatAiringCountdown(
+    airingAtEpochSeconds: Long,
+    zoneId: ZoneId = ZoneId.systemDefault(),
+    airedLabel: String = "Aired"
+): String {
     val now = Instant.now()
     val airingInstant = Instant.ofEpochSecond(airingAtEpochSeconds)
-    if (airingInstant.isBefore(now)) return "Emitovano"
+    if (airingInstant.isBefore(now)) return airedLabel
     val totalMinutes = ChronoUnit.MINUTES.between(now, airingInstant)
     val days = totalMinutes / (60 * 24)
     val hours = (totalMinutes % (60 * 24)) / 60

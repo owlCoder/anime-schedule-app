@@ -64,7 +64,8 @@ fun AnimeDetailEntity.toDomain(malListEntry: MalListEntry? = null): AnimeDetail 
                     coverImageUrl = m["coverUrl"]?.takeIf { u -> u.isNotEmpty() },
                     format = m["format"]?.takeIf { f -> f.isNotEmpty() },
                     status = m["status"]?.takeIf { s -> s.isNotEmpty() },
-                    relationType = m["relation"]?.takeIf { r -> r.isNotEmpty() }
+                    relationType = m["relation"]?.takeIf { r -> r.isNotEmpty() },
+                    mediaType = m["type"]?.takeIf { t -> t.isNotEmpty() }
                 )
             }
         }.getOrDefault(emptyList())

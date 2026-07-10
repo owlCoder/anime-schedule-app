@@ -45,7 +45,11 @@ data class RelatedAnime(
     val coverImageUrl: String?,
     val format: String?,
     val status: String?,
-    val relationType: String?
+    val relationType: String?,
+    /** AniList `MediaType` of the related node ("ANIME", "MANGA") — used to filter out
+     *  non-anime relations (manga, light novels) since there's no manga detail screen and
+     *  fetching them via the anime detail query (`type: ANIME`) returns no match. */
+    val mediaType: String? = null
 )
 
 data class Studio(val id: Int, val name: String, val isMain: Boolean)

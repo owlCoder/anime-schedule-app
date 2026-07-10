@@ -64,7 +64,8 @@ fun AnimeDetailByMalQuery.Media.toEntity(nowEpoch: Long, malId: Int): AnimeDetai
             "coverUrl" to (edge.node?.coverImage?.medium ?: ""),
             "format" to (edge.node?.format?.rawValue ?: ""),
             "status" to (edge.node?.status?.rawValue ?: ""),
-            "relation" to (edge.relationType?.rawValue ?: "")
+            "relation" to (edge.relationType?.rawValue ?: ""),
+            "type" to (edge.node?.type?.rawValue ?: "")
         )
     }?.let { kotlinx.serialization.json.Json.encodeToString(it) }
 
@@ -114,7 +115,8 @@ fun AnimeDetailQuery.Media.toEntity(nowEpoch: Long): AnimeDetailEntity {
             "coverUrl" to (edge.node?.coverImage?.medium ?: ""),
             "format" to (edge.node?.format?.rawValue ?: ""),
             "status" to (edge.node?.status?.rawValue ?: ""),
-            "relation" to (edge.relationType?.rawValue ?: "")
+            "relation" to (edge.relationType?.rawValue ?: ""),
+            "type" to (edge.node?.type?.rawValue ?: "")
         )
     }?.let { json.encodeToString(it) }
 

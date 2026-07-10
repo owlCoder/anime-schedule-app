@@ -21,8 +21,12 @@ fun JikanAnime.toAiringEpisodeEntity(
     )
     val airingZdt = ZonedDateTime.of(targetDay, java.time.LocalTime.of(hour, minute), zoneId)
     return AiringEpisodeEntity(
-        airingId = malId,
+        // Negated so this fallback (Jikan/MAL id space) can never collide with the primary
+        // AniList path's `airingId` (AniList's own AiringSchedule id, always positive) in the
+        // shared Room primary key column.
+        airingId = -malId,
         animeId = malId,
+        malId = malId,
         episode = 0,
         airingAtEpochSeconds = airingZdt.toEpochSecond(),
         title = titleEnglish ?: title,

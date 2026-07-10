@@ -115,6 +115,7 @@
     <string name="schedule_watched_progress">Watched: %1$d%2$s</string>
     <string name="schedule_episode_label">Ep. %1$d%2$s</string>
     <string name="schedule_episode_number_short">#%1$d</string>
+    <string name="schedule_aired_label">Aired</string>
     <string name="schedule_edit_status_action">Edit status</string>
     <string name="schedule_section_today">Today</string>
     <string name="schedule_section_tomorrow">Tomorrow</string>
@@ -172,6 +173,7 @@
 
     <!-- Notification channel -->
     <string name="notif_channel_name">New episodes</string>
+    <string name="notif_content_text">Episode %d is available</string>
 
     <!-- Detail screen -->
     <string name="detail_episodes">Episodes</string>

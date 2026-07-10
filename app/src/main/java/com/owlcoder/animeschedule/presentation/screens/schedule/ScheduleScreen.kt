@@ -105,14 +105,14 @@ fun ScheduleScreen(
     // animated splash until the very first schedule load resolves.
     LaunchedEffect(uiState.isInitialLoad) { onInitialLoadChange(uiState.isInitialLoad) }
     var editingEpisode by remember { mutableStateOf<AiringEpisode?>(null) }
-    var showFilterSheet by remember { mutableStateOf(false) }
-    var showNotifications by remember { mutableStateOf(false) }
-    var showSeasonal by remember { mutableStateOf(false) }
-    var seeAllSection by remember { mutableStateOf<Pair<String, List<AiringEpisode>>?>(null) }
+    val openOverlay by viewModel.openOverlay.collectAsState()
     // Tracks the episode behind the most recent "+1" tap so that, if it just landed on the
     // series finale, the incrementEvent handler below can pop the same status/score sheet
     // used for manual edits — pre-filled to prompt a rating + a switch to Completed.
     var lastIncrementedEpisode by remember { mutableStateOf<AiringEpisode?>(null) }
+    val todaySeeAllTitle = stringResource(R.string.schedule_section_today)
+    val tomorrowSeeAllTitle = stringResource(R.string.schedule_section_tomorrow)
+    val weekSeeAllTitle = stringResource(R.string.schedule_section_this_week)
     val markedMsg = stringResource(R.string.toast_episode_marked)
     val savedMsg = stringResource(R.string.toast_status_saved)
     val removedMsg = stringResource(R.string.toast_removed_from_list)
@@ -170,7 +170,7 @@ fun ScheduleScreen(
                     ),
                     actions = {
                         TopBarActionButton(
-                            onClick = { showSeasonal = true },
+                            onClick = { viewModel.setOpenOverlay(ScheduleOverlay.Seasonal) },
                             contentDescription = stringResource(R.string.nav_seasonal)
                         ) {
                             Icon(
@@ -180,7 +180,7 @@ fun ScheduleScreen(
                             )
                         }
                         TopBarActionButton(
-                            onClick = { showNotifications = true },
+                            onClick = { viewModel.setOpenOverlay(ScheduleOverlay.Notifications) },
                             contentDescription = stringResource(R.string.schedule_notifications_action)
                         ) {
                             BadgedBox(
@@ -215,7 +215,7 @@ fun ScheduleScreen(
                             }
                         }
                         TopBarActionButton(
-                            onClick = { showFilterSheet = true },
+                            onClick = { viewModel.setOpenOverlay(ScheduleOverlay.Filter) },
                             contentDescription = stringResource(R.string.filter_title),
                             highlighted = uiState.filter.isActive
                         ) {
@@ -267,7 +267,7 @@ fun ScheduleScreen(
                         }
                     },
                     onEditStatus = { editingEpisode = it },
-                    onSeeAll = { title, episodes -> seeAllSection = title to episodes },
+                    onSeeAll = { section -> viewModel.setOpenOverlay(ScheduleOverlay.SeeAll(section)) },
                     onRecentEntryClick = { onAnimeClick(it.animeId) },
                     onIncrementEntry = { entry -> viewModel.incrementEpisode(entry.animeId) }
                 )
@@ -285,7 +285,7 @@ fun ScheduleScreen(
         )
     }
 
-    if (showFilterSheet) {
+    if (openOverlay is ScheduleOverlay.Filter) {
         ScheduleFilterSheet(
             filter = uiState.filter,
             availableGenres = uiState.availableGenres,
@@ -295,16 +295,21 @@ fun ScheduleScreen(
             onGenreToggle = { viewModel.toggleGenre(it) },
             onFormatToggle = { viewModel.toggleFormat(it) },
             onClear = { viewModel.clearFilter() },
-            onDismiss = { showFilterSheet = false }
+            onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) }
         )
     }
 
-    seeAllSection?.let { (title, episodes) ->
+    (openOverlay as? ScheduleOverlay.SeeAll)?.let { overlay ->
+        val (title, episodes) = when (overlay.section) {
+            ScheduleSection.TODAY -> todaySeeAllTitle to uiState.todayEpisodes
+            ScheduleSection.TOMORROW -> tomorrowSeeAllTitle to uiState.tomorrowEpisodes
+            ScheduleSection.WEEK -> weekSeeAllTitle to uiState.weekDays.flatMap { it.episodes }
+        }
         SeeAllSheet(
             title = title,
             episodes = episodes,
-            onCardClick = { seeAllSection = null; onAnimeClick(it.animeId) },
-            onDismiss = { seeAllSection = null },
+            onCardClick = { onAnimeClick(it.animeId) },
+            onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) },
             pendingIncrementIds = uiState.pendingIncrementIds,
             onIncrementEpisode = { ep ->
                 ep.malId?.let { mid ->
@@ -315,17 +320,17 @@ fun ScheduleScreen(
         )
     }
 
-    if (showNotifications) {
+    if (openOverlay is ScheduleOverlay.Notifications) {
         NotificationsOverlay(
-            onAnimeClick = { showNotifications = false; onAnimeClick(it) },
-            onDismiss = { showNotifications = false }
+            onAnimeClick = { onAnimeClick(it) },
+            onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) }
         )
     }
 
-    if (showSeasonal) {
+    if (openOverlay is ScheduleOverlay.Seasonal) {
         SeasonalOverlay(
-            onAnimeClick = { showSeasonal = false; onAnimeClick(it) },
-            onDismiss = { showSeasonal = false }
+            onAnimeClick = { onAnimeClick(it) },
+            onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) }
         )
     }
 }
@@ -427,7 +432,7 @@ private fun TodayHomeContent(
     onCardClick: (AiringEpisode) -> Unit,
     onIncrementEpisode: (AiringEpisode) -> Unit,
     onEditStatus: (AiringEpisode) -> Unit,
-    onSeeAll: (title: String, episodes: List<AiringEpisode>) -> Unit,
+    onSeeAll: (section: ScheduleSection) -> Unit,
     onRecentEntryClick: (MalListEntry) -> Unit = {},
     onIncrementEntry: (MalListEntry) -> Unit = {}
 ) {
@@ -470,7 +475,7 @@ private fun TodayHomeContent(
                     title = todayTitle,
                     episodes = uiState.todayEpisodes,
                     onCardClick = onCardClick,
-                    onSeeAll = { onSeeAll(todayTitle, uiState.todayEpisodes) },
+                    onSeeAll = { onSeeAll(ScheduleSection.TODAY) },
                     pendingIncrementIds = uiState.pendingIncrementIds,
                     onIncrementEpisode = onIncrementEpisode
                 )
@@ -482,7 +487,7 @@ private fun TodayHomeContent(
                     title = tomorrowTitle,
                     episodes = uiState.tomorrowEpisodes,
                     onCardClick = onCardClick,
-                    onSeeAll = { onSeeAll(tomorrowTitle, uiState.tomorrowEpisodes) },
+                    onSeeAll = { onSeeAll(ScheduleSection.TOMORROW) },
                     pendingIncrementIds = uiState.pendingIncrementIds,
                     onIncrementEpisode = onIncrementEpisode
                 )
@@ -505,7 +510,7 @@ private fun TodayHomeContent(
                     title = weekTitle,
                     episodes = weekEpisodes,
                     onCardClick = onCardClick,
-                    onSeeAll = { onSeeAll(weekTitle, weekEpisodes) },
+                    onSeeAll = { onSeeAll(ScheduleSection.WEEK) },
                     pendingIncrementIds = uiState.pendingIncrementIds,
                     onIncrementEpisode = onIncrementEpisode
                 )

@@ -64,6 +64,19 @@ data class ScheduleFilter(
     val isActive: Boolean get() = onlyMyList || genres.isNotEmpty() || formats.isNotEmpty()
 }
 
+/** Which schedule overlay (bottom sheet) is currently open, if any — kept in the ViewModel
+ *  (survives navigating to Detail and back) instead of `remember` in the Composable, which
+ *  gets torn down and reset to "closed" whenever ScheduleScreen leaves composition. */
+enum class ScheduleSection { TODAY, TOMORROW, WEEK }
+
+sealed interface ScheduleOverlay {
+    data object None : ScheduleOverlay
+    data object Filter : ScheduleOverlay
+    data object Notifications : ScheduleOverlay
+    data object Seasonal : ScheduleOverlay
+    data class SeeAll(val section: ScheduleSection) : ScheduleOverlay
+}
+
 data class ScheduleUiState(
     val todayEpisodes: List<AiringEpisode> = emptyList(),
     val tomorrowEpisodes: List<AiringEpisode> = emptyList(),
@@ -120,6 +133,8 @@ class ScheduleViewModel @Inject constructor(
     private val _hasLoadedOnce = MutableStateFlow(false)
     private val _filter = MutableStateFlow(ScheduleFilter())
     private val _pendingIncrementIds = MutableStateFlow<Set<Int>>(emptySet())
+    private val _openOverlay = MutableStateFlow<ScheduleOverlay>(ScheduleOverlay.None)
+    val openOverlay: StateFlow<ScheduleOverlay> = _openOverlay
 
     sealed interface IncrementEvent {
         data object Success : IncrementEvent
@@ -197,6 +212,8 @@ class ScheduleViewModel @Inject constructor(
     }
 
     fun clearFilter() = _filter.update { ScheduleFilter() }
+
+    fun setOpenOverlay(overlay: ScheduleOverlay) { _openOverlay.value = overlay }
 
     fun refresh() {
         viewModelScope.launch {

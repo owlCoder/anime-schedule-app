@@ -115,6 +115,7 @@
     <string name="schedule_watched_progress">Odgledano: %1$d%2$s</string>
     <string name="schedule_episode_label">Ep. %1$d%2$s</string>
     <string name="schedule_episode_number_short">#%1$d</string>
+    <string name="schedule_aired_label">Emitovano</string>
     <string name="schedule_edit_status_action">Uredi status</string>
     <string name="schedule_section_today">Danas</string>
     <string name="schedule_section_tomorrow">Sutra</string>
@@ -172,6 +173,7 @@
 
     <!-- Notification channel -->
     <string name="notif_channel_name">Nove epizode</string>
+    <string name="notif_content_text">Epizoda %d je dostupna</string>
 
     <!-- Detail screen -->
     <string name="detail_episodes">Epizode</string>

@@ -16,7 +16,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
 @Composable
@@ -49,7 +51,7 @@ fun ErrorBanner(message: String, onRetry: (() -> Unit)? = null) {
             if (onRetry != null) {
                 Spacer(Modifier.width(8.dp))
                 TextButton(onClick = onRetry, shape = PillShape) {
-                    Text("Pokušaj ponovo", color = MaterialTheme.colorScheme.onErrorContainer)
+                    Text(stringResource(R.string.common_retry), color = MaterialTheme.colorScheme.onErrorContainer)
                 }
             }
         }

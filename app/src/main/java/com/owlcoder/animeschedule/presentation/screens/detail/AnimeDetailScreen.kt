@@ -64,7 +64,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.RelatedAnime
-import com.owlcoder.animeschedule.presentation.components.CountdownText
 import com.owlcoder.animeschedule.presentation.components.ErrorBanner
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
@@ -229,9 +228,24 @@ fun AnimeDetailScreen(
                                 )
                             }
 
-                            if (detail.nextAiringAt != null) {
+                            val mainStudio = detail.studios.firstOrNull { it.isMain }?.name
+                            if (mainStudio != null) {
                                 Spacer(Modifier.height(10.dp))
-                                CountdownText(detail.nextAiringAt)
+                                Box(
+                                    modifier = Modifier
+                                        .clip(PillShape)
+                                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        mainStudio,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                             }
 
                             val entry = detail.malListEntry
@@ -414,7 +428,19 @@ fun AnimeDetailScreen(
                                     items(sortedRelations, key = { it.animeId }) { related ->
                                         RelatedAnimeCard(
                                             related = related,
-                                            onClick = { onAnimeClick(related.animeId) }
+                                            onClick = {
+                                                if (related.mediaType == null || related.mediaType == "ANIME") {
+                                                    onAnimeClick(related.animeId)
+                                                } else {
+                                                    val path = related.mediaType.lowercase()
+                                                    val uri = android.net.Uri.parse(
+                                                        "https://anilist.co/$path/${related.animeId}"
+                                                    )
+                                                    androidx.browser.customtabs.CustomTabsIntent.Builder()
+                                                        .build()
+                                                        .launchUrl(context, uri)
+                                                }
+                                            }
                                         )
                                     }
                                 }

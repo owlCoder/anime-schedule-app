@@ -10,8 +10,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import kotlinx.coroutines.delay
+import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.core.time.formatAiringCountdown
 import java.time.ZoneId
 
@@ -21,10 +23,13 @@ fun CountdownText(
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.onSurfaceVariant
 ) {
-    var text by remember { mutableStateOf(formatAiringCountdown(airingAtEpochSeconds, ZoneId.systemDefault())) }
-    LaunchedEffect(airingAtEpochSeconds) {
+    val airedLabel = stringResource(R.string.schedule_aired_label)
+    var text by remember(airedLabel) {
+        mutableStateOf(formatAiringCountdown(airingAtEpochSeconds, ZoneId.systemDefault(), airedLabel))
+    }
+    LaunchedEffect(airingAtEpochSeconds, airedLabel) {
         while (true) {
-            text = formatAiringCountdown(airingAtEpochSeconds, ZoneId.systemDefault())
+            text = formatAiringCountdown(airingAtEpochSeconds, ZoneId.systemDefault(), airedLabel)
             delay(60_000L)
         }
     }

@@ -125,7 +125,7 @@ fun NotificationsOverlay(
             // Segmented unread/read tabs.
             val tabs = listOf(
                 Triple(R.string.notif_tab_unread, Icons.Default.MarkEmailUnread, unread.size),
-                Triple(R.string.notif_tab_read, Icons.Default.MarkEmailRead, 0)
+                Triple(R.string.notif_tab_read, Icons.Default.MarkEmailRead, read.size)
             )
             Box(
                 modifier = Modifier

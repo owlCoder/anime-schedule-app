@@ -139,7 +139,7 @@ class AiringNotificationWorker @AssistedInject constructor(
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(title)
-            .setContentText("Epizoda $episode je dostupna")
+            .setContentText(context.getString(R.string.notif_content_text, episode))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
