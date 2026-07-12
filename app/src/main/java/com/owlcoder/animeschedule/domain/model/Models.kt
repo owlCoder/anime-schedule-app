@@ -54,6 +54,24 @@ data class RelatedAnime(
 
 data class Studio(val id: Int, val name: String, val isMain: Boolean)
 
+data class Character(
+    val id: Int,
+    val name: String,
+    val nativeName: String?,
+    val imageUrl: String?,
+    val role: String?
+)
+
+/** Fetched lazily (separate query) only when the user opens a character's overlay —
+ *  the description is a long field we don't want in the main detail payload/cache. */
+data class CharacterDetail(
+    val id: Int,
+    val name: String,
+    val nativeName: String?,
+    val imageUrl: String?,
+    val description: String?
+)
+
 data class AnimeDetail(
     val animeId: Int,
     val malId: Int?,
@@ -76,6 +94,7 @@ data class AnimeDetail(
     val nextAiringEpisode: Int?,
     val nextAiringAt: Long?,
     val studios: List<Studio>,
+    val characters: List<Character>,
     val relations: List<RelatedAnime>,
     val trailerSite: String?,
     val trailerId: String?,

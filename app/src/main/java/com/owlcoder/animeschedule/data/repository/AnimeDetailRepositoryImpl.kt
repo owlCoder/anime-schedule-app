@@ -13,6 +13,7 @@ import com.owlcoder.animeschedule.data.local.db.MalListEntryDao
 import com.owlcoder.animeschedule.data.mapper.toDomain
 import com.owlcoder.animeschedule.data.mapper.toEntity
 import com.owlcoder.animeschedule.domain.model.AnimeDetail
+import com.owlcoder.animeschedule.domain.model.CharacterDetail
 import com.owlcoder.animeschedule.domain.repository.AnimeDetailRepository
 import java.time.Instant
 import javax.inject.Inject
@@ -50,6 +51,22 @@ class AnimeDetailRepositoryImpl @Inject constructor(
             val malEntry = malEntity?.toDomain()
             AppResult.Success(detail.toDomain(malEntry)) as AppResult<AnimeDetail>
         }.collect { emit(it) }
+    }
+
+    override suspend fun getCharacterDetail(characterId: Int): AppResult<CharacterDetail> {
+        val result = aniListDataSource.getCharacterDetail(characterId)
+        return when (result) {
+            is AppResult.Success -> AppResult.Success(
+                CharacterDetail(
+                    id = result.data.id,
+                    name = result.data.name?.full ?: "",
+                    nativeName = result.data.name?.native,
+                    imageUrl = result.data.image?.large,
+                    description = result.data.description
+                )
+            )
+            is AppResult.Error -> AppResult.Error(result.error)
+        }
     }
 
     private suspend fun ensureDetailCached(animeId: Int) {

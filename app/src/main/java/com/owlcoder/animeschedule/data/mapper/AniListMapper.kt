@@ -57,6 +57,16 @@ fun AnimeDetailByMalQuery.Media.toEntity(nowEpoch: Long, malId: Int): AnimeDetai
         )
     }?.let { kotlinx.serialization.json.Json.encodeToString(it) }
 
+    val charactersJson = characters?.edges?.filterNotNull()?.map { edge ->
+        mapOf(
+            "id" to (edge.node?.id?.toString() ?: ""),
+            "name" to (edge.node?.name?.full ?: ""),
+            "nativeName" to (edge.node?.name?.native ?: ""),
+            "imageUrl" to (edge.node?.image?.large ?: edge.node?.image?.medium ?: ""),
+            "role" to (edge.role?.name ?: "")
+        )
+    }?.let { kotlinx.serialization.json.Json.encodeToString(it) }
+
     val relationsJson = relations?.edges?.filterNotNull()?.map { edge ->
         mapOf(
             "id" to (edge.node?.id?.toString() ?: ""),
@@ -91,6 +101,7 @@ fun AnimeDetailByMalQuery.Media.toEntity(nowEpoch: Long, malId: Int): AnimeDetai
         nextAiringEpisode = nextAiringEpisode?.episode,
         nextAiringAt = nextAiringEpisode?.airingAt?.toLong(),
         studiosJson = studiosJson,
+        charactersJson = charactersJson,
         relationsJson = relationsJson,
         trailerSite = trailer?.site,
         trailerId = trailer?.id,
@@ -105,6 +116,16 @@ fun AnimeDetailQuery.Media.toEntity(nowEpoch: Long): AnimeDetailEntity {
             "id" to (edge.node?.id?.toString() ?: ""),
             "name" to (edge.node?.name ?: ""),
             "isMain" to (edge.isMain?.toString() ?: "false")
+        )
+    }?.let { json.encodeToString(it) }
+
+    val charactersJson = characters?.edges?.filterNotNull()?.map { edge ->
+        mapOf(
+            "id" to (edge.node?.id?.toString() ?: ""),
+            "name" to (edge.node?.name?.full ?: ""),
+            "nativeName" to (edge.node?.name?.native ?: ""),
+            "imageUrl" to (edge.node?.image?.large ?: edge.node?.image?.medium ?: ""),
+            "role" to (edge.role?.name ?: "")
         )
     }?.let { json.encodeToString(it) }
 
@@ -142,6 +163,7 @@ fun AnimeDetailQuery.Media.toEntity(nowEpoch: Long): AnimeDetailEntity {
         nextAiringEpisode = nextAiringEpisode?.episode,
         nextAiringAt = nextAiringEpisode?.airingAt?.toLong(),
         studiosJson = studiosJson,
+        charactersJson = charactersJson,
         relationsJson = relationsJson,
         trailerSite = trailer?.site,
         trailerId = trailer?.id,

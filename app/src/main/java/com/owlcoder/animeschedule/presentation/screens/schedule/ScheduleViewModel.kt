@@ -98,6 +98,15 @@ data class ScheduleUiState(
     val recentlyChangedEntries: List<MalListEntry> = emptyList()
 )
 
+/** Dropped titles shouldn't clutter Today/Tomorrow/This week, and "+1" makes no sense on
+ *  an entry the user already dropped — so these sections exclude them entirely rather than
+ *  just disabling the increment action. */
+private fun List<AiringEpisode>.excludeDropped(): List<AiringEpisode> =
+    filter { it.malListEntry?.status != WatchStatus.DROPPED }
+
+private fun List<ScheduleDay>.excludeDroppedFromWeek(): List<ScheduleDay> =
+    map { day -> day.copy(episodes = day.episodes.excludeDropped()) }
+
 private fun List<AiringEpisode>.applyFilter(filter: ScheduleFilter): List<AiringEpisode> {
     if (!filter.isActive) return this
     return filter { ep ->
@@ -156,9 +165,9 @@ class ScheduleViewModel @Inject constructor(
                 getWeekScheduleUseCase(zoneId),
                 _isLoading
             ) { today, tomorrow, week, loading ->
-                val todayList = (today as? AppResult.Success)?.data ?: emptyList()
-                val tomorrowList = (tomorrow as? AppResult.Success)?.data ?: emptyList()
-                val weekList = (week as? AppResult.Success)?.data ?: emptyList()
+                val todayList = ((today as? AppResult.Success)?.data ?: emptyList()).excludeDropped()
+                val tomorrowList = ((tomorrow as? AppResult.Success)?.data ?: emptyList()).excludeDropped()
+                val weekList = ((week as? AppResult.Success)?.data ?: emptyList()).excludeDroppedFromWeek()
                 val allEpisodes = todayList + tomorrowList + weekList.flatMap { it.episodes }
                 val genres = allEpisodes.flatMap { it.genres }.distinct().sorted()
                 val formats = allEpisodes.mapNotNull { it.format }.distinct().sorted()

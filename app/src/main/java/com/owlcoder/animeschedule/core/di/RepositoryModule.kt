@@ -12,6 +12,7 @@ import com.owlcoder.animeschedule.data.repository.ScheduleRepositoryImpl
 import com.owlcoder.animeschedule.data.repository.SearchRepositoryImpl
 import com.owlcoder.animeschedule.data.repository.SeasonalRepositoryImpl
 import com.owlcoder.animeschedule.data.repository.SettingsRepositoryImpl
+import com.owlcoder.animeschedule.data.repository.WatchSourceRepositoryImpl
 import com.owlcoder.animeschedule.data.work.PendingUpdateScheduler
 import com.owlcoder.animeschedule.data.work.WorkManagerPendingUpdateScheduler
 import com.owlcoder.animeschedule.domain.repository.AnimeDetailRepository
@@ -22,6 +23,7 @@ import com.owlcoder.animeschedule.domain.repository.ScheduleRepository
 import com.owlcoder.animeschedule.domain.repository.SearchRepository
 import com.owlcoder.animeschedule.domain.repository.SeasonalRepository
 import com.owlcoder.animeschedule.domain.repository.SettingsRepository
+import com.owlcoder.animeschedule.domain.repository.WatchSourceRepository
 import javax.inject.Singleton
 
 @Module
@@ -36,4 +38,5 @@ abstract class RepositoryModule {
     @Binds @Singleton abstract fun bindNotificationRepository(impl: NotificationRepositoryImpl): NotificationRepository
     @Binds @Singleton abstract fun bindSeasonalRepository(impl: SeasonalRepositoryImpl): SeasonalRepository
     @Binds @Singleton abstract fun bindPendingUpdateScheduler(impl: WorkManagerPendingUpdateScheduler): PendingUpdateScheduler
+    @Binds @Singleton abstract fun bindWatchSourceRepository(impl: WatchSourceRepositoryImpl): WatchSourceRepository
 }

@@ -10,9 +10,10 @@ import androidx.room.TypeConverters
         AnimeDetailEntity::class,
         MalListEntryEntity::class,
         NotificationEntity::class,
-        PendingListUpdateEntity::class
+        PendingListUpdateEntity::class,
+        WatchSourceEntity::class
     ],
-    version = 5,
+    version = 8,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -22,4 +23,5 @@ abstract class AnimeScheduleDatabase : RoomDatabase() {
     abstract fun malListEntryDao(): MalListEntryDao
     abstract fun notificationDao(): NotificationDao
     abstract fun pendingListUpdateDao(): PendingListUpdateDao
+    abstract fun watchSourceDao(): WatchSourceDao
 }

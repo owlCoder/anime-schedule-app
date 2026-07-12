@@ -19,6 +19,8 @@
     <string name="settings_changelog_subtitle">What\'s new in the app</string>
     <string name="settings_about">About</string>
     <string name="settings_about_subtitle">Version, sources, contact</string>
+    <string name="settings_watch_sources">Watch sources</string>
+    <string name="settings_watch_sources_subtitle">Manage where you watch anime</string>
 
     <!-- Profile card -->
     <string name="profile_logged_in">Logged in</string>
@@ -183,11 +185,14 @@
     <string name="detail_season">Season</string>
     <string name="detail_studios">Studios</string>
     <string name="detail_related">Related</string>
+    <string name="detail_characters">Characters</string>
     <string name="detail_synopsis">Synopsis</string>
     <string name="detail_next_episode">Next episode</string>
     <string name="detail_watch_trailer">Watch trailer</string>
     <string name="detail_open_mal">Open on MAL</string>
     <string name="detail_add_to_list">Add to list</string>
+    <string name="detail_watch_on">Watch on</string>
+    <string name="detail_watch_on_disclaimer">These are external, user-added sites. AnimeSchedule doesn\'t host or endorse their content — manage sources in Settings.</string>
 
     <!-- Related anime relation types -->
     <string name="relation_prequel">Prequel</string>
@@ -205,6 +210,19 @@
     <string name="changelog_version_prefix">Version %s</string>
 
     <!-- Changelog entries EN -->
+    <string name="cl_32_1">Fixed video fullscreen button not working on some watch-source sites</string>
+    <string name="cl_32_date">July 2026</string>
+
+    <string name="cl_31_1">Watch sources — add streaming sites (or apps like Netflix/Crunchyroll) per anime, opened in a fullscreen in-app browser</string>
+    <string name="cl_31_2">"Open in app" option per watch source, hands off to an installed app instead of the in-app browser</string>
+    <string name="cl_31_3">Built-in ad blocker for the in-app browser</string>
+    <string name="cl_31_4">Character list on anime details — tap a character to see their bio</string>
+    <string name="cl_31_5">Collapsible synopsis with "Read more"</string>
+    <string name="cl_31_6">Livelier onboarding — animated logo and page transitions</string>
+    <string name="cl_31_7">Notification permission is now only requested when you enable notifications, not on first launch</string>
+    <string name="cl_31_8">Layout and spacing polish across the detail and settings screens</string>
+    <string name="cl_31_date">July 2026</string>
+
     <string name="cl_201_1">New app branding — updated icon and "AS" logo mark</string>
     <string name="cl_201_2">Animated loading splash screen on app start</string>
     <string name="cl_201_3">Redesigned bottom navigation bar</string>
@@ -307,4 +325,15 @@
     <string name="list_status_score_unrated">—</string>
     <string name="list_status_remove">Remove from list</string>
     <string name="detail_login_cta">Sign in with MAL to track</string>
+
+    <!-- Watch sources screen -->
+    <string name="watch_sources_title">Watch sources</string>
+    <string name="watch_sources_disclaimer">AnimeSchedule doesn\'t host, stream, or verify any content on these sites. Add sources you trust — links open in an in-app browser.</string>
+    <string name="watch_sources_add">Add source</string>
+    <string name="watch_sources_delete">Delete source</string>
+    <string name="watch_sources_name_label">Name</string>
+    <string name="watch_sources_url_label">Search URL</string>
+    <string name="watch_sources_url_hint">Must contain {query} — it\'s replaced with the anime title, e.g. https://example.com/search?q={query}</string>
+    <string name="watch_sources_open_externally">Open in app</string>
+    <string name="watch_sources_open_externally_hint">Lets the system hand off to an installed app (e.g. Netflix) instead of the in-app browser</string>
 </resources>

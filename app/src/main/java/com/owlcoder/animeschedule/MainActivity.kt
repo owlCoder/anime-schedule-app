@@ -79,7 +79,6 @@ class MainActivity : AppCompatActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        requestNotificationPermissionIfNeeded()
         intent?.let { handleOAuthIntent(it) }
 
         // Read prefs synchronously on main thread to avoid onboarding flash.
@@ -129,6 +128,7 @@ class MainActivity : AppCompatActivity() {
                         onNotifSettingsChange = { enabled, offset ->
                             pendingNotifEnabled = enabled
                             pendingNotifOffset = offset
+                            if (enabled) requestNotificationPermissionIfNeeded()
                         }
                     )
                 } else {
@@ -147,7 +147,7 @@ class MainActivity : AppCompatActivity() {
                     var searchOpen by rememberSaveable { mutableStateOf(false) }
                     // Covers the whole app (incl. nav bar) with the animated splash until the
                     // Schedule screen reports its first data load has resolved.
-                    var appLoading by androidx.compose.runtime.remember { mutableStateOf(true) }
+                    var appLoading by rememberSaveable { mutableStateOf(true) }
                     CompositionLocalProvider(
                         LocalNavBarHeight provides navBarHeightState.value,
                         LocalToast provides toastController
@@ -242,7 +242,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun requestNotificationPermissionIfNeeded() {
+    fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108"
+    android:tint="?attr/colorControlNormal">
+
+    <!-- Monochrome (single-color) launcher variant: same "Niti" glyph, no halo
+         needed since both strokes render in the same themed color. -->
+    <path
+        android:pathData="M22.5,54 H85.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="20.25"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <path
+        android:pathData="M31.5,31.5 H76.5 V72 H31.5 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="20.25"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+</vector>

@@ -19,6 +19,8 @@
     <string name="settings_changelog_subtitle">Šta je novo u aplikaciji</string>
     <string name="settings_about">O aplikaciji</string>
     <string name="settings_about_subtitle">Verzija, podaci, kontakt</string>
+    <string name="settings_watch_sources">Izvori za gledanje</string>
+    <string name="settings_watch_sources_subtitle">Upravljaj mestima gde gledaš anime</string>
 
     <!-- Profile card -->
     <string name="profile_logged_in">Ulogovan</string>
@@ -183,11 +185,14 @@
     <string name="detail_season">Sezona</string>
     <string name="detail_studios">Studiji</string>
     <string name="detail_related">Povezano</string>
+    <string name="detail_characters">Likovi</string>
     <string name="detail_synopsis">Sinopsis</string>
     <string name="detail_next_episode">Sledeća epizoda</string>
     <string name="detail_watch_trailer">Pogledaj trejler</string>
     <string name="detail_open_mal">Otvori na MAL</string>
     <string name="detail_add_to_list">Dodaj na listu</string>
+    <string name="detail_watch_on">Gledaj na</string>
+    <string name="detail_watch_on_disclaimer">Ovo su spoljni sajtovi koje si sam dodao. AnimeSchedule ne hostuje niti garantuje za njihov sadržaj — izvorima upravljaj u podešavanjima.</string>
 
     <!-- Related anime relation types -->
     <string name="relation_prequel">Prethodni deo</string>
@@ -205,6 +210,19 @@
     <string name="changelog_version_prefix">Verzija %s</string>
 
     <!-- Changelog entries SR -->
+    <string name="cl_32_1">Ispravljeno dugme za fullscreen video koje nije radilo na pojedinim sajtovima za gledanje</string>
+    <string name="cl_32_date">Jul 2026</string>
+
+    <string name="cl_31_1">Izvori za gledanje — dodaj sajtove (ili aplikacije poput Netflix/Crunchyroll) po anime-u, otvaraju se u ugrađenom pregledaču preko celog ekrana</string>
+    <string name="cl_31_2">Opcija "Otvori u aplikaciji" po izvoru — sistem prosleđuje instaliranoj aplikaciji umesto ugrađenog pregledača</string>
+    <string name="cl_31_3">Ugrađen blokator reklama za ugrađeni pregledač</string>
+    <string name="cl_31_4">Lista likova na detaljima anime-a — dodirni lika da vidiš biografiju</string>
+    <string name="cl_31_5">Sažet sinopsis sa "Pročitaj više"</string>
+    <string name="cl_31_6">Živahniji onboarding — animirani logo i prelazi između stranica</string>
+    <string name="cl_31_7">Dozvola za notifikacije se sada traži tek kada ih uključiš, ne odmah pri prvom pokretanju</string>
+    <string name="cl_31_8">Doterani razmaci i raspored na ekranima detalja i podešavanja</string>
+    <string name="cl_31_date">Jul 2026</string>
+
     <string name="cl_201_1">Novi brending aplikacije — nova ikonica i "AS" logo oznaka</string>
     <string name="cl_201_2">Animirani loading ekran pri pokretanju aplikacije</string>
     <string name="cl_201_3">Redizajnirana donja navigaciona traka</string>
@@ -307,4 +325,15 @@
     <string name="list_status_score_unrated">—</string>
     <string name="list_status_remove">Ukloni sa liste</string>
     <string name="detail_login_cta">Prijavi se na MAL da pratiš</string>
+
+    <!-- Watch sources screen -->
+    <string name="watch_sources_title">Izvori za gledanje</string>
+    <string name="watch_sources_disclaimer">AnimeSchedule ne hostuje, ne emituje niti proverava sadržaj ovih sajtova. Dodaj izvore kojima veruješ — linkovi se otvaraju u ugrađenom pregledaču.</string>
+    <string name="watch_sources_add">Dodaj izvor</string>
+    <string name="watch_sources_delete">Obriši izvor</string>
+    <string name="watch_sources_name_label">Naziv</string>
+    <string name="watch_sources_url_label">URL za pretragu</string>
+    <string name="watch_sources_url_hint">Mora sadržati {query} — zamenjuje se nazivom anime-a, npr. https://example.com/search?q={query}</string>
+    <string name="watch_sources_open_externally">Otvori u aplikaciji</string>
+    <string name="watch_sources_open_externally_hint">Sistem preusmerava na instaliranu aplikaciju (npr. Netflix) umesto ugrađenog pregledača</string>
 </resources>

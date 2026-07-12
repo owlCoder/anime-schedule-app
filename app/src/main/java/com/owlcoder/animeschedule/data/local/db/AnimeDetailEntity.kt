@@ -26,6 +26,7 @@ data class AnimeDetailEntity(
     val nextAiringEpisode: Int?,
     val nextAiringAt: Long?,
     val studiosJson: String?,
+    val charactersJson: String? = null,
     val relationsJson: String?,
     val trailerSite: String?,
     val trailerId: String?,

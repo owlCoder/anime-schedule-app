@@ -1,5 +1,10 @@
 package com.owlcoder.animeschedule.presentation.screens.settings
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +38,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Update
@@ -65,6 +71,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -74,6 +81,7 @@ import coil3.compose.AsyncImage
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.data.local.datastore.AccentColor
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
+import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import com.owlcoder.animeschedule.ui.theme.PillShape
 import com.owlcoder.animeschedule.ui.theme.accentPrimary
 import java.time.ZoneId
@@ -83,7 +91,8 @@ import java.time.ZoneId
 fun SettingsScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
-    onRestartForLanguage: (AppLanguage) -> Unit = {}
+    onRestartForLanguage: (AppLanguage) -> Unit = {},
+    onManageWatchSources: () -> Unit = {}
 ) {
     val uiState by settingsViewModel.uiState.collectAsState()
     val isLoggingIn by authViewModel.isLoggingIn.collectAsState()
@@ -166,6 +175,14 @@ fun SettingsScreen(
                         subtitle = uiState.timezoneId.ifEmpty { ZoneId.systemDefault().id },
                         onClick = { showTimezonePicker = true }
                     )
+                    SettingsDivider()
+                    SettingsRow(
+                        icon = Icons.Default.PlayCircle,
+                        iconColor = accentPrimary(AccentColor.PURPLE, dark = isSystemDark()),
+                        title = stringResource(R.string.settings_watch_sources),
+                        subtitle = stringResource(R.string.settings_watch_sources_subtitle),
+                        onClick = onManageWatchSources
+                    )
                 }
                 Spacer(Modifier.height(28.dp))
             }
@@ -190,7 +207,7 @@ fun SettingsScreen(
                         onClick = { showAbout = true }
                     )
                 }
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(LocalNavBarHeight.current + 24.dp))
             }
         }
     }
@@ -614,6 +631,21 @@ private fun NotifBottomSheet(
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val context = LocalContext.current
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* permission result — no action needed, user decided */ }
+
+    fun onSwitchToggled(isEnabled: Boolean) {
+        onEnabledChange(isEnabled)
+        if (isEnabled &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -646,7 +678,7 @@ private fun NotifBottomSheet(
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f)
                 )
-                Switch(checked = enabled, onCheckedChange = onEnabledChange)
+                Switch(checked = enabled, onCheckedChange = ::onSwitchToggled)
             }
 
             if (enabled) {

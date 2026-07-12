@@ -2,10 +2,18 @@ package com.owlcoder.animeschedule.presentation.screens.onboarding
 
 import android.content.Context
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.Image
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +30,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -46,8 +55,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -89,19 +100,35 @@ fun OnboardingScreen(
             state = pagerState,
             modifier = Modifier.weight(1f)
         ) { page ->
-            when (page) {
-                0 -> LanguagePickerPage(
-                    selectedLanguage = selectedLanguage,
-                    onLanguageChange = onLanguageChange
-                )
-                1 -> WelcomePage(lang = selectedLanguage)
-                2 -> FeaturesPage(lang = selectedLanguage)
-                3 -> NotificationsPage(onSettingsChange = onNotifSettingsChange, lang = selectedLanguage)
-                4 -> MalLoginPage(
-                    onLogin = onLogin,
-                    onComplete = onComplete,
-                    lang = selectedLanguage
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        // Parallax: pages fade + shrink slightly as they slide out of focus
+                        // during a swipe, instead of a flat cut — makes the pager feel alive.
+                        val pageOffset =
+                            (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                        val distance = pageOffset.let { if (it < 0f) -it else it }.coerceIn(0f, 1f)
+                        alpha = 1f - distance * 0.7f
+                        val scale = 1f - distance * 0.1f
+                        scaleX = scale
+                        scaleY = scale
+                    }
+            ) {
+                when (page) {
+                    0 -> LanguagePickerPage(
+                        selectedLanguage = selectedLanguage,
+                        onLanguageChange = onLanguageChange
+                    )
+                    1 -> WelcomePage(lang = selectedLanguage)
+                    2 -> FeaturesPage(lang = selectedLanguage)
+                    3 -> NotificationsPage(onSettingsChange = onNotifSettingsChange, lang = selectedLanguage)
+                    4 -> MalLoginPage(
+                        onLogin = onLogin,
+                        onComplete = onComplete,
+                        lang = selectedLanguage
+                    )
+                }
             }
         }
 
@@ -163,7 +190,10 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
             val isSelected = index == currentPage
             val width by animateDpAsState(
                 targetValue = if (isSelected) 24.dp else 8.dp,
-                animationSpec = spring(),
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                ),
                 label = "indicatorWidth"
             )
             val color by animateColorAsState(
@@ -182,6 +212,54 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
     }
 }
 
+// Minimal "AS" wordmark (same lockup as the About screen) with a slow breathing
+// scale and a pulsing halo ring behind it, so the welcome page reads as alive
+// rather than a static logo tile.
+@Composable
+private fun WelcomeLogo() {
+    val transition = rememberInfiniteTransition(label = "welcomeLogo")
+    val breathe by transition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.06f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1800, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "breathe"
+    )
+    val pulse by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2600, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pulse"
+    )
+
+    Box(
+        modifier = Modifier.size(140.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(110.dp)
+                .scale(1f + pulse * 0.55f)
+                .border(
+                    BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.30f * (1f - pulse))),
+                    CircleShape
+                )
+        )
+        Text(
+            text = stringResource(R.string.about_logo_monogram),
+            style = MaterialTheme.typography.displayLarge,
+            fontWeight = FontWeight.Black,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.scale(breathe)
+        )
+    }
+}
+
 // ── Page 0: Welcome ──────────────────────────────────────────────────────────
 
 @Composable
@@ -193,19 +271,7 @@ private fun WelcomePage(lang: AppLanguage) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Box(
-            modifier = Modifier
-                .size(96.dp)
-                .clip(MaterialTheme.shapes.large)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center
-        ) {
-            androidx.compose.foundation.Image(
-                painter = painterResource(id = R.drawable.ic_app_icon),
-                contentDescription = "App icon",
-                modifier = Modifier.size(72.dp)
-            )
-        }
+        WelcomeLogo()
 
         Spacer(Modifier.height(32.dp))
 
@@ -373,20 +439,7 @@ private fun FeaturesPage(lang: AppLanguage) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(MaterialTheme.shapes.small)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = feature.icon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
+                FeatureIconBadge(icon = feature.icon, phaseOffset = index * 0.25f)
 
                 Spacer(Modifier.width(16.dp))
 
@@ -409,6 +462,41 @@ private fun FeaturesPage(lang: AppLanguage) {
                 Spacer(Modifier.height(20.dp))
             }
         }
+    }
+}
+
+// Feature icon badge with a slow, gently phase-offset bob — each row floats independently
+// so the list doesn't look perfectly static while still reading as calm, not busy.
+@Composable
+private fun FeatureIconBadge(icon: ImageVector, phaseOffset: Float) {
+    val transition = rememberInfiniteTransition(label = "featureBob")
+    val bob by transition.animateFloat(
+        initialValue = -1f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse,
+            initialStartOffset = androidx.compose.animation.core.StartOffset(
+                (2200 * phaseOffset).toInt()
+            )
+        ),
+        label = "bob"
+    )
+
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .graphicsLayer { translationY = bob * 4.dp.toPx() }
+            .clip(MaterialTheme.shapes.small)
+            .background(MaterialTheme.colorScheme.primaryContainer),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.size(22.dp)
+        )
     }
 }
 

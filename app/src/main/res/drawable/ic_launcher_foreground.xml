@@ -1,38 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
     <!--
-      AnimeSchedule mark: an "AS" monogram — a bold "A" with a raised, superscript-style
-      "S" to its upper-right. Clean WHITE glyph on the brand violet background tile,
-      matching the Tapiz Admin launcher's white-on-brand convention. A faint dark
-      drop-shadow layer sits under the glyph for depth. All artwork stays within the
-      adaptive-icon safe zone (~x/y 21..87).
+      "Niti" launcher mark (matches the Tapiz ecosystem's 3-stroke halo technique,
+      scaled to Android's 108x108 adaptive-icon canvas / 48-unit design grid:
+      u = 108/48 = 2.25). Ink bar = horizontal "schedule" strip; accent thread =
+      rounded TV/monitor silhouette ("anime" viewing), color #E0457B (pink,
+      deliberately outside the Tapiz ecosystem palette since this is not a
+      Tapiz product, just stylistically aligned).
     -->
 
-    <!-- Shadow layer: same glyph, dark + translucent, nudged down-right ~1.5u. -->
-    <group android:translateX="1.5" android:translateY="1.6">
-        <path
-            android:fillColor="#40000000"
-            android:fillType="evenOdd"
-            android:pathData="M40,30 L58,30 L72,78 L61,78 L57.5,66 L40.5,66 L37,78 L26,78 Z M43.7,56 L54.3,56 L49,37.5 Z" />
-        <path
-            android:fillColor="#40000000"
-            android:pathData="M62,32 C62,28.5 65.2,26 70.2,26 C73.9,26 76.7,27.4 78.6,29.6 L74.8,33.4 C73.6,32.1 71.9,31.1 70.1,31.1 C68.1,31.1 66.9,32 66.9,33.2 C66.9,34.6 68.3,35.1 71.2,35.9 C75.6,37 78.8,38.6 78.8,43 C78.8,47 75.4,49.9 70.2,49.9 C66.1,49.9 62.9,48.3 60.8,45.7 L64.7,41.9 C66.1,43.6 68,44.7 70.3,44.7 C72.5,44.7 73.8,43.8 73.8,42.4 C73.8,41 72.6,40.4 69.2,39.6 C64.9,38.5 62,36.7 62,32 Z" />
-    </group>
-
-    <!-- "A": bold triangular monogram stroke with a hollow crossbar cut (evenOdd). -->
+    <!-- Ink bar: M10 24 H38 -> scaled -->
     <path
-        android:fillColor="#FFFFFF"
-        android:fillType="evenOdd"
-        android:pathData="M40,30 L58,30 L72,78 L61,78 L57.5,66 L40.5,66 L37,78 L26,78 Z M43.7,56 L54.3,56 L49,37.5 Z" />
+        android:pathData="M22.5,54 H85.5"
+        android:strokeColor="#221C30"
+        android:strokeWidth="20.25"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
 
-    <!-- "S": compact, raised to the upper-right (superscript feel). -->
+    <!-- Halo: same path as accent, wider, tile-background color to punch the gap -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M62,32 C62,28.5 65.2,26 70.2,26 C73.9,26 76.7,27.4 78.6,29.6 L74.8,33.4 C73.6,32.1 71.9,31.1 70.1,31.1 C68.1,31.1 66.9,32 66.9,33.2 C66.9,34.6 68.3,35.1 71.2,35.9 C75.6,37 78.8,38.6 78.8,43 C78.8,47 75.4,49.9 70.2,49.9 C66.1,49.9 62.9,48.3 60.8,45.7 L64.7,41.9 C66.1,43.6 68,44.7 70.3,44.7 C72.5,44.7 73.8,43.8 73.8,42.4 C73.8,41 72.6,40.4 69.2,39.6 C64.9,38.5 62,36.7 62,32 Z" />
+        android:pathData="M31.5,31.5 H76.5 V72 H31.5 Z"
+        android:strokeColor="#F6F4FA"
+        android:strokeWidth="33.75"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+
+    <!-- Accent thread: rounded TV/monitor silhouette -->
+    <path
+        android:pathData="M31.5,31.5 H76.5 V72 H31.5 Z"
+        android:strokeColor="#E0457B"
+        android:strokeWidth="20.25"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
 </vector>

@@ -9,6 +9,7 @@ import com.owlcoder.animeschedule.data.api.anilist.generated.AiringScheduleQuery
 import com.owlcoder.animeschedule.data.api.anilist.generated.AnimeDetailByMalQuery
 import com.owlcoder.animeschedule.data.api.anilist.generated.AnimeDetailQuery
 import com.owlcoder.animeschedule.data.api.anilist.generated.AnimeSearchQuery
+import com.owlcoder.animeschedule.data.api.anilist.generated.CharacterDetailQuery
 import com.owlcoder.animeschedule.data.api.anilist.generated.SeasonalAnimeQuery
 import com.owlcoder.animeschedule.data.api.anilist.generated.type.MediaSeason
 import com.owlcoder.animeschedule.data.api.anilist.generated.type.MediaSort
@@ -129,6 +130,22 @@ class AniListRemoteDataSource @Inject constructor(
                 currentPage++
             }
             AppResult.Success(allResults)
+        } catch (e: ApolloException) {
+            AppResult.Error(AppError.Network(e.message))
+        }
+    }
+
+    suspend fun getCharacterDetail(id: Int): AppResult<CharacterDetailQuery.Character> {
+        return try {
+            val response = apolloClient.query(
+                CharacterDetailQuery(id = com.apollographql.apollo.api.Optional.present(id))
+            ).execute()
+            if (response.hasErrors()) {
+                return AppResult.Error(AppError.GraphQL(response.errors!!.first().message))
+            }
+            val character = response.data?.Character
+                ?: return AppResult.Error(AppError.NoCache)
+            AppResult.Success(character)
         } catch (e: ApolloException) {
             AppResult.Error(AppError.Network(e.message))
         }

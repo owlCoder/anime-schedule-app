@@ -10,6 +10,7 @@ import com.owlcoder.animeschedule.data.local.datastore.UserPreferences
 import com.owlcoder.animeschedule.domain.model.AiringEpisode
 import com.owlcoder.animeschedule.domain.model.AnimeSeason
 import com.owlcoder.animeschedule.domain.model.AnimeDetail
+import com.owlcoder.animeschedule.domain.model.CharacterDetail
 import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
 import com.owlcoder.animeschedule.domain.model.AppNotification
 import com.owlcoder.animeschedule.domain.model.MalListEntry
@@ -17,6 +18,7 @@ import com.owlcoder.animeschedule.domain.model.MalListUpdate
 import com.owlcoder.animeschedule.domain.model.ScheduleDay
 import com.owlcoder.animeschedule.domain.model.SearchPage
 import com.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
+import com.owlcoder.animeschedule.domain.model.WatchSource
 import java.time.ZoneId
 
 interface ScheduleRepository {
@@ -28,6 +30,7 @@ interface ScheduleRepository {
 
 interface AnimeDetailRepository {
     fun getAnimeDetail(animeId: Int): Flow<AppResult<AnimeDetail>>
+    suspend fun getCharacterDetail(characterId: Int): AppResult<CharacterDetail>
 }
 
 interface MalRepository {
@@ -77,4 +80,11 @@ interface NotificationRepository {
     suspend fun markRead(id: Int)
     suspend fun markAllRead()
     suspend fun createNotification(episode: AiringEpisode)
+}
+
+interface WatchSourceRepository {
+    fun getAll(): Flow<List<WatchSource>>
+    suspend fun add(name: String, urlTemplate: String, faviconUrl: String?, openExternally: Boolean)
+    suspend fun update(source: WatchSource)
+    suspend fun delete(source: WatchSource)
 }

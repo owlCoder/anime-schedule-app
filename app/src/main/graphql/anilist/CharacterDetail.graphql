@@ -1,0 +1,13 @@
+query CharacterDetailQuery($id: Int) {
+  Character(id: $id) {
+    id
+    name {
+      full
+      native
+    }
+    image {
+      large
+    }
+    description(asHtml: false)
+  }
+}

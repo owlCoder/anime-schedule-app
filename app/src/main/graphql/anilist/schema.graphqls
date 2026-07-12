@@ -1,6 +1,7 @@
 type Query {
   Page(page: Int, perPage: Int): Page
   Media(id: Int, idMal: Int, type: MediaType): Media
+  Character(id: Int): Character
 }
 
 type Page {
@@ -66,6 +67,7 @@ type Media {
   seasonYear: Int
   nextAiringEpisode: AiringSchedule
   studios(isMain: Boolean): StudioConnection
+  characters(sort: [CharacterSort], perPage: Int): CharacterConnection
   relations: MediaConnection
   trailer: MediaTrailer
   siteUrl: String
@@ -113,6 +115,45 @@ type MediaTrailer {
   id: String
   site: String
   thumbnail: String
+}
+
+type CharacterConnection {
+  edges: [CharacterEdge]
+}
+
+type CharacterEdge {
+  role: CharacterRole
+  node: Character
+}
+
+type Character {
+  id: Int!
+  name: CharacterName
+  image: CharacterImage
+  description(asHtml: Boolean): String
+}
+
+type CharacterName {
+  full: String
+  native: String
+}
+
+type CharacterImage {
+  large: String
+  medium: String
+}
+
+enum CharacterRole {
+  MAIN
+  SUPPORTING
+  BACKGROUND
+}
+
+enum CharacterSort {
+  ID
+  ROLE
+  FAVOURITES
+  RELEVANCE
 }
 
 enum MediaType {

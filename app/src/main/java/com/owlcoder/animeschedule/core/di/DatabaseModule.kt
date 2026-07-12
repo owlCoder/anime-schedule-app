@@ -13,6 +13,7 @@ import com.owlcoder.animeschedule.data.local.db.AnimeScheduleDatabase
 import com.owlcoder.animeschedule.data.local.db.MalListEntryDao
 import com.owlcoder.animeschedule.data.local.db.NotificationDao
 import com.owlcoder.animeschedule.data.local.db.PendingListUpdateDao
+import com.owlcoder.animeschedule.data.local.db.WatchSourceDao
 import javax.inject.Singleton
 
 @Module
@@ -29,4 +30,5 @@ object DatabaseModule {
     @Provides fun provideMalListEntryDao(db: AnimeScheduleDatabase): MalListEntryDao = db.malListEntryDao()
     @Provides fun provideNotificationDao(db: AnimeScheduleDatabase): NotificationDao = db.notificationDao()
     @Provides fun providePendingListUpdateDao(db: AnimeScheduleDatabase): PendingListUpdateDao = db.pendingListUpdateDao()
+    @Provides fun provideWatchSourceDao(db: AnimeScheduleDatabase): WatchSourceDao = db.watchSourceDao()
 }

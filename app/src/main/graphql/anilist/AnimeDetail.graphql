@@ -36,6 +36,22 @@ query AnimeDetailQuery($id: Int) {
         }
       }
     }
+    characters(sort: ROLE, perPage: 12) {
+      edges {
+        role
+        node {
+          id
+          name {
+            full
+            native
+          }
+          image {
+            large
+            medium
+          }
+        }
+      }
+    }
     relations {
       edges {
         relationType
@@ -96,6 +112,22 @@ query AnimeDetailByMalQuery($idMal: Int) {
         node {
           id
           name
+        }
+      }
+    }
+    characters(sort: ROLE, perPage: 12) {
+      edges {
+        role
+        node {
+          id
+          name {
+            full
+            native
+          }
+          image {
+            large
+            medium
+          }
         }
       }
     }

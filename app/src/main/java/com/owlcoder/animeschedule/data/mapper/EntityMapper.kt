@@ -4,14 +4,35 @@ import kotlinx.serialization.json.Json
 import com.owlcoder.animeschedule.data.local.db.AiringEpisodeEntity
 import com.owlcoder.animeschedule.data.local.db.AnimeDetailEntity
 import com.owlcoder.animeschedule.data.local.db.NotificationEntity
+import com.owlcoder.animeschedule.data.local.db.WatchSourceEntity
 import com.owlcoder.animeschedule.domain.model.AiringEpisode
 import com.owlcoder.animeschedule.domain.model.AnimeDetail
 import com.owlcoder.animeschedule.domain.model.AppNotification
+import com.owlcoder.animeschedule.domain.model.Character
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.RelatedAnime
 import com.owlcoder.animeschedule.domain.model.Studio
+import com.owlcoder.animeschedule.domain.model.WatchSource
 
 private val json = Json { ignoreUnknownKeys = true }
+
+fun WatchSourceEntity.toDomain(): WatchSource = WatchSource(
+    id = id,
+    name = name,
+    urlTemplate = urlTemplate,
+    faviconUrl = faviconUrl,
+    sortOrder = sortOrder,
+    openExternally = openExternally
+)
+
+fun WatchSource.toEntity(): WatchSourceEntity = WatchSourceEntity(
+    id = id,
+    name = name,
+    urlTemplate = urlTemplate,
+    faviconUrl = faviconUrl,
+    sortOrder = sortOrder,
+    openExternally = openExternally
+)
 
 fun NotificationEntity.toDomain(): AppNotification = AppNotification(
     id = id,
@@ -55,6 +76,20 @@ fun AnimeDetailEntity.toDomain(malListEntry: MalListEntry? = null): AnimeDetail 
         }.getOrDefault(emptyList())
     } ?: emptyList()
 
+    val characters = charactersJson?.let {
+        runCatching {
+            json.decodeFromString<List<Map<String, String>>>(it).map { m ->
+                Character(
+                    id = m["id"]?.toIntOrNull() ?: 0,
+                    name = m["name"] ?: "",
+                    nativeName = m["nativeName"]?.takeIf { n -> n.isNotEmpty() },
+                    imageUrl = m["imageUrl"]?.takeIf { u -> u.isNotEmpty() },
+                    role = m["role"]?.takeIf { r -> r.isNotEmpty() }
+                )
+            }
+        }.getOrDefault(emptyList())
+    } ?: emptyList()
+
     val relations = relationsJson?.let {
         runCatching {
             json.decodeFromString<List<Map<String, String>>>(it).map { m ->
@@ -93,6 +128,7 @@ fun AnimeDetailEntity.toDomain(malListEntry: MalListEntry? = null): AnimeDetail 
         nextAiringEpisode = nextAiringEpisode,
         nextAiringAt = nextAiringAt,
         studios = studios,
+        characters = characters,
         relations = relations,
         trailerSite = trailerSite,
         trailerId = trailerId,

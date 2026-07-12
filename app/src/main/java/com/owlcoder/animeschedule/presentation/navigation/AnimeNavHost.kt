@@ -14,8 +14,10 @@ import androidx.navigation.navArgument
 import com.owlcoder.animeschedule.presentation.screens.detail.AnimeDetailScreen
 import com.owlcoder.animeschedule.presentation.screens.mylist.MyListScreen
 import com.owlcoder.animeschedule.presentation.screens.schedule.ScheduleScreen
+import com.owlcoder.animeschedule.presentation.screens.watch.WatchScreen
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import com.owlcoder.animeschedule.presentation.screens.settings.SettingsScreen
+import com.owlcoder.animeschedule.presentation.screens.settings.WatchSourcesScreen
 
 private val slideEnter = slideInHorizontally(initialOffsetX = { it }) + fadeIn()
 private val slideExit = slideOutHorizontally(targetOffsetX = { -it / 3 }) + fadeOut()
@@ -52,7 +54,13 @@ fun AnimeNavHost(
             })
         }
         composable(Screen.Settings.route) {
-            SettingsScreen(onRestartForLanguage = onRestartForLanguage)
+            SettingsScreen(
+                onRestartForLanguage = onRestartForLanguage,
+                onManageWatchSources = { navController.navigate(Screen.WatchSources.route) }
+            )
+        }
+        composable(Screen.WatchSources.route) {
+            WatchSourcesScreen(onBack = { navController.popBackStack() })
         }
         composable(
             route = Screen.Detail.ROUTE,
@@ -66,7 +74,25 @@ fun AnimeNavHost(
                 onBack = { navController.popBackStack() },
                 onAnimeClick = { animeId ->
                     navController.navigate(Screen.Detail.createRoute(animeId))
+                },
+                onWatchSourceClick = { url ->
+                    navController.navigate(Screen.Watch.createRoute(url))
                 }
+            )
+        }
+        composable(
+            route = Screen.Watch.ROUTE,
+            arguments = listOf(navArgument("url") { type = NavType.StringType }),
+            enterTransition = { slideEnter },
+            exitTransition = { slideExit },
+            popEnterTransition = { slidePopEnter },
+            popExitTransition = { slidePopExit }
+        ) { backStackEntry ->
+            val encodedUrl = backStackEntry.arguments?.getString("url").orEmpty()
+            val url = java.net.URLDecoder.decode(encodedUrl, "UTF-8")
+            WatchScreen(
+                url = url,
+                onBack = { navController.popBackStack() }
             )
         }
     }
