@@ -6,20 +6,17 @@
     android:viewportHeight="108"
     android:tint="?attr/colorControlNormal">
 
-    <!-- Monochrome (single-color) launcher variant: same "Niti" glyph, no halo
-         needed since both strokes render in the same themed color. -->
     <path
-        android:pathData="M22.5,54 H85.5"
+        android:pathData="M32,54 L76,54"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="20.25"
+        android:strokeWidth="12.5"
         android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
+        android:fillColor="#00000000" />
 
     <path
-        android:pathData="M31.5,31.5 H76.5 V72 H31.5 Z"
+        android:pathData="M67,30 C67,30 41,26 41,41 C41,54 67,54 67,67 C67,82 41,78 41,78"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="20.25"
+        android:strokeWidth="13.5"
         android:strokeLineCap="round"
-        android:strokeLineJoin="round"
         android:fillColor="#00000000" />
 </vector>
