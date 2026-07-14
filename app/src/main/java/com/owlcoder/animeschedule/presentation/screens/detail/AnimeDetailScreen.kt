@@ -71,6 +71,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.Character
+import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.RelatedAnime
 import com.owlcoder.animeschedule.domain.model.WatchSource
 import com.owlcoder.animeschedule.domain.model.WatchStatus
@@ -96,6 +97,10 @@ fun AnimeDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     var showStatusSheet by remember { mutableStateOf(false) }
+    // Set only by the finale-prompt below, to pre-fill the sheet with the just-watched count
+    // and Completed status before `uiState` re-emits with the fresh DB value (which otherwise
+    // wouldn't be visible for a beat — same snapshot-on-open gap ScheduleScreen works around).
+    var finaleOverrideEntry by remember { mutableStateOf<MalListEntry?>(null) }
     val context = LocalContext.current
     val toast = LocalToast.current
     val savedMsg = stringResource(R.string.toast_status_saved)
@@ -107,7 +112,24 @@ fun AnimeDetailScreen(
         viewModel.updateEvent.collect { event ->
             when (event) {
                 is DetailViewModel.UpdateEvent.Success -> toast.success(savedMsg)
-                is DetailViewModel.UpdateEvent.Incremented -> toast.success(markedMsg)
+                is DetailViewModel.UpdateEvent.Incremented -> {
+                    toast.success(markedMsg)
+                    // Mirrors ScheduleScreen's finale-prompt: if the "+1" that just landed hit
+                    // the last episode, pop the status sheet pre-filled with Completed + full
+                    // count so the user is nudged to rate it. Skipped entirely when the total
+                    // episode count is unknown (still-airing shows with a "?" episode count),
+                    // since there's no way to tell a "+1" was actually the finale.
+                    val detail = uiState.detail
+                    val entry = detail?.malListEntry
+                    val total = detail?.episodes
+                    if (entry != null && total != null && entry.episodesWatched + 1 >= total) {
+                        finaleOverrideEntry = entry.copy(
+                            episodesWatched = total,
+                            status = WatchStatus.COMPLETED
+                        )
+                        showStatusSheet = true
+                    }
+                }
                 is DetailViewModel.UpdateEvent.Removed -> toast.success(removedMsg)
                 is DetailViewModel.UpdateEvent.Error -> toast.error(errorMsg)
             }
@@ -562,8 +584,11 @@ fun AnimeDetailScreen(
     if (showStatusSheet && uiState.detail != null) {
         ListStatusBottomSheet(
             animeId = uiState.detail!!.animeId,
-            currentEntry = uiState.detail!!.malListEntry,
-            onDismiss = { showStatusSheet = false },
+            currentEntry = finaleOverrideEntry ?: uiState.detail!!.malListEntry,
+            onDismiss = {
+                showStatusSheet = false
+                finaleOverrideEntry = null
+            },
             onConfirm = { _, update -> viewModel.updateListEntry(update) },
             onRemove = { viewModel.removeListEntry() }
         )

@@ -210,6 +210,9 @@
     <string name="changelog_version_prefix">Version %s</string>
 
     <!-- Changelog entries EN -->
+    <string name="cl_35_1">Marking the last episode with "+1" now prompts you to rate the show and mark it Completed (skipped for shows with an unknown episode count)</string>
+    <string name="cl_35_date">July 2026</string>
+
     <string name="cl_32_1">Fixed video fullscreen button not working on some watch-source sites</string>
     <string name="cl_32_date">July 2026</string>
 

@@ -210,6 +210,9 @@
     <string name="changelog_version_prefix">Verzija %s</string>
 
     <!-- Changelog entries SR -->
+    <string name="cl_35_1">Označavanje poslednje epizode sa "+1" sada traži da oceniš anime i označi ga kao Završeno (preskače se za anime kod kojih broj epizoda nije poznat)</string>
+    <string name="cl_35_date">Jul 2026</string>
+
     <string name="cl_32_1">Ispravljeno dugme za fullscreen video koje nije radilo na pojedinim sajtovima za gledanje</string>
     <string name="cl_32_date">Jul 2026</string>
 
