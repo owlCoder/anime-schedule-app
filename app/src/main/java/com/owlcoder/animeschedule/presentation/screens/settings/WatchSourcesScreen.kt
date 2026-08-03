@@ -95,7 +95,7 @@ fun WatchSourcesScreen(
                 text = stringResource(R.string.watch_sources_disclaimer),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 2.dp, top = 8.dp, bottom = 14.dp),
+                modifier = Modifier.padding(start = 2.dp, top = 8.dp, end = 2.dp, bottom = 14.dp),
             )
             InsetGroup(modifier = Modifier.weight(1f)) {
                 LazyColumn(
