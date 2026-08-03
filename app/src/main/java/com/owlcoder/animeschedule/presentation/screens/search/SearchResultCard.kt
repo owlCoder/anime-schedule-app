@@ -1,6 +1,5 @@
 package com.owlcoder.animeschedule.presentation.screens.search
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,7 +29,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
+import com.owlcoder.animeschedule.presentation.components.GlassSurface
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
+import com.owlcoder.animeschedule.ui.theme.GlassBlur
+import com.owlcoder.animeschedule.ui.theme.GlassTone
 
 @Composable
 fun SearchResultCard(
@@ -44,25 +46,25 @@ fun SearchResultCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 74.dp)
+                .heightIn(min = 78.dp)
                 .clickable(onClick = onCardClick)
                 .semantics(mergeDescendants = true) { role = Role.Button }
-                .padding(start = 11.dp, end = 7.dp, top = 7.dp, bottom = 7.dp),
+                .padding(start = 12.dp, end = 8.dp, top = 7.dp, bottom = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(11.dp),
         ) {
             MediaThumbnail.Small(
                 url = result.coverImageUrl,
                 contentDescription = result.title,
-                modifier = Modifier.size(44.dp, 58.dp),
+                modifier = Modifier.size(48.dp, 64.dp),
             )
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
             ) {
                 Text(
                     text = result.title,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -80,36 +82,39 @@ fun SearchResultCard(
             if (onEditStatus != null) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(44.dp)
                         .clickable(onClick = onEditStatus)
                         .semantics { role = Role.Button },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.13f), CircleShape),
-                        contentAlignment = Alignment.Center,
+                    GlassSurface(
+                        modifier = Modifier.size(34.dp),
+                        shape = CircleShape,
+                        tone = if (result.userListEntry != null) GlassTone.Neutral else GlassTone.Accent,
+                        blur = GlassBlur.Soft,
+                        contentColor = MaterialTheme.colorScheme.primary,
                     ) {
-                        Icon(
-                            imageVector = if (result.userListEntry != null) Icons.Default.Edit else Icons.Default.Add,
-                            contentDescription = if (result.userListEntry != null) {
-                                stringResource(R.string.cd_edit_list_status)
-                            } else {
-                                stringResource(R.string.detail_add_to_list)
-                            },
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
+                        Box(Modifier.size(34.dp), contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (result.userListEntry != null) Icons.Default.Edit else Icons.Default.Add,
+                                contentDescription = if (result.userListEntry != null) {
+                                    stringResource(R.string.cd_edit_list_status)
+                                } else {
+                                    stringResource(R.string.detail_add_to_list)
+                                },
+                                modifier = Modifier.size(17.dp),
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
                     }
                 }
             }
         }
         if (showDivider) {
             HorizontalDivider(
-                modifier = Modifier.padding(start = 65.dp),
+                modifier = Modifier.padding(start = 72.dp),
                 thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.38f),
             )
         }
     }
