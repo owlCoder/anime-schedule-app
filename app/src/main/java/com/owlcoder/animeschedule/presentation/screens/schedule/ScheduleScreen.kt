@@ -1,7 +1,6 @@
 package com.owlcoder.animeschedule.presentation.screens.schedule
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,14 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
@@ -34,7 +31,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -49,24 +45,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.ui.res.stringResource
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AiringEpisode
 import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
+import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.AppSurface
 import com.owlcoder.animeschedule.presentation.components.CountdownText
 import com.owlcoder.animeschedule.presentation.components.EmptyState
 import com.owlcoder.animeschedule.presentation.components.ErrorBanner
 import com.owlcoder.animeschedule.presentation.components.GlassButton
-import com.owlcoder.animeschedule.presentation.components.GlassSurface
+import com.owlcoder.animeschedule.presentation.components.GlassToolbarButton
+import com.owlcoder.animeschedule.presentation.components.GlassToolbarGroup
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 import com.owlcoder.animeschedule.presentation.components.LoadingShimmer
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
@@ -74,7 +68,6 @@ import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
 import com.owlcoder.animeschedule.presentation.screens.notifications.NotificationsOverlay
 import com.owlcoder.animeschedule.presentation.screens.seasonal.SeasonalOverlay
-import com.owlcoder.animeschedule.ui.theme.GlassTone
 import java.time.Clock
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -237,38 +230,49 @@ private fun TodayHomeContent(
     } else {
         stringResource(R.string.schedule_notifications_action)
     }
+    val sectionTitle = when (selection.mode) {
+        DashboardScheduleMode.UPCOMING -> "Next 90 minutes"
+        DashboardScheduleMode.LATER_TODAY -> "Later today"
+        DashboardScheduleMode.EARLIER_TODAY -> "Earlier today"
+    }
+    val sectionSubtitle = when (selection.mode) {
+        DashboardScheduleMode.UPCOMING -> if (selection.upcoming.isEmpty()) "No more broadcasts soon" else "${selection.upcoming.size} upcoming"
+        DashboardScheduleMode.LATER_TODAY -> "${selection.upcoming.size + 1} broadcasts remaining"
+        DashboardScheduleMode.EARLIER_TODAY -> "Latest broadcasts from today"
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().statusBarsPadding(),
         contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
-            top = 4.dp,
-            bottom = LocalNavBarHeight.current + 16.dp,
+            top = 8.dp,
+            bottom = LocalNavBarHeight.current + 18.dp,
         ),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item(key = "today-header") {
             AppLargeHeader(
                 title = stringResource(R.string.schedule_tab_today),
                 subtitle = date,
                 trailingContent = {
-                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                        CompactToolbarAction(
+                    GlassToolbarGroup {
+                        GlassToolbarButton(
                             icon = Icons.Default.AutoAwesome,
                             contentDescription = stringResource(R.string.nav_seasonal),
                             onClick = onSeasonal,
                         )
-                        CompactToolbarAction(
+                        GlassToolbarButton(
                             icon = Icons.Default.Notifications,
                             contentDescription = notificationDescription,
                             onClick = onNotifications,
+                            selected = uiState.unreadNotificationCount > 0,
                         )
-                        CompactToolbarAction(
+                        GlassToolbarButton(
                             icon = Icons.Outlined.Tune,
                             contentDescription = stringResource(R.string.filter_title),
                             onClick = onFilter,
-                            accented = uiState.filter.isActive,
+                            selected = uiState.filter.isActive,
                         )
                     }
                 },
@@ -299,30 +303,45 @@ private fun TodayHomeContent(
                 }
             }
 
-            item(key = "up-next-header") {
+            item(key = "dashboard-section-header") {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text("Next 90 minutes", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(1.dp),
+                    ) {
                         Text(
-                            text = if (selection.upcoming.isEmpty()) "Nothing else soon" else "${selection.upcoming.size} upcoming",
-                            style = MaterialTheme.typography.labelMedium,
+                            text = sectionTitle,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = sectionSubtitle,
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    TextButton(onClick = onSeeAll, modifier = Modifier.heightIn(min = 48.dp)) {
+                    TextButton(
+                        onClick = onSeeAll,
+                        modifier = Modifier.heightIn(min = 44.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp),
+                    ) {
                         Text(stringResource(R.string.schedule_see_all))
-                        Spacer(Modifier.width(2.dp))
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(3.dp))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp),
+                        )
                     }
                 }
             }
 
             if (selection.upcoming.isNotEmpty()) {
-                item(key = "upcoming-list") {
+                item(key = "dashboard-list") {
                     UpcomingAiringList(
                         episodes = selection.upcoming,
                         isLoggedIn = uiState.isLoggedIn,
@@ -338,36 +357,6 @@ private fun TodayHomeContent(
 }
 
 @Composable
-private fun CompactToolbarAction(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    contentDescription: String,
-    onClick: () -> Unit,
-    accented: Boolean = false,
-) {
-    Box(
-        modifier = Modifier
-            .size(48.dp)
-            .clickable(onClick = onClick)
-            .semantics {
-                this.contentDescription = contentDescription
-                role = Role.Button
-            },
-        contentAlignment = Alignment.Center,
-    ) {
-        GlassSurface(
-            modifier = Modifier.size(40.dp),
-            shape = CircleShape,
-            tone = if (accented) GlassTone.Accent else GlassTone.Neutral,
-            contentColor = if (accented) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-        ) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
-            }
-        }
-    }
-}
-
-@Composable
 private fun FeaturedAiring(
     episode: AiringEpisode,
     isLoggedIn: Boolean,
@@ -375,42 +364,56 @@ private fun FeaturedAiring(
     onClick: () -> Unit,
     onIncrement: () -> Unit,
 ) {
-    val groupedShape = MaterialTheme.shapes.medium
+    val now = System.currentTimeMillis() / 1000L
+    val status = when {
+        episode.airingAtEpochSeconds > now -> "Up next"
+        now - episode.airingAtEpochSeconds <= 30 * 60 -> "Just aired"
+        else -> "Latest today"
+    }
+
     AppSurface(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 96.dp, max = 108.dp)
-            .border(
-                width = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f),
-                shape = groupedShape,
-            )
+            .heightIn(min = 106.dp)
             .clickable(onClick = onClick),
-        shape = groupedShape,
+        shape = MaterialTheme.shapes.large,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             MediaThumbnail.Small(
                 url = episode.coverImageUrl,
                 contentDescription = episode.title,
-                modifier = Modifier.size(width = 64.dp, height = 80.dp),
+                modifier = Modifier.size(width = 64.dp, height = 84.dp),
             )
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+            ) {
                 Text(
-                    text = if (episode.airingAtEpochSeconds <= System.currentTimeMillis() / 1000) "Now airing" else "Up next",
+                    text = status,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold,
                 )
-                Text(episode.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(
+                    text = episode.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = stringResource(R.string.schedule_episode_label, episode.episode, episode.totalEpisodes?.let { "/$it" } ?: ""),
-                        style = MaterialTheme.typography.labelSmall,
+                        text = "${airingTimeLabel(episode)} · " + stringResource(
+                            R.string.schedule_episode_label,
+                            episode.episode,
+                            episode.totalEpisodes?.let { "/$it" } ?: "",
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     CountdownText(episode.airingAtEpochSeconds)
@@ -420,13 +423,30 @@ private fun FeaturedAiring(
                 GlassButton(
                     onClick = onIncrement,
                     enabled = !isIncrementing,
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp),
                 ) { contentColor ->
-                    if (isIncrementing) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = contentColor)
-                    else Icon(Icons.Default.Add, contentDescription = stringResource(R.string.schedule_hero_action_watched), modifier = Modifier.size(18.dp), tint = contentColor)
+                    if (isIncrementing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = contentColor,
+                        )
+                    } else {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = stringResource(R.string.schedule_hero_action_watched),
+                            modifier = Modifier.size(18.dp),
+                            tint = contentColor,
+                        )
+                    }
                 }
             } else {
-                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }
@@ -444,7 +464,7 @@ private fun UpcomingAiringList(
     AppSurface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.34f),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Column {
             episodes.forEachIndexed { index, episode ->
@@ -457,7 +477,11 @@ private fun UpcomingAiringList(
                     onEditStatus = { onEditStatus(episode) },
                 )
                 if (index < episodes.lastIndex) {
-                    HorizontalDivider(modifier = Modifier.padding(start = 82.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    HorizontalDivider(
+                        modifier = Modifier.padding(start = 118.dp),
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+                    )
                 }
             }
         }
@@ -474,38 +498,90 @@ private fun UpcomingAiringRow(
     onEditStatus: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp, max = 72.dp).clickable(onClick = onClick).padding(horizontal = 10.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 72.dp)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Column(modifier = Modifier.width(48.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(airingTimeLabel(episode), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+        Column(
+            modifier = Modifier.width(48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(1.dp),
+        ) {
+            Text(
+                text = airingTimeLabel(episode),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
             CountdownText(episode.airingAtEpochSeconds)
         }
-        MediaThumbnail.Small(url = episode.coverImageUrl, contentDescription = episode.title, modifier = Modifier.size(width = 44.dp, height = 56.dp))
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(episode.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        MediaThumbnail.Small(
+            url = episode.coverImageUrl,
+            contentDescription = episode.title,
+            modifier = Modifier.size(width = 46.dp, height = 60.dp),
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
             Text(
-                stringResource(R.string.schedule_episode_label, episode.episode, episode.totalEpisodes?.let { "/$it" } ?: ""),
-                style = MaterialTheme.typography.labelSmall,
+                text = episode.title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = stringResource(
+                    R.string.schedule_episode_label,
+                    episode.episode,
+                    episode.totalEpisodes?.let { "/$it" } ?: "",
+                ),
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         if (isLoggedIn && episode.malListEntry != null) {
-            androidx.compose.material3.IconButton(onClick = onIncrement, enabled = !isIncrementing, modifier = Modifier.size(48.dp)) {
-                if (isIncrementing) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                else Icon(Icons.Default.Add, contentDescription = stringResource(R.string.schedule_hero_action_watched), tint = MaterialTheme.colorScheme.primary)
+            androidx.compose.material3.IconButton(
+                onClick = onIncrement,
+                enabled = !isIncrementing,
+                modifier = Modifier.size(40.dp),
+            ) {
+                if (isIncrementing) {
+                    CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                } else {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.schedule_hero_action_watched),
+                        modifier = Modifier.size(19.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
-            androidx.compose.material3.IconButton(onClick = onEditStatus, modifier = Modifier.size(48.dp)) {
-                Icon(Icons.Default.ChevronRight, contentDescription = stringResource(R.string.schedule_edit_status_action))
+            androidx.compose.material3.IconButton(
+                onClick = onEditStatus,
+                modifier = Modifier.size(40.dp),
+            ) {
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = stringResource(R.string.schedule_edit_status_action),
+                    modifier = Modifier.size(19.dp),
+                )
             }
         } else {
-            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                modifier = Modifier.size(19.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
 
-/** Full chronological list intended for the shell's future All Today route. */
 @Composable
 fun AllTodayScreen(
     episodes: List<AiringEpisode>,
@@ -519,7 +595,6 @@ fun AllTodayScreen(
     LazyColumn(
         modifier = Modifier.fillMaxSize().statusBarsPadding(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item {
             if (onBack != null) {
@@ -529,10 +604,16 @@ fun AllTodayScreen(
                     modifier = Modifier.padding(bottom = 8.dp),
                 )
             } else {
-                AppLargeHeader(title = stringResource(R.string.schedule_section_today), modifier = Modifier.padding(bottom = 8.dp))
+                AppLargeHeader(
+                    title = stringResource(R.string.schedule_section_today),
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
             }
         }
-        items(episodes.sortedBy { it.airingAtEpochSeconds }, key = { it.airingId }) { episode ->
+        items(
+            items = episodes.sortedBy { it.airingAtEpochSeconds },
+            key = { it.airingId },
+        ) { episode ->
             UpcomingAiringRow(
                 episode = episode,
                 isLoggedIn = isLoggedIn,
@@ -540,6 +621,11 @@ fun AllTodayScreen(
                 onClick = { onAnimeClick(episode) },
                 onIncrement = { onIncrementEpisode(episode) },
                 onEditStatus = { onEditStatus(episode) },
+            )
+            HorizontalDivider(
+                modifier = Modifier.padding(start = 118.dp),
+                thickness = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
             )
         }
     }
@@ -557,15 +643,24 @@ private fun SeeAllSheet(
     isLoggedIn: Boolean,
     onEditStatus: (AiringEpisode) -> Unit,
 ) {
-    ModalBottomSheet(
+    AppSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = MaterialTheme.colorScheme.surface,
+        title = title,
     ) {
-        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 16.dp)) {
-            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(vertical = 8.dp))
-            LazyColumn(contentPadding = PaddingValues(bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(episodes.sortedBy { it.airingAtEpochSeconds }, key = { "all-${it.airingId}" }) { episode ->
+        AppSurface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().heightIn(max = 640.dp),
+                contentPadding = PaddingValues(vertical = 4.dp),
+            ) {
+                items(
+                    items = episodes.sortedBy { it.airingAtEpochSeconds },
+                    key = { "all-${it.airingId}" },
+                ) { episode ->
                     UpcomingAiringRow(
                         episode = episode,
                         isLoggedIn = isLoggedIn,
@@ -573,6 +668,11 @@ private fun SeeAllSheet(
                         onClick = { onCardClick(episode) },
                         onIncrement = { onIncrementEpisode(episode) },
                         onEditStatus = { onEditStatus(episode) },
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(start = 118.dp),
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                     )
                 }
             }
