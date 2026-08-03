@@ -17,37 +17,32 @@ import androidx.compose.ui.unit.dp
 fun AppHalfCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    shape: Shape = ContinuousRoundedShape(24.dp),
+    shape: Shape = MaterialTheme.shapes.medium,
     content: @Composable () -> Unit,
-) {
-    AppCardSurface(modifier, onClick, shape, content = content)
-}
+) = AppCardSurface(modifier, onClick, shape, 14.dp, content)
 
 @Composable
 fun AppFullCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    shape: Shape = ContinuousRoundedShape(24.dp),
+    shape: Shape = MaterialTheme.shapes.large,
     content: @Composable () -> Unit,
-) {
-    AppCardSurface(modifier, onClick, shape, content = content)
-}
+) = AppCardSurface(modifier, onClick, shape, 16.dp, content)
 
 @Composable
 fun AppCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    shape: Shape = ContinuousRoundedShape(24.dp),
+    shape: Shape = MaterialTheme.shapes.medium,
     content: @Composable () -> Unit,
-) {
-    AppCardSurface(modifier, onClick, shape, content = content)
-}
+) = AppCardSurface(modifier, onClick, shape, 14.dp, content)
 
 @Composable
 private fun AppCardSurface(
     modifier: Modifier,
     onClick: (() -> Unit)?,
     shape: Shape,
+    contentPadding: androidx.compose.ui.unit.Dp,
     content: @Composable () -> Unit,
 ) {
     AppMaterialSurface(
@@ -61,6 +56,6 @@ private fun AppCardSurface(
         material = AppMaterial.Elevated,
         shape = shape,
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) { content() }
+        Column(Modifier.fillMaxWidth().padding(contentPadding)) { content() }
     }
 }
