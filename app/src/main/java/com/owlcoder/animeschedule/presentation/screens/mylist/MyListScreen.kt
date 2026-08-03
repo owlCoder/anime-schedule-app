@@ -16,17 +16,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.RemoveCircle
@@ -37,11 +35,11 @@ import androidx.compose.material.icons.outlined.PauseCircle
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.RemoveCircle
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -51,7 +49,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -60,21 +57,19 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.WatchStatus
+import com.owlcoder.animeschedule.presentation.components.AppButton
+import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
 import com.owlcoder.animeschedule.presentation.components.AppErrorState
 import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
 import com.owlcoder.animeschedule.presentation.components.AppLoadingState
+import com.owlcoder.animeschedule.presentation.components.AppSearchField
 import com.owlcoder.animeschedule.presentation.components.EmptyState
 import com.owlcoder.animeschedule.presentation.components.ErrorBanner
-import com.owlcoder.animeschedule.presentation.components.GlassButton
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
@@ -87,7 +82,7 @@ private val statusTabs = listOf(
     WatchStatus.COMPLETED,
     WatchStatus.PLAN_TO_WATCH,
     WatchStatus.ON_HOLD,
-    WatchStatus.DROPPED
+    WatchStatus.DROPPED,
 )
 
 private fun WatchStatus.tabIcon(selected: Boolean): ImageVector = when (this) {
@@ -103,7 +98,7 @@ private fun WatchStatus.tabIcon(selected: Boolean): ImageVector = when (this) {
 fun MyListScreen(
     onAnimeClick: (Int) -> Unit,
     viewModel: MyListViewModel = hiltViewModel(),
-    authViewModel: AuthViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var editingAnimeId by remember { mutableStateOf<Int?>(null) }
@@ -149,26 +144,29 @@ fun MyListScreen(
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.background)
                     .statusBarsPadding()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 16.dp),
             ) {
                 AppLargeHeader(
                     title = stringResource(R.string.mylist_title),
                     subtitle = if (totalCount > 0) "$totalCount anime" else null,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 10.dp)
+                    modifier = Modifier.padding(top = 6.dp, bottom = 8.dp),
                 )
-                MyListSearchField(
-                    query = uiState.searchQuery,
-                    onQueryChange = viewModel::setSearchQuery,
-                    onClear = { viewModel.setSearchQuery("") }
+                AppSearchField(
+                    value = uiState.searchQuery,
+                    onValueChange = viewModel::setSearchQuery,
+                    placeholder = stringResource(R.string.mylist_search_placeholder),
+                    leadingIcon = Icons.Default.Search,
+                    onClear = { viewModel.setSearchQuery("") },
+                    modifier = Modifier.height(40.dp),
                 )
-                StatusSegmentedControl(
+                StatusFilterRow(
                     activeFilter = uiState.activeFilter,
                     counts = uiState.statusCounts,
                     onFilterSelected = viewModel::setFilter,
-                    modifier = Modifier.padding(top = 10.dp, bottom = 8.dp)
+                    modifier = Modifier.padding(top = 10.dp, bottom = 7.dp),
                 )
             }
-        }
+        },
     ) { innerPadding ->
         PullToRefreshBox(
             isRefreshing = uiState.isLoading,
@@ -176,12 +174,12 @@ fun MyListScreen(
                 showError = false
                 viewModel.refresh()
             },
-            modifier = Modifier.fillMaxSize().padding(innerPadding)
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
         ) {
             when {
                 uiState.isLoading && uiState.entries.isEmpty() -> AppLoadingState(
                     modifier = Modifier.fillMaxSize(),
-                    label = stringResource(R.string.mylist_title)
+                    label = stringResource(R.string.mylist_title),
                 )
                 showError && uiState.entries.isEmpty() -> AppErrorState(
                     title = errorMsg,
@@ -190,21 +188,21 @@ fun MyListScreen(
                         showError = false
                         viewModel.refresh()
                     },
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
                 uiState.entries.isEmpty() -> EmptyState(
                     icon = Icons.AutoMirrored.Filled.FormatListBulleted,
                     title = stringResource(R.string.mylist_empty_title),
                     subtitle = stringResource(R.string.mylist_empty_subtitle),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
-                        top = 4.dp,
-                        bottom = LocalNavBarHeight.current + 16.dp
+                        top = 3.dp,
+                        bottom = LocalNavBarHeight.current + 14.dp,
                     ),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     if (showError) {
                         item(key = "sync-error", contentType = "error") {
@@ -214,14 +212,14 @@ fun MyListScreen(
                                     showError = false
                                     viewModel.refresh()
                                 },
-                                modifier = Modifier.padding(horizontal = 16.dp)
+                                modifier = Modifier.padding(horizontal = 16.dp),
                             )
                         }
                     }
                     item(key = "list-group", contentType = "my-list-group") {
                         InsetGroup(
                             title = uiState.activeFilter.displayName(),
-                            modifier = Modifier.padding(horizontal = 16.dp)
+                            modifier = Modifier.padding(horizontal = 16.dp),
                         ) {
                             Column {
                                 uiState.entries.forEachIndexed { index, entry ->
@@ -233,7 +231,7 @@ fun MyListScreen(
                                         onCardClick = { onAnimeClick(entry.animeId) },
                                         onIncrementEpisode = { viewModel.incrementEpisode(entry.animeId) },
                                         onEditStatus = { editingAnimeId = entry.animeId },
-                                        showDivider = index < uiState.entries.lastIndex
+                                        showDivider = index < uiState.entries.lastIndex,
                                     )
                                 }
                             }
@@ -250,94 +248,76 @@ fun MyListScreen(
             currentEntry = editingEntry,
             onDismiss = { editingAnimeId = null },
             onConfirm = { animeId, update -> viewModel.updateEntry(animeId, update) },
-            onRemove = { animeId -> viewModel.removeEntry(animeId) }
+            onRemove = { animeId -> viewModel.removeEntry(animeId) },
         )
     }
 }
 
 @Composable
-private fun MyListSearchField(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onClear: () -> Unit
-) {
-    TextField(
-        value = query,
-        onValueChange = onQueryChange,
-        modifier = Modifier.fillMaxWidth().height(44.dp),
-        placeholder = { Text(stringResource(R.string.mylist_search_placeholder)) },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-        trailingIcon = {
-            if (query.isNotEmpty()) {
-                IconButton(onClick = onClear, modifier = Modifier.size(40.dp)) {
-                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.search_clear_recent))
-                }
-            }
-        },
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-        shape = RoundedCornerShape(12.dp),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.78f),
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.58f),
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent
-        )
-    )
-}
-
-@Composable
-private fun StatusSegmentedControl(
+private fun StatusFilterRow(
     activeFilter: WatchStatus,
     counts: Map<WatchStatus, Int>,
     onFilterSelected: (WatchStatus) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.58f))
-            .padding(3.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp)
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(7.dp),
     ) {
         statusTabs.forEach { status ->
             val selected = status == activeFilter
             Surface(
                 modifier = Modifier
-                    .height(38.dp)
-                    .clip(RoundedCornerShape(9.dp))
+                    .height(34.dp)
                     .clickable(onClick = { onFilterSelected(status) })
                     .semantics { role = Role.Tab },
-                shape = RoundedCornerShape(9.dp),
-                color = if (selected) MaterialTheme.colorScheme.surface else Color.Transparent,
-                tonalElevation = if (selected) 1.dp else 0.dp
+                shape = RoundedCornerShape(percent = 50),
+                color = if (selected) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainerHigh
+                },
+                tonalElevation = 0.dp,
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 12.dp),
+                    modifier = Modifier.padding(horizontal = 11.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
                 ) {
                     Icon(
                         status.tabIcon(selected),
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        modifier = Modifier.size(16.dp),
+                        tint = if (selected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
                         text = status.displayName(),
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                        color = if (selected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    counts[status]?.takeIf { it > 0 }?.let {
-                        Text(
-                            it.toString(),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    counts[status]?.takeIf { it > 0 }?.let { count ->
+                        Box(
+                            modifier = Modifier
+                                .size(17.dp)
+                                .background(
+                                    color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+                                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f),
+                                    shape = CircleShape,
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = count.toString(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (selected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
             }
@@ -347,36 +327,57 @@ private fun StatusSegmentedControl(
 
 @Composable
 private fun NotLoggedInState(onLogin: () -> Unit) {
-    Box(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding(),
-        contentAlignment = Alignment.Center
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp),
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.padding(32.dp)
+        AppLargeHeader(
+            title = stringResource(R.string.mylist_title),
+            modifier = Modifier.padding(top = 6.dp),
+        )
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                Icons.Default.AccountCircle,
-                contentDescription = null,
-                modifier = Modifier.size(56.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                stringResource(R.string.mylist_not_logged_in_title),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                stringResource(R.string.mylist_not_logged_in_subtitle),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-            GlassButton(onClick = onLogin) { contentColor ->
-                Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null, tint = contentColor, modifier = Modifier.size(18.dp))
-                Text(stringResource(R.string.profile_login), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = contentColor)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(7.dp),
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 56.dp),
+            ) {
+                Surface(
+                    modifier = Modifier.size(48.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ) {
+                    Icon(
+                        Icons.Default.AccountCircle,
+                        contentDescription = null,
+                        modifier = Modifier.padding(9.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Text(
+                    stringResource(R.string.mylist_not_logged_in_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    stringResource(R.string.mylist_not_logged_in_subtitle),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+                Box(Modifier.height(6.dp))
+                AppButton(
+                    label = stringResource(R.string.profile_login),
+                    onClick = onLogin,
+                    variant = AppButtonVariant.Primary,
+                    icon = Icons.AutoMirrored.Filled.Login,
+                )
             }
         }
     }
