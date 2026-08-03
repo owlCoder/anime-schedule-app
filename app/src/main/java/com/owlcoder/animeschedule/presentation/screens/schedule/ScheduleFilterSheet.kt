@@ -144,16 +144,16 @@ private fun CompactScheduleFilterChip(
     onClick: () -> Unit,
 ) {
     val borderColor = if (selected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.42f)
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.24f)
     } else {
-        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.56f)
     }
     Row(
         modifier = Modifier
             .sizeIn(minHeight = 34.dp)
             .clip(PillShape)
             .background(
-                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                if (selected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
                 else Color.Transparent,
             )
             .border(0.5.dp, borderColor, PillShape)
@@ -165,7 +165,7 @@ private fun CompactScheduleFilterChip(
             text = label,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            color = if (selected) MaterialTheme.colorScheme.primary
+            color = if (selected) MaterialTheme.colorScheme.onSurface
             else MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
         )
