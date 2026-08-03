@@ -1,5 +1,7 @@
 package com.owlcoder.animeschedule.presentation.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -7,7 +9,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.background
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,8 +36,9 @@ fun AppSheet(
         modifier = modifier,
         sheetState = sheetState,
         shape = ContinuousRoundedShape(28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         contentColor = MaterialTheme.colorScheme.onSurface,
+        tonalElevation = 0.dp,
         dragHandle = { AppSheetHandle() },
     ) {
         Column(
@@ -43,13 +46,14 @@ fun AppSheet(
                 .fillMaxWidth()
                 .imePadding()
                 .navigationBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
+                .padding(start = 18.dp, end = 18.dp, bottom = 14.dp),
         ) {
             if (!title.isNullOrBlank()) {
                 Text(
                     text = title,
-                    modifier = Modifier.padding(bottom = 8.dp),
+                    modifier = Modifier.padding(top = 2.dp, bottom = 14.dp),
                     style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
             content()
@@ -59,19 +63,16 @@ fun AppSheet(
 
 @Composable
 fun AppSheetHandle(modifier: Modifier = Modifier) {
-    androidx.compose.foundation.layout.Box(
-        modifier = modifier
-            .padding(vertical = 8.dp)
-            .fillMaxWidth(),
+    Box(
+        modifier = modifier.padding(top = 10.dp, bottom = 8.dp).fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
-        androidx.compose.foundation.layout.Box(
+        Box(
             modifier = Modifier
-                .fillMaxWidth(0.12f)
-                .padding(vertical = 4.dp)
-                .requiredHeight(4.dp)
+                .fillMaxWidth(0.10f)
+                .requiredHeight(5.dp)
                 .clip(MaterialTheme.shapes.extraLarge)
-                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)),
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.30f)),
         )
     }
 }
