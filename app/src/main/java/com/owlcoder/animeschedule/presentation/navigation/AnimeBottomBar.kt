@@ -64,8 +64,8 @@ private val items = listOf(
     BottomNavItem(Screen.Settings, "Settings", Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle),
 )
 
-private val DockShape = ContinuousRoundedShape(22.dp)
-private val DockHeight = 58.dp
+private val DockShape = ContinuousRoundedShape(20.dp)
+private val DockHeight = 54.dp
 
 @Composable
 fun AnimeBottomBar(
@@ -79,7 +79,7 @@ fun AnimeBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-            .padding(horizontal = 16.dp, vertical = 5.dp),
+            .padding(horizontal = 16.dp, vertical = 4.dp),
     ) {
         GlassChrome(
             modifier = Modifier.fillMaxWidth().height(DockHeight),
@@ -144,9 +144,9 @@ private fun BottomNavItemView(
         ) {
             Box(
                 modifier = Modifier
-                    .size(width = 38.dp, height = 25.dp)
+                    .size(width = 35.dp, height = 23.dp)
                     .background(
-                        if (selected) accent.copy(alpha = 0.15f)
+                        if (selected) accent.copy(alpha = 0.14f)
                         else androidx.compose.ui.graphics.Color.Transparent,
                         CircleShape,
                     ),
@@ -156,7 +156,7 @@ private fun BottomNavItemView(
                     imageVector = if (selected) item.activeIcon else item.inactiveIcon,
                     contentDescription = null,
                     tint = iconColor,
-                    modifier = Modifier.size(19.dp),
+                    modifier = Modifier.size(18.dp),
                 )
             }
         }
@@ -164,8 +164,8 @@ private fun BottomNavItemView(
             text = item.label,
             color = iconColor,
             style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 10.sp,
-                lineHeight = 12.sp,
+                fontSize = 9.5.sp,
+                lineHeight = 11.sp,
             ),
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             maxLines = 1,
