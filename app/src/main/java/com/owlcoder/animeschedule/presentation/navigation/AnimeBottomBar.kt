@@ -1,7 +1,6 @@
 package com.owlcoder.animeschedule.presentation.navigation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -10,15 +9,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Bookmark
@@ -36,10 +35,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -48,11 +43,11 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.owlcoder.animeschedule.presentation.components.AppNotificationBadge
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
+import com.owlcoder.animeschedule.presentation.components.GlassChrome
 
 private data class BottomNavItem(
     val screen: Screen,
@@ -68,12 +63,9 @@ private val items = listOf(
     BottomNavItem(Screen.Settings, "Settings", Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle),
 )
 
-private val DockShape = ContinuousRoundedShape(20.dp)
-private val LensShape = RoundedCornerShape(17.dp)
-private val DockHeight = 55.dp
-private val LensSize = 33.dp
+private val DockShape = ContinuousRoundedShape(24.dp)
+private val DockHeight = 64.dp
 
-/** Fixed 25% tabs with an always-visible label and a stable selected lens. */
 @Composable
 fun AnimeBottomBar(
     navController: NavController,
@@ -81,46 +73,19 @@ fun AnimeBottomBar(
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
-    val dockFill = if (dark) {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color(0xFF28282B).copy(alpha = 0.60f),
-                Color(0xFF151517).copy(alpha = 0.54f),
-            ),
-        )
-    } else {
-        Brush.verticalGradient(
-            colors = listOf(
-                Color.White.copy(alpha = 0.58f),
-                Color(0xFFF2F2F7).copy(alpha = 0.50f),
-            ),
-        )
-    }
-    val dockHighlight = if (dark) {
-        Color.White.copy(alpha = 0.11f)
-    } else {
-        Color.White.copy(alpha = 0.72f)
-    }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-            .padding(horizontal = 12.dp)
-            .padding(top = 2.dp, bottom = 2.dp),
+            .padding(horizontal = 14.dp, vertical = 6.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(DockHeight)
-                .clip(DockShape)
-                .background(dockFill, DockShape)
-                .border(0.5.dp, dockHighlight, DockShape),
+        GlassChrome(
+            modifier = Modifier.fillMaxWidth().height(DockHeight),
+            shape = DockShape,
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().height(DockHeight),
-                horizontalArrangement = Arrangement.Start,
+                modifier = Modifier.fillMaxWidth().height(DockHeight).padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 items.forEach { item ->
@@ -155,17 +120,12 @@ private fun BottomNavItemView(
 ) {
     val accent = MaterialTheme.colorScheme.primary
     val iconColor = if (selected) accent else MaterialTheme.colorScheme.onSurfaceVariant
-    val lensColor = if (selected) accent.copy(alpha = 0.18f) else Color.Transparent
     val interactionSource = remember { MutableInteractionSource() }
 
     Column(
         modifier = modifier
             .fillMaxHeight()
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick,
-            )
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick)
             .semantics {
                 contentDescription = item.label
                 role = Role.Tab
@@ -176,15 +136,15 @@ private fun BottomNavItemView(
     ) {
         AppNotificationBadge(
             count = notificationCount,
-            contentDescription = if (notificationCount > 0) {
-                "${item.label}, $notificationCount unread"
-            } else null,
+            contentDescription = if (notificationCount > 0) "${item.label}, $notificationCount unread" else null,
         ) {
             Box(
                 modifier = Modifier
-                    .size(LensSize)
-                    .clip(LensShape)
-                    .background(lensColor, LensShape),
+                    .size(width = 42.dp, height = 28.dp)
+                    .background(
+                        if (selected) accent.copy(alpha = 0.15f) else androidx.compose.ui.graphics.Color.Transparent,
+                        CircleShape,
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -198,10 +158,7 @@ private fun BottomNavItemView(
         Text(
             text = item.label,
             color = iconColor,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 10.sp,
-                lineHeight = 11.sp,
-            ),
+            style = MaterialTheme.typography.labelSmall,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             maxLines = 1,
         )
