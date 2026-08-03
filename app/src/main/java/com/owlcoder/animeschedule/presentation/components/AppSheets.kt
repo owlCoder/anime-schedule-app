@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.owlcoder.animeschedule.ui.theme.GlassTokens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,10 +41,10 @@ fun AppSheet(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         sheetState = sheetState,
-        shape = ContinuousRoundedShape(24.dp),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = ContinuousRoundedShape(GlassTokens.sheetRadius),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.98f),
         contentColor = MaterialTheme.colorScheme.onSurface,
-        scrimColor = Color.Black.copy(alpha = 0.38f),
+        scrimColor = Color.Black.copy(alpha = 0.46f),
         tonalElevation = 0.dp,
         dragHandle = { AppSheetHandle() },
     ) {
@@ -52,14 +53,14 @@ fun AppSheet(
                 .fillMaxWidth()
                 .imePadding()
                 .navigationBarsPadding()
-                .padding(start = 16.dp, end = 16.dp, bottom = 13.dp),
+                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
         ) {
             if (!title.isNullOrBlank()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 38.dp)
-                        .padding(bottom = 5.dp),
+                        .heightIn(min = 44.dp)
+                        .padding(bottom = 7.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -81,16 +82,16 @@ fun AppSheet(
 fun AppSheetHandle(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(top = 7.dp, bottom = 5.dp)
+            .padding(top = 9.dp, bottom = 6.dp)
             .fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
-                .width(32.dp)
-                .requiredHeight(4.dp)
+                .width(36.dp)
+                .requiredHeight(5.dp)
                 .clip(MaterialTheme.shapes.extraLarge)
-                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.24f)),
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f)),
         )
     }
 }
