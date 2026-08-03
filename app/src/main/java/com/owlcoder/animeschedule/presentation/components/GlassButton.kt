@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -38,39 +39,78 @@ fun AppButton(
     icon: ImageVector? = null,
 ) {
     val accent = MaterialTheme.colorScheme.primary
-    val contentColor = when (variant) {
-        AppButtonVariant.Primary, AppButtonVariant.Secondary, AppButtonVariant.Plain -> accent
-        AppButtonVariant.Destructive -> MaterialTheme.colorScheme.error
-    }
-
-    if (variant == AppButtonVariant.Plain) {
-        androidx.compose.material3.TextButton(
-            onClick = onClick,
-            enabled = enabled,
-            modifier = modifier.heightIn(min = 42.dp),
-            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-        ) {
-            ButtonContent(label, icon, contentColor, enabled)
+    when (variant) {
+        AppButtonVariant.Plain -> {
+            androidx.compose.material3.TextButton(
+                onClick = onClick,
+                enabled = enabled,
+                modifier = modifier.heightIn(min = 42.dp),
+                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+            ) {
+                ButtonContent(label, icon, accent, enabled)
+            }
         }
-        return
+        AppButtonVariant.Primary -> {
+            val container = if (enabled) accent else accent.copy(alpha = 0.34f)
+            val contentColor = if (enabled) MaterialTheme.colorScheme.onPrimary
+            else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.62f)
+            Surface(
+                modifier = modifier
+                    .height(42.dp)
+                    .clickable(enabled = enabled, onClick = onClick)
+                    .semantics { role = Role.Button },
+                shape = PillShape,
+                color = container,
+                contentColor = contentColor,
+                tonalElevation = 0.dp,
+            ) {
+                ButtonRow(label, icon, contentColor, enabled = true)
+            }
+        }
+        AppButtonVariant.Secondary -> {
+            GlassSurface(
+                modifier = modifier
+                    .height(42.dp)
+                    .clickable(enabled = enabled, onClick = onClick)
+                    .semantics { role = Role.Button },
+                shape = PillShape,
+                tone = GlassTone.Neutral,
+                contentColor = accent,
+            ) {
+                ButtonRow(label, icon, accent, enabled)
+            }
+        }
+        AppButtonVariant.Destructive -> {
+            val error = MaterialTheme.colorScheme.error
+            Surface(
+                modifier = modifier
+                    .height(42.dp)
+                    .clickable(enabled = enabled, onClick = onClick)
+                    .semantics { role = Role.Button },
+                shape = PillShape,
+                color = error.copy(alpha = if (enabled) 0.14f else 0.07f),
+                contentColor = error,
+                tonalElevation = 0.dp,
+            ) {
+                ButtonRow(label, icon, error, enabled)
+            }
+        }
     }
+}
 
-    GlassSurface(
-        modifier = modifier
-            .height(42.dp)
-            .clickable(enabled = enabled, onClick = onClick)
-            .semantics { role = Role.Button },
-        shape = PillShape,
-        tone = if (variant == AppButtonVariant.Primary) GlassTone.Accent else GlassTone.Neutral,
-        contentColor = contentColor,
+@Composable
+private fun ButtonRow(
+    label: String,
+    icon: ImageVector?,
+    color: Color,
+    enabled: Boolean,
+) {
+    Row(
+        modifier = Modifier.height(42.dp).padding(horizontal = 15.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
     ) {
-        Row(
-            modifier = Modifier.height(42.dp).padding(horizontal = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-        ) {
-            ButtonContent(label, icon, contentColor, enabled)
-        }
+        ButtonContent(label, icon, color, enabled)
     }
 }
 
