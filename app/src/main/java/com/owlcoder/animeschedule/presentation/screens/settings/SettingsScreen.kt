@@ -8,7 +8,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -63,7 +62,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -75,7 +73,6 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.owlcoder.animeschedule.R
-import com.owlcoder.animeschedule.data.local.datastore.AccentColor
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import com.owlcoder.animeschedule.data.local.datastore.CacheRetentionPolicy
 import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
@@ -83,11 +80,10 @@ import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
-import com.owlcoder.animeschedule.ui.theme.accentPrimary
 import java.time.ZoneId
 
-private val SettingsGroupShape = RoundedCornerShape(14.dp)
-private val SettingsRowIconShape = RoundedCornerShape(7.dp)
+private val SettingsGroupShape = RoundedCornerShape(16.dp)
+private val SettingsRowIconShape = RoundedCornerShape(8.dp)
 private val SettingsAccentRed = Color(0xFFFF453A)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,7 +103,6 @@ fun SettingsScreen(
     val context = LocalContext.current
 
     var showThemePicker by remember { mutableStateOf(false) }
-    var showAccentPicker by remember { mutableStateOf(false) }
     var showTimezonePicker by remember { mutableStateOf(false) }
     var showNotifPicker by remember { mutableStateOf(false) }
     var showLanguagePicker by remember { mutableStateOf(false) }
@@ -132,7 +127,7 @@ fun SettingsScreen(
                 top = 6.dp,
                 bottom = LocalNavBarHeight.current + 20.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(13.dp),
         ) {
             item {
                 AppLargeHeader(
@@ -171,21 +166,9 @@ fun SettingsScreen(
                     SettingsGroup {
                         SettingsRow(
                             icon = Icons.Default.ColorLens,
-                            iconTint = MaterialTheme.colorScheme.primary,
                             title = "Theme",
                             value = themeModeLabel(uiState.themeMode),
                             onClick = { showThemePicker = true },
-                        )
-                        SettingsDivider()
-                        SettingsRow(
-                            icon = Icons.Default.ColorLens,
-                            iconTint = accentPrimary(uiState.accentColor, dark = isDarkTheme()),
-                            title = "Accent Color",
-                            value = uiState.accentColor.displayName(),
-                            onClick = { showAccentPicker = true },
-                            trailing = {
-                                AccentSwatch(accentPrimary(uiState.accentColor, dark = isDarkTheme()))
-                            },
                         )
                     }
                 }
@@ -196,7 +179,6 @@ fun SettingsScreen(
                     SettingsGroup {
                         SettingsRow(
                             icon = Icons.Default.Notifications,
-                            iconTint = if (uiState.notificationsEnabled) MaterialTheme.colorScheme.primary else SettingsAccentRed,
                             title = stringResource(R.string.settings_notifications),
                             value = if (uiState.notificationsEnabled) {
                                 "${stringResource(R.string.settings_notifications_on)} · ${notifOffsetLabel(uiState.notificationOffsetMinutes)}"
@@ -214,7 +196,6 @@ fun SettingsScreen(
                     SettingsGroup {
                         SettingsRow(
                             icon = Icons.Default.Schedule,
-                            iconTint = accentPrimary(AccentColor.GREEN, dark = isDarkTheme()),
                             title = stringResource(R.string.settings_timezone),
                             value = uiState.timezoneId.ifEmpty { ZoneId.systemDefault().id },
                             onClick = { showTimezonePicker = true },
@@ -228,7 +209,6 @@ fun SettingsScreen(
                     SettingsGroup {
                         SettingsRow(
                             icon = Icons.Default.PlayCircle,
-                            iconTint = accentPrimary(AccentColor.PURPLE, dark = isDarkTheme()),
                             title = stringResource(R.string.settings_watch_sources),
                             value = stringResource(R.string.settings_watch_sources_subtitle),
                             onClick = onManageWatchSources,
@@ -242,7 +222,6 @@ fun SettingsScreen(
                     SettingsGroup {
                         SettingsRow(
                             icon = Icons.Default.Storage,
-                            iconTint = accentPrimary(AccentColor.TEAL, dark = isDarkTheme()),
                             title = "Cache",
                             value = "${formatBytes(cacheSizeBytes)} · ${uiState.cacheRetentionDays} days",
                             onClick = { showCacheRetentionPicker = true },
@@ -273,7 +252,6 @@ fun SettingsScreen(
                     SettingsGroup {
                         SettingsRow(
                             icon = Icons.Default.Translate,
-                            iconTint = accentPrimary(AccentColor.TELEGRAM_BLUE, dark = isDarkTheme()),
                             title = stringResource(R.string.settings_language),
                             value = languageLabel(uiState.appLanguage),
                             onClick = { showLanguagePicker = true },
@@ -287,7 +265,6 @@ fun SettingsScreen(
                     SettingsGroup {
                         SettingsRow(
                             icon = Icons.Default.Update,
-                            iconTint = accentPrimary(AccentColor.TEAL, dark = isDarkTheme()),
                             title = stringResource(R.string.settings_changelog),
                             value = stringResource(R.string.settings_changelog_subtitle),
                             onClick = { showChangelog = true },
@@ -295,7 +272,6 @@ fun SettingsScreen(
                         SettingsDivider()
                         SettingsRow(
                             icon = Icons.Default.Info,
-                            iconTint = accentPrimary(AccentColor.TELEGRAM_BLUE, dark = isDarkTheme()),
                             title = stringResource(R.string.settings_about),
                             value = stringResource(R.string.settings_about_subtitle),
                             onClick = { showAbout = true },
@@ -311,13 +287,6 @@ fun SettingsScreen(
             current = uiState.themeMode,
             onSelect = { settingsViewModel.setThemeMode(it); showThemePicker = false },
             onDismiss = { showThemePicker = false },
-        )
-    }
-    if (showAccentPicker) {
-        AccentBottomSheet(
-            current = uiState.accentColor,
-            onSelect = { settingsViewModel.setAccentColor(it); showAccentPicker = false },
-            onDismiss = { showAccentPicker = false },
         )
     }
     if (showLanguagePicker) {
@@ -379,9 +348,6 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun isDarkTheme(): Boolean = MaterialTheme.colorScheme.background.luminance() < 0.2f
-
-@Composable
 private fun SettingsSection(
     title: String,
     content: @Composable () -> Unit,
@@ -391,7 +357,7 @@ private fun SettingsSection(
             text = title.uppercase(),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.74f),
             modifier = Modifier.padding(start = 12.dp, bottom = 5.dp),
         )
         content()
@@ -437,12 +403,12 @@ private fun AccountRow(
             Surface(
                 modifier = Modifier.size(34.dp),
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
             ) {
                 Icon(
                     imageVector = Icons.Default.AccountCircle,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimary,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(6.dp),
                 )
             }
@@ -488,10 +454,10 @@ private fun AccountRow(
 @Composable
 private fun SettingsRow(
     icon: ImageVector,
-    iconTint: Color,
     title: String,
     value: String,
     onClick: () -> Unit,
+    iconTint: Color = MaterialTheme.colorScheme.onSurface,
     enabled: Boolean = true,
     trailing: @Composable (() -> Unit)? = null,
 ) {
@@ -506,12 +472,12 @@ private fun SettingsRow(
         Surface(
             modifier = Modifier.size(29.dp),
             shape = SettingsRowIconShape,
-            color = iconTint,
+            color = iconTint.copy(alpha = if (iconTint == SettingsAccentRed) 0.16f else 0.10f),
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = Color.White,
+                tint = iconTint,
                 modifier = Modifier.padding(6.dp),
             )
         }
@@ -541,7 +507,7 @@ private fun SettingsRow(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.64f),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.58f),
                 modifier = Modifier.size(17.dp),
             )
         }
@@ -553,17 +519,7 @@ private fun SettingsDivider() {
     HorizontalDivider(
         modifier = Modifier.padding(start = 49.dp),
         thickness = 0.5.dp,
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.52f),
-    )
-}
-
-@Composable
-private fun AccentSwatch(color: Color) {
-    Box(
-        modifier = Modifier
-            .size(18.dp)
-            .clip(CircleShape)
-            .background(color),
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.34f),
     )
 }
 
@@ -579,10 +535,6 @@ private fun languageLabel(language: AppLanguage): String = when (language) {
     AppLanguage.ENGLISH -> stringResource(R.string.settings_language_english)
     AppLanguage.SERBIAN_LATIN -> stringResource(R.string.settings_language_serbian)
 }
-
-private fun AccentColor.displayName(): String = name.lowercase()
-    .replace('_', ' ')
-    .replaceFirstChar { it.uppercase() }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -626,7 +578,7 @@ private fun PickerRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 modifier = Modifier.weight(1f),
                 maxLines = 1,
@@ -637,14 +589,14 @@ private fun PickerRow(
                     Icons.Default.Check,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }
         HorizontalDivider(
             modifier = Modifier.padding(start = 13.dp),
             thickness = 0.5.dp,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.34f),
         )
     }
 }
@@ -663,51 +615,6 @@ private fun ThemeBottomSheet(
                 selected = current == mode,
                 onClick = { onSelect(mode) },
             )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AccentBottomSheet(
-    current: AccentColor,
-    onSelect: (AccentColor) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    PickerSheet(title = "Accent Color", onDismiss = onDismiss) {
-        AccentColor.entries.forEach { accent ->
-            Column {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clickable { onSelect(accent) }
-                        .padding(horizontal = 13.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    AccentSwatch(accentPrimary(accent, dark = isDarkTheme()))
-                    Text(
-                        text = accent.displayName(),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f).padding(start = 11.dp),
-                        color = if (current == accent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                        fontWeight = if (current == accent) FontWeight.SemiBold else FontWeight.Normal,
-                    )
-                    if (current == accent) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-                HorizontalDivider(
-                    modifier = Modifier.padding(start = 42.dp),
-                    thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
-                )
-            }
         }
     }
 }
@@ -759,7 +666,7 @@ private fun NotifBottomSheet(
             HorizontalDivider(
                 modifier = Modifier.padding(start = 13.dp),
                 thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.34f),
             )
             Text(
                 text = stringResource(R.string.notif_offset_title),
