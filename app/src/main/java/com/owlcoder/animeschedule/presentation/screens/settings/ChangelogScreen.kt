@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -24,14 +25,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,7 +41,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
-import com.owlcoder.animeschedule.ui.theme.PillShape
+import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.InsetGroup
+import com.owlcoder.animeschedule.presentation.components.InsetListRow
 
 private data class ChangelogEntry(
     val version: String,
@@ -128,28 +127,19 @@ private val changelogEntries = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangelogBottomSheet(onDismiss: () -> Unit) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    ModalBottomSheet(
+    AppSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface
+        title = stringResource(R.string.changelog_title),
     ) {
-        Text(
-            stringResource(R.string.changelog_title),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
-        )
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 480.dp)
-                .padding(horizontal = 16.dp)
+                .heightIn(max = 600.dp),
+            contentPadding = PaddingValues(bottom = 12.dp),
         ) {
             itemsIndexed(changelogEntries) { index, entry ->
                 ChangelogCard(entry = entry, expandedByDefault = index == 0)
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(10.dp))
             }
             item { Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars)) }
         }
@@ -160,35 +150,18 @@ fun ChangelogBottomSheet(onDismiss: () -> Unit) {
 private fun ChangelogCard(entry: ChangelogEntry, expandedByDefault: Boolean) {
     var expanded by remember { mutableStateOf(expandedByDefault) }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    InsetGroup(
+        title = stringResource(R.string.changelog_version_prefix, entry.version),
     ) {
         Column {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 48.dp)
+                    .heightIn(min = 56.dp)
                     .clickable { expanded = !expanded }
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .clip(PillShape)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                        .padding(horizontal = 12.dp, vertical = 5.dp)
-                ) {
-                    Text(
-                        stringResource(R.string.changelog_version_prefix, entry.version),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Spacer(Modifier.width(12.dp))
                 Text(
                     stringResource(entry.dateRes),
                     style = MaterialTheme.typography.bodySmall,
@@ -211,7 +184,7 @@ private fun ChangelogCard(entry: ChangelogEntry, expandedByDefault: Boolean) {
                 enter = expandVertically(),
                 exit = shrinkVertically()
             ) {
-                Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 18.dp)) {
+                Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 14.dp)) {
                     entry.changeRes.forEach { resId ->
                         Row(
                             modifier = Modifier.padding(vertical = 4.dp),

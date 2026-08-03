@@ -12,18 +12,17 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.ToastController
 import com.owlcoder.animeschedule.presentation.components.ToastHost
-import com.owlcoder.animeschedule.presentation.screens.search.SearchOverlay
-import androidx.compose.ui.Alignment
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,9 +30,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import com.owlcoder.animeschedule.presentation.navigation.Screen
+import com.owlcoder.animeschedule.presentation.navigation.shouldShowBottomBar
 import androidx.core.content.ContextCompat
 import android.content.res.Configuration
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -49,6 +50,7 @@ import com.owlcoder.animeschedule.presentation.navigation.AnimeNavHost
 import com.owlcoder.animeschedule.presentation.screens.onboarding.OnboardingScreen
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.AnimeScheduleTheme
+import androidx.navigation.compose.currentBackStackEntryAsState
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -139,67 +141,64 @@ class MainActivity : AppCompatActivity() {
                             navController.navigate(Screen.Detail.createRoute(animeId))
                         }
                     }
-                    val density = LocalDensity.current
-                    val navBarHeightState = androidx.compose.runtime.remember {
-                        mutableStateOf(androidx.compose.ui.unit.Dp(0f))
-                    }
                     val toastController = androidx.compose.runtime.remember { ToastController() }
-                    var searchOpen by rememberSaveable { mutableStateOf(false) }
+                    var searchKeyboardFocused by rememberSaveable { mutableStateOf(false) }
                     // Covers the whole app (incl. nav bar) with the animated splash until the
                     // Schedule screen reports its first data load has resolved.
                     var appLoading by rememberSaveable { mutableStateOf(true) }
+                    val backStackEntry by navController.currentBackStackEntryAsState()
+                    val currentRoute = backStackEntry?.destination?.route
+                    val showBottomBar = shouldShowBottomBar(currentRoute) &&
+                        !(currentRoute == Screen.Search.route && searchKeyboardFocused)
+                    LaunchedEffect(currentRoute) {
+                        if (currentRoute != Screen.Search.route) searchKeyboardFocused = false
+                    }
                     CompositionLocalProvider(
-                        LocalNavBarHeight provides navBarHeightState.value,
+                        // Screens still consume this local for their bottom spacers. The root
+                        // Scaffold now owns the actual bar/insets, so keeping the compatibility
+                        // local at zero avoids double-padding and preserves existing screens.
+                        LocalNavBarHeight provides 0.dp,
                         LocalToast provides toastController
                     ) {
-                    ToastHost(controller = toastController, bottomInset = navBarHeightState.value) {
-                    Scaffold(
-                        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-                    ) { innerPadding ->
-                        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+                    ToastHost(controller = toastController) {
+                        Box(modifier = Modifier.fillMaxSize()) {
+                        Scaffold(
+                            modifier = Modifier.fillMaxSize(),
+                            // Nested screens own their status/navigation-bar insets. The root
+                            // contributes only horizontal safe-drawing insets and the measured
+                            // Material NavigationBar height, avoiding double bottom padding.
+                            contentWindowInsets = WindowInsets.safeDrawing.only(
+                                WindowInsetsSides.Horizontal
+                            ),
+                            bottomBar = {
+                                if (showBottomBar) {
+                                    AnimeBottomBar(
+                                        navController = navController,
+                                    )
+                                }
+                            }
+                        ) { innerPadding ->
                             AnimeNavHost(
                                 navController = navController,
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding),
                                 onRestartForLanguage = { lang ->
                                     scope.launch {
                                         prefsDataStore.setAppLanguage(lang)
                                         LocaleHelper.applyLanguage(lang)
                                     }
                                 },
-                                onScheduleInitialLoadChange = { appLoading = it }
+                                onScheduleInitialLoadChange = { appLoading = it },
+                                onSearchFocusChanged = { searchKeyboardFocused = it },
                             )
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.BottomCenter)
-                                    .onGloballyPositioned { coords ->
-                                        val h = with(density) { coords.size.height.toDp() }
-                                        if (h != navBarHeightState.value) navBarHeightState.value = h
-                                    }
-                            ) {
-                                AnimeBottomBar(
-                                    navController = navController,
-                                    onSearchClick = { searchOpen = true }
-                                )
-                            }
-                            // Command-palette search overlay — floats over the current screen
-                            // and the nav bar instead of being its own destination.
-                            SearchOverlay(
-                                visible = searchOpen,
-                                onDismiss = { searchOpen = false },
-                                onAnimeClick = { animeId ->
-                                    searchOpen = false
-                                    navController.navigate(Screen.Detail.createRoute(animeId))
-                                }
-                            )
-                            // Full-screen animated splash over everything (incl. nav bar) until
-                            // the first schedule load resolves.
-                            if (appLoading) {
-                                com.owlcoder.animeschedule.presentation.components.AnimatedSplashScreen(
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            }
                         }
-                    }
+                        if (appLoading) {
+                            com.owlcoder.animeschedule.presentation.components.AnimatedSplashScreen(
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        }
                     }
                     }
                 }

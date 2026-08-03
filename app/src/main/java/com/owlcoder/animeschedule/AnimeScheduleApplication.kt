@@ -6,13 +6,20 @@ import android.app.NotificationManager
 import android.os.Build
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import android.content.Context
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
 import dagger.hilt.android.HiltAndroidApp
 import com.owlcoder.animeschedule.data.work.AiringNotificationWorker
+import com.owlcoder.animeschedule.data.work.AnimeScheduleImageLoader
 import javax.inject.Inject
 
 @HiltAndroidApp
-class AnimeScheduleApplication : Application(), Configuration.Provider {
+class AnimeScheduleApplication : Application(), Configuration.Provider, SingletonImageLoader.Factory {
     @Inject lateinit var workerFactory: HiltWorkerFactory
+
+    override fun newImageLoader(context: Context): ImageLoader =
+        AnimeScheduleImageLoader.create(context)
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()

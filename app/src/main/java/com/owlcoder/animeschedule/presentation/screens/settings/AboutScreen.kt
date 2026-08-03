@@ -15,14 +15,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,7 +30,11 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.BuildConfig
 import com.owlcoder.animeschedule.R
-import com.owlcoder.animeschedule.ui.theme.PillShape
+import com.owlcoder.animeschedule.presentation.components.AppInlineHeader
+import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
+import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.InsetGroup
+import com.owlcoder.animeschedule.presentation.components.InsetListRow
 
 /**
  * About as a bottom-sheet overlay (mirrors Changelog/Search/Notifications) instead of a full
@@ -44,20 +43,15 @@ import com.owlcoder.animeschedule.ui.theme.PillShape
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutBottomSheet(onDismiss: () -> Unit) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    ModalBottomSheet(
+    AppSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface
+        title = stringResource(R.string.settings_about),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 620.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-                .windowInsetsPadding(WindowInsets.navigationBars),
+                .padding(bottom = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Simple "AS" wordmark — no tile, no background, just the accent-coloured
@@ -84,30 +78,20 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(10.dp))
-            Box(
-                modifier = Modifier
-                    .clip(PillShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                    .padding(horizontal = 14.dp, vertical = 5.dp)
-            ) {
-                Text(
-                    stringResource(R.string.about_version_prefix, BuildConfig.VERSION_NAME),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
+            Text(
+                stringResource(R.string.about_version_prefix, BuildConfig.VERSION_NAME),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+            )
 
             Spacer(Modifier.height(28.dp))
 
             // Main info card
-            AboutSection {
+            InsetGroup {
                 AboutRow(label = stringResource(R.string.about_version_label), value = BuildConfig.VERSION_NAME)
-                AboutDivider()
                 AboutRow(label = stringResource(R.string.about_build_label), value = BuildConfig.VERSION_CODE.toString())
-                AboutDivider()
                 AboutRow(label = stringResource(R.string.about_platform_label), value = "Android 12+")
-                AboutDivider()
                 AboutRow(label = stringResource(R.string.about_package_label), value = "com.owlcoder.animeschedule")
             }
 
@@ -116,13 +100,10 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
             // Data sources
             AboutSectionHeader(stringResource(R.string.about_section_data_sources))
             Spacer(Modifier.height(8.dp))
-            AboutSection {
+            InsetGroup {
                 AboutRow(label = stringResource(R.string.about_data_schedule), value = "AniList GraphQL API")
-                AboutDivider()
                 AboutRow(label = stringResource(R.string.about_data_list), value = "MyAnimeList API v2")
-                AboutDivider()
                 AboutRow(label = stringResource(R.string.about_data_fallback), value = "Jikan REST API")
-                AboutDivider()
                 AboutRow(label = stringResource(R.string.about_data_auth), value = "OAuth 2.0 + PKCE")
             }
 
@@ -131,15 +112,11 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
             // Tech stack
             AboutSectionHeader(stringResource(R.string.about_section_tech))
             Spacer(Modifier.height(8.dp))
-            AboutSection {
+            InsetGroup {
                 AboutRow(label = stringResource(R.string.about_tech_language), value = "Kotlin")
-                AboutDivider()
                 AboutRow(label = stringResource(R.string.about_tech_ui), value = "Jetpack Compose")
-                AboutDivider()
                 AboutRow(label = stringResource(R.string.about_tech_arch), value = "MVVM + Clean")
-                AboutDivider()
                 AboutRow(label = "DI", value = "Hilt")
-                AboutDivider()
                 AboutRow(label = "DB", value = "Room")
             }
 
@@ -169,47 +146,6 @@ private fun AboutSectionHeader(title: String) {
 }
 
 @Composable
-private fun AboutSection(content: @Composable () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column {
-            content()
-        }
-    }
-}
-
-@Composable
-private fun AboutDivider() {
-    HorizontalDivider(
-        modifier = Modifier.padding(start = 16.dp),
-        thickness = 0.5.dp,
-        color = MaterialTheme.colorScheme.outlineVariant
-    )
-}
-
-@Composable
 private fun AboutRow(label: String, value: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+    InsetListRow(label = label, supportingText = value)
 }

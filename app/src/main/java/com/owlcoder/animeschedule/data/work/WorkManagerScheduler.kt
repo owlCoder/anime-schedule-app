@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit
 object WorkManagerScheduler {
     private const val SYNC_WORK_NAME = "schedule_sync"
     private const val PENDING_UPDATES_WORK_NAME = "pending_mal_updates"
+    private const val CACHE_CLEANUP_WORK_NAME = "cache_cleanup"
 
     fun schedule(context: Context) {
         val constraints = Constraints.Builder()
@@ -29,6 +30,17 @@ object WorkManagerScheduler {
             SYNC_WORK_NAME,
             ExistingPeriodicWorkPolicy.KEEP,
             request
+        )
+
+        // Cache cleanup is deliberately unconstrained: it only touches local Room/Coil data.
+        val cacheCleanupRequest = PeriodicWorkRequestBuilder<CacheCleanupWorker>(
+            1, TimeUnit.DAYS
+        ).build()
+
+        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            CACHE_CLEANUP_WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            cacheCleanupRequest
         )
     }
 

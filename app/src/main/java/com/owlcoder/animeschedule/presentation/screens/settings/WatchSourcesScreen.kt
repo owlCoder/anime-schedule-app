@@ -19,24 +19,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -53,6 +45,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.WatchSource
 import com.owlcoder.animeschedule.presentation.components.FaviconImage
+import com.owlcoder.animeschedule.presentation.components.AppInlineHeader
+import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.GlassIconButton
+import com.owlcoder.animeschedule.presentation.components.InsetGroup
+import com.owlcoder.animeschedule.presentation.components.InsetListRow
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,48 +63,47 @@ fun WatchSourcesScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.watch_sources_title), style = MaterialTheme.typography.titleLarge) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { showAddSheet = true }) {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.watch_sources_add))
-                    }
-                },
-                windowInsets = WindowInsets.statusBars,
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
-            )
-        },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        Column(Modifier.fillMaxSize().padding(innerPadding)) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(horizontal = 16.dp)
+        ) {
+            AppInlineHeader(
+                title = stringResource(R.string.watch_sources_title),
+                onBack = onBack,
+                trailingContent = {
+                    GlassIconButton(
+                        icon = Icons.Default.Add,
+                        contentDescription = stringResource(R.string.watch_sources_add),
+                        onClick = { showAddSheet = true },
+                    )
+                },
+            )
             Text(
                 stringResource(R.string.watch_sources_disclaimer),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                modifier = Modifier.padding(vertical = 10.dp)
             )
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 4.dp,
-                    bottom = 4.dp + LocalNavBarHeight.current
-                )
+            InsetGroup(
+                modifier = Modifier.weight(1f),
+                title = stringResource(R.string.watch_sources_title),
             ) {
-                items(sources, key = { it.id }) { source ->
-                    WatchSourceRow(
-                        source = source,
-                        onDelete = { viewModel.deleteSource(source) },
-                        onOpenExternallyChange = { viewModel.setOpenExternally(source, it) }
-                    )
-                    Spacer(Modifier.height(8.dp))
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(bottom = 4.dp + LocalNavBarHeight.current)
+                ) {
+                    items(sources, key = { it.id }) { source ->
+                        WatchSourceRow(
+                            source = source,
+                            onDelete = { viewModel.deleteSource(source) },
+                            onOpenExternallyChange = { viewModel.setOpenExternally(source, it) }
+                        )
+                    }
                 }
             }
         }
@@ -130,49 +126,35 @@ private fun WatchSourceRow(
     onDelete: () -> Unit,
     onOpenExternallyChange: (Boolean) -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+    InsetListRow(
+        label = source.name,
+        supportingText = source.urlTemplate,
+        leadingContent = {
                 if (source.faviconUrl != null) {
                     FaviconImage(
                         faviconUrl = source.faviconUrl,
                         siteUrl = source.urlTemplate,
                         modifier = Modifier.size(28.dp).clip(CircleShape)
                     )
-                    Spacer(Modifier.width(12.dp))
                 }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(source.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-                    Text(
-                        source.urlTemplate,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
-                    )
-                }
-                IconButton(onClick = onDelete) {
+        },
+        trailingContent = {
+            Column(horizontalAlignment = Alignment.End) {
+                androidx.compose.material3.IconButton(onClick = onDelete) {
                     Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.watch_sources_delete), tint = MaterialTheme.colorScheme.error)
                 }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
                     stringResource(R.string.watch_sources_open_externally),
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f)
-                )
-                Switch(checked = source.openExternally, onCheckedChange = onOpenExternallyChange)
+                    )
+                    Switch(checked = source.openExternally, onCheckedChange = onOpenExternallyChange)
+                }
             }
-        }
-    }
+        },
+        onClick = null,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -181,29 +163,18 @@ private fun AddWatchSourceSheet(
     onDismiss: () -> Unit,
     onConfirm: (name: String, urlTemplate: String, openExternally: Boolean) -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var name by remember { mutableStateOf("") }
     var urlTemplate by remember { mutableStateOf("") }
     var openExternally by remember { mutableStateOf(false) }
     val isValid = name.isNotBlank() && urlTemplate.contains("{query}")
 
-    ModalBottomSheet(
+    AppSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface
+        title = stringResource(R.string.watch_sources_add),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .windowInsetsPadding(WindowInsets.navigationBars)
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                stringResource(R.string.watch_sources_add),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },

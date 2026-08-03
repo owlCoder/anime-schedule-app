@@ -22,8 +22,11 @@ interface NotificationDao {
     @Query("UPDATE notifications SET isRead = 1")
     suspend fun markAllRead()
 
-    @Query("DELETE FROM notifications WHERE createdAtEpochSeconds < :cutoff")
-    suspend fun deleteOlderThan(cutoff: Long)
+    @Query("DELETE FROM notifications WHERE isRead = 1 AND createdAtEpochSeconds < :cutoff")
+    suspend fun deleteReadOlderThan(cutoff: Long)
+
+    @Query("DELETE FROM notifications WHERE isRead = 0 AND createdAtEpochSeconds < :cutoff")
+    suspend fun deleteUnreadOlderThan(cutoff: Long)
 
     @Query("SELECT id FROM notifications")
     suspend fun getAllIds(): List<Int>

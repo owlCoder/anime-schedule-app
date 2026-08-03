@@ -34,11 +34,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.BlurredEdgeTreatment
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -135,33 +131,14 @@ private fun ToastCard(data: ToastData) {
         ToastTone.Error -> Icons.Outlined.ErrorOutline
     }
     val shape = RoundedCornerShape(20.dp)
-    // Frosted glass: a genuinely blurred translucent surface layer sits beneath the sharp
-    // content (icon + text). The blur is isolated to this backing box (clipped by the parent
-    // shape) so the message stays crisp while the card reads as frosted rather than flat.
-    val glassColors = listOf(
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.82f),
-        MaterialTheme.colorScheme.surface.copy(alpha = 0.78f)
-    )
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .widthIn(max = 460.dp)
-            .shadow(16.dp, shape, spotColor = Color.Black.copy(alpha = 0.6f))
             .clip(shape)
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
     ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .blur(radius = 22.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded)
-                .background(Brush.verticalGradient(glassColors))
-        )
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.35f))
-        )
         Row(
             modifier = Modifier
                 .fillMaxWidth()

@@ -8,183 +8,184 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Matrix
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
-import kotlin.math.cos
-import kotlin.math.sin
 
-/**
- * Full-screen animated brand splash shown while the app's first data load is in flight
- * (mirrors tapiz-lms's SessionLoadingScreen + AnimatedLetterBackground). The main UI
- * (schedule + nav bar) is NOT shown until loading finishes; a pull-to-refresh later uses
- * the LoadingShimmer skeleton instead, never this. A large "AS" brand glyph tilts/drifts
- * behind an eyebrow + title text, same recipe as tapiz-lms's tilting "T".
- */
+/** Branded first-load surface: quiet, centered and intentionally animation-light. */
 @Composable
 fun AnimatedSplashScreen(modifier: Modifier = Modifier) {
-    AnimatedLetterBackground(modifier.fillMaxSize()) {
-        val primary = MaterialTheme.colorScheme.primary
-        val transition = rememberInfiniteTransition(label = "splashPulse")
-        val pulseScale by transition.animateFloat(
-            initialValue = 1f,
-            targetValue = 1.15f,
-            animationSpec = infiniteRepeatable(tween(1800, easing = LinearEasing), RepeatMode.Reverse),
-            label = "pulseScale"
-        )
-        val pulseAlpha by transition.animateFloat(
-            initialValue = 1f,
-            targetValue = 0.35f,
-            animationSpec = infiniteRepeatable(tween(1800, easing = LinearEasing), RepeatMode.Reverse),
-            label = "pulseAlpha"
-        )
+    val reduceMotion = rememberReduceMotion()
+    val transition = rememberInfiniteTransition(label = "loadingPulse")
+    val pulse = if (reduceMotion) {
+        1f
+    } else {
+        transition.animateFloat(
+            initialValue = 0.96f,
+            targetValue = 1.04f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1800, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "logoPulse",
+        ).value
+    }
+    val rotation = if (reduceMotion) {
+        0f
+    } else {
+        transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(2200, easing = LinearEasing),
+            ),
+            label = "loadingRing",
+        ).value
+    }
+    val loadingDescription = stringResource(R.string.splash_title)
 
-        Canvas(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 24.dp, bottom = 56.dp)
-                .size(36.dp)
-                .scale(pulseScale)
-        ) {
-            drawCircle(
-                color = primary.copy(alpha = pulseAlpha),
-                style = Stroke(width = 2.5.dp.toPx())
+    Box(
+        modifier = modifier
+            .background(
+                Brush.radialGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                        MaterialTheme.colorScheme.background,
+                    ),
+                )
             )
-        }
-
+            .semantics {
+                contentDescription = loadingDescription
+                liveRegion = LiveRegionMode.Polite
+            },
+        contentAlignment = Alignment.Center,
+    ) {
         Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth(0.7f)
-                .padding(start = 24.dp, end = 24.dp, bottom = 56.dp)
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 24.dp),
         ) {
+            // A small translucent bloom gives the mark separation without creating a large
+            // card. The content remains readable on both semantic light and dark surfaces.
+            Box(
+                modifier = Modifier.size(112.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                val bloomOuter = MaterialTheme.colorScheme.primary.copy(alpha = 0.07f)
+                val bloomInner = MaterialTheme.colorScheme.primary.copy(alpha = 0.09f)
+                Canvas(Modifier.fillMaxSize()) {
+                    drawCircle(
+                        color = bloomOuter,
+                        radius = size.minDimension * 0.48f,
+                    )
+                    drawCircle(
+                        color = bloomInner,
+                        radius = size.minDimension * 0.31f,
+                    )
+                }
+                AnimeScheduleMark(
+                    modifier = Modifier
+                        .size(68.dp)
+                        .graphicsLayer {
+                            scaleX = pulse
+                            scaleY = pulse
+                        },
+                )
+            }
+
+            Spacer(Modifier.height(20.dp))
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Spacer(Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.splash_eyebrow),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                text = stringResource(R.string.splash_title),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 3
+            Spacer(Modifier.height(18.dp))
+            LoadingRing(
+                rotation = rotation,
+                reduceMotion = reduceMotion,
+                modifier = Modifier.semantics {
+                    contentDescription = loadingDescription
+                },
             )
         }
     }
 }
 
-/**
- * Full-screen animated canvas: a large "S" brand glyph (the same amber Niti
- * accent thread as the launcher icon — see `ic_launcher_foreground.xml`, path
- * "M67,30 C67,30 41,26 41,41 C41,54 67,54 67,67 C67,82 41,78 41,78" on a
- * 108-unit grid) skews/drifts in 3D behind [content], instead of a static
- * watermark.
- */
+/** Reusable AS mark for loading and future shared surfaces; text keeps it scalable/accessibile. */
 @Composable
-private fun AnimatedLetterBackground(
+fun AnimeScheduleMark(
     modifier: Modifier = Modifier,
-    content: @Composable BoxScope.() -> Unit
+    scale: Float = 1f,
 ) {
-    val background = MaterialTheme.colorScheme.background
-    val surface = MaterialTheme.colorScheme.surface
-    val brandAmber = Color(0xFFE8A33D)
-    val isDark = true // app is dark-only (see AnimeScheduleTheme)
-
-    val transition = rememberInfiniteTransition(label = "loadingLetterDrift")
-    val turn by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(animation = tween(14_000, easing = LinearEasing)),
-        label = "loadingLetterTurn"
-    )
-    val driftT by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(animation = tween(19_000, easing = LinearEasing)),
-        label = "loadingLetterDriftT"
-    )
-
-    val glyphAlpha = if (isDark) 0.30f else 0.22f
-
-    Box(modifier = modifier.background(Brush.verticalGradient(listOf(background, surface)))) {
+    val accent = MaterialTheme.colorScheme.primary
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Text(
+            text = stringResource(R.string.about_logo_monogram),
+            style = MaterialTheme.typography.headlineMedium,
+            color = accent,
+            modifier = Modifier,
+        )
         Canvas(Modifier.fillMaxSize()) {
-            val w = size.width
-            val h = size.height
-            val turnAngle = turn * 2f * Math.PI.toFloat()
-            val shearX = cos(turnAngle) * 0.55f
-            val shearY = sin(turnAngle * 0.5f) * 0.12f
-            val driftAngle = driftT * 2f * Math.PI.toFloat()
-            val cx = w * 0.5f + cos(driftAngle) * w * 0.10f
-            val cy = h * 0.42f + sin(driftAngle) * h * 0.08f
-
-            // "S" glyph, same shape as the launcher icon's accent thread (108-unit
-            // grid path scaled to this canvas), centred on the origin so the shear
-            // transform pivots around the glyph's own centre, then translated to (cx, cy).
-            val glyphSize = size.minDimension * 1.25f
-            val u = glyphSize / 108f
-            val halfW = 54f * u
-            val halfH = 54f * u
-
-            val sPath = Path().apply {
-                moveTo(67f * u, 30f * u)
-                cubicTo(67f * u, 30f * u, 41f * u, 26f * u, 41f * u, 41f * u)
-                cubicTo(41f * u, 54f * u, 67f * u, 54f * u, 67f * u, 67f * u)
-                cubicTo(67f * u, 82f * u, 41f * u, 78f * u, 41f * u, 78f * u)
-            }.let { path ->
-                val m = Matrix().apply { translate(-halfW, -halfH) }
-                Path().apply { addPath(path, Offset.Zero); transform(m) }
-            }
-
-            val brush = Brush.linearGradient(
-                colors = listOf(
-                    brandAmber.copy(alpha = glyphAlpha * 0.5f),
-                    brandAmber.copy(alpha = glyphAlpha),
-                    brandAmber.copy(alpha = glyphAlpha * 0.5f)
-                ),
-                start = Offset(-halfW, -halfH),
-                end = Offset(halfW, halfH)
+            drawCircle(
+                color = accent.copy(alpha = 0.22f),
+                radius = size.minDimension * 0.44f * scale,
+                center = Offset(size.width / 2f, size.height / 2f),
+                style = Stroke(width = 1.5.dp.toPx()),
             )
-
-            withTransform({
-                translate(cx, cy)
-                transform(
-                    Matrix().apply {
-                        this[1, 0] = shearX
-                        this[0, 1] = -shearY
-                    }
-                )
-            }) {
-                drawPath(
-                    sPath,
-                    brush = brush,
-                    style = Stroke(width = 13.5f * u, cap = StrokeCap.Round)
-                )
-            }
         }
-        content()
+    }
+}
+
+@Composable
+private fun LoadingRing(
+    rotation: Float,
+    reduceMotion: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val primary = MaterialTheme.colorScheme.primary
+    Canvas(modifier.size(20.dp)) {
+        drawArc(
+            color = primary.copy(alpha = 0.20f),
+            startAngle = 0f,
+            sweepAngle = 360f,
+            useCenter = false,
+            style = Stroke(width = 1.8.dp.toPx()),
+        )
+        drawArc(
+            color = primary,
+            startAngle = rotation - 90f,
+            sweepAngle = if (reduceMotion) 110f else 96f,
+            useCenter = false,
+            style = Stroke(width = 2.2.dp.toPx(), cap = StrokeCap.Round),
+        )
     }
 }

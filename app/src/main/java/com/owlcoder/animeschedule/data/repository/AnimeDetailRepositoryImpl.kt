@@ -6,12 +6,21 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flatMapLatest
 import com.owlcoder.animeschedule.core.result.AppError
 import com.owlcoder.animeschedule.core.result.AppResult
+import com.owlcoder.animeschedule.data.api.alternative.AlternativeAnimeDataSource
+import com.owlcoder.animeschedule.data.api.alternative.toInternalId
 import com.owlcoder.animeschedule.data.api.anilist.AniListRemoteDataSource
 import com.owlcoder.animeschedule.data.local.db.AnimeDetailDao
 import com.owlcoder.animeschedule.data.local.db.AnimeDetailEntity
 import com.owlcoder.animeschedule.data.local.db.MalListEntryDao
+import com.owlcoder.animeschedule.data.local.offline.OfflineCatalogDataSource
 import com.owlcoder.animeschedule.data.mapper.toDomain
 import com.owlcoder.animeschedule.data.mapper.toEntity
+import com.owlcoder.animeschedule.data.provider.ProviderCall
+import com.owlcoder.animeschedule.data.provider.ProviderCallException
+import com.owlcoder.animeschedule.data.provider.ProviderOperation
+import com.owlcoder.animeschedule.data.provider.ProviderOrchestrator
+import com.owlcoder.animeschedule.data.provider.ProviderResult
+import com.owlcoder.animeschedule.data.provider.requireProviderData
 import com.owlcoder.animeschedule.domain.model.AnimeDetail
 import com.owlcoder.animeschedule.domain.model.CharacterDetail
 import com.owlcoder.animeschedule.domain.repository.AnimeDetailRepository
@@ -25,7 +34,10 @@ private const val DETAIL_CACHE_TTL = 60 * 60L
 class AnimeDetailRepositoryImpl @Inject constructor(
     private val animeDetailDao: AnimeDetailDao,
     private val malListEntryDao: MalListEntryDao,
-    private val aniListDataSource: AniListRemoteDataSource
+    private val aniListDataSource: AniListRemoteDataSource,
+    private val alternativeDataSource: AlternativeAnimeDataSource,
+    private val providerOrchestrator: ProviderOrchestrator,
+    private val offlineCatalogDataSource: OfflineCatalogDataSource
 ) : AnimeDetailRepository {
 
     override fun getAnimeDetail(animeId: Int): Flow<AppResult<AnimeDetail>> = flow {
@@ -35,7 +47,10 @@ class AnimeDetailRepositoryImpl @Inject constructor(
         val resolved = animeDetailDao.getByIdOnce(animeId) ?: animeDetailDao.getByMalId(animeId)
 
         if (resolved == null) {
-            emit(AppResult.Error(AppError.NoCache) as AppResult<AnimeDetail>)
+            when (val offline = offlineCatalogDataSource.getDetail(animeId)) {
+                is AppResult.Success -> emit(offline)
+                is AppResult.Error -> emit(AppResult.Error(offline.error))
+            }
             return@flow
         }
 
@@ -77,22 +92,43 @@ class AnimeDetailRepositoryImpl @Inject constructor(
         val stale = entity == null || (nowEpoch - entity.cachedAtEpochSeconds) > DETAIL_CACHE_TTL
         if (!stale) return
 
-        if (entity != null) {
-            val r = aniListDataSource.getAnimeDetail(entity.animeId)
-            if (r is AppResult.Success) {
-                animeDetailDao.upsert(r.data.toEntity(nowEpoch).copy(malId = entity.malId))
-            }
-        } else {
-            // Try as AniList ID first (schedule/search); fall back to MAL ID (my-list)
-            val byAniList = aniListDataSource.getAnimeDetail(animeId)
-            if (byAniList is AppResult.Success) {
-                animeDetailDao.upsert(byAniList.data.toEntity(nowEpoch))
-            } else {
-                val byMal = aniListDataSource.getAnimeDetailByMalId(animeId)
-                if (byMal is AppResult.Success) {
-                    animeDetailDao.upsert(byMal.data.toEntity(nowEpoch, malId = animeId))
+        val canonicalAniListId = entity?.animeId ?: animeId
+        val malId = entity?.malId ?: animeId.takeIf { entity == null && it > 0 }
+        val result = providerOrchestrator.firstSuccessful(
+            operation = ProviderOperation.DETAIL,
+            calls = listOf(
+                ProviderCall("AniList") {
+                    if (entity != null) {
+                        val media = aniListDataSource.getAnimeDetail(canonicalAniListId)
+                            .requireProviderData("AniList")
+                        DetailPayload(media.toEntity(nowEpoch).copy(malId = entity.malId))
+                    } else {
+                        val byAniList = aniListDataSource.getAnimeDetail(canonicalAniListId)
+                        if (byAniList is AppResult.Success) {
+                            DetailPayload(byAniList.data.toEntity(nowEpoch))
+                        } else {
+                            val byMal = aniListDataSource.getAnimeDetailByMalId(animeId)
+                                .requireProviderData("AniList")
+                            DetailPayload(byMal.toEntity(nowEpoch, malId = animeId))
+                        }
+                    }
+                },
+                ProviderCall("AnimeSchedule") {
+                    val item = alternativeDataSource.getByAnimeScheduleAniListId(canonicalAniListId)
+                        ?: malId?.let { alternativeDataSource.getByAnimeScheduleMalId(it) }
+                        ?: throw ProviderCallException("AnimeSchedule", message = "anime not found")
+                    DetailPayload(
+                        alternativeDataSource.run {
+                            item.toDetailEntity(entity?.animeId ?: item.toInternalId(), nowEpoch)
+                        }
+                    )
                 }
-            }
+            )
+        )
+        if (result is ProviderResult.Success) {
+            animeDetailDao.upsert(result.value.entity)
         }
     }
+
+    private data class DetailPayload(val entity: AnimeDetailEntity)
 }

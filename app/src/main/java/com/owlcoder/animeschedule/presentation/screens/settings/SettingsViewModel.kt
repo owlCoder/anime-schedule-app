@@ -1,17 +1,24 @@
 package com.owlcoder.animeschedule.presentation.screens.settings
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.owlcoder.animeschedule.core.result.AppResult
 import com.owlcoder.animeschedule.data.local.datastore.AccentColor
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
+import com.owlcoder.animeschedule.data.local.datastore.CacheRetentionPolicy
 import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
+import com.owlcoder.animeschedule.data.work.CacheMaintenance
 import com.owlcoder.animeschedule.domain.repository.AuthRepository
 import com.owlcoder.animeschedule.domain.repository.SettingsRepository
 import com.owlcoder.animeschedule.domain.usecase.GetMalUserListUseCase
@@ -37,6 +44,7 @@ data class SettingsUiState(
     val notificationOffsetMinutes: Int = 0,
     val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
     val appLanguage: AppLanguage = AppLanguage.SYSTEM,
+    val cacheRetentionDays: Int = CacheRetentionPolicy.DEFAULT_RETENTION_DAYS,
     val profileStats: ProfileStats = ProfileStats()
 )
 
@@ -44,8 +52,19 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     authRepository: AuthRepository,
-    getMalUserListUseCase: GetMalUserListUseCase
+    getMalUserListUseCase: GetMalUserListUseCase,
+    private val cacheMaintenance: CacheMaintenance,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
+
+    private val _cacheSizeBytes = MutableStateFlow(0L)
+    val cacheSizeBytes: StateFlow<Long> = _cacheSizeBytes
+
+    private val _isClearingCache = MutableStateFlow(false)
+    val isClearingCache: StateFlow<Boolean> = _isClearingCache
+
+    private val _cacheActionMessage = MutableStateFlow<String?>(null)
+    val cacheActionMessage: StateFlow<String?> = _cacheActionMessage
 
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsRepository.userPreferencesFlow,
@@ -66,6 +85,7 @@ class SettingsViewModel @Inject constructor(
             notificationOffsetMinutes = prefs.notificationOffsetMinutes,
             accentColor = prefs.accentColor,
             appLanguage = prefs.appLanguage,
+            cacheRetentionDays = prefs.cacheRetentionDays,
             profileStats = ProfileStats(
                 entryCount = entries.size,
                 episodesWatched = episodesWatched,
@@ -73,6 +93,10 @@ class SettingsViewModel @Inject constructor(
             )
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
+
+    init {
+        refreshCacheSize()
+    }
 
     fun setTimezone(timezoneId: String) {
         viewModelScope.launch { settingsRepository.setTimezoneId(timezoneId) }
@@ -97,4 +121,44 @@ class SettingsViewModel @Inject constructor(
     fun setAppLanguage(language: AppLanguage) {
         viewModelScope.launch { settingsRepository.setAppLanguage(language) }
     }
+
+    fun setCacheRetentionDays(days: Int) {
+        viewModelScope.launch { settingsRepository.setCacheRetentionDays(days) }
+    }
+
+    fun clearCacheNow() {
+        if (_isClearingCache.value) return
+        viewModelScope.launch {
+            _isClearingCache.value = true
+            _cacheActionMessage.value = null
+            runCatching {
+                cacheMaintenance.run(clearImageCacheNow = true)
+                refreshCacheSizeAndWait()
+            }.onSuccess {
+                _cacheActionMessage.value = "Cache cleared"
+            }.onFailure {
+                _cacheActionMessage.value = "Couldn’t clear cache"
+            }
+            _isClearingCache.value = false
+        }
+    }
+
+    fun clearCacheActionMessage() {
+        _cacheActionMessage.value = null
+    }
+
+    private fun refreshCacheSize() {
+        viewModelScope.launch {
+            _cacheSizeBytes.value = withContext(Dispatchers.IO) { calculateCacheSize() }
+        }
+    }
+
+    private suspend fun refreshCacheSizeAndWait() {
+        _cacheSizeBytes.value = withContext(Dispatchers.IO) { calculateCacheSize() }
+    }
+
+    private fun calculateCacheSize(): Long = context.cacheDir
+        .walkTopDown()
+        .filter { it.isFile }
+        .sumOf { it.length() }
 }

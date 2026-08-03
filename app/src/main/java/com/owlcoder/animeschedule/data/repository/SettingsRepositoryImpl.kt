@@ -42,6 +42,10 @@ class SettingsRepositoryImpl @Inject constructor(
         prefsDataStore.setAppLanguage(language)
     }
 
+    override suspend fun setCacheRetentionDays(days: Int) {
+        prefsDataStore.setCacheRetentionDays(days)
+    }
+
     override fun getEffectiveZoneId(prefs: UserPreferences): ZoneId =
         if (prefs.timezoneId.isNotEmpty()) {
             runCatching { ZoneId.of(prefs.timezoneId) }.getOrElse { ZoneId.systemDefault() }

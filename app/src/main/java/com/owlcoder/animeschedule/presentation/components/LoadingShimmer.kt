@@ -15,7 +15,9 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -24,11 +26,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.PillShape
+import com.owlcoder.animeschedule.ui.theme.AppDensity
 
 @Composable
 fun ShimmerBrush(): Brush {
+    val reduceMotion = rememberReduceMotion()
+    val color = MaterialTheme.colorScheme.surfaceVariant
+    val highlight = MaterialTheme.colorScheme.surface
+    if (reduceMotion) {
+        return SolidColor(color.copy(alpha = 0.72f))
+    }
     val transition = rememberInfiniteTransition(label = "shimmer")
     val translateAnim by transition.animateFloat(
         initialValue = 0f,
@@ -36,8 +46,6 @@ fun ShimmerBrush(): Brush {
         animationSpec = infiniteRepeatable(tween(1000), RepeatMode.Restart),
         label = "shimmer_translate"
     )
-    val color = MaterialTheme.colorScheme.surfaceVariant
-    val highlight = MaterialTheme.colorScheme.surface
     return Brush.linearGradient(
         colors = listOf(color, highlight, color),
         start = Offset(translateAnim - 200f, 0f),
@@ -45,81 +53,103 @@ fun ShimmerBrush(): Brush {
     )
 }
 
-/**
- * Loading skeleton that mirrors the current Schedule home layout: a big hero-card
- * placeholder + dot indicators, followed by two "section header + horizontal card row"
- * blocks (Today / Tomorrow), instead of the old vertical list-row cards.
- */
+/** Compact loading skeleton that mirrors the shared grouped-material language. */
 @Composable
-fun LoadingShimmer() {
+fun LoadingShimmer(modifier: Modifier = Modifier) {
     val brush = ShimmerBrush()
     Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(28.dp)
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = AppDensity.screenHorizontal),
+        verticalArrangement = Arrangement.spacedBy(AppDensity.sectionGap),
     ) {
-        Spacer(Modifier.height(4.dp))
-        // Hero card placeholder.
-        Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+        Spacer(Modifier.height(2.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Box(Modifier.width(110.dp).height(30.dp).clip(MaterialTheme.shapes.small).background(brush))
+                Box(Modifier.width(150.dp).height(14.dp).clip(MaterialTheme.shapes.extraSmall).background(brush))
+            }
+            Box(Modifier.size(48.dp).clip(PillShape).background(brush))
+        }
+        // Compact horizontal feature placeholder; it must not consume the viewport.
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 128.dp, max = 152.dp)
+                .clip(MaterialTheme.shapes.large)
+                .background(brush)
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             Box(
                 Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(240.dp)
-                    .clip(MaterialTheme.shapes.extraLarge)
+                    .aspectRatio(0.72f)
+                    .fillMaxSize()
+                    .clip(MaterialTheme.shapes.medium)
                     .background(brush)
             )
-            Spacer(Modifier.height(14.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                repeat(5) { i ->
-                    Box(
-                        Modifier
-                            .height(6.dp)
-                            .width(if (i == 0) 20.dp else 6.dp)
-                            .clip(PillShape)
-                            .background(brush)
-                    )
-                }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Box(Modifier.fillMaxWidth(0.74f).height(18.dp).clip(MaterialTheme.shapes.extraSmall).background(brush))
+                Box(Modifier.fillMaxWidth(0.48f).height(12.dp).clip(MaterialTheme.shapes.extraSmall).background(brush))
+                Spacer(Modifier.weight(1f))
+                Box(Modifier.width(86.dp).height(32.dp).clip(PillShape).background(brush))
             }
         }
-        // Two horizontal section placeholders.
-        repeat(2) {
-            ShimmerSection(brush)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Box(Modifier.width(116.dp).height(18.dp).clip(MaterialTheme.shapes.extraSmall).background(brush))
+                Box(Modifier.width(70.dp).height(28.dp).clip(PillShape).background(brush))
+            }
+            // Shared timeline rows instead of independent large cards.
+            repeat(4) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 64.dp)
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.72f))
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                ) {
+                    Box(Modifier.width(42.dp).height(12.dp).clip(MaterialTheme.shapes.extraSmall).background(brush))
+                    Box(Modifier.size(48.dp).clip(MaterialTheme.shapes.small).background(brush))
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Box(Modifier.fillMaxWidth(0.84f).height(14.dp).clip(MaterialTheme.shapes.extraSmall).background(brush))
+                        Box(Modifier.fillMaxWidth(0.42f).height(10.dp).clip(MaterialTheme.shapes.extraSmall).background(brush))
+                    }
+                    Box(Modifier.size(32.dp).clip(PillShape).background(brush))
+                }
+            }
         }
     }
 }
 
+/** A single compact loading row for lists that do not need a full-screen skeleton. */
 @Composable
-private fun ShimmerSection(brush: Brush) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // Section header row.
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Box(Modifier.width(120.dp).height(20.dp).clip(MaterialTheme.shapes.extraSmall).background(brush))
-            Box(Modifier.width(56.dp).height(16.dp).clip(PillShape).background(brush))
-        }
-        // Horizontal card row.
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            repeat(3) {
-                Column(
-                    modifier = Modifier.width(140.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(3f / 4f)
-                            .clip(MaterialTheme.shapes.medium)
-                            .background(brush)
-                    )
-                    Box(Modifier.fillMaxWidth(0.9f).height(14.dp).clip(MaterialTheme.shapes.extraSmall).background(brush))
-                    Box(Modifier.fillMaxWidth(0.5f).height(11.dp).clip(MaterialTheme.shapes.extraSmall).background(brush))
-                }
-            }
+fun SkeletonRow(modifier: Modifier = Modifier) {
+    val brush = ShimmerBrush()
+    Row(
+        modifier = modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(52.dp).clip(MaterialTheme.shapes.small).background(brush))
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Box(Modifier.fillMaxWidth(0.78f).height(14.dp).clip(MaterialTheme.shapes.extraSmall).background(brush))
+            Box(Modifier.fillMaxWidth(0.42f).height(11.dp).clip(MaterialTheme.shapes.extraSmall).background(brush))
         }
     }
 }

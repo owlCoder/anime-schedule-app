@@ -16,8 +16,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -28,11 +40,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.owlcoder.animeschedule.core.adblock.AdBlockFilter
+import com.owlcoder.animeschedule.R
+import com.owlcoder.animeschedule.presentation.components.AppLoadingState
+import com.owlcoder.animeschedule.presentation.components.GlassChrome
 import java.io.ByteArrayInputStream
 
 /** Fullscreen in-app browser for a watch-source link — no address bar/chrome, mirrors
@@ -69,7 +85,12 @@ fun WatchScreen(
     }
 
     Scaffold(contentWindowInsets = WindowInsets(0, 0, 0, 0)) { innerPadding ->
-        Box(Modifier.fillMaxSize().padding(innerPadding)) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                .padding(innerPadding)
+        ) {
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = { viewContext ->
@@ -126,14 +147,63 @@ fun WatchScreen(
                 }
             )
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.82f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AppLoadingState(label = stringResource(R.string.common_loading))
+                }
+            }
+            GlassChrome(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                shape = RoundedCornerShape(22.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp, vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    IconButton(
+                        onClick = {
+                            if (isVideoFullscreen) {
+                                fullscreenChromeClient?.onHideCustomView()
+                            } else {
+                                onBack()
+                            }
+                        },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back),
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                    androidx.compose.material3.Text(
+                        text = "Watch",
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1
+                    )
+                }
             }
         }
     }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(activity) {
+        // Watch owns only its temporary chrome state. The activity's bars are restored
+        // when leaving the route, including after a WebView/HTML5 fullscreen session.
+        activity?.let { setSystemBarsVisible(it, visible = true) }
         onDispose {
             webView?.let { wv -> webViewBundle = Bundle().also { wv.saveState(it) } }
+            fullscreenChromeClient?.onHideCustomView()
+            activity?.let { setSystemBarsVisible(it, visible = true) }
         }
     }
 }

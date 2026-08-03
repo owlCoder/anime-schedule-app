@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.core.result.AppResult
 import com.owlcoder.animeschedule.core.result.AppError
@@ -227,22 +228,31 @@ class ScheduleViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             _isLoading.value = true
-            val prefs = settingsRepository.userPreferencesFlow.stateIn(viewModelScope).value
-            val zoneId = settingsRepository.getEffectiveZoneId(prefs)
-            refreshScheduleUseCase(zoneId)
-            // A freshly-subscribed Room Flow always queries current DB state on its first
-            // emission, so awaiting one here guarantees the write above has landed before we
-            // flip isInitialLoad off — otherwise the splash could clear a beat before the
-            // long-lived uiState combine (subscribed earlier) re-emits with the fresh rows.
-            combine(
-                getTodayScheduleUseCase(zoneId),
-                getTomorrowScheduleUseCase(zoneId),
-                getWeekScheduleUseCase(zoneId)
-            ) { today, tomorrow, week -> Triple(today, tomorrow, week) }.first()
-            _isLoading.value = false
-            _hasLoadedOnce.value = true
-            AiringNotificationWorker.runNow(context)
+            try {
+                val prefs = settingsRepository.userPreferencesFlow.stateIn(viewModelScope).value
+                val zoneId = settingsRepository.getEffectiveZoneId(prefs)
+                // The repository has its own provider fallbacks. This outer guard covers DNS,
+                // a wedged HTTP stack, or a provider interceptor that never returns.
+                withTimeoutOrNull(SCHEDULE_REFRESH_TIMEOUT_MS) {
+                    refreshScheduleUseCase(zoneId)
+                }
+                // Room emits the current cache immediately. We only need to wait for that
+                // first snapshot; a failed refresh must not keep the animated splash forever.
+                combine(
+                    getTodayScheduleUseCase(zoneId),
+                    getTomorrowScheduleUseCase(zoneId),
+                    getWeekScheduleUseCase(zoneId)
+                ) { today, tomorrow, week -> Triple(today, tomorrow, week) }.first()
+            } finally {
+                _isLoading.value = false
+                _hasLoadedOnce.value = true
+                runCatching { AiringNotificationWorker.runNow(context) }
+            }
         }
+    }
+
+    private companion object {
+        const val SCHEDULE_REFRESH_TIMEOUT_MS = 12_000L
     }
 
     fun incrementEpisode(malId: Int) {

@@ -16,10 +16,14 @@ import retrofit2.Retrofit
 import com.owlcoder.animeschedule.BuildConfig
 import com.owlcoder.animeschedule.core.network.AuthInterceptor
 import com.owlcoder.animeschedule.core.network.RateLimitInterceptor
+import com.owlcoder.animeschedule.data.provider.ProviderClock
+import com.owlcoder.animeschedule.data.provider.SystemProviderClock
 import com.owlcoder.animeschedule.data.api.anilist.buildAniListApolloClient
 import com.owlcoder.animeschedule.data.api.jikan.JikanApiService
 import com.owlcoder.animeschedule.data.api.mal.MalApiService
 import com.owlcoder.animeschedule.data.api.mal.auth.MalAuthService
+import com.owlcoder.animeschedule.data.api.alternative.AnimeScheduleApiService
+import com.owlcoder.animeschedule.data.api.alternative.KitsuApiService
 import com.owlcoder.animeschedule.data.local.secure.SecureTokenStore
 import javax.inject.Named
 import javax.inject.Singleton
@@ -29,6 +33,9 @@ private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+
+    @Provides @Singleton
+    fun provideProviderClock(clock: SystemProviderClock): ProviderClock = clock
 
     @Provides @Singleton
     fun provideOkHttpClient(secureTokenStore: SecureTokenStore): OkHttpClient =
@@ -70,6 +77,20 @@ object NetworkModule {
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
 
+    @Provides @Singleton @Named("kitsu")
+    fun provideKitsuRetrofit(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
+        .baseUrl("https://kitsu.io/api/edge/")
+        .client(okHttpClient)
+        .addConverterFactory(json.asConverterFactory("application/vnd.api+json".toMediaType()))
+        .build()
+
+    @Provides @Singleton @Named("animeSchedule")
+    fun provideAnimeScheduleRetrofit(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
+        .baseUrl("https://animeschedule.net/api/v3/")
+        .client(okHttpClient)
+        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+        .build()
+
     @Provides @Singleton
     fun provideMalApiService(@Named("mal") retrofit: Retrofit): MalApiService =
         retrofit.create(MalApiService::class.java)
@@ -81,4 +102,12 @@ object NetworkModule {
     @Provides @Singleton
     fun provideJikanApiService(@Named("jikan") retrofit: Retrofit): JikanApiService =
         retrofit.create(JikanApiService::class.java)
+
+    @Provides @Singleton
+    fun provideKitsuApiService(@Named("kitsu") retrofit: Retrofit): KitsuApiService =
+        retrofit.create(KitsuApiService::class.java)
+
+    @Provides @Singleton
+    fun provideAnimeScheduleApiService(@Named("animeSchedule") retrofit: Retrofit): AnimeScheduleApiService =
+        retrofit.create(AnimeScheduleApiService::class.java)
 }

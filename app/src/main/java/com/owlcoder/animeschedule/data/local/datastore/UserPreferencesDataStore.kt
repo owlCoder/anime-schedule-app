@@ -30,6 +30,8 @@ class UserPreferencesDataStore @Inject constructor(
         val ACCENT_COLOR = stringPreferencesKey("accent_color")
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         val APP_LANGUAGE = stringPreferencesKey("app_language")
+        val CACHE_RETENTION_DAYS = intPreferencesKey("cache_retention_days")
+        val LAST_IMAGE_CACHE_CLEAR = longPreferencesKey("last_image_cache_clear_epoch_seconds")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = dataStore.data.map { prefs ->
@@ -44,7 +46,10 @@ class UserPreferencesDataStore @Inject constructor(
             notificationOffsetMinutes = prefs[Keys.NOTIFICATION_OFFSET] ?: 0,
             accentColor = runCatching { AccentColor.valueOf(prefs[Keys.ACCENT_COLOR] ?: "") }.getOrDefault(AccentColor.TELEGRAM_BLUE),
             onboardingDone = prefs[Keys.ONBOARDING_DONE] ?: false,
-            appLanguage = runCatching { AppLanguage.valueOf(prefs[Keys.APP_LANGUAGE] ?: "") }.getOrDefault(AppLanguage.SYSTEM)
+            appLanguage = runCatching { AppLanguage.valueOf(prefs[Keys.APP_LANGUAGE] ?: "") }.getOrDefault(AppLanguage.SYSTEM),
+            cacheRetentionDays = CacheRetentionPolicy.normalizeRetentionDays(
+                prefs[Keys.CACHE_RETENTION_DAYS] ?: CacheRetentionPolicy.DEFAULT_RETENTION_DAYS
+            )
         )
     }
 
@@ -95,5 +100,18 @@ class UserPreferencesDataStore @Inject constructor(
 
     suspend fun setAppLanguage(language: AppLanguage) {
         dataStore.edit { it[Keys.APP_LANGUAGE] = language.name }
+    }
+
+    suspend fun setCacheRetentionDays(days: Int) {
+        dataStore.edit {
+            it[Keys.CACHE_RETENTION_DAYS] = CacheRetentionPolicy.normalizeRetentionDays(days)
+        }
+    }
+
+    suspend fun getLastImageCacheClearEpochSeconds(): Long =
+        dataStore.data.first()[Keys.LAST_IMAGE_CACHE_CLEAR] ?: 0L
+
+    suspend fun setLastImageCacheClearEpochSeconds(epochSeconds: Long) {
+        dataStore.edit { it[Keys.LAST_IMAGE_CACHE_CLEAR] = epochSeconds }
     }
 }

@@ -13,8 +13,9 @@ interface AiringEpisodeDao {
     @Upsert
     suspend fun upsertAll(episodes: List<AiringEpisodeEntity>)
 
-    @Query("DELETE FROM airing_episodes WHERE cachedAtEpochSeconds < :olderThanEpoch")
-    suspend fun deleteStale(olderThanEpoch: Long)
+    /** Deletes only episodes that aired before the cutoff; future episodes are never touched. */
+    @Query("DELETE FROM airing_episodes WHERE airingAtEpochSeconds < :olderThanEpoch")
+    suspend fun deleteAiredBefore(olderThanEpoch: Long)
 
     @Query("SELECT MAX(cachedAtEpochSeconds) FROM airing_episodes WHERE airingAtEpochSeconds >= :from AND airingAtEpochSeconds <= :to")
     suspend fun getLastCacheTime(from: Long, to: Long): Long?

@@ -5,6 +5,7 @@ sealed class Screen(val route: String) {
     data object Search : Screen("search")
     data object MyList : Screen("mylist")
     data object Settings : Screen("settings")
+    data object AllToday : Screen("all_today")
     data object WatchSources : Screen("watch_sources")
     data class Detail(val animeId: Int = 0) : Screen("detail/{animeId}") {
         companion object {
@@ -19,4 +20,13 @@ sealed class Screen(val route: String) {
                 "watch/${java.net.URLEncoder.encode(url, "UTF-8")}"
         }
     }
+}
+
+/** True for top-level destinations; full-screen tasks own the whole app shell. */
+fun shouldShowBottomBar(route: String?): Boolean {
+    val destination = route?.substringBefore('?') ?: return true
+    return destination != Screen.WatchSources.route &&
+        destination != Screen.AllToday.route &&
+        !destination.startsWith("detail/") &&
+        !destination.startsWith("watch/")
 }

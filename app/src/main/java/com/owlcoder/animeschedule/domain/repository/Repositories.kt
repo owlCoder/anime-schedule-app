@@ -63,6 +63,7 @@ interface SettingsRepository {
     suspend fun setNotificationOffset(minutes: Int)
     suspend fun setAccentColor(color: AccentColor)
     suspend fun setAppLanguage(language: AppLanguage)
+    suspend fun setCacheRetentionDays(days: Int)
     fun getEffectiveZoneId(prefs: UserPreferences): ZoneId
 }
 

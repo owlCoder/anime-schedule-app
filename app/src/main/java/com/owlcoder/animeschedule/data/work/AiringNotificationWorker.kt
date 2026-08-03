@@ -18,7 +18,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import coil3.ImageLoader
+import coil3.SingletonImageLoader
 import coil3.request.ImageRequest
 import coil3.request.allowHardware
 import coil3.toBitmap
@@ -112,7 +112,8 @@ class AiringNotificationWorker @AssistedInject constructor(
     }
 
     private suspend fun loadBitmap(url: String): Bitmap? = runCatching {
-        val loader = ImageLoader(context)
+        // Reuse the application loader so notification work does not create another cache.
+        val loader = SingletonImageLoader.get(context)
         val request = ImageRequest.Builder(context)
             .data(url)
             .allowHardware(false)

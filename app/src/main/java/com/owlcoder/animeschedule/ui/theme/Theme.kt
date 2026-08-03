@@ -1,8 +1,5 @@
 package com.owlcoder.animeschedule.ui.theme
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -10,167 +7,160 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.data.local.datastore.AccentColor
 import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
+import com.owlcoder.animeschedule.presentation.components.ProvideMotionPolicy
 
-/**
- * Shared shape scale for the "soft rounded card" look. Reference these tokens
- * (`MaterialTheme.shapes.*` or the named constants below) instead of hardcoding
- * `RoundedCornerShape(Ndp)` per screen, so radii stay consistent app-wide.
- */
-val AnimeScheduleShapes = Shapes(
+/** Shared continuous-ish shape scale. Every component category has one geometry. */
+val AnimeScheduleShapes = Shapes().copy(
     extraSmall = RoundedCornerShape(10.dp),
-    small = RoundedCornerShape(14.dp),
-    medium = RoundedCornerShape(20.dp),
-    large = RoundedCornerShape(24.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(22.dp),
     extraLarge = RoundedCornerShape(28.dp),
 )
 
-/** Pill shape for chips/badges/buttons that should be fully rounded regardless of height. */
+/** Shape for short statuses, filters and compact actions. */
 val PillShape = RoundedCornerShape(percent = 50)
 
 fun accentPrimary(accent: AccentColor, dark: Boolean = false): Color = when (accent) {
-    AccentColor.TELEGRAM_BLUE -> if (dark) Color(0xFF1A8FCC) else Color(0xFF2AABEE)
-    AccentColor.PURPLE        -> if (dark) Color(0xFF6A3FDD) else Color(0xFF8B5CF6)
-    AccentColor.GREEN         -> if (dark) Color(0xFF00A846) else Color(0xFF22C55E)
-    AccentColor.ORANGE        -> if (dark) Color(0xFFD45A00) else Color(0xFFF97316)
-    AccentColor.PINK          -> if (dark) Color(0xFFC41570) else Color(0xFFEC4899)
-    AccentColor.RED           -> if (dark) Color(0xFFCC2222) else Color(0xFFEF4444)
-    AccentColor.CYAN          -> if (dark) Color(0xFF0891B2) else Color(0xFF06B6D4)
-    AccentColor.INDIGO        -> if (dark) Color(0xFF7C5CE0) else Color(0xFF8B5CF6)
-    AccentColor.TEAL          -> if (dark) Color(0xFF0D7A6A) else Color(0xFF14B8A6)
-    AccentColor.YELLOW        -> if (dark) Color(0xFFB48000) else Color(0xFFEAB308)
-    AccentColor.DEEP_PURPLE   -> if (dark) Color(0xFF5B1FA8) else Color(0xFF7C3AED)
+    AccentColor.TELEGRAM_BLUE -> if (dark) Color(0xFF63B8EA) else Color(0xFF087EBA)
+    AccentColor.PURPLE        -> if (dark) Color(0xFFD0BCFF) else Color(0xFF6750A4)
+    AccentColor.GREEN         -> if (dark) Color(0xFF75DC91) else Color(0xFF087F3D)
+    AccentColor.ORANGE        -> if (dark) Color(0xFFFFB77A) else Color(0xFF9A4300)
+    AccentColor.PINK          -> if (dark) Color(0xFFFFB0C8) else Color(0xFF9B1746)
+    AccentColor.RED           -> if (dark) Color(0xFFFFB4AB) else Color(0xFFBA1A1A)
+    AccentColor.CYAN          -> if (dark) Color(0xFF6DDAF5) else Color(0xFF006877)
+    AccentColor.INDIGO        -> if (dark) Color(0xFFBFC4FF) else Color(0xFF4F5FBA)
+    AccentColor.TEAL          -> if (dark) Color(0xFF70DBC7) else Color(0xFF006A5B)
+    AccentColor.YELLOW        -> if (dark) Color(0xFFEFC238) else Color(0xFF765900)
+    AccentColor.DEEP_PURPLE   -> if (dark) Color(0xFFE0B9FF) else Color(0xFF7A3DA0)
 }
 
 private fun darkColors(primary: Color) = darkColorScheme(
     primary = primary,
-    onPrimary = Color.White,
-    primaryContainer = primary.copy(alpha = 0.15f).compositeOver(Color(0xFF0D0D0D)),
+    onPrimary = readableOn(primary, dark = true),
+    primaryContainer = primary.copy(alpha = 0.24f).compositeOver(Color(0xFF15161A)),
     onPrimaryContainer = primary,
-    secondary = Color(0xFF7986CB),
-    onSecondary = Color.White,
-    secondaryContainer = Color(0xFF1A1D3A),
-    background = TgBackgroundDark,
-    onBackground = Color(0xFFE0E0E0),
-    surface = TgSurfaceDark,
-    onSurface = Color(0xFFE0E0E0),
-    surfaceVariant = Color(0xFF1A1A1A),
-    onSurfaceVariant = Color(0xFF909090),
-    outline = Color(0xFF404040),
-    outlineVariant = Color(0xFF222222),
-    error = Color(0xFFEF5350),
-    onError = Color.White,
-    errorContainer = Color(0xFF2A0A0A),
-    onErrorContainer = Color(0xFFEF9A9A),
-    inverseSurface = Color(0xFFE0E0E0),
-    inverseOnSurface = Color(0xFF141414),
+    secondary = Color(0xFFBEC6DC),
+    onSecondary = Color(0xFF293041),
+    secondaryContainer = Color(0xFF40485A),
+    onSecondaryContainer = Color(0xFFDAE2F9),
+    background = AppDarkBackground,
+    onBackground = Color.White,
+    surface = AppDarkGrouped,
+    onSurface = Color.White,
+    surfaceVariant = AppDarkSecondary,
+    onSurfaceVariant = Color(0xFFEBEBF5).copy(alpha = 0.60f),
+    surfaceContainerLowest = Color.Black,
+    surfaceContainerLow = AppDarkGrouped,
+    surfaceContainer = AppDarkGrouped,
+    surfaceContainerHigh = AppDarkElevated,
+    surfaceContainerHighest = AppDarkSecondary,
+    outline = Color(0xFF545458),
+    outlineVariant = Color(0xFF545458).copy(alpha = 0.60f),
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005),
+    errorContainer = Color(0xFF93000A),
+    onErrorContainer = Color(0xFFFFDAD6),
+    inverseSurface = Color(0xFFE6E1E6),
+    inverseOnSurface = Color(0xFF303034),
+    inversePrimary = Color(0xFF4F5FBA),
 )
 
 private fun lightColors(primary: Color) = lightColorScheme(
     primary = primary,
-    onPrimary = Color.White,
-    primaryContainer = primary.copy(alpha = 0.12f).compositeOver(Color.White),
+    onPrimary = readableOn(primary, dark = false),
+    primaryContainer = primary.copy(alpha = 0.14f).compositeOver(Color(0xFFFBF8FF)),
     onPrimaryContainer = primary,
-    secondary = Color(0xFF5C6BC0),
+    secondary = Color(0xFF5D5F72),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFE8EAF6),
-    background = TgBackground,
-    onBackground = Color(0xFF0F0F0F),
-    surface = TgCard,
-    onSurface = Color(0xFF0F0F0F),
-    surfaceVariant = Color(0xFFE4E4E8),
-    onSurfaceVariant = Color(0xFF5A5A6A),
-    outline = Color(0xFFB0B0B0),
-    outlineVariant = TgDivider,
-    error = Color(0xFFE53935),
+    secondaryContainer = Color(0xFFE1E2F2),
+    onSecondaryContainer = Color(0xFF191A2B),
+    background = AppLightBackground,
+    onBackground = Color.Black,
+    surface = AppLightGrouped,
+    onSurface = Color.Black,
+    surfaceVariant = AppLightSecondary,
+    onSurfaceVariant = Color(0xFF3C3C43).copy(alpha = 0.60f),
+    surfaceContainerLowest = Color.White,
+    surfaceContainerLow = AppLightGrouped,
+    surfaceContainer = AppLightGrouped,
+    surfaceContainerHigh = Color(0xFFF2F2F7),
+    surfaceContainerHighest = Color(0xFFE5E5EA),
+    outline = Color(0xFF8E8E93),
+    outlineVariant = Color(0xFF3C3C43).copy(alpha = 0.18f),
+    error = Color(0xFFBA1A1A),
     onError = Color.White,
-    errorContainer = Color(0xFFFFEBEE),
-    onErrorContainer = Color(0xFFB71C1C),
-    inverseSurface = Color(0xFF1A1A1A),
-    inverseOnSurface = Color(0xFFF5F5F5),
+    errorContainer = Color(0xFFFFDAD6),
+    onErrorContainer = Color(0xFF410002),
+    inverseSurface = Color(0xFF2F3035),
+    inverseOnSurface = Color(0xFFF1EFF4),
+    inversePrimary = Color(0xFFBEC4FF),
 )
 
-// Blends a translucent color onto an opaque background (no BlendMode needed)
+private fun readableOn(color: Color, dark: Boolean): Color {
+    val luminance = (0.299f * color.red) + (0.587f * color.green) + (0.114f * color.blue)
+    return if (luminance > if (dark) 0.48f else 0.62f) Color(0xFF1A1B20) else Color.White
+}
+
 private fun Color.compositeOver(background: Color): Color {
-    val fg = this
-    val a = fg.alpha
+    val alpha = this.alpha
     return Color(
-        red   = fg.red   * a + background.red   * (1f - a),
-        green = fg.green * a + background.green * (1f - a),
-        blue  = fg.blue  * a + background.blue  * (1f - a),
-        alpha = 1f
+        red = red * alpha + background.red * (1f - alpha),
+        green = green * alpha + background.green * (1f - alpha),
+        blue = blue * alpha + background.blue * (1f - alpha),
+        alpha = 1f,
     )
 }
 
-@Composable
-private fun ColorScheme.animated(): ColorScheme {
-    val spec = tween<Color>(durationMillis = 350, easing = FastOutSlowInEasing)
-    val primary by animateColorAsState(primary, spec, label = "primary")
-    val onPrimary by animateColorAsState(onPrimary, spec, label = "onPrimary")
-    val primaryContainer by animateColorAsState(primaryContainer, spec, label = "primaryContainer")
-    val onPrimaryContainer by animateColorAsState(onPrimaryContainer, spec, label = "onPrimaryContainer")
-    val secondary by animateColorAsState(secondary, spec, label = "secondary")
-    val onSecondary by animateColorAsState(onSecondary, spec, label = "onSecondary")
-    val secondaryContainer by animateColorAsState(secondaryContainer, spec, label = "secondaryContainer")
-    val background by animateColorAsState(background, spec, label = "background")
-    val onBackground by animateColorAsState(onBackground, spec, label = "onBackground")
-    val surface by animateColorAsState(surface, spec, label = "surface")
-    val onSurface by animateColorAsState(onSurface, spec, label = "onSurface")
-    val surfaceVariant by animateColorAsState(surfaceVariant, spec, label = "surfaceVariant")
-    val onSurfaceVariant by animateColorAsState(onSurfaceVariant, spec, label = "onSurfaceVariant")
-    val outline by animateColorAsState(outline, spec, label = "outline")
-    val outlineVariant by animateColorAsState(outlineVariant, spec, label = "outlineVariant")
-    val error by animateColorAsState(error, spec, label = "error")
-    val onError by animateColorAsState(onError, spec, label = "onError")
-    val errorContainer by animateColorAsState(errorContainer, spec, label = "errorContainer")
-    val onErrorContainer by animateColorAsState(onErrorContainer, spec, label = "onErrorContainer")
+/** Apply the selected accent while keeping the neutral palette stable across devices. */
+private fun ColorScheme.withAccent(accent: Color, dark: Boolean): ColorScheme {
+    val container = accent.copy(alpha = if (dark) 0.24f else 0.14f)
+        .compositeOver(if (dark) surfaceContainer else surface)
     return copy(
-        primary = primary,
-        onPrimary = onPrimary,
-        primaryContainer = primaryContainer,
-        onPrimaryContainer = onPrimaryContainer,
-        secondary = secondary,
-        onSecondary = onSecondary,
-        secondaryContainer = secondaryContainer,
-        background = background,
-        onBackground = onBackground,
-        surface = surface,
-        onSurface = onSurface,
-        surfaceVariant = surfaceVariant,
-        onSurfaceVariant = onSurfaceVariant,
-        outline = outline,
-        outlineVariant = outlineVariant,
-        error = error,
-        onError = onError,
-        errorContainer = errorContainer,
-        onErrorContainer = onErrorContainer,
+        primary = accent,
+        onPrimary = readableOn(accent, dark),
+        primaryContainer = container,
+        onPrimaryContainer = if (dark) accent else accent.copy(alpha = 1f),
+        inversePrimary = accent,
     )
 }
 
 /**
- * App is dark-only: [themeMode] and [accentColor] parameters are kept in the signature so
- * existing call sites (e.g. onboarding's pending-preview flow) keep compiling, but they are
- * intentionally ignored here — the app always renders the dark palette with the fixed
- * [AccentColor.INDIGO] accent (matches the violet/indigo launcher branding), regardless of
- * stored preferences or system setting.
+ * Material 3 app theme.
+ *
+ * [dynamicColor] keeps Android 12+ system surfaces when available, while the selected
+ * accent remains visible on primary actions. It is an optional parameter so existing
+ * callers keep compiling and older devices still use the curated palette.
  */
 @Composable
 fun AnimeScheduleTheme(
-    themeMode: ThemeMode = ThemeMode.DARK,
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
     accentColor: AccentColor = AccentColor.INDIGO,
-    content: @Composable () -> Unit
+    dynamicColor: Boolean = true,
+    content: @Composable () -> Unit,
 ) {
-    val primary = accentPrimary(AccentColor.INDIGO, dark = true)
-    val colorScheme = darkColors(primary).animated()
+    val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val darkTheme = when (themeMode) {
+        ThemeMode.SYSTEM -> systemDark
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+    }
+
+    val colorScheme = if (darkTheme) {
+        darkColors(accentPrimary(accentColor, dark = true))
+    } else {
+        lightColors(accentPrimary(accentColor, dark = false))
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
         shapes = AnimeScheduleShapes,
-        content = content
-    )
+    ) {
+        ProvideMotionPolicy(content = content)
+    }
 }

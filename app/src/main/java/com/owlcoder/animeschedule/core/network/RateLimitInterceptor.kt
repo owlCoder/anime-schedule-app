@@ -3,20 +3,12 @@ package com.owlcoder.animeschedule.core.network
 import okhttp3.Interceptor
 import okhttp3.Response
 
-private const val MAX_RETRY_AFTER_SECONDS = 120L
-
 class RateLimitInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
-        val response = chain.proceed(chain.request())
-        if (response.code == 429) {
-            val retryAfterSeconds = (response.header("Retry-After")?.toLongOrNull() ?: 60L)
-                .coerceAtMost(MAX_RETRY_AFTER_SECONDS)
-            response.close()
-            // OkHttp interceptors run on a background thread — sleep is acceptable here,
-            // but we cap Retry-After to avoid indefinitely blocking the connection pool.
-            Thread.sleep(retryAfterSeconds * 1000L)
-            return chain.proceed(chain.request())
-        }
-        return response
+        // Never sleep in an OkHttp interceptor. A provider can return Retry-After=60 and that
+        // would block the connection pool, defeat coroutine timeouts, and keep the app splash
+        // visible long after the request is known to have failed. Callers treat 429 as a
+        // provider failure and move to the next source or the local cache.
+        return chain.proceed(chain.request())
     }
 }

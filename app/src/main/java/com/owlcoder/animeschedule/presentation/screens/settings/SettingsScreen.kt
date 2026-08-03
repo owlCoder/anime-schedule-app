@@ -5,14 +5,12 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -23,28 +21,29 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Update
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -52,11 +51,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -71,20 +69,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.core.content.ContextCompat
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.data.local.datastore.AccentColor
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
+import com.owlcoder.animeschedule.data.local.datastore.CacheRetentionPolicy
+import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
-import com.owlcoder.animeschedule.ui.theme.PillShape
 import com.owlcoder.animeschedule.ui.theme.accentPrimary
 import java.time.ZoneId
+
+private val SettingsGroupShape = RoundedCornerShape(16.dp)
+private val SettingsAccentRed = Color(0xFFFF3B30)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,142 +100,276 @@ fun SettingsScreen(
     val uiState by settingsViewModel.uiState.collectAsState()
     val isLoggingIn by authViewModel.isLoggingIn.collectAsState()
     val loginError by authViewModel.loginError.collectAsState()
+    val cacheSizeBytes by settingsViewModel.cacheSizeBytes.collectAsState()
+    val isClearingCache by settingsViewModel.isClearingCache.collectAsState()
+    val cacheActionMessage by settingsViewModel.cacheActionMessage.collectAsState()
     val context = LocalContext.current
+
+    var showThemePicker by remember { mutableStateOf(false) }
+    var showAccentPicker by remember { mutableStateOf(false) }
     var showTimezonePicker by remember { mutableStateOf(false) }
     var showNotifPicker by remember { mutableStateOf(false) }
     var showLanguagePicker by remember { mutableStateOf(false) }
+    var showCacheRetentionPicker by remember { mutableStateOf(false) }
+    var showClearCacheConfirm by remember { mutableStateOf(false) }
     var showChangelog by remember { mutableStateOf(false) }
     var showAbout by remember { mutableStateOf(false) }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.titleLarge) },
-                windowInsets = WindowInsets.statusBars,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         LazyColumn(
+            state = rememberLazyListState(),
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .statusBarsPadding(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 10.dp,
+                bottom = LocalNavBarHeight.current + 24.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
-                Spacer(Modifier.height(20.dp))
-                SettingsSectionLabel(stringResource(R.string.settings_section_account))
-                Spacer(Modifier.height(8.dp))
-                ProfileCard(
-                    isLoggedIn = uiState.isLoggedIn,
-                    username = uiState.username,
-                    avatarUrl = uiState.avatarUrl,
-                    isLoggingIn = isLoggingIn,
-                    loginError = loginError,
-                    stats = uiState.profileStats,
-                    onLogin = { authViewModel.launchMalLogin(context) },
-                    onLogout = { authViewModel.logout() }
+                Text(
+                    text = stringResource(R.string.settings_title),
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
-                Spacer(Modifier.height(28.dp))
             }
 
             item {
-                SettingsSectionLabel(stringResource(R.string.settings_section_preferences))
-                Spacer(Modifier.height(8.dp))
-                SectionCard {
-                    val notifSubtitle = if (uiState.notificationsEnabled)
-                        "${stringResource(R.string.settings_notifications_on)} · ${notifOffsetLabel(uiState.notificationOffsetMinutes)}"
-                    else
-                        stringResource(R.string.settings_notifications_off)
-                    SettingsRow(
-                        icon = Icons.Default.Notifications,
-                        iconColor = MaterialTheme.colorScheme.error,
-                        title = stringResource(R.string.settings_notifications),
-                        subtitle = notifSubtitle,
-                        onClick = { showNotifPicker = true }
-                    )
-                    SettingsDivider()
-                    SettingsRow(
-                        icon = Icons.Default.Translate,
-                        iconColor = accentPrimary(AccentColor.TELEGRAM_BLUE, dark = isSystemDark()),
-                        title = stringResource(R.string.settings_language),
-                        subtitle = when (uiState.appLanguage) {
-                            AppLanguage.ENGLISH -> stringResource(R.string.settings_language_english)
-                            AppLanguage.SERBIAN_LATIN -> stringResource(R.string.settings_language_serbian)
-                            AppLanguage.SYSTEM -> stringResource(R.string.settings_language_system)
-                        },
-                        onClick = { showLanguagePicker = true }
-                    )
-                    SettingsDivider()
-                    SettingsRow(
-                        icon = Icons.Default.Schedule,
-                        iconColor = accentPrimary(AccentColor.GREEN, dark = isSystemDark()),
-                        title = stringResource(R.string.settings_timezone),
-                        subtitle = uiState.timezoneId.ifEmpty { ZoneId.systemDefault().id },
-                        onClick = { showTimezonePicker = true }
-                    )
-                    SettingsDivider()
-                    SettingsRow(
-                        icon = Icons.Default.PlayCircle,
-                        iconColor = accentPrimary(AccentColor.PURPLE, dark = isSystemDark()),
-                        title = stringResource(R.string.settings_watch_sources),
-                        subtitle = stringResource(R.string.settings_watch_sources_subtitle),
-                        onClick = onManageWatchSources
-                    )
+                SettingsSection(
+                    title = stringResource(R.string.settings_section_account)
+                ) {
+                    SettingsGroup {
+                        AccountRow(
+                            isLoggedIn = uiState.isLoggedIn,
+                            username = uiState.username,
+                            avatarUrl = uiState.avatarUrl,
+                            isLoggingIn = isLoggingIn,
+                            onClick = {
+                                if (uiState.isLoggedIn) authViewModel.logout()
+                                else authViewModel.launchMalLogin(context)
+                            }
+                        )
+                    }
+                    if (!loginError.isNullOrBlank()) {
+                        Text(
+                            text = loginError.orEmpty(),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(start = 4.dp, top = 6.dp)
+                        )
+                    }
                 }
-                Spacer(Modifier.height(28.dp))
             }
 
             item {
-                SettingsSectionLabel(stringResource(R.string.settings_section_info))
-                Spacer(Modifier.height(8.dp))
-                SectionCard {
-                    SettingsRow(
-                        icon = Icons.Default.Update,
-                        iconColor = accentPrimary(AccentColor.TEAL, dark = isSystemDark()),
-                        title = stringResource(R.string.settings_changelog),
-                        subtitle = stringResource(R.string.settings_changelog_subtitle),
-                        onClick = { showChangelog = true }
-                    )
-                    SettingsDivider()
-                    SettingsRow(
-                        icon = Icons.Default.Info,
-                        iconColor = accentPrimary(AccentColor.TELEGRAM_BLUE, dark = isSystemDark()),
-                        title = stringResource(R.string.settings_about),
-                        subtitle = stringResource(R.string.settings_about_subtitle),
-                        onClick = { showAbout = true }
-                    )
+                SettingsSection(title = "Appearance") {
+                    SettingsGroup {
+                        SettingsRow(
+                            icon = Icons.Default.ColorLens,
+                            iconTint = MaterialTheme.colorScheme.primary,
+                            title = "Theme",
+                            value = themeModeLabel(uiState.themeMode),
+                            onClick = { showThemePicker = true }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            icon = Icons.Default.ColorLens,
+                            iconTint = accentPrimary(uiState.accentColor, dark = isDarkTheme()),
+                            title = "Accent Color",
+                            value = uiState.accentColor.displayName(),
+                            onClick = { showAccentPicker = true },
+                            trailing = {
+                                AccentSwatch(
+                                    color = accentPrimary(uiState.accentColor, dark = isDarkTheme())
+                                )
+                            }
+                        )
+                    }
                 }
-                Spacer(Modifier.height(LocalNavBarHeight.current + 24.dp))
+            }
+
+            item {
+                SettingsSection(title = stringResource(R.string.settings_notifications)) {
+                    SettingsGroup {
+                        SettingsRow(
+                            icon = Icons.Default.Notifications,
+                            iconTint = if (uiState.notificationsEnabled) MaterialTheme.colorScheme.primary else SettingsAccentRed,
+                            title = stringResource(R.string.settings_notifications),
+                            value = if (uiState.notificationsEnabled) {
+                                "${stringResource(R.string.settings_notifications_on)} · ${notifOffsetLabel(uiState.notificationOffsetMinutes)}"
+                            } else {
+                                stringResource(R.string.settings_notifications_off)
+                            },
+                            onClick = { showNotifPicker = true }
+                        )
+                    }
+                }
+            }
+
+            item {
+                SettingsSection(title = "Schedule") {
+                    SettingsGroup {
+                        SettingsRow(
+                            icon = Icons.Default.Schedule,
+                            iconTint = accentPrimary(AccentColor.GREEN, dark = isDarkTheme()),
+                            title = stringResource(R.string.settings_timezone),
+                            value = uiState.timezoneId.ifEmpty { ZoneId.systemDefault().id },
+                            onClick = { showTimezonePicker = true }
+                        )
+                    }
+                }
+            }
+
+            item {
+                SettingsSection(title = "Sources") {
+                    SettingsGroup {
+                        SettingsRow(
+                            icon = Icons.Default.PlayCircle,
+                            iconTint = accentPrimary(AccentColor.PURPLE, dark = isDarkTheme()),
+                            title = stringResource(R.string.settings_watch_sources),
+                            value = stringResource(R.string.settings_watch_sources_subtitle),
+                            onClick = onManageWatchSources
+                        )
+                    }
+                }
+            }
+
+            item {
+                SettingsSection(title = "Storage") {
+                    SettingsGroup {
+                        SettingsRow(
+                            icon = Icons.Default.Storage,
+                            iconTint = accentPrimary(AccentColor.TEAL, dark = isDarkTheme()),
+                            title = "Cache",
+                            value = "${formatBytes(cacheSizeBytes)} · ${uiState.cacheRetentionDays} days",
+                            onClick = { showCacheRetentionPicker = true }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            icon = Icons.Default.Storage,
+                            iconTint = SettingsAccentRed,
+                            title = "Clear Cache",
+                            value = cacheActionMessage ?: "Remove temporary images and stale data",
+                            onClick = { showClearCacheConfirm = true },
+                            enabled = !isClearingCache,
+                            trailing = {
+                                if (isClearingCache) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
+            item {
+                SettingsSection(title = "Language") {
+                    SettingsGroup {
+                        SettingsRow(
+                            icon = Icons.Default.Translate,
+                            iconTint = accentPrimary(AccentColor.TELEGRAM_BLUE, dark = isDarkTheme()),
+                            title = stringResource(R.string.settings_language),
+                            value = languageLabel(uiState.appLanguage),
+                            onClick = { showLanguagePicker = true }
+                        )
+                    }
+                }
+            }
+
+            item {
+                SettingsSection(title = "About") {
+                    SettingsGroup {
+                        SettingsRow(
+                            icon = Icons.Default.Update,
+                            iconTint = accentPrimary(AccentColor.TEAL, dark = isDarkTheme()),
+                            title = stringResource(R.string.settings_changelog),
+                            value = stringResource(R.string.settings_changelog_subtitle),
+                            onClick = { showChangelog = true }
+                        )
+                        SettingsDivider()
+                        SettingsRow(
+                            icon = Icons.Default.Info,
+                            iconTint = accentPrimary(AccentColor.TELEGRAM_BLUE, dark = isDarkTheme()),
+                            title = stringResource(R.string.settings_about),
+                            value = stringResource(R.string.settings_about_subtitle),
+                            onClick = { showAbout = true }
+                        )
+                    }
+                }
             }
         }
     }
 
+    if (showThemePicker) {
+        ThemeBottomSheet(
+            current = uiState.themeMode,
+            onSelect = { settingsViewModel.setThemeMode(it); showThemePicker = false },
+            onDismiss = { showThemePicker = false }
+        )
+    }
+    if (showAccentPicker) {
+        AccentBottomSheet(
+            current = uiState.accentColor,
+            onSelect = { settingsViewModel.setAccentColor(it); showAccentPicker = false },
+            onDismiss = { showAccentPicker = false }
+        )
+    }
     if (showLanguagePicker) {
         LanguageBottomSheet(
             currentLanguage = uiState.appLanguage,
-            onSelect = { lang ->
+            onSelect = { language ->
                 showLanguagePicker = false
-                onRestartForLanguage(lang)
+                settingsViewModel.setAppLanguage(language)
+                onRestartForLanguage(language)
             },
             onDismiss = { showLanguagePicker = false }
         )
     }
-
     if (showNotifPicker) {
         NotifBottomSheet(
             enabled = uiState.notificationsEnabled,
             currentOffset = uiState.notificationOffsetMinutes,
-            onEnabledChange = { settingsViewModel.setNotificationsEnabled(it) },
-            onOffsetSelect = { settingsViewModel.setNotificationOffset(it) },
+            onEnabledChange = settingsViewModel::setNotificationsEnabled,
+            onOffsetSelect = settingsViewModel::setNotificationOffset,
             onDismiss = { showNotifPicker = false }
         )
     }
-
+    if (showCacheRetentionPicker) {
+        CacheRetentionBottomSheet(
+            currentRetentionDays = uiState.cacheRetentionDays,
+            onSelect = { settingsViewModel.setCacheRetentionDays(it); showCacheRetentionPicker = false },
+            onDismiss = { showCacheRetentionPicker = false }
+        )
+    }
+    if (showClearCacheConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClearCacheConfirm = false },
+            title = { Text("Clear cache?") },
+            text = { Text("Temporary images and stale cached data will be removed. Your MAL list, tokens and settings stay safe.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showClearCacheConfirm = false
+                    settingsViewModel.clearCacheNow()
+                }) { Text("Clear") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearCacheConfirm = false }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
+    }
     if (showTimezonePicker) {
         TimezonePickerDialog(
             currentTimezoneId = uiState.timezoneId,
@@ -240,388 +377,328 @@ fun SettingsScreen(
             onConfirm = { settingsViewModel.setTimezone(it); showTimezonePicker = false }
         )
     }
-
-    if (showChangelog) {
-        ChangelogBottomSheet(onDismiss = { showChangelog = false })
-    }
-
-    if (showAbout) {
-        AboutBottomSheet(onDismiss = { showAbout = false })
-    }
-}
-
-/** True when the *current* rendered MaterialTheme colors are the dark palette (background is near-black). */
-@Composable
-private fun isSystemDark(): Boolean = MaterialTheme.colorScheme.background.luminance() < 0.2f
-
-@Composable
-private fun SettingsSectionLabel(text: String) {
-    Text(
-        text = text.uppercase(),
-        style = MaterialTheme.typography.labelMedium,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        letterSpacing = androidx.compose.ui.unit.TextUnit(1.1f, androidx.compose.ui.unit.TextUnitType.Sp),
-        modifier = Modifier.padding(start = 4.dp)
-    )
+    if (showChangelog) ChangelogBottomSheet(onDismiss = { showChangelog = false })
+    if (showAbout) AboutBottomSheet(onDismiss = { showAbout = false })
 }
 
 @Composable
-private fun ProfileCard(
-    isLoggedIn: Boolean,
-    username: String,
-    avatarUrl: String,
-    isLoggingIn: Boolean = false,
-    loginError: String? = null,
-    stats: ProfileStats = ProfileStats(),
-    onLogin: () -> Unit,
-    onLogout: () -> Unit
-) {
-    Card(
+private fun isDarkTheme(): Boolean = MaterialTheme.colorScheme.background.luminance() < 0.2f
+
+@Composable
+private fun SettingsSection(title: String, content: @Composable () -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = title.uppercase(),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 4.dp, bottom = 7.dp)
+        )
+        content()
+    }
+}
+
+@Composable
+private fun SettingsGroup(content: @Composable () -> Unit) {
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = SettingsGroupShape,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 0.dp
     ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isLoggedIn && avatarUrl.isNotEmpty()) {
-                        AsyncImage(
-                            model = avatarUrl,
-                            contentDescription = username,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(56.dp).clip(CircleShape)
-                        )
-                    } else {
-                        Icon(
-                            Icons.Default.AccountCircle,
-                            contentDescription = null,
-                            modifier = Modifier.size(32.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Spacer(Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        if (isLoggedIn) username.ifEmpty { "MyAnimeList" } else "MyAnimeList",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        if (isLoggedIn) stringResource(R.string.profile_logged_in) else stringResource(R.string.profile_not_logged_in),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (isLoggedIn) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Spacer(Modifier.width(12.dp))
-                if (isLoggedIn) {
-                    Box(
-                        modifier = Modifier
-                            .heightIn(min = 40.dp)
-                            .clip(PillShape)
-                            .background(MaterialTheme.colorScheme.errorContainer)
-                            .clickable { onLogout() }
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ExitToApp,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                stringResource(R.string.profile_logout),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
-                } else if (isLoggingIn) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(PillShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .heightIn(min = 40.dp)
-                            .clip(PillShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                            .clickable { onLogin() }
-                            .padding(horizontal = 18.dp, vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.Login,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                stringResource(R.string.profile_login),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-                    }
-                }
-            }
-            if (loginError != null) {
-                Text(
-                    text = loginError,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp)
-                )
-            }
-            if (isLoggedIn && stats.entryCount > 0) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 14.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    ProfileStatItem(stringResource(R.string.profile_stat_entries), "${stats.entryCount}")
-                    ProfileStatDivider()
-                    ProfileStatItem(stringResource(R.string.profile_stat_episodes), "${stats.episodesWatched}")
-                    ProfileStatDivider()
-                    ProfileStatItem(stringResource(R.string.profile_stat_hours), "${stats.hoursWatched}")
-                }
-            }
+        Column(modifier = Modifier.fillMaxWidth()) {
+            content()
         }
     }
 }
 
 @Composable
-private fun ProfileStatItem(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            value,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(Modifier.height(2.dp))
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun ProfileStatDivider() {
-    Box(
-        modifier = Modifier
-            .width(1.dp)
-            .height(28.dp)
-            .background(MaterialTheme.colorScheme.outlineVariant)
-    )
-}
-
-@Composable
-private fun SectionCard(content: @Composable () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column { content() }
-    }
-}
-
-@Composable
-private fun SettingsDivider() {
-    HorizontalDivider(
-        modifier = Modifier.padding(start = 68.dp),
-        thickness = 0.5.dp,
-        color = MaterialTheme.colorScheme.outlineVariant
-    )
-}
-
-@Composable
-private fun SettingsRow(
-    icon: ImageVector,
-    iconColor: Color,
-    title: String,
-    subtitle: String,
+private fun AccountRow(
+    isLoggedIn: Boolean,
+    username: String,
+    avatarUrl: String,
+    isLoggingIn: Boolean,
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .height(64.dp)
+            .clickable(enabled = !isLoggingIn, onClick = onClick)
+            .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconBadge(icon = icon, color = iconColor)
-        Spacer(Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
+        if (avatarUrl.isNotBlank()) {
+            AsyncImage(
+                model = avatarUrl,
+                contentDescription = null,
+                modifier = Modifier.size(40.dp).clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(7.dp)
+                )
+            }
+        }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 12.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(
-                subtitle,
+                text = if (isLoggedIn && username.isNotBlank()) username else "MyAnimeList",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Clip
+            )
+            Text(
+                text = if (isLoggedIn) "Signed in" else "Not signed in",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+        }
+        if (isLoggingIn) {
+            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+        } else {
+            Text(
+                text = if (isLoggedIn) "Sign out" else "Sign in",
+                style = MaterialTheme.typography.labelLarge,
+                color = if (isLoggedIn) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Icon(
+                imageVector = if (isLoggedIn) Icons.AutoMirrored.Filled.ExitToApp else Icons.AutoMirrored.Filled.Login,
+                contentDescription = null,
+                tint = if (isLoggedIn) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 6.dp).size(18.dp)
             )
         }
     }
 }
 
 @Composable
-private fun IconBadge(icon: ImageVector, color: Color) {
+private fun SettingsRow(
+    icon: ImageVector,
+    iconTint: Color,
+    title: String,
+    value: String,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    trailing: @Composable (() -> Unit)? = null
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 52.dp, max = 64.dp)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Surface(
+            modifier = Modifier.size(28.dp),
+            shape = RoundedCornerShape(8.dp),
+            color = iconTint.copy(alpha = 0.14f)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.padding(5.dp)
+            )
+        }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 12.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            if (value.isNotBlank()) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+        trailing?.invoke()
+        if (trailing == null) {
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = 54.dp),
+        thickness = 0.5.dp,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+    )
+}
+
+@Composable
+private fun AccentSwatch(color: Color) {
     Box(
         modifier = Modifier
-            .size(40.dp)
-            .clip(MaterialTheme.shapes.small)
-            .background(color.copy(alpha = 0.14f)),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(20.dp)
-        )
+            .size(20.dp)
+            .clip(CircleShape)
+            .background(color)
+    )
+}
+
+@Composable
+private fun themeModeLabel(mode: ThemeMode): String = when (mode) {
+    ThemeMode.SYSTEM -> "System"
+    ThemeMode.LIGHT -> "Light"
+    ThemeMode.DARK -> "Dark"
+}
+
+@Composable
+private fun languageLabel(language: AppLanguage): String = when (language) {
+    AppLanguage.SYSTEM -> stringResource(R.string.settings_language_system)
+    AppLanguage.ENGLISH -> stringResource(R.string.settings_language_english)
+    AppLanguage.SERBIAN_LATIN -> stringResource(R.string.settings_language_serbian)
+}
+
+private fun AccentColor.displayName(): String = name.lowercase()
+    .replace('_', ' ')
+    .replaceFirstChar { it.uppercase() }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ThemeBottomSheet(
+    current: ThemeMode,
+    onSelect: (ThemeMode) -> Unit,
+    onDismiss: () -> Unit
+) {
+    PickerSheet(title = "Theme", onDismiss = onDismiss) {
+        ThemeMode.entries.forEach { mode ->
+            PickerRow(
+                label = themeModeLabel(mode),
+                selected = current == mode,
+                onClick = { onSelect(mode) }
+            )
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TimezonePickerDialog(
-    currentTimezoneId: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+private fun AccentBottomSheet(
+    current: AccentColor,
+    onSelect: (AccentColor) -> Unit,
+    onDismiss: () -> Unit
 ) {
-    val zones = remember {
-        ZoneId.getAvailableZoneIds().sorted().filter { !it.startsWith("Etc/") || it == "Etc/UTC" }
+    PickerSheet(title = "Accent Color", onDismiss = onDismiss) {
+        AccentColor.entries.forEach { accent ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onSelect(accent) }
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AccentSwatch(accentPrimary(accent, dark = isDarkTheme()))
+                Text(
+                    text = accent.displayName(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.weight(1f).padding(start = 12.dp),
+                    color = if (current == accent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                    fontWeight = if (current == accent) FontWeight.SemiBold else FontWeight.Normal
+                )
+                if (current == accent) {
+                    Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                }
+            }
+        }
     }
-    var selected by remember { mutableStateOf(currentTimezoneId.ifEmpty { ZoneId.systemDefault().id }) }
-    val sheetState = rememberModalBottomSheetState()
-    val initialIndex = remember(zones, selected) { zones.indexOf(selected).coerceAtLeast(0) }
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PickerSheet(title: String, onDismiss: () -> Unit, content: @Composable () -> Unit) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentWindowInsets = { WindowInsets.navigationBars }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
                 .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(bottom = 12.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    stringResource(R.string.timezone_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
-                )
-                TextButton(onClick = { onConfirm(selected) }) {
-                    Text(stringResource(R.string.timezone_confirm))
-                }
-            }
-
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(420.dp)
-            ) {
-                items(zones) { zone ->
-                    val isSelected = selected == zone
-                    val bgColor by animateColorAsState(
-                        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-                        else Color.Transparent,
-                        label = "zoneBg"
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(bgColor)
-                            .clickable { selected = zone }
-                            .padding(horizontal = 12.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            zone,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurface,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            modifier = Modifier.weight(1f)
-                        )
-                        if (isSelected) {
-                            Icon(
-                                Icons.Default.Check,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(8.dp))
+            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(12.dp))
+            content()
         }
     }
 }
 
-// ── Notification helpers ──────────────────────────────────────────────────────
+@Composable
+private fun PickerRow(label: String, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            modifier = Modifier.weight(1f)
+        )
+        if (selected) Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+    }
+}
 
 private val notifOffsetOptions = listOf(-30, -15, -5, 0, 5, 15, 30, 60)
 
 @Composable
 fun notifOffsetLabel(minutes: Int): String = when {
-    minutes < 0  -> stringResource(R.string.notif_offset_before, -minutes)
+    minutes < 0 -> stringResource(R.string.notif_offset_before, -minutes)
     minutes == 0 -> stringResource(R.string.notif_offset_immediate)
     minutes < 60 -> stringResource(R.string.notif_offset_after_min, minutes)
-    else         -> stringResource(R.string.notif_offset_after_hour, minutes / 60)
+    else -> stringResource(R.string.notif_offset_after_hour, minutes / 60)
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NotifBottomSheet(
     enabled: Boolean,
@@ -630,99 +707,65 @@ private fun NotifBottomSheet(
     onOffsetSelect: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val context = LocalContext.current
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { /* permission result — no action needed, user decided */ }
-
-    fun onSwitchToggled(isEnabled: Boolean) {
-        onEnabledChange(isEnabled)
-        if (isEnabled &&
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-                != PackageManager.PERMISSION_GRANTED
-        ) {
-            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    fun toggle(value: Boolean) {
+        onEnabledChange(value)
+        if (value && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface
-    ) {
-        Column(
+    PickerSheet(title = stringResource(R.string.settings_notifications), onDismiss = onDismiss) {
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .windowInsetsPadding(WindowInsets.navigationBars)
+                .height(52.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            Text(stringResource(R.string.onboarding_notif_enable), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+            Switch(checked = enabled, onCheckedChange = ::toggle)
+        }
+        if (enabled) {
             Text(
-                stringResource(R.string.settings_notifications),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 12.dp)
+                stringResource(R.string.notif_offset_title),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 4.dp, top = 18.dp, bottom = 6.dp)
             )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    stringResource(R.string.onboarding_notif_enable),
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f)
+            notifOffsetOptions.forEach { minutes ->
+                PickerRow(
+                    label = notifOffsetLabel(minutes),
+                    selected = minutes == currentOffset,
+                    onClick = { onOffsetSelect(minutes) }
                 )
-                Switch(checked = enabled, onCheckedChange = ::onSwitchToggled)
             }
+        }
+    }
+}
 
-            if (enabled) {
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    stringResource(R.string.notif_offset_title),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
-                )
-
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    notifOffsetOptions.forEach { minutes ->
-                        val isSelected = minutes == currentOffset
-                        val bgColor by animateColorAsState(
-                            targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer
-                                          else MaterialTheme.colorScheme.surfaceVariant,
-                            label = "offsetChipBg"
-                        )
-                        Box(
-                            modifier = Modifier
-                                .clip(PillShape)
-                                .background(bgColor)
-                                .clickable { onOffsetSelect(minutes) }
-                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                notifOffsetLabel(minutes),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CacheRetentionBottomSheet(
+    currentRetentionDays: Int,
+    onSelect: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    PickerSheet(title = "Cache Retention", onDismiss = onDismiss) {
+        Text(
+            "Older temporary data is removed automatically during daily maintenance.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        CacheRetentionPolicy.supportedRetentionDays.forEach { days ->
+            PickerRow(
+                label = "$days days",
+                selected = currentRetentionDays == days,
+                onClick = { onSelect(days) }
+            )
         }
     }
 }
@@ -734,17 +777,34 @@ fun LanguageBottomSheet(
     onSelect: (AppLanguage) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState()
-    val options = listOf(
-        AppLanguage.SYSTEM to stringResource(R.string.settings_language_system),
-        AppLanguage.ENGLISH to stringResource(R.string.settings_language_english),
-        AppLanguage.SERBIAN_LATIN to stringResource(R.string.settings_language_serbian)
-    )
+    PickerSheet(title = stringResource(R.string.settings_language), onDismiss = onDismiss) {
+        listOf(
+            AppLanguage.SYSTEM to stringResource(R.string.settings_language_system),
+            AppLanguage.ENGLISH to stringResource(R.string.settings_language_english),
+            AppLanguage.SERBIAN_LATIN to stringResource(R.string.settings_language_serbian)
+        ).forEach { (language, label) ->
+            PickerRow(label, currentLanguage == language, onClick = { onSelect(language) })
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TimezonePickerDialog(
+    currentTimezoneId: String,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    val zones = remember { ZoneId.getAvailableZoneIds().sorted() }
+    var selected by remember(currentTimezoneId) { mutableStateOf(currentTimezoneId.ifEmpty { ZoneId.systemDefault().id }) }
+    val listState = rememberLazyListState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentWindowInsets = { WindowInsets.navigationBars }
     ) {
         Column(
             modifier = Modifier
@@ -752,49 +812,21 @@ fun LanguageBottomSheet(
                 .padding(horizontal = 20.dp)
                 .windowInsetsPadding(WindowInsets.navigationBars)
         ) {
-            Text(
-                stringResource(R.string.settings_language),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 20.dp)
-            )
-
-            options.forEach { (language, label) ->
-                val isSelected = currentLanguage == language
-                val bgColor by animateColorAsState(
-                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
-                                  else MaterialTheme.colorScheme.surface,
-                    label = "langBg"
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(bgColor)
-                        .clickable { onSelect(language) }
-                        .padding(horizontal = 12.dp, vertical = 13.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (isSelected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurface,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        modifier = Modifier.weight(1f)
-                    )
-                    if (isSelected) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.timezone_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                TextButton(onClick = { onConfirm(selected) }) { Text(stringResource(R.string.timezone_confirm)) }
+            }
+            LazyColumn(state = listState, modifier = Modifier.fillMaxWidth().height(420.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
+                items(zones) { zone ->
+                    PickerRow(zone, selected == zone, onClick = { selected = zone })
                 }
             }
-
-            Spacer(Modifier.height(8.dp))
         }
     }
+}
+
+private fun formatBytes(bytes: Long): String = when {
+    bytes < 1024L -> "$bytes B"
+    bytes < 1024L * 1024L -> "${bytes / 1024L} KB"
+    else -> "${bytes / (1024L * 1024L)} MB"
 }
