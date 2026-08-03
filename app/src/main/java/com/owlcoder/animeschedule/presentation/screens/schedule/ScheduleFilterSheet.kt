@@ -1,20 +1,20 @@
 package com.owlcoder.animeschedule.presentation.screens.schedule
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -23,6 +23,8 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,10 +38,10 @@ private val FORMAT_LABELS = mapOf(
     "TV" to "TV",
     "TV_SHORT" to "TV Short",
     "MOVIE" to "Film",
-    "SPECIAL" to "Specijal",
+    "SPECIAL" to "Special",
     "OVA" to "OVA",
     "ONA" to "ONA",
-    "MUSIC" to "Music"
+    "MUSIC" to "Music",
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -53,33 +55,25 @@ fun ScheduleFilterSheet(
     onGenreToggle: (String) -> Unit,
     onFormatToggle: (String) -> Unit,
     onClear: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-
     AppSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
         title = stringResource(R.string.filter_title),
+        trailingContent = {
+            TextButton(onClick = onClear) {
+                Text(stringResource(R.string.filter_reset))
+            }
+        },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 520.dp)
-                .verticalScroll(rememberScrollState())
+                .heightIn(max = 560.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = onClear) {
-                    Text(stringResource(R.string.filter_reset))
-                }
-            }
-
-            Spacer(Modifier.height(4.dp))
-
             if (isLoggedIn) {
                 InsetGroup {
                     InsetListRow(
@@ -88,62 +82,92 @@ fun ScheduleFilterSheet(
                         trailingContent = {
                             Switch(
                                 checked = filter.onlyMyList,
-                                onCheckedChange = onOnlyMyListChange
+                                onCheckedChange = onOnlyMyListChange,
                             )
-                        }
+                        },
                     )
                 }
-                Spacer(Modifier.height(12.dp))
             }
 
             if (availableFormats.isNotEmpty()) {
-                Text(
-                    stringResource(R.string.filter_format),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(Modifier.height(6.dp))
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    availableFormats.forEach { fmt ->
-                        FilterChip(
-                            selected = fmt in filter.formats,
-                            onClick = { onFormatToggle(fmt) },
-                            shape = PillShape,
-                            label = { Text(FORMAT_LABELS[fmt] ?: fmt) }
+                FilterSection(title = stringResource(R.string.filter_format)) {
+                    availableFormats.forEach { format ->
+                        CompactScheduleFilterChip(
+                            label = FORMAT_LABELS[format] ?: format,
+                            selected = format in filter.formats,
+                            onClick = { onFormatToggle(format) },
                         )
                     }
                 }
-                Spacer(Modifier.height(12.dp))
             }
 
             if (availableGenres.isNotEmpty()) {
-                Text(
-                    stringResource(R.string.filter_genre),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(Modifier.height(6.dp))
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
+                FilterSection(title = stringResource(R.string.filter_genre)) {
                     availableGenres.forEach { genre ->
-                        FilterChip(
+                        CompactScheduleFilterChip(
+                            label = genre,
                             selected = genre in filter.genres,
                             onClick = { onGenreToggle(genre) },
-                            shape = PillShape,
-                            label = { Text(genre) }
                         )
                     }
                 }
             }
-
-            Spacer(Modifier.height(8.dp))
         }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun FilterSection(
+    title: String,
+    content: @Composable androidx.compose.foundation.layout.FlowRowScope.() -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.SemiBold,
+        )
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            content = content,
+        )
+    }
+}
+
+@Composable
+private fun CompactScheduleFilterChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val borderColor = if (selected) {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.48f)
+    } else {
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.85f)
+    }
+    Row(
+        modifier = Modifier
+            .sizeIn(minHeight = 36.dp)
+            .clip(PillShape)
+            .background(
+                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                else Color.Transparent,
+            )
+            .border(1.dp, borderColor, PillShape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+            color = if (selected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
     }
 }
