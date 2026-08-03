@@ -105,14 +105,14 @@ private fun glassPalette(tone: GlassTone): GlassPalette {
         fill = fill,
         border = border,
         highlight = Brush.verticalGradient(
-            colorStops = arrayOf(
-                0f to top,
-                0.38f to Color.Transparent,
-                1f to Color.Black.copy(alpha = if (dark) 0.035f else 0f),
+            colors = listOf(
+                top,
+                Color.Transparent,
+                Color.Black.copy(alpha = if (dark) 0.035f else 0f),
             ),
         ),
         backdrop = Brush.verticalGradient(
-            listOf(Color.White.copy(alpha = 0.025f), Color.Transparent),
+            colors = listOf(Color.White.copy(alpha = 0.025f), Color.Transparent),
         ),
     )
 }
