@@ -3,7 +3,6 @@ package com.owlcoder.animeschedule.presentation.navigation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -64,8 +64,8 @@ private val items = listOf(
     BottomNavItem(Screen.Settings, "Settings", Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle),
 )
 
-private val DockShape = ContinuousRoundedShape(20.dp)
-private val DockHeight = 54.dp
+private val DockShape = ContinuousRoundedShape(18.dp)
+private val DockHeight = 50.dp
 
 @Composable
 fun AnimeBottomBar(
@@ -79,7 +79,7 @@ fun AnimeBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = 18.dp, vertical = 6.dp),
     ) {
         GlassChrome(
             modifier = Modifier.fillMaxWidth().height(DockHeight),
@@ -89,7 +89,7 @@ fun AnimeBottomBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(DockHeight)
-                    .padding(horizontal = 3.dp),
+                    .padding(horizontal = 2.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 items.forEach { item ->
@@ -136,7 +136,7 @@ private fun BottomNavItemView(
                 this.selected = selected
             },
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
     ) {
         AppNotificationBadge(
             count = notificationCount,
@@ -144,11 +144,10 @@ private fun BottomNavItemView(
         ) {
             Box(
                 modifier = Modifier
-                    .size(width = 35.dp, height = 23.dp)
+                    .size(width = 33.dp, height = 22.dp)
                     .background(
-                        if (selected) accent.copy(alpha = 0.14f)
-                        else androidx.compose.ui.graphics.Color.Transparent,
-                        CircleShape,
+                        color = if (selected) accent.copy(alpha = 0.12f) else Color.Transparent,
+                        shape = CircleShape,
                     ),
                 contentAlignment = Alignment.Center,
             ) {
@@ -156,7 +155,7 @@ private fun BottomNavItemView(
                     imageVector = if (selected) item.activeIcon else item.inactiveIcon,
                     contentDescription = null,
                     tint = iconColor,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(17.dp),
                 )
             }
         }
@@ -164,8 +163,8 @@ private fun BottomNavItemView(
             text = item.label,
             color = iconColor,
             style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 9.5.sp,
-                lineHeight = 11.sp,
+                fontSize = 9.sp,
+                lineHeight = 10.5.sp,
             ),
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             maxLines = 1,
