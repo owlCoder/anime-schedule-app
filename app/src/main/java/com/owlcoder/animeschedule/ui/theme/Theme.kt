@@ -13,41 +13,35 @@ import com.owlcoder.animeschedule.data.local.datastore.AccentColor
 import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import com.owlcoder.animeschedule.presentation.components.ProvideMotionPolicy
 
-/**
- * Compact iOS-inspired shape hierarchy.
- *
- * Content surfaces stay quieter and less inflated than transient chrome. Large radii are
- * reserved for sheets and the floating navigation dock, which keeps dense screens readable.
- */
+/** Compact content shapes; larger curvature is reserved for sheets and floating chrome. */
 val AnimeScheduleShapes = Shapes().copy(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(11.dp),
-    medium = RoundedCornerShape(15.dp),
-    large = RoundedCornerShape(20.dp),
-    extraLarge = RoundedCornerShape(28.dp),
+    extraSmall = RoundedCornerShape(7.dp),
+    small = RoundedCornerShape(10.dp),
+    medium = RoundedCornerShape(13.dp),
+    large = RoundedCornerShape(17.dp),
+    extraLarge = RoundedCornerShape(26.dp),
 )
 
-/** Shape for short statuses, filters and compact actions. */
 val PillShape = RoundedCornerShape(percent = 50)
 
 fun accentPrimary(accent: AccentColor, dark: Boolean = false): Color = when (accent) {
-    AccentColor.TELEGRAM_BLUE -> if (dark) Color(0xFF63B8EA) else Color(0xFF087EBA)
-    AccentColor.PURPLE        -> if (dark) Color(0xFFD0BCFF) else Color(0xFF6750A4)
-    AccentColor.GREEN         -> if (dark) Color(0xFF75DC91) else Color(0xFF087F3D)
-    AccentColor.ORANGE        -> if (dark) Color(0xFFFFB77A) else Color(0xFF9A4300)
-    AccentColor.PINK          -> if (dark) Color(0xFFFFB0C8) else Color(0xFF9B1746)
-    AccentColor.RED           -> if (dark) Color(0xFFFFB4AB) else Color(0xFFBA1A1A)
-    AccentColor.CYAN          -> if (dark) Color(0xFF6DDAF5) else Color(0xFF006877)
-    AccentColor.INDIGO        -> if (dark) Color(0xFFBFC4FF) else Color(0xFF4F5FBA)
-    AccentColor.TEAL          -> if (dark) Color(0xFF70DBC7) else Color(0xFF006A5B)
-    AccentColor.YELLOW        -> if (dark) Color(0xFFEFC238) else Color(0xFF765900)
-    AccentColor.DEEP_PURPLE   -> if (dark) Color(0xFFE0B9FF) else Color(0xFF7A3DA0)
+    AccentColor.TELEGRAM_BLUE -> if (dark) Color(0xFF64B5E8) else Color(0xFF087EBA)
+    AccentColor.PURPLE -> if (dark) Color(0xFFD0BCFF) else Color(0xFF6750A4)
+    AccentColor.GREEN -> if (dark) Color(0xFF75DC91) else Color(0xFF087F3D)
+    AccentColor.ORANGE -> if (dark) Color(0xFFFFB77A) else Color(0xFF9A4300)
+    AccentColor.PINK -> if (dark) Color(0xFFFFB0C8) else Color(0xFF9B1746)
+    AccentColor.RED -> if (dark) Color(0xFFFFB4AB) else Color(0xFFBA1A1A)
+    AccentColor.CYAN -> if (dark) Color(0xFF6DDAF5) else Color(0xFF006877)
+    AccentColor.INDIGO -> if (dark) Color(0xFFBFC4FF) else Color(0xFF4F5FBA)
+    AccentColor.TEAL -> if (dark) Color(0xFF70DBC7) else Color(0xFF006A5B)
+    AccentColor.YELLOW -> if (dark) Color(0xFFEFC238) else Color(0xFF765900)
+    AccentColor.DEEP_PURPLE -> if (dark) Color(0xFFE0B9FF) else Color(0xFF7A3DA0)
 }
 
 private fun darkColors(primary: Color) = darkColorScheme(
     primary = primary,
     onPrimary = readableOn(primary, dark = true),
-    primaryContainer = primary.copy(alpha = 0.24f).compositeOver(Color(0xFF15161A)),
+    primaryContainer = primary.copy(alpha = 0.20f).compositeOver(AppDarkGrouped),
     onPrimaryContainer = primary,
     secondary = Color(0xFFBEC6DC),
     onSecondary = Color(0xFF293041),
@@ -65,20 +59,20 @@ private fun darkColors(primary: Color) = darkColorScheme(
     surfaceContainerHigh = AppDarkElevated,
     surfaceContainerHighest = AppDarkSecondary,
     outline = Color(0xFF545458),
-    outlineVariant = Color(0xFF545458).copy(alpha = 0.60f),
+    outlineVariant = Color(0xFF545458).copy(alpha = 0.48f),
     error = Color(0xFFFFB4AB),
     onError = Color(0xFF690005),
     errorContainer = Color(0xFF93000A),
     onErrorContainer = Color(0xFFFFDAD6),
     inverseSurface = Color(0xFFE6E1E6),
     inverseOnSurface = Color(0xFF303034),
-    inversePrimary = Color(0xFF4F5FBA),
+    inversePrimary = primary,
 )
 
 private fun lightColors(primary: Color) = lightColorScheme(
     primary = primary,
     onPrimary = readableOn(primary, dark = false),
-    primaryContainer = primary.copy(alpha = 0.14f).compositeOver(Color(0xFFFBF8FF)),
+    primaryContainer = primary.copy(alpha = 0.12f).compositeOver(AppLightGrouped),
     onPrimaryContainer = primary,
     secondary = Color(0xFF5D5F72),
     onSecondary = Color.White,
@@ -93,17 +87,17 @@ private fun lightColors(primary: Color) = lightColorScheme(
     surfaceContainerLowest = Color.White,
     surfaceContainerLow = AppLightGrouped,
     surfaceContainer = AppLightGrouped,
-    surfaceContainerHigh = Color(0xFFF2F2F7),
-    surfaceContainerHighest = Color(0xFFE5E5EA),
+    surfaceContainerHigh = AppLightElevated,
+    surfaceContainerHighest = AppLightSecondary,
     outline = Color(0xFF8E8E93),
-    outlineVariant = Color(0xFF3C3C43).copy(alpha = 0.18f),
+    outlineVariant = Color(0xFF3C3C43).copy(alpha = 0.16f),
     error = Color(0xFFBA1A1A),
     onError = Color.White,
     errorContainer = Color(0xFFFFDAD6),
     onErrorContainer = Color(0xFF410002),
     inverseSurface = Color(0xFF2F3035),
     inverseOnSurface = Color(0xFFF1EFF4),
-    inversePrimary = Color(0xFFBEC4FF),
+    inversePrimary = primary,
 )
 
 private fun readableOn(color: Color, dark: Boolean): Color {
@@ -121,26 +115,18 @@ private fun Color.compositeOver(background: Color): Color {
     )
 }
 
-/** Apply the selected accent while keeping the neutral palette stable across devices. */
 private fun ColorScheme.withAccent(accent: Color, dark: Boolean): ColorScheme {
-    val container = accent.copy(alpha = if (dark) 0.24f else 0.14f)
+    val container = accent.copy(alpha = if (dark) 0.20f else 0.12f)
         .compositeOver(if (dark) surfaceContainer else surface)
     return copy(
         primary = accent,
         onPrimary = readableOn(accent, dark),
         primaryContainer = container,
-        onPrimaryContainer = if (dark) accent else accent.copy(alpha = 1f),
+        onPrimaryContainer = accent,
         inversePrimary = accent,
     )
 }
 
-/**
- * Material 3 app theme.
- *
- * [dynamicColor] keeps Android 12+ system surfaces when available, while the selected
- * accent remains visible on primary actions. It is an optional parameter so existing
- * callers keep compiling and older devices still use the curated palette.
- */
 @Composable
 fun AnimeScheduleTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
@@ -154,13 +140,11 @@ fun AnimeScheduleTheme(
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
     }
-
     val colorScheme = if (darkTheme) {
         darkColors(accentPrimary(accentColor, dark = true))
     } else {
         lightColors(accentPrimary(accentColor, dark = false))
     }
-
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
