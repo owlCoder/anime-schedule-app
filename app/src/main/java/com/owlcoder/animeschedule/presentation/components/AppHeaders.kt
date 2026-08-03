@@ -38,13 +38,15 @@ fun AppLargeHeader(
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = if (subtitle.isNullOrBlank()) 44.dp else 62.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(1.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             Text(
                 text = title,
@@ -77,7 +79,7 @@ fun AppInlineHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 48.dp),
+            .heightIn(min = 46.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
     ) {
@@ -90,7 +92,7 @@ fun AppInlineHeader(
         }
         Text(
             text = title,
-            modifier = Modifier.weight(1f).padding(horizontal = 1.dp),
+            modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.titleLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -109,7 +111,7 @@ fun GlassToolbarGroup(
         shape = PillShape,
     ) {
         Row(
-            modifier = Modifier.height(40.dp).padding(horizontal = 3.dp),
+            modifier = Modifier.height(38.dp).padding(horizontal = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(0.dp),
             content = content,
@@ -128,9 +130,9 @@ fun GlassToolbarButton(
 ) {
     Box(
         modifier = modifier
-            .size(36.dp)
+            .size(34.dp)
             .background(
-                color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f) else Color.Transparent,
+                color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.13f) else Color.Transparent,
                 shape = androidx.compose.foundation.shape.CircleShape,
             )
             .clickable(enabled = enabled, onClick = onClick)
@@ -140,7 +142,7 @@ fun GlassToolbarButton(
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            modifier = Modifier.size(17.dp),
+            modifier = Modifier.size(16.dp),
             tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
         )
     }
