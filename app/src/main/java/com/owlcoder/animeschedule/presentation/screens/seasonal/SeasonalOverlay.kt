@@ -5,10 +5,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -32,14 +30,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.presentation.components.AppInlineHeader
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.EmptyState
-import com.owlcoder.animeschedule.presentation.components.GlassIconButton
 import com.owlcoder.animeschedule.presentation.components.GlassToolbarButton
 import com.owlcoder.animeschedule.presentation.components.GlassToolbarGroup
 
@@ -58,32 +54,44 @@ fun SeasonalOverlay(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         modifier = Modifier.fillMaxSize(),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .navigationBarsPadding(),
-        ) {
-            BrowseSeasonHeader(
-                season = uiState.season,
-                year = uiState.year,
-                filterActive = uiState.filter.isActive,
-                onDismiss = onDismiss,
-                onPrevious = {
-                    val (season, year) = prevSeason(uiState.season, uiState.year)
-                    viewModel.setSeason(season, year)
+        Column(modifier = Modifier.fillMaxSize()) {
+            AppInlineHeader(
+                title = "${stringResource(uiState.season.labelRes())} ${uiState.year}",
+                onBack = onDismiss,
+                backContentDescription = stringResource(R.string.common_cancel),
+                trailingContent = {
+                    GlassToolbarGroup {
+                        GlassToolbarButton(
+                            icon = Icons.AutoMirrored.Filled.NavigateBefore,
+                            contentDescription = stringResource(R.string.seasonal_title),
+                            onClick = {
+                                val result = prevSeason(uiState.season, uiState.year)
+                                viewModel.setSeason(result.first, result.second)
+                            },
+                        )
+                        GlassToolbarButton(
+                            icon = Icons.AutoMirrored.Filled.NavigateNext,
+                            contentDescription = stringResource(R.string.seasonal_title),
+                            onClick = {
+                                val result = nextSeason(uiState.season, uiState.year)
+                                viewModel.setSeason(result.first, result.second)
+                            },
+                        )
+                        GlassToolbarButton(
+                            icon = Icons.Outlined.Tune,
+                            contentDescription = stringResource(R.string.seasonal_filter_title),
+                            onClick = { showFilterSheet = true },
+                            selected = uiState.filter.isActive,
+                        )
+                    }
                 },
-                onNext = {
-                    val (season, year) = nextSeason(uiState.season, uiState.year)
-                    viewModel.setSeason(season, year)
-                },
-                onFilter = { showFilterSheet = true },
             )
 
             SeasonTabRow(
                 currentSeason = uiState.season,
                 currentYear = uiState.year,
                 onSelect = { season, year -> viewModel.setSeason(season, year) },
-                modifier = Modifier.padding(top = 8.dp),
+                modifier = Modifier.padding(top = 7.dp),
             )
 
             when {
@@ -115,9 +123,9 @@ fun SeasonalOverlay(
                 else -> LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
                     modifier = Modifier.fillMaxWidth().weight(1f),
-                    contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(18.dp),
+                    contentPadding = PaddingValues(top = 12.dp, bottom = 22.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     items(
                         items = uiState.filteredItems,
@@ -150,67 +158,6 @@ fun SeasonalOverlay(
 }
 
 @Composable
-private fun BrowseSeasonHeader(
-    season: com.owlcoder.animeschedule.domain.model.AnimeSeason,
-    year: Int,
-    filterActive: Boolean,
-    onDismiss: () -> Unit,
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
-    onFilter: () -> Unit,
-) {
-    AppInlineHeader(
-        title = stringResource(R.string.seasonal_title),
-        onBack = onDismiss,
-        backContentDescription = stringResource(R.string.common_cancel),
-        trailingContent = {
-            GlassIconButton(
-                icon = Icons.Outlined.Tune,
-                contentDescription = stringResource(R.string.seasonal_filter_title),
-                onClick = onFilter,
-            )
-        },
-    )
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            Text(
-                text = "${stringResource(season.labelRes())} $year",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.SemiBold,
-            )
-            if (filterActive) {
-                Text(
-                    text = stringResource(R.string.seasonal_filter_title),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-        }
-        GlassToolbarGroup {
-            GlassToolbarButton(
-                icon = Icons.AutoMirrored.Filled.NavigateBefore,
-                contentDescription = stringResource(R.string.seasonal_title),
-                onClick = onPrevious,
-            )
-            GlassToolbarButton(
-                icon = Icons.AutoMirrored.Filled.NavigateNext,
-                contentDescription = stringResource(R.string.seasonal_title),
-                onClick = onNext,
-            )
-        }
-    }
-}
-
-@Composable
 private fun ColumnScope.SeasonalLoadingState() {
     Box(
         modifier = Modifier.fillMaxWidth().weight(1f),
@@ -218,9 +165,9 @@ private fun ColumnScope.SeasonalLoadingState() {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            CircularProgressIndicator(Modifier.size(26.dp), strokeWidth = 2.dp)
+            CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
             Text(
                 text = stringResource(R.string.seasonal_title),
                 style = MaterialTheme.typography.bodyMedium,
