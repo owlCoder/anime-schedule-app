@@ -5,12 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,7 +28,7 @@ import com.owlcoder.animeschedule.ui.theme.PillShape
 
 enum class AppButtonVariant { Primary, Secondary, Plain, Destructive }
 
-/** Stable iOS-like action geometry: 44dp visual control inside a 48dp touch target. */
+/** 44dp visible controls with an intentionally calm label/icon rhythm. */
 @Composable
 fun AppButton(
     label: String,
@@ -41,34 +40,37 @@ fun AppButton(
 ) {
     val accent = MaterialTheme.colorScheme.primary
     val contentColor = when (variant) {
-        AppButtonVariant.Primary -> accent
-        AppButtonVariant.Secondary, AppButtonVariant.Plain -> accent
+        AppButtonVariant.Primary, AppButtonVariant.Secondary, AppButtonVariant.Plain -> accent
         AppButtonVariant.Destructive -> MaterialTheme.colorScheme.error
     }
+
     if (variant == AppButtonVariant.Plain) {
         androidx.compose.material3.TextButton(
             onClick = onClick,
             enabled = enabled,
-            modifier = modifier.heightIn(min = 48.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+            modifier = modifier.heightIn(min = 44.dp),
+            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
         ) {
             ButtonContent(label, icon, contentColor, enabled)
         }
-    } else {
-        GlassSurface(
-            modifier = modifier
-                .heightIn(min = 44.dp)
-                .clickable(enabled = enabled, onClick = onClick)
-                .semantics { role = Role.Button },
-            shape = PillShape,
-            tone = if (variant == AppButtonVariant.Primary) GlassTone.Accent else GlassTone.Neutral,
-            contentColor = contentColor,
+        return
+    }
+
+    GlassSurface(
+        modifier = modifier
+            .height(44.dp)
+            .clickable(enabled = enabled, onClick = onClick)
+            .semantics { role = Role.Button },
+        shape = PillShape,
+        tone = if (variant == AppButtonVariant.Primary) GlassTone.Accent else GlassTone.Neutral,
+        contentColor = contentColor,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 15.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
-            ) { ButtonContent(label, icon, contentColor, enabled) }
+            ButtonContent(label, icon, contentColor, enabled)
         }
     }
 }
@@ -76,8 +78,20 @@ fun AppButton(
 @Composable
 private fun ButtonContent(label: String, icon: ImageVector?, color: Color, enabled: Boolean) {
     val resolved = if (enabled) color else color.copy(alpha = 0.42f)
-    if (icon != null) Icon(icon, contentDescription = null, modifier = Modifier.size(17.dp), tint = resolved)
-    Text(label, color = resolved, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+    if (icon != null) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(17.dp),
+            tint = resolved,
+        )
+    }
+    Text(
+        text = label,
+        color = resolved,
+        style = MaterialTheme.typography.labelLarge,
+        maxLines = 1,
+    )
 }
 
 @Composable
@@ -88,13 +102,13 @@ fun GlassButton(
     shape: Shape = PillShape,
     accent: Color = MaterialTheme.colorScheme.primary,
     onImagery: Boolean = false,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp, vertical = 9.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp),
     content: @Composable (contentColor: Color) -> Unit,
 ) {
     val contentColor = if (onImagery) Color.White else if (enabled) accent else accent.copy(alpha = 0.42f)
     GlassSurface(
         modifier = modifier
-            .heightIn(min = 44.dp)
+            .height(44.dp)
             .clickable(enabled = enabled, onClick = onClick)
             .semantics { role = Role.Button },
         shape = shape,
@@ -105,10 +119,13 @@ fun GlassButton(
             modifier = Modifier.padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
-        ) { content(contentColor) }
+        ) {
+            content(contentColor)
+        }
     }
 }
 
+/** A 40dp glass disc nested inside a full 48dp accessibility target. */
 @Composable
 fun GlassIconButton(
     icon: ImageVector,
@@ -118,17 +135,26 @@ fun GlassIconButton(
     enabled: Boolean = true,
     onImagery: Boolean = false,
 ) {
-    GlassSurface(
+    Box(
         modifier = modifier
-            .sizeIn(minWidth = 44.dp, minHeight = 44.dp)
+            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
             .clickable(enabled = enabled, onClick = onClick)
             .semantics { role = Role.Button },
-        shape = androidx.compose.foundation.shape.CircleShape,
-        tone = if (onImagery) GlassTone.OnImage else GlassTone.Neutral,
-        contentColor = if (onImagery) Color.White else MaterialTheme.colorScheme.onSurface,
+        contentAlignment = Alignment.Center,
     ) {
-        Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(20.dp))
+        GlassSurface(
+            modifier = Modifier.size(40.dp),
+            shape = androidx.compose.foundation.shape.CircleShape,
+            tone = if (onImagery) GlassTone.OnImage else GlassTone.Neutral,
+            contentColor = if (onImagery) Color.White else MaterialTheme.colorScheme.onSurface,
+        ) {
+            Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = contentDescription,
+                    modifier = Modifier.size(19.dp),
+                )
+            }
         }
     }
 }
