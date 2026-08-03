@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -38,7 +39,7 @@ fun AppSheet(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         sheetState = sheetState,
-        shape = ContinuousRoundedShape(30.dp),
+        shape = ContinuousRoundedShape(26.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = 0.dp,
@@ -49,14 +50,14 @@ fun AppSheet(
                 .fillMaxWidth()
                 .imePadding()
                 .navigationBarsPadding()
-                .padding(start = 18.dp, end = 18.dp, bottom = 16.dp),
+                .padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
         ) {
             if (!title.isNullOrBlank()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 44.dp)
-                        .padding(bottom = 8.dp),
+                        .heightIn(min = 40.dp)
+                        .padding(bottom = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -78,16 +79,16 @@ fun AppSheet(
 fun AppSheetHandle(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(top = 9.dp, bottom = 7.dp)
+            .padding(top = 8.dp, bottom = 6.dp)
             .fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.10f)
+                .width(36.dp)
                 .requiredHeight(4.dp)
                 .clip(MaterialTheme.shapes.extraLarge)
-                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f)),
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.26f)),
         )
     }
 }
