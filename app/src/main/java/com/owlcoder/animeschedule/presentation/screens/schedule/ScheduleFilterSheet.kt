@@ -16,7 +16,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -30,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.InsetListRow
 import com.owlcoder.animeschedule.ui.theme.PillShape
@@ -72,7 +72,7 @@ fun ScheduleFilterSheet(
                 .fillMaxWidth()
                 .heightIn(max = 560.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             if (isLoggedIn) {
                 InsetGroup {
@@ -80,7 +80,7 @@ fun ScheduleFilterSheet(
                         label = stringResource(R.string.filter_only_my_list),
                         supportingText = stringResource(R.string.filter_only_my_list_subtitle),
                         trailingContent = {
-                            Switch(
+                            AppSwitch(
                                 checked = filter.onlyMyList,
                                 onCheckedChange = onOnlyMyListChange,
                             )
@@ -122,7 +122,7 @@ private fun FilterSection(
     title: String,
     content: @Composable androidx.compose.foundation.layout.FlowRowScope.() -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = title,
             style = MaterialTheme.typography.labelMedium,
@@ -130,8 +130,8 @@ private fun FilterSection(
             fontWeight = FontWeight.SemiBold,
         )
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+            verticalArrangement = Arrangement.spacedBy(7.dp),
             content = content,
         )
     }
@@ -144,21 +144,21 @@ private fun CompactScheduleFilterChip(
     onClick: () -> Unit,
 ) {
     val borderColor = if (selected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.48f)
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.42f)
     } else {
-        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.85f)
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)
     }
     Row(
         modifier = Modifier
-            .sizeIn(minHeight = 36.dp)
+            .sizeIn(minHeight = 34.dp)
             .clip(PillShape)
             .background(
-                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                 else Color.Transparent,
             )
-            .border(1.dp, borderColor, PillShape)
+            .border(0.5.dp, borderColor, PillShape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 7.dp),
+            .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
