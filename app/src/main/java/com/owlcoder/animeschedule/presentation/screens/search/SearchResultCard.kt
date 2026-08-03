@@ -44,21 +44,21 @@ fun SearchResultCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 80.dp)
+                .heightIn(min = 74.dp)
                 .clickable(onClick = onCardClick)
                 .semantics(mergeDescendants = true) { role = Role.Button }
-                .padding(start = 12.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                .padding(start = 11.dp, end = 7.dp, top = 7.dp, bottom = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(11.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             MediaThumbnail.Small(
                 url = result.coverImageUrl,
                 contentDescription = result.title,
-                modifier = Modifier.size(48.dp, 64.dp),
+                modifier = Modifier.size(44.dp, 58.dp),
             )
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(3.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(
                     text = result.title,
@@ -80,15 +80,15 @@ fun SearchResultCard(
             if (onEditStatus != null) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(40.dp)
                         .clickable(onClick = onEditStatus)
                         .semantics { role = Role.Button },
                     contentAlignment = Alignment.Center,
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), CircleShape),
+                            .size(30.dp)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.13f), CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -98,7 +98,7 @@ fun SearchResultCard(
                             } else {
                                 stringResource(R.string.detail_add_to_list)
                             },
-                            modifier = Modifier.size(17.dp),
+                            modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.primary,
                         )
                     }
@@ -107,9 +107,9 @@ fun SearchResultCard(
         }
         if (showDivider) {
             HorizontalDivider(
-                modifier = Modifier.padding(start = 71.dp),
+                modifier = Modifier.padding(start = 65.dp),
                 thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
             )
         }
     }
