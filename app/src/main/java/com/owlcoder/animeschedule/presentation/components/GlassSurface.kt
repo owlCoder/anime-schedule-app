@@ -34,10 +34,14 @@ fun GlassSurface(
     content: @Composable () -> Unit,
 ) {
     val palette = glassPalette(tone)
-    val elevation = if (blur == GlassBlur.None) 0.dp else 8.dp
+    val elevation = when (blur) {
+        GlassBlur.None -> 0.dp
+        GlassBlur.Soft -> 2.dp
+        GlassBlur.Medium -> 4.dp
+    }
     Box(
         modifier = modifier
-            .shadow(elevation, shape, clip = false)
+            .shadow(elevation, shape, clip = false, ambientColor = GlassTokens.shadow, spotColor = GlassTokens.shadow)
             .clip(shape)
             .background(palette.fill)
             .background(palette.highlight)
@@ -78,23 +82,23 @@ private fun glassPalette(tone: GlassTone): GlassPalette {
     val accent = colors.primary
     val fill = when (tone) {
         GlassTone.Neutral -> if (dark) GlassTokens.neutralFillDark else GlassTokens.neutralFillLight
-        GlassTone.Accent -> accent.copy(alpha = if (dark) 0.24f else 0.13f)
-        GlassTone.OnImage -> Color.Black.copy(alpha = 0.28f)
+        GlassTone.Accent -> accent.copy(alpha = if (dark) 0.20f else 0.12f)
+        GlassTone.OnImage -> Color.Black.copy(alpha = 0.24f)
     }
     val border = when (tone) {
-        GlassTone.Accent -> accent.copy(alpha = if (dark) 0.48f else 0.34f)
+        GlassTone.Accent -> accent.copy(alpha = if (dark) 0.38f else 0.28f)
         else -> if (dark) GlassTokens.darkHighlight else GlassTokens.highlight
     }
     val top = when (tone) {
-        GlassTone.Accent -> Color.White.copy(alpha = if (dark) 0.10f else 0.38f)
-        GlassTone.OnImage -> Color.White.copy(alpha = 0.18f)
-        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.08f else 0.38f)
+        GlassTone.Accent -> Color.White.copy(alpha = if (dark) 0.07f else 0.28f)
+        GlassTone.OnImage -> Color.White.copy(alpha = 0.14f)
+        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.055f else 0.28f)
     }
     return GlassPalette(
         fill = fill,
         border = border,
         highlight = Brush.verticalGradient(listOf(top, Color.Transparent)),
-        backdrop = Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.05f), Color.Transparent)),
+        backdrop = Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.035f), Color.Transparent)),
     )
 }
 
