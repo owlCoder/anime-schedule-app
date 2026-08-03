@@ -8,25 +8,25 @@ enum class GlassTone { Neutral, Accent, OnImage }
 
 enum class GlassBlur(val radius: Dp) {
     None(0.dp),
-    Soft(10.dp),
-    Medium(16.dp),
+    Soft(8.dp),
+    Medium(14.dp),
 }
 
-/** Restrained glass vocabulary: thin optical edge, low shadow and compact radii. */
+/** Thin optical edge and restrained translucency for navigation chrome only. */
 object GlassTokens {
     val hairline: Dp = 0.5.dp
-    val highlight = Color.White.copy(alpha = 0.34f)
-    val darkHighlight = Color.White.copy(alpha = 0.12f)
-    val shadow = Color.Black.copy(alpha = 0.18f)
-    val neutralFillLight = Color.White.copy(alpha = 0.72f)
-    val neutralFillDark = Color(0xFF242428).copy(alpha = 0.66f)
-    val interactiveFillLight = Color.White.copy(alpha = 0.50f)
-    val interactiveFillDark = Color.White.copy(alpha = 0.13f)
-    val maxBackdropBlurRadius: Dp = 18.dp
-    val chromeRadius: Dp = 20.dp
-    val sheetRadius: Dp = 28.dp
-    val contentRadius: Dp = 14.dp
-    val groupRadius: Dp = 14.dp
-    val controlRadius: Dp = 11.dp
-    val posterRadius: Dp = 10.dp
+    val highlight = Color.White.copy(alpha = 0.28f)
+    val darkHighlight = Color.White.copy(alpha = 0.10f)
+    val shadow = Color.Black.copy(alpha = 0.14f)
+    val neutralFillLight = Color.White.copy(alpha = 0.68f)
+    val neutralFillDark = Color(0xFF28282C).copy(alpha = 0.58f)
+    val interactiveFillLight = Color.White.copy(alpha = 0.46f)
+    val interactiveFillDark = Color.White.copy(alpha = 0.11f)
+    val maxBackdropBlurRadius: Dp = 16.dp
+    val chromeRadius: Dp = 18.dp
+    val sheetRadius: Dp = 26.dp
+    val contentRadius: Dp = 13.dp
+    val groupRadius: Dp = 12.dp
+    val controlRadius: Dp = 10.dp
+    val posterRadius: Dp = 9.dp
 }
