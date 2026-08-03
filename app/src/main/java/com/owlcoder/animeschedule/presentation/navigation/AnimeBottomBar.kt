@@ -17,14 +17,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -63,11 +63,11 @@ private val items = listOf(
     BottomNavItem(Screen.Schedule, "Today", Icons.Filled.CalendarMonth, Icons.Outlined.CalendarMonth),
     BottomNavItem(Screen.Search, "Search", Icons.Filled.Search, Icons.Outlined.Search),
     BottomNavItem(Screen.MyList, "My List", Icons.Filled.Bookmark, Icons.Outlined.BookmarkBorder),
-    BottomNavItem(Screen.Settings, "Settings", Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle),
+    BottomNavItem(Screen.Settings, "Settings", Icons.Filled.Settings, Icons.Outlined.Settings),
 )
 
-private val DockShape = ContinuousRoundedShape(30.dp)
-private val DockHeight = 62.dp
+private val DockShape = ContinuousRoundedShape(28.dp)
+private val DockHeight = 58.dp
 
 @Composable
 fun AnimeBottomBar(
@@ -81,7 +81,7 @@ fun AnimeBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-            .padding(horizontal = 14.dp, vertical = 7.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp),
     ) {
         GlassChrome(
             modifier = Modifier.fillMaxWidth().height(DockHeight),
@@ -91,7 +91,7 @@ fun AnimeBottomBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(DockHeight)
-                    .padding(horizontal = 4.dp),
+                    .padding(horizontal = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 items.forEach { item ->
@@ -139,17 +139,17 @@ private fun BottomNavItemView(
     ) {
         if (selected) {
             GlassSurface(
-                modifier = Modifier.size(width = 74.dp, height = 46.dp),
+                modifier = Modifier.size(width = 66.dp, height = 42.dp),
                 shape = PillShape,
                 tone = GlassTone.Accent,
                 blur = GlassBlur.Soft,
-                contentColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onSurface,
             ) {
                 TabVisual(item, selected, notificationCount)
             }
         } else {
             Box(
-                modifier = Modifier.size(width = 74.dp, height = 46.dp),
+                modifier = Modifier.size(width = 66.dp, height = 42.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 TabVisual(item, selected, notificationCount)
@@ -164,7 +164,11 @@ private fun TabVisual(
     selected: Boolean,
     notificationCount: Int,
 ) {
-    val color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    val color = if (selected) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
+    }
 
     Column(
         modifier = Modifier.fillMaxHeight(),
