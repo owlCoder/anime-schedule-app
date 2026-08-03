@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,12 +25,11 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.GlassTone
-import com.owlcoder.animeschedule.ui.theme.GlassTokens
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
 enum class AppButtonVariant { Primary, Secondary, Plain, Destructive }
 
-/** One action vocabulary for the whole app. Visible controls stay 44dp; hit targets stay 48dp. */
+/** Stable iOS-like action geometry: 44dp visual control inside a 48dp touch target. */
 @Composable
 fun AppButton(
     label: String,
@@ -41,7 +41,7 @@ fun AppButton(
 ) {
     val accent = MaterialTheme.colorScheme.primary
     val contentColor = when (variant) {
-        AppButtonVariant.Primary -> MaterialTheme.colorScheme.onPrimary
+        AppButtonVariant.Primary -> accent
         AppButtonVariant.Secondary, AppButtonVariant.Plain -> accent
         AppButtonVariant.Destructive -> MaterialTheme.colorScheme.error
     }
@@ -50,51 +50,51 @@ fun AppButton(
             onClick = onClick,
             enabled = enabled,
             modifier = modifier.heightIn(min = 48.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
         ) {
-            if (icon != null) Icon(icon, null, Modifier.size(18.dp))
-            androidx.compose.foundation.layout.Spacer(Modifier.size(if (icon != null) 8.dp else 0.dp))
-            androidx.compose.material3.Text(label, color = contentColor)
+            ButtonContent(label, icon, contentColor, enabled)
         }
     } else {
-        val tone = if (variant == AppButtonVariant.Primary) GlassTone.Accent else GlassTone.Neutral
         GlassSurface(
             modifier = modifier
-                .heightIn(min = 48.dp)
+                .heightIn(min = 44.dp)
                 .clickable(enabled = enabled, onClick = onClick)
                 .semantics { role = Role.Button },
-            shape = MaterialTheme.shapes.small,
-            tone = tone,
-            contentColor = if (enabled) contentColor else contentColor.copy(alpha = 0.45f),
+            shape = PillShape,
+            tone = if (variant == AppButtonVariant.Primary) GlassTone.Accent else GlassTone.Neutral,
+            contentColor = contentColor,
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                if (icon != null) Icon(icon, null, Modifier.size(18.dp))
-                androidx.compose.material3.Text(label, color = if (enabled) contentColor else contentColor.copy(alpha = 0.45f), style = MaterialTheme.typography.labelLarge)
-            }
+                horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
+            ) { ButtonContent(label, icon, contentColor, enabled) }
         }
     }
 }
 
-/** Compatibility action used by existing screens while they migrate to AppButton. */
+@Composable
+private fun ButtonContent(label: String, icon: ImageVector?, color: Color, enabled: Boolean) {
+    val resolved = if (enabled) color else color.copy(alpha = 0.42f)
+    if (icon != null) Icon(icon, contentDescription = null, modifier = Modifier.size(17.dp), tint = resolved)
+    Text(label, color = resolved, style = MaterialTheme.typography.labelLarge, maxLines = 1)
+}
+
 @Composable
 fun GlassButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    shape: Shape = MaterialTheme.shapes.small,
+    shape: Shape = PillShape,
     accent: Color = MaterialTheme.colorScheme.primary,
     onImagery: Boolean = false,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp, vertical = 9.dp),
     content: @Composable (contentColor: Color) -> Unit,
 ) {
-    val contentColor = if (onImagery) Color.White else if (enabled) accent else accent.copy(alpha = 0.45f)
+    val contentColor = if (onImagery) Color.White else if (enabled) accent else accent.copy(alpha = 0.42f)
     GlassSurface(
         modifier = modifier
-            .heightIn(min = 48.dp)
+            .heightIn(min = 44.dp)
             .clickable(enabled = enabled, onClick = onClick)
             .semantics { role = Role.Button },
         shape = shape,
@@ -104,12 +104,11 @@ fun GlassButton(
         Row(
             modifier = Modifier.padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
         ) { content(contentColor) }
     }
 }
 
-/** Icon-only chrome action with a fixed 48dp accessibility target and 22dp icon. */
 @Composable
 fun GlassIconButton(
     icon: ImageVector,
@@ -121,15 +120,15 @@ fun GlassIconButton(
 ) {
     GlassSurface(
         modifier = modifier
-            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+            .sizeIn(minWidth = 44.dp, minHeight = 44.dp)
             .clickable(enabled = enabled, onClick = onClick)
             .semantics { role = Role.Button },
         shape = androidx.compose.foundation.shape.CircleShape,
         tone = if (onImagery) GlassTone.OnImage else GlassTone.Neutral,
         contentColor = if (onImagery) Color.White else MaterialTheme.colorScheme.onSurface,
     ) {
-        Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-            Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(22.dp))
+        Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) {
+            Icon(icon, contentDescription = contentDescription, modifier = Modifier.size(20.dp))
         }
     }
 }
