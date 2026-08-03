@@ -34,26 +34,26 @@ fun EmptyState(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 28.dp, vertical = 18.dp)
+            .padding(horizontal = 22.dp, vertical = 16.dp)
             .semantics(mergeDescendants = true) { },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Box(
             modifier = Modifier
-                .size(52.dp)
-                .clip(MaterialTheme.shapes.large)
+                .size(48.dp)
+                .clip(MaterialTheme.shapes.medium)
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(22.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(9.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
@@ -62,7 +62,7 @@ fun EmptyState(
             textAlign = TextAlign.Center,
         )
         if (!subtitle.isNullOrBlank()) {
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(4.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium,
@@ -71,7 +71,7 @@ fun EmptyState(
             )
         }
         if (actionLabel != null && onAction != null) {
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(10.dp))
             AppButton(
                 label = actionLabel,
                 onClick = onAction,
