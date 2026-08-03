@@ -41,13 +41,13 @@ fun AppLargeHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = if (subtitle.isNullOrBlank()) 52.dp else 72.dp),
+            .heightIn(min = if (subtitle.isNullOrBlank()) 50.dp else 70.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(1.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             Text(
                 text = title,
@@ -80,7 +80,7 @@ fun AppInlineHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 52.dp),
+            .heightIn(min = 50.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
@@ -112,7 +112,7 @@ fun GlassToolbarGroup(
         shape = PillShape,
     ) {
         Row(
-            modifier = Modifier.height(44.dp).padding(horizontal = 3.dp),
+            modifier = Modifier.height(42.dp).padding(horizontal = 3.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(1.dp),
             content = content,
@@ -131,9 +131,13 @@ fun GlassToolbarButton(
 ) {
     Box(
         modifier = modifier
-            .size(38.dp)
+            .size(36.dp)
             .background(
-                color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.20f) else Color.Transparent,
+                color = if (selected) {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.11f)
+                } else {
+                    Color.Transparent
+                },
                 shape = CircleShape,
             )
             .clickable(enabled = enabled, onClick = onClick)
@@ -144,7 +148,11 @@ fun GlassToolbarButton(
             imageVector = icon,
             contentDescription = contentDescription,
             modifier = Modifier.size(18.dp),
-            tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            tint = if (enabled) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+            },
         )
     }
 }
