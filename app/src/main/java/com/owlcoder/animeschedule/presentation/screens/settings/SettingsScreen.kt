@@ -10,24 +10,24 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.Login
@@ -36,7 +36,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Schedule
@@ -49,7 +48,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -82,12 +80,14 @@ import com.owlcoder.animeschedule.data.local.datastore.AccentColor
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import com.owlcoder.animeschedule.data.local.datastore.CacheRetentionPolicy
 import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
+import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import com.owlcoder.animeschedule.ui.theme.accentPrimary
 import java.time.ZoneId
 
-private val SettingsGroupShape = RoundedCornerShape(16.dp)
-private val SettingsAccentRed = Color(0xFFFF3B30)
+private val SettingsGroupShape = RoundedCornerShape(18.dp)
+private val SettingsRowIconShape = RoundedCornerShape(9.dp)
+private val SettingsAccentRed = Color(0xFFFF453A)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,7 +95,7 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
     onRestartForLanguage: (AppLanguage) -> Unit = {},
-    onManageWatchSources: () -> Unit = {}
+    onManageWatchSources: () -> Unit = {},
 ) {
     val uiState by settingsViewModel.uiState.collectAsState()
     val isLoggingIn by authViewModel.isLoggingIn.collectAsState()
@@ -117,7 +117,7 @@ fun SettingsScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         LazyColumn(
             state = rememberLazyListState(),
@@ -128,24 +128,23 @@ fun SettingsScreen(
             contentPadding = PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
-                top = 10.dp,
-                bottom = LocalNavBarHeight.current + 24.dp
+                top = 12.dp,
+                bottom = LocalNavBarHeight.current + 28.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             item {
                 Text(
                     text = stringResource(R.string.settings_title),
-                    style = MaterialTheme.typography.headlineLarge,
+                    style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(start = 2.dp, bottom = 2.dp),
                 )
             }
 
             item {
-                SettingsSection(
-                    title = stringResource(R.string.settings_section_account)
-                ) {
+                SettingsSection(title = stringResource(R.string.settings_section_account)) {
                     SettingsGroup {
                         AccountRow(
                             isLoggedIn = uiState.isLoggedIn,
@@ -155,7 +154,7 @@ fun SettingsScreen(
                             onClick = {
                                 if (uiState.isLoggedIn) authViewModel.logout()
                                 else authViewModel.launchMalLogin(context)
-                            }
+                            },
                         )
                     }
                     if (!loginError.isNullOrBlank()) {
@@ -163,7 +162,7 @@ fun SettingsScreen(
                             text = loginError.orEmpty(),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(start = 4.dp, top = 6.dp)
+                            modifier = Modifier.padding(start = 12.dp, top = 6.dp),
                         )
                     }
                 }
@@ -177,7 +176,7 @@ fun SettingsScreen(
                             iconTint = MaterialTheme.colorScheme.primary,
                             title = "Theme",
                             value = themeModeLabel(uiState.themeMode),
-                            onClick = { showThemePicker = true }
+                            onClick = { showThemePicker = true },
                         )
                         SettingsDivider()
                         SettingsRow(
@@ -187,10 +186,8 @@ fun SettingsScreen(
                             value = uiState.accentColor.displayName(),
                             onClick = { showAccentPicker = true },
                             trailing = {
-                                AccentSwatch(
-                                    color = accentPrimary(uiState.accentColor, dark = isDarkTheme())
-                                )
-                            }
+                                AccentSwatch(accentPrimary(uiState.accentColor, dark = isDarkTheme()))
+                            },
                         )
                     }
                 }
@@ -208,7 +205,7 @@ fun SettingsScreen(
                             } else {
                                 stringResource(R.string.settings_notifications_off)
                             },
-                            onClick = { showNotifPicker = true }
+                            onClick = { showNotifPicker = true },
                         )
                     }
                 }
@@ -222,7 +219,7 @@ fun SettingsScreen(
                             iconTint = accentPrimary(AccentColor.GREEN, dark = isDarkTheme()),
                             title = stringResource(R.string.settings_timezone),
                             value = uiState.timezoneId.ifEmpty { ZoneId.systemDefault().id },
-                            onClick = { showTimezonePicker = true }
+                            onClick = { showTimezonePicker = true },
                         )
                     }
                 }
@@ -236,7 +233,7 @@ fun SettingsScreen(
                             iconTint = accentPrimary(AccentColor.PURPLE, dark = isDarkTheme()),
                             title = stringResource(R.string.settings_watch_sources),
                             value = stringResource(R.string.settings_watch_sources_subtitle),
-                            onClick = onManageWatchSources
+                            onClick = onManageWatchSources,
                         )
                     }
                 }
@@ -250,7 +247,7 @@ fun SettingsScreen(
                             iconTint = accentPrimary(AccentColor.TEAL, dark = isDarkTheme()),
                             title = "Cache",
                             value = "${formatBytes(cacheSizeBytes)} · ${uiState.cacheRetentionDays} days",
-                            onClick = { showCacheRetentionPicker = true }
+                            onClick = { showCacheRetentionPicker = true },
                         )
                         SettingsDivider()
                         SettingsRow(
@@ -263,11 +260,11 @@ fun SettingsScreen(
                             trailing = {
                                 if (isClearingCache) {
                                     CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp),
-                                        strokeWidth = 2.dp
+                                        modifier = Modifier.size(18.dp),
+                                        strokeWidth = 2.dp,
                                     )
                                 }
-                            }
+                            },
                         )
                     }
                 }
@@ -281,7 +278,7 @@ fun SettingsScreen(
                             iconTint = accentPrimary(AccentColor.TELEGRAM_BLUE, dark = isDarkTheme()),
                             title = stringResource(R.string.settings_language),
                             value = languageLabel(uiState.appLanguage),
-                            onClick = { showLanguagePicker = true }
+                            onClick = { showLanguagePicker = true },
                         )
                     }
                 }
@@ -295,7 +292,7 @@ fun SettingsScreen(
                             iconTint = accentPrimary(AccentColor.TEAL, dark = isDarkTheme()),
                             title = stringResource(R.string.settings_changelog),
                             value = stringResource(R.string.settings_changelog_subtitle),
-                            onClick = { showChangelog = true }
+                            onClick = { showChangelog = true },
                         )
                         SettingsDivider()
                         SettingsRow(
@@ -303,7 +300,7 @@ fun SettingsScreen(
                             iconTint = accentPrimary(AccentColor.TELEGRAM_BLUE, dark = isDarkTheme()),
                             title = stringResource(R.string.settings_about),
                             value = stringResource(R.string.settings_about_subtitle),
-                            onClick = { showAbout = true }
+                            onClick = { showAbout = true },
                         )
                     }
                 }
@@ -315,14 +312,14 @@ fun SettingsScreen(
         ThemeBottomSheet(
             current = uiState.themeMode,
             onSelect = { settingsViewModel.setThemeMode(it); showThemePicker = false },
-            onDismiss = { showThemePicker = false }
+            onDismiss = { showThemePicker = false },
         )
     }
     if (showAccentPicker) {
         AccentBottomSheet(
             current = uiState.accentColor,
             onSelect = { settingsViewModel.setAccentColor(it); showAccentPicker = false },
-            onDismiss = { showAccentPicker = false }
+            onDismiss = { showAccentPicker = false },
         )
     }
     if (showLanguagePicker) {
@@ -333,7 +330,7 @@ fun SettingsScreen(
                 settingsViewModel.setAppLanguage(language)
                 onRestartForLanguage(language)
             },
-            onDismiss = { showLanguagePicker = false }
+            onDismiss = { showLanguagePicker = false },
         )
     }
     if (showNotifPicker) {
@@ -342,19 +339,21 @@ fun SettingsScreen(
             currentOffset = uiState.notificationOffsetMinutes,
             onEnabledChange = settingsViewModel::setNotificationsEnabled,
             onOffsetSelect = settingsViewModel::setNotificationOffset,
-            onDismiss = { showNotifPicker = false }
+            onDismiss = { showNotifPicker = false },
         )
     }
     if (showCacheRetentionPicker) {
         CacheRetentionBottomSheet(
             currentRetentionDays = uiState.cacheRetentionDays,
             onSelect = { settingsViewModel.setCacheRetentionDays(it); showCacheRetentionPicker = false },
-            onDismiss = { showCacheRetentionPicker = false }
+            onDismiss = { showCacheRetentionPicker = false },
         )
     }
     if (showClearCacheConfirm) {
         AlertDialog(
             onDismissRequest = { showClearCacheConfirm = false },
+            shape = RoundedCornerShape(26.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             title = { Text("Clear cache?") },
             text = { Text("Temporary images and stale cached data will be removed. Your MAL list, tokens and settings stay safe.") },
             confirmButton = {
@@ -367,14 +366,14 @@ fun SettingsScreen(
                 TextButton(onClick = { showClearCacheConfirm = false }) {
                     Text(stringResource(R.string.common_cancel))
                 }
-            }
+            },
         )
     }
     if (showTimezonePicker) {
         TimezonePickerDialog(
             currentTimezoneId = uiState.timezoneId,
             onDismiss = { showTimezonePicker = false },
-            onConfirm = { settingsViewModel.setTimezone(it); showTimezonePicker = false }
+            onConfirm = { settingsViewModel.setTimezone(it); showTimezonePicker = false },
         )
     }
     if (showChangelog) ChangelogBottomSheet(onDismiss = { showChangelog = false })
@@ -385,14 +384,17 @@ fun SettingsScreen(
 private fun isDarkTheme(): Boolean = MaterialTheme.colorScheme.background.luminance() < 0.2f
 
 @Composable
-private fun SettingsSection(title: String, content: @Composable () -> Unit) {
+private fun SettingsSection(
+    title: String,
+    content: @Composable () -> Unit,
+) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title.uppercase(),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 4.dp, bottom = 7.dp)
+            modifier = Modifier.padding(start = 12.dp, bottom = 7.dp),
         )
         content()
     }
@@ -403,12 +405,10 @@ private fun SettingsGroup(content: @Composable () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = SettingsGroupShape,
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        tonalElevation = 0.dp
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        tonalElevation = 0.dp,
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            content()
-        }
+        Column(modifier = Modifier.fillMaxWidth()) { content() }
     }
 }
 
@@ -418,71 +418,70 @@ private fun AccountRow(
     username: String,
     avatarUrl: String,
     isLoggingIn: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(64.dp)
             .clickable(enabled = !isLoggingIn, onClick = onClick)
-            .padding(horizontal = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         if (avatarUrl.isNotBlank()) {
             AsyncImage(
                 model = avatarUrl,
                 contentDescription = null,
-                modifier = Modifier.size(40.dp).clip(CircleShape),
-                contentScale = ContentScale.Crop
+                modifier = Modifier.size(38.dp).clip(CircleShape),
+                contentScale = ContentScale.Crop,
             )
         } else {
             Surface(
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(38.dp),
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
             ) {
                 Icon(
                     imageVector = Icons.Default.AccountCircle,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(7.dp)
+                    modifier = Modifier.padding(7.dp),
                 )
             }
         }
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp),
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier.weight(1f).padding(horizontal = 11.dp),
+            verticalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = if (isLoggedIn && username.isNotBlank()) username else "MyAnimeList",
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
-                overflow = TextOverflow.Clip
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = if (isLoggedIn) "Signed in" else "Not signed in",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
+                maxLines = 1,
             )
         }
         if (isLoggingIn) {
-            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
         } else {
+            val actionColor = if (isLoggedIn) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary
             Text(
                 text = if (isLoggedIn) "Sign out" else "Sign in",
-                style = MaterialTheme.typography.labelLarge,
-                color = if (isLoggedIn) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold
+                style = MaterialTheme.typography.labelMedium,
+                color = actionColor,
+                fontWeight = FontWeight.SemiBold,
             )
             Icon(
                 imageVector = if (isLoggedIn) Icons.AutoMirrored.Filled.ExitToApp else Icons.AutoMirrored.Filled.Login,
                 contentDescription = null,
-                tint = if (isLoggedIn) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 6.dp).size(18.dp)
+                tint = actionColor,
+                modifier = Modifier.padding(start = 5.dp).size(17.dp),
             )
         }
     }
@@ -496,40 +495,38 @@ private fun SettingsRow(
     value: String,
     onClick: () -> Unit,
     enabled: Boolean = true,
-    trailing: @Composable (() -> Unit)? = null
+    trailing: @Composable (() -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 52.dp, max = 64.dp)
+            .heightIn(min = 56.dp)
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Surface(
-            modifier = Modifier.size(28.dp),
-            shape = RoundedCornerShape(8.dp),
-            color = iconTint.copy(alpha = 0.14f)
+            modifier = Modifier.size(30.dp),
+            shape = SettingsRowIconShape,
+            color = iconTint.copy(alpha = 0.14f),
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = iconTint,
-                modifier = Modifier.padding(5.dp)
+                modifier = Modifier.padding(6.dp),
             )
         }
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp),
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier.weight(1f).padding(start = 11.dp, end = 8.dp),
+            verticalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
             if (value.isNotBlank()) {
                 Text(
@@ -537,7 +534,7 @@ private fun SettingsRow(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -547,7 +544,7 @@ private fun SettingsRow(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(18.dp),
             )
         }
     }
@@ -556,9 +553,9 @@ private fun SettingsRow(
 @Composable
 private fun SettingsDivider() {
     HorizontalDivider(
-        modifier = Modifier.padding(start = 54.dp),
+        modifier = Modifier.padding(start = 53.dp),
         thickness = 0.5.dp,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
     )
 }
 
@@ -568,11 +565,10 @@ private fun AccentSwatch(color: Color) {
         modifier = Modifier
             .size(20.dp)
             .clip(CircleShape)
-            .background(color)
+            .background(color),
     )
 }
 
-@Composable
 private fun themeModeLabel(mode: ThemeMode): String = when (mode) {
     ThemeMode.SYSTEM -> "System"
     ThemeMode.LIGHT -> "Light"
@@ -592,17 +588,82 @@ private fun AccentColor.displayName(): String = name.lowercase()
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+private fun PickerSheet(
+    title: String,
+    onDismiss: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    AppSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        title = title,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 600.dp)
+                .clip(SettingsGroupShape)
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .verticalScroll(rememberScrollState()),
+            content = content,
+        )
+    }
+}
+
+@Composable
+private fun PickerRow(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .clickable(onClick = onClick)
+                .padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                modifier = Modifier.weight(1f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (selected) {
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+        HorizontalDivider(
+            modifier = Modifier.padding(start = 14.dp),
+            thickness = 0.5.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 private fun ThemeBottomSheet(
     current: ThemeMode,
     onSelect: (ThemeMode) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     PickerSheet(title = "Theme", onDismiss = onDismiss) {
         ThemeMode.entries.forEach { mode ->
             PickerRow(
                 label = themeModeLabel(mode),
                 selected = current == mode,
-                onClick = { onSelect(mode) }
+                onClick = { onSelect(mode) },
             )
         }
     }
@@ -613,78 +674,43 @@ private fun ThemeBottomSheet(
 private fun AccentBottomSheet(
     current: AccentColor,
     onSelect: (AccentColor) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     PickerSheet(title = "Accent Color", onDismiss = onDismiss) {
         AccentColor.entries.forEach { accent ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .clickable { onSelect(accent) }
-                    .padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AccentSwatch(accentPrimary(accent, dark = isDarkTheme()))
-                Text(
-                    text = accent.displayName(),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f).padding(start = 12.dp),
-                    color = if (current == accent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                    fontWeight = if (current == accent) FontWeight.SemiBold else FontWeight.Normal
-                )
-                if (current == accent) {
-                    Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .clickable { onSelect(accent) }
+                        .padding(horizontal = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    AccentSwatch(accentPrimary(accent, dark = isDarkTheme()))
+                    Text(
+                        text = accent.displayName(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f).padding(start = 12.dp),
+                        color = if (current == accent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        fontWeight = if (current == accent) FontWeight.SemiBold else FontWeight.Normal,
+                    )
+                    if (current == accent) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                 }
+                HorizontalDivider(
+                    modifier = Modifier.padding(start = 46.dp),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+                )
             }
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun PickerSheet(title: String, onDismiss: () -> Unit, content: @Composable () -> Unit) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentWindowInsets = { WindowInsets.navigationBars }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(bottom = 12.dp)
-        ) {
-            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(12.dp))
-            content()
-        }
-    }
-}
-
-@Composable
-private fun PickerRow(label: String, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-            modifier = Modifier.weight(1f)
-        )
-        if (selected) Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
     }
 }
 
@@ -705,41 +731,50 @@ private fun NotifBottomSheet(
     currentOffset: Int,
     onEnabledChange: (Boolean) -> Unit,
     onOffsetSelect: (Int) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     fun toggle(value: Boolean) {
         onEnabledChange(value)
-        if (value && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        if (
+            value && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        ) {
+            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
     }
+
     PickerSheet(title = stringResource(R.string.settings_notifications), onDismiss = onDismiss) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth().height(52.dp).padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(stringResource(R.string.onboarding_notif_enable), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                stringResource(R.string.onboarding_notif_enable),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium,
+            )
             Switch(checked = enabled, onCheckedChange = ::toggle)
         }
         if (enabled) {
+            HorizontalDivider(
+                modifier = Modifier.padding(start = 14.dp),
+                thickness = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+            )
             Text(
-                stringResource(R.string.notif_offset_title),
-                style = MaterialTheme.typography.labelMedium,
+                text = stringResource(R.string.notif_offset_title),
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp, top = 18.dp, bottom = 6.dp)
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(start = 14.dp, top = 14.dp, bottom = 4.dp),
             )
             notifOffsetOptions.forEach { minutes ->
                 PickerRow(
                     label = notifOffsetLabel(minutes),
                     selected = minutes == currentOffset,
-                    onClick = { onOffsetSelect(minutes) }
+                    onClick = { onOffsetSelect(minutes) },
                 )
             }
         }
@@ -751,20 +786,20 @@ private fun NotifBottomSheet(
 private fun CacheRetentionBottomSheet(
     currentRetentionDays: Int,
     onSelect: (Int) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     PickerSheet(title = "Cache Retention", onDismiss = onDismiss) {
         Text(
-            "Older temporary data is removed automatically during daily maintenance.",
-            style = MaterialTheme.typography.bodyMedium,
+            text = "Older temporary data is removed automatically during daily maintenance.",
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(14.dp),
         )
         CacheRetentionPolicy.supportedRetentionDays.forEach { days ->
             PickerRow(
                 label = "$days days",
                 selected = currentRetentionDays == days,
-                onClick = { onSelect(days) }
+                onClick = { onSelect(days) },
             )
         }
     }
@@ -775,15 +810,19 @@ private fun CacheRetentionBottomSheet(
 fun LanguageBottomSheet(
     currentLanguage: AppLanguage,
     onSelect: (AppLanguage) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     PickerSheet(title = stringResource(R.string.settings_language), onDismiss = onDismiss) {
         listOf(
             AppLanguage.SYSTEM to stringResource(R.string.settings_language_system),
             AppLanguage.ENGLISH to stringResource(R.string.settings_language_english),
-            AppLanguage.SERBIAN_LATIN to stringResource(R.string.settings_language_serbian)
+            AppLanguage.SERBIAN_LATIN to stringResource(R.string.settings_language_serbian),
         ).forEach { (language, label) ->
-            PickerRow(label, currentLanguage == language, onClick = { onSelect(language) })
+            PickerRow(
+                label = label,
+                selected = currentLanguage == language,
+                onClick = { onSelect(language) },
+            )
         }
     }
 }
@@ -793,33 +832,37 @@ fun LanguageBottomSheet(
 private fun TimezonePickerDialog(
     currentTimezoneId: String,
     onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+    onConfirm: (String) -> Unit,
 ) {
     val zones = remember { ZoneId.getAvailableZoneIds().sorted() }
-    var selected by remember(currentTimezoneId) { mutableStateOf(currentTimezoneId.ifEmpty { ZoneId.systemDefault().id }) }
-    val listState = rememberLazyListState()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var selected by remember(currentTimezoneId) {
+        mutableStateOf(currentTimezoneId.ifEmpty { ZoneId.systemDefault().id })
+    }
 
-    ModalBottomSheet(
+    AppSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentWindowInsets = { WindowInsets.navigationBars }
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        title = stringResource(R.string.timezone_title),
+        trailingContent = {
+            TextButton(onClick = { onConfirm(selected) }) {
+                Text(stringResource(R.string.timezone_confirm))
+            }
+        },
     ) {
-        Column(
+        LazyColumn(
+            state = rememberLazyListState(),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .windowInsetsPadding(WindowInsets.navigationBars)
+                .heightIn(max = 560.dp)
+                .clip(SettingsGroupShape)
+                .background(MaterialTheme.colorScheme.surfaceContainer),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.timezone_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                TextButton(onClick = { onConfirm(selected) }) { Text(stringResource(R.string.timezone_confirm)) }
-            }
-            LazyColumn(state = listState, modifier = Modifier.fillMaxWidth().height(420.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
-                items(zones) { zone ->
-                    PickerRow(zone, selected == zone, onClick = { selected = zone })
-                }
+            items(zones) { zone ->
+                PickerRow(
+                    label = zone,
+                    selected = selected == zone,
+                    onClick = { selected = zone },
+                )
             }
         }
     }
