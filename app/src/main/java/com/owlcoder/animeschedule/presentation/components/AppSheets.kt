@@ -42,9 +42,9 @@ fun AppSheet(
         modifier = modifier,
         sheetState = sheetState,
         shape = ContinuousRoundedShape(GlassTokens.sheetRadius),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.98f),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.94f),
         contentColor = MaterialTheme.colorScheme.onSurface,
-        scrimColor = Color.Black.copy(alpha = 0.46f),
+        scrimColor = Color.Black.copy(alpha = 0.42f),
         tonalElevation = 0.dp,
         dragHandle = { AppSheetHandle() },
     ) {
@@ -59,8 +59,8 @@ fun AppSheet(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 44.dp)
-                        .padding(bottom = 7.dp),
+                        .heightIn(min = 42.dp)
+                        .padding(bottom = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -82,16 +82,16 @@ fun AppSheet(
 fun AppSheetHandle(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(top = 9.dp, bottom = 6.dp)
+            .padding(top = 8.dp, bottom = 5.dp)
             .fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
-                .width(36.dp)
-                .requiredHeight(5.dp)
+                .width(34.dp)
+                .requiredHeight(4.dp)
                 .clip(MaterialTheme.shapes.extraLarge)
-                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f)),
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.24f)),
         )
     }
 }
