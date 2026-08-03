@@ -4,7 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -29,13 +31,14 @@ fun AppSheet(
     modifier: Modifier = Modifier,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
     title: String? = null,
+    trailingContent: @Composable (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         sheetState = sheetState,
-        shape = ContinuousRoundedShape(28.dp),
+        shape = ContinuousRoundedShape(30.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = 0.dp,
@@ -46,15 +49,25 @@ fun AppSheet(
                 .fillMaxWidth()
                 .imePadding()
                 .navigationBarsPadding()
-                .padding(start = 18.dp, end = 18.dp, bottom = 14.dp),
+                .padding(start = 18.dp, end = 18.dp, bottom = 16.dp),
         ) {
             if (!title.isNullOrBlank()) {
-                Text(
-                    text = title,
-                    modifier = Modifier.padding(top = 2.dp, bottom = 14.dp),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 44.dp)
+                        .padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = title,
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                    )
+                    trailingContent?.invoke()
+                }
             }
             content()
         }
@@ -64,15 +77,17 @@ fun AppSheet(
 @Composable
 fun AppSheetHandle(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.padding(top = 10.dp, bottom = 8.dp).fillMaxWidth(),
+        modifier = modifier
+            .padding(top = 9.dp, bottom = 7.dp)
+            .fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.10f)
-                .requiredHeight(5.dp)
+                .requiredHeight(4.dp)
                 .clip(MaterialTheme.shapes.extraLarge)
-                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.30f)),
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f)),
         )
     }
 }
