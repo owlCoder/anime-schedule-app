@@ -42,6 +42,7 @@ fun AppButton(
     icon: ImageVector? = null,
 ) {
     val accent = MaterialTheme.colorScheme.primary
+    val neutral = MaterialTheme.colorScheme.onSurface
     when (variant) {
         AppButtonVariant.Plain -> {
             androidx.compose.material3.TextButton(
@@ -65,7 +66,7 @@ fun AppButton(
                 shape = PillShape,
                 color = container,
                 contentColor = contentColor,
-                shadowElevation = if (enabled) 2.dp else 0.dp,
+                shadowElevation = if (enabled) 1.dp else 0.dp,
                 tonalElevation = 0.dp,
             ) {
                 ButtonRow(label, icon, contentColor, enabled = true)
@@ -80,9 +81,9 @@ fun AppButton(
                 shape = PillShape,
                 tone = GlassTone.Neutral,
                 blur = GlassBlur.Soft,
-                contentColor = accent,
+                contentColor = neutral,
             ) {
-                ButtonRow(label, icon, accent, enabled)
+                ButtonRow(label, icon, neutral, enabled)
             }
         }
         AppButtonVariant.Destructive -> {
@@ -93,7 +94,7 @@ fun AppButton(
                     .clickable(enabled = enabled, onClick = onClick)
                     .semantics { role = Role.Button },
                 shape = PillShape,
-                color = error.copy(alpha = if (enabled) 0.16f else 0.07f),
+                color = error.copy(alpha = if (enabled) 0.14f else 0.06f),
                 contentColor = error,
                 tonalElevation = 0.dp,
             ) {
@@ -144,7 +145,7 @@ fun GlassButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     shape: Shape = PillShape,
-    accent: Color = MaterialTheme.colorScheme.primary,
+    accent: Color = MaterialTheme.colorScheme.onSurface,
     onImagery: Boolean = false,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp),
     content: @Composable (contentColor: Color) -> Unit,
@@ -156,7 +157,7 @@ fun GlassButton(
             .clickable(enabled = enabled, onClick = onClick)
             .semantics { role = Role.Button },
         shape = shape,
-        tone = if (onImagery) GlassTone.OnImage else GlassTone.Accent,
+        tone = if (onImagery) GlassTone.OnImage else GlassTone.Neutral,
         blur = GlassBlur.Soft,
         contentColor = contentColor,
     ) {
@@ -170,7 +171,7 @@ fun GlassButton(
     }
 }
 
-/** 42dp visible liquid-glass disc nested inside a full 48dp accessibility target. */
+/** 40dp visible liquid-glass disc nested inside a full 48dp accessibility target. */
 @Composable
 fun GlassIconButton(
     icon: ImageVector,
@@ -188,17 +189,17 @@ fun GlassIconButton(
         contentAlignment = Alignment.Center,
     ) {
         GlassSurface(
-            modifier = Modifier.size(42.dp),
+            modifier = Modifier.size(40.dp),
             shape = androidx.compose.foundation.shape.CircleShape,
             tone = if (onImagery) GlassTone.OnImage else GlassTone.Neutral,
             blur = GlassBlur.Soft,
             contentColor = if (onImagery) Color.White else MaterialTheme.colorScheme.onSurface,
         ) {
-            Box(Modifier.size(42.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = icon,
                     contentDescription = contentDescription,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(19.dp),
                 )
             }
         }
