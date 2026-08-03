@@ -73,7 +73,7 @@ internal fun SeasonTabRow(
             .fillMaxWidth()
             .height(40.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
@@ -85,7 +85,7 @@ internal fun SeasonTabRow(
                     .height(34.dp)
                     .clip(RoundedCornerShape(9.dp))
                     .background(
-                        if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+                        if (selected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
                         else Color.Transparent,
                     )
                     .clickable(role = Role.Tab) { onSelect(season, currentYear) }
@@ -96,7 +96,7 @@ internal fun SeasonTabRow(
                     text = stringResource(season.labelRes()),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                    color = if (selected) MaterialTheme.colorScheme.primary
+                    color = if (selected) MaterialTheme.colorScheme.onSurface
                     else MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -242,16 +242,16 @@ private fun CompactFilterChip(
     onClick: () -> Unit,
 ) {
     val borderColor = if (selected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.42f)
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.24f)
     } else {
-        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.56f)
     }
     Row(
         modifier = Modifier
             .sizeIn(minHeight = 34.dp)
             .clip(PillShape)
             .background(
-                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                if (selected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
                 else Color.Transparent,
             )
             .border(0.5.dp, borderColor, PillShape)
@@ -263,7 +263,7 @@ private fun CompactFilterChip(
             text = label,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            color = if (selected) MaterialTheme.colorScheme.primary
+            color = if (selected) MaterialTheme.colorScheme.onSurface
             else MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
         )
