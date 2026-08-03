@@ -30,7 +30,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -56,6 +55,7 @@ import com.owlcoder.animeschedule.presentation.components.AppButton
 import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
 import com.owlcoder.animeschedule.presentation.components.AppInlineHeader
 import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.FaviconImage
 import com.owlcoder.animeschedule.presentation.components.GlassIconButton
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
@@ -186,10 +186,9 @@ private fun WatchSourceRow(
                 maxLines = 1,
             )
         }
-        Switch(
+        AppSwitch(
             checked = source.openExternally,
             onCheckedChange = onOpenExternallyChange,
-            modifier = Modifier.size(width = 46.dp, height = 30.dp),
         )
         Box(
             modifier = Modifier
@@ -263,7 +262,7 @@ private fun AddWatchSourceSheet(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Switch(
+                AppSwitch(
                     checked = openExternally,
                     onCheckedChange = { openExternally = it },
                 )
