@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -19,9 +20,9 @@ import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -31,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
@@ -38,10 +40,9 @@ import com.owlcoder.animeschedule.presentation.components.AppInlineHeader
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.EmptyState
 import com.owlcoder.animeschedule.presentation.components.GlassIconButton
-import com.owlcoder.animeschedule.ui.theme.AppDensity
-import androidx.compose.material3.rememberModalBottomSheetState
+import com.owlcoder.animeschedule.presentation.components.GlassToolbarButton
+import com.owlcoder.animeschedule.presentation.components.GlassToolbarGroup
 
-/** Seasonal discovery stays content-first: one header, one selector, one poster grid. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SeasonalOverlay(
@@ -51,11 +52,10 @@ fun SeasonalOverlay(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showFilterSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     AppSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         modifier = Modifier.fillMaxSize(),
     ) {
         Column(
@@ -79,16 +79,12 @@ fun SeasonalOverlay(
                 onFilter = { showFilterSheet = true },
             )
 
-            Column(
-                modifier = Modifier.padding(horizontal = AppDensity.screenHorizontal),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                SeasonTabRow(
-                    currentSeason = uiState.season,
-                    currentYear = uiState.year,
-                    onSelect = { season, year -> viewModel.setSeason(season, year) },
-                )
-            }
+            SeasonTabRow(
+                currentSeason = uiState.season,
+                currentYear = uiState.year,
+                onSelect = { season, year -> viewModel.setSeason(season, year) },
+                modifier = Modifier.padding(top = 8.dp),
+            )
 
             when {
                 uiState.isLoading -> SeasonalLoadingState()
@@ -117,13 +113,10 @@ fun SeasonalOverlay(
                     )
                 }
                 else -> LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 140.dp),
+                    columns = GridCells.Fixed(2),
                     modifier = Modifier.fillMaxWidth().weight(1f),
-                    contentPadding = PaddingValues(
-                        horizontal = AppDensity.screenHorizontal,
-                        vertical = 16.dp,
-                    ),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
                     verticalArrangement = Arrangement.spacedBy(18.dp),
                 ) {
                     items(
@@ -170,7 +163,6 @@ private fun BrowseSeasonHeader(
         title = stringResource(R.string.seasonal_title),
         onBack = onDismiss,
         backContentDescription = stringResource(R.string.common_cancel),
-        modifier = Modifier.padding(horizontal = 4.dp),
         trailingContent = {
             GlassIconButton(
                 icon = Icons.Outlined.Tune,
@@ -179,36 +171,42 @@ private fun BrowseSeasonHeader(
             )
         },
     )
-    androidx.compose.foundation.layout.Row(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = AppDensity.screenHorizontal, vertical = 4.dp),
+            .padding(top = 8.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
             Text(
                 text = "${stringResource(season.labelRes())} $year",
                 style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.SemiBold,
             )
             if (filterActive) {
                 Text(
                     text = stringResource(R.string.seasonal_filter_title),
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
-        GlassIconButton(
-            icon = Icons.AutoMirrored.Filled.NavigateBefore,
-            contentDescription = stringResource(R.string.seasonal_title),
-            onClick = onPrevious,
-        )
-        GlassIconButton(
-            icon = Icons.AutoMirrored.Filled.NavigateNext,
-            contentDescription = stringResource(R.string.seasonal_title),
-            onClick = onNext,
-        )
+        GlassToolbarGroup {
+            GlassToolbarButton(
+                icon = Icons.AutoMirrored.Filled.NavigateBefore,
+                contentDescription = stringResource(R.string.seasonal_title),
+                onClick = onPrevious,
+            )
+            GlassToolbarButton(
+                icon = Icons.AutoMirrored.Filled.NavigateNext,
+                contentDescription = stringResource(R.string.seasonal_title),
+                onClick = onNext,
+            )
+        }
     }
 }
 
@@ -222,7 +220,7 @@ private fun ColumnScope.SeasonalLoadingState() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            CircularProgressIndicator(Modifier.size(28.dp))
+            CircularProgressIndicator(Modifier.size(26.dp), strokeWidth = 2.dp)
             Text(
                 text = stringResource(R.string.seasonal_title),
                 style = MaterialTheme.typography.bodyMedium,
