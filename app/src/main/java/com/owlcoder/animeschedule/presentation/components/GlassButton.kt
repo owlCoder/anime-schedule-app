@@ -66,7 +66,7 @@ fun AppButton(
         contentColor = contentColor,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 15.dp),
+            modifier = Modifier.height(44.dp).padding(horizontal = 15.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
         ) {
@@ -116,7 +116,7 @@ fun GlassButton(
         contentColor = contentColor,
     ) {
         Row(
-            modifier = Modifier.padding(contentPadding),
+            modifier = Modifier.height(44.dp).padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
         ) {
