@@ -12,22 +12,17 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.GlassBlur
 import com.owlcoder.animeschedule.ui.theme.GlassTone
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
 
-/**
- * Selective glass treatment for chrome, controls and transient surfaces.
- *
- * This is an honest tonal glass fallback: Compose's Modifier.blur() blurs the layer it is
- * attached to, not the content behind it. A real sampled backdrop belongs in a dedicated
- * host and is intentionally not faked here. Dimensions and hierarchy remain identical on
- * every device while the tint, highlight and hairline communicate translucency.
- */
+/** Selective translucent material for navigation chrome, controls and overlays. */
 @Composable
 fun GlassSurface(
     modifier: Modifier = Modifier,
@@ -39,15 +34,15 @@ fun GlassSurface(
     content: @Composable () -> Unit,
 ) {
     val palette = glassPalette(tone)
+    val elevation = if (blur == GlassBlur.None) 0.dp else 8.dp
     Box(
         modifier = modifier
+            .shadow(elevation, shape, clip = false)
             .clip(shape)
             .background(palette.fill)
             .background(palette.highlight)
             .border(GlassTokens.hairline, palette.border, shape),
     ) {
-        // Kept as an optional compatibility hook. It is tonal decoration, never a claim of
-        // backdrop sampling and never part of the foreground layout measurement.
         if (backdrop != null) {
             Box(Modifier.fillMaxSize().background(palette.backdrop)) { backdrop() }
         }
@@ -55,16 +50,19 @@ fun GlassSurface(
     }
 }
 
-/** Named semantic primitive for top bars, floating controls and bottom navigation. */
 @Composable
 fun GlassChrome(
     modifier: Modifier = Modifier,
     shape: Shape = ContinuousRoundedShape(GlassTokens.chromeRadius),
     tone: GlassTone = GlassTone.Neutral,
     content: @Composable () -> Unit,
-) {
-    GlassSurface(modifier = modifier, shape = shape, tone = tone, blur = GlassBlur.Medium, content = content)
-}
+) = GlassSurface(
+    modifier = modifier,
+    shape = shape,
+    tone = tone,
+    blur = GlassBlur.Medium,
+    content = content,
+)
 
 private data class GlassPalette(
     val fill: Color,
@@ -80,14 +78,17 @@ private fun glassPalette(tone: GlassTone): GlassPalette {
     val accent = colors.primary
     val fill = when (tone) {
         GlassTone.Neutral -> if (dark) GlassTokens.neutralFillDark else GlassTokens.neutralFillLight
-        GlassTone.Accent -> accent.copy(alpha = if (dark) 0.22f else 0.16f)
-        GlassTone.OnImage -> Color.Black.copy(alpha = 0.22f)
+        GlassTone.Accent -> accent.copy(alpha = if (dark) 0.24f else 0.13f)
+        GlassTone.OnImage -> Color.Black.copy(alpha = 0.28f)
     }
-    val border = if (dark) GlassTokens.darkHighlight else GlassTokens.highlight
+    val border = when (tone) {
+        GlassTone.Accent -> accent.copy(alpha = if (dark) 0.48f else 0.34f)
+        else -> if (dark) GlassTokens.darkHighlight else GlassTokens.highlight
+    }
     val top = when (tone) {
-        GlassTone.Accent -> accent.copy(alpha = if (dark) 0.13f else 0.18f)
-        GlassTone.OnImage -> Color.White.copy(alpha = 0.16f)
-        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.08f else 0.34f)
+        GlassTone.Accent -> Color.White.copy(alpha = if (dark) 0.10f else 0.38f)
+        GlassTone.OnImage -> Color.White.copy(alpha = 0.18f)
+        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.08f else 0.38f)
     }
     return GlassPalette(
         fill = fill,
@@ -97,7 +98,6 @@ private fun glassPalette(tone: GlassTone): GlassPalette {
     )
 }
 
-/** Retained for callers that need a low-RAM/API capability check before adding decoration. */
 @Composable
 fun rememberGlassCapability(): Boolean {
     val context = LocalContext.current
