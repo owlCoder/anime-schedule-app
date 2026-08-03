@@ -43,6 +43,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.owlcoder.animeschedule.presentation.components.AppNotificationBadge
@@ -63,8 +64,8 @@ private val items = listOf(
     BottomNavItem(Screen.Settings, "Settings", Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle),
 )
 
-private val DockShape = ContinuousRoundedShape(24.dp)
-private val DockHeight = 64.dp
+private val DockShape = ContinuousRoundedShape(22.dp)
+private val DockHeight = 58.dp
 
 @Composable
 fun AnimeBottomBar(
@@ -78,14 +79,17 @@ fun AnimeBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-            .padding(horizontal = 14.dp, vertical = 6.dp),
+            .padding(horizontal = 16.dp, vertical = 5.dp),
     ) {
         GlassChrome(
             modifier = Modifier.fillMaxWidth().height(DockHeight),
             shape = DockShape,
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().height(DockHeight).padding(horizontal = 4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(DockHeight)
+                    .padding(horizontal = 3.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 items.forEach { item ->
@@ -140,9 +144,10 @@ private fun BottomNavItemView(
         ) {
             Box(
                 modifier = Modifier
-                    .size(width = 42.dp, height = 28.dp)
+                    .size(width = 38.dp, height = 25.dp)
                     .background(
-                        if (selected) accent.copy(alpha = 0.15f) else androidx.compose.ui.graphics.Color.Transparent,
+                        if (selected) accent.copy(alpha = 0.15f)
+                        else androidx.compose.ui.graphics.Color.Transparent,
                         CircleShape,
                     ),
                 contentAlignment = Alignment.Center,
@@ -151,14 +156,17 @@ private fun BottomNavItemView(
                     imageVector = if (selected) item.activeIcon else item.inactiveIcon,
                     contentDescription = null,
                     tint = iconColor,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(19.dp),
                 )
             }
         }
         Text(
             text = item.label,
             color = iconColor,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 10.sp,
+                lineHeight = 12.sp,
+            ),
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             maxLines = 1,
         )
