@@ -13,12 +13,17 @@ import com.owlcoder.animeschedule.data.local.datastore.AccentColor
 import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import com.owlcoder.animeschedule.presentation.components.ProvideMotionPolicy
 
-/** Shared continuous-ish shape scale. Every component category has one geometry. */
+/**
+ * Compact iOS-inspired shape hierarchy.
+ *
+ * Content surfaces stay quieter and less inflated than transient chrome. Large radii are
+ * reserved for sheets and the floating navigation dock, which keeps dense screens readable.
+ */
 val AnimeScheduleShapes = Shapes().copy(
-    extraSmall = RoundedCornerShape(10.dp),
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(22.dp),
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(11.dp),
+    medium = RoundedCornerShape(15.dp),
+    large = RoundedCornerShape(20.dp),
     extraLarge = RoundedCornerShape(28.dp),
 )
 
