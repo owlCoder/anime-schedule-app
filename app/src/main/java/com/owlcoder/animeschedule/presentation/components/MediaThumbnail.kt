@@ -2,8 +2,7 @@ package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,13 +18,13 @@ object MediaThumbnail {
     fun Small(
         url: String?,
         contentDescription: String?,
-        modifier: Modifier = Modifier,
-        placeholderColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier: Modifier = Modifier.size(width = 52.dp, height = 70.dp),
+        placeholderColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Thumbnail(
             url = url,
             contentDescription = contentDescription,
-            modifier = modifier.widthIn(min = 56.dp).heightIn(min = 72.dp),
+            modifier = modifier,
             placeholderColor = placeholderColor,
         )
     }
@@ -34,13 +33,13 @@ object MediaThumbnail {
     fun Large(
         url: String?,
         contentDescription: String?,
-        modifier: Modifier = Modifier,
-        placeholderColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier: Modifier = Modifier.size(width = 120.dp, height = 168.dp),
+        placeholderColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Thumbnail(
             url = url,
             contentDescription = contentDescription,
-            modifier = modifier.widthIn(min = 96.dp).heightIn(min = 128.dp),
+            modifier = modifier,
             placeholderColor = placeholderColor,
         )
     }
@@ -55,7 +54,7 @@ private fun Thumbnail(
 ) {
     Box(
         modifier = modifier
-            .clip(MaterialTheme.shapes.medium)
+            .clip(MaterialTheme.shapes.small)
             .background(placeholderColor),
         contentAlignment = Alignment.Center,
     ) {
