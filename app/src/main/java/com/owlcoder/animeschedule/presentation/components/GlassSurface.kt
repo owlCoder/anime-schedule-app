@@ -23,11 +23,11 @@ import com.owlcoder.animeschedule.ui.theme.GlassTone
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
 
 /**
- * Layered translucent material for floating navigation, controls and overlays.
+ * Achromatic liquid material for floating navigation, controls and transient overlays.
  *
- * Android Compose does not expose the same sampled backdrop pipeline as UIKit. This primitive
- * therefore uses a restrained tint, specular highlight, lowlight and hairline edge rather than
- * pretending that a normal foreground blur is a backdrop blur.
+ * Compose cannot sample the UIKit backdrop pipeline directly, so this primitive builds depth from
+ * translucent neutral fill, edge light, a soft specular band and a lowlight. Accent color is never
+ * baked into the glass itself; selected glass is simply a brighter neutral lens.
  */
 @Composable
 fun GlassSurface(
@@ -42,8 +42,8 @@ fun GlassSurface(
     val palette = glassPalette(tone)
     val elevation = when (blur) {
         GlassBlur.None -> 0.dp
-        GlassBlur.Soft -> 3.dp
-        GlassBlur.Medium -> 6.dp
+        GlassBlur.Soft -> 2.dp
+        GlassBlur.Medium -> 4.dp
     }
 
     Box(
@@ -96,53 +96,56 @@ private data class GlassPalette(
 private fun glassPalette(tone: GlassTone): GlassPalette {
     val colors = MaterialTheme.colorScheme
     val dark = colors.background.red < 0.2f
-    val accent = colors.primary
 
     val fill = when (tone) {
         GlassTone.Neutral -> if (dark) GlassTokens.neutralFillDark else GlassTokens.neutralFillLight
-        GlassTone.Accent -> accent.copy(alpha = if (dark) 0.26f else 0.18f)
-        GlassTone.OnImage -> Color.Black.copy(alpha = 0.30f)
+        GlassTone.Accent -> if (dark) GlassTokens.selectedFillDark else GlassTokens.selectedFillLight
+        GlassTone.OnImage -> Color.Black.copy(alpha = 0.26f)
     }
 
     val border = when (tone) {
-        GlassTone.Accent -> if (dark) Color.White.copy(alpha = 0.18f) else accent.copy(alpha = 0.34f)
-        GlassTone.Neutral -> if (dark) Color.White.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.72f)
-        GlassTone.OnImage -> Color.White.copy(alpha = 0.22f)
+        GlassTone.Accent -> Color.White.copy(alpha = if (dark) 0.20f else 0.78f)
+        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.12f else 0.66f)
+        GlassTone.OnImage -> Color.White.copy(alpha = 0.20f)
     }
 
     val ambientTop = when (tone) {
-        GlassTone.Accent -> accent.copy(alpha = if (dark) 0.10f else 0.08f)
-        GlassTone.OnImage -> Color.White.copy(alpha = 0.08f)
-        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.055f else 0.14f)
+        GlassTone.Accent -> Color.White.copy(alpha = if (dark) 0.075f else 0.16f)
+        GlassTone.OnImage -> Color.White.copy(alpha = 0.065f)
+        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.04f else 0.10f)
     }
 
     val specularTop = when (tone) {
-        GlassTone.Accent -> Color.White.copy(alpha = if (dark) 0.13f else 0.30f)
-        GlassTone.OnImage -> Color.White.copy(alpha = 0.18f)
-        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.11f else 0.30f)
+        GlassTone.Accent -> Color.White.copy(alpha = if (dark) 0.17f else 0.38f)
+        GlassTone.OnImage -> Color.White.copy(alpha = 0.17f)
+        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.095f else 0.27f)
     }
 
     return GlassPalette(
         fill = fill,
         border = border,
         ambient = Brush.horizontalGradient(
-            colors = listOf(ambientTop, Color.Transparent, ambientTop.copy(alpha = ambientTop.alpha * 0.35f)),
+            colors = listOf(
+                ambientTop,
+                Color.Transparent,
+                ambientTop.copy(alpha = ambientTop.alpha * 0.26f),
+            ),
         ),
         specular = Brush.verticalGradient(
             colorStops = arrayOf(
                 0f to specularTop,
-                0.20f to specularTop.copy(alpha = specularTop.alpha * 0.35f),
-                0.58f to Color.Transparent,
+                0.16f to specularTop.copy(alpha = specularTop.alpha * 0.32f),
+                0.52f to Color.Transparent,
             ),
         ),
         lowlight = Brush.verticalGradient(
             colorStops = arrayOf(
                 0.62f to Color.Transparent,
-                1f to Color.Black.copy(alpha = if (dark) 0.11f else 0.035f),
+                1f to Color.Black.copy(alpha = if (dark) 0.085f else 0.025f),
             ),
         ),
         backdrop = Brush.verticalGradient(
-            colors = listOf(Color.White.copy(alpha = 0.035f), Color.Transparent),
+            colors = listOf(Color.White.copy(alpha = 0.025f), Color.Transparent),
         ),
     )
 }
