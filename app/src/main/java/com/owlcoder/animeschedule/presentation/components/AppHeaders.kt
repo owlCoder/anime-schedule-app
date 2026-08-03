@@ -40,11 +40,11 @@ fun AppLargeHeader(
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(1.dp),
         ) {
             Text(
                 text = title,
@@ -77,7 +77,7 @@ fun AppInlineHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 52.dp),
+            .heightIn(min = 48.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
     ) {
@@ -90,7 +90,7 @@ fun AppInlineHeader(
         }
         Text(
             text = title,
-            modifier = Modifier.weight(1f).padding(horizontal = 2.dp),
+            modifier = Modifier.weight(1f).padding(horizontal = 1.dp),
             style = MaterialTheme.typography.titleLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -99,7 +99,6 @@ fun AppInlineHeader(
     }
 }
 
-/** One shared piece of glass for adjacent toolbar actions; never stacks glass discs. */
 @Composable
 fun GlassToolbarGroup(
     modifier: Modifier = Modifier,
@@ -110,9 +109,9 @@ fun GlassToolbarGroup(
         shape = PillShape,
     ) {
         Row(
-            modifier = Modifier.height(42.dp).padding(horizontal = 3.dp),
+            modifier = Modifier.height(40.dp).padding(horizontal = 3.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(1.dp),
+            horizontalArrangement = Arrangement.spacedBy(0.dp),
             content = content,
         )
     }
@@ -129,9 +128,9 @@ fun GlassToolbarButton(
 ) {
     Box(
         modifier = modifier
-            .size(38.dp)
+            .size(36.dp)
             .background(
-                color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f) else Color.Transparent,
+                color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f) else Color.Transparent,
                 shape = androidx.compose.foundation.shape.CircleShape,
             )
             .clickable(enabled = enabled, onClick = onClick)
@@ -141,7 +140,7 @@ fun GlassToolbarButton(
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            modifier = Modifier.size(18.dp),
+            modifier = Modifier.size(17.dp),
             tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
         )
     }
