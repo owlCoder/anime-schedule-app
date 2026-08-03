@@ -50,7 +50,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -80,13 +79,15 @@ import com.owlcoder.animeschedule.data.local.datastore.AccentColor
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import com.owlcoder.animeschedule.data.local.datastore.CacheRetentionPolicy
 import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
+import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
 import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import com.owlcoder.animeschedule.ui.theme.accentPrimary
 import java.time.ZoneId
 
-private val SettingsGroupShape = RoundedCornerShape(18.dp)
-private val SettingsRowIconShape = RoundedCornerShape(9.dp)
+private val SettingsGroupShape = RoundedCornerShape(14.dp)
+private val SettingsRowIconShape = RoundedCornerShape(7.dp)
 private val SettingsAccentRed = Color(0xFFFF453A)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -128,18 +129,15 @@ fun SettingsScreen(
             contentPadding = PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
-                top = 12.dp,
-                bottom = LocalNavBarHeight.current + 28.dp,
+                top = 6.dp,
+                bottom = LocalNavBarHeight.current + 20.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
-                Text(
-                    text = stringResource(R.string.settings_title),
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(start = 2.dp, bottom = 2.dp),
+                AppLargeHeader(
+                    title = stringResource(R.string.settings_title),
+                    modifier = Modifier.padding(bottom = 2.dp),
                 )
             }
 
@@ -162,7 +160,7 @@ fun SettingsScreen(
                             text = loginError.orEmpty(),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(start = 12.dp, top = 6.dp),
+                            modifier = Modifier.padding(start = 12.dp, top = 5.dp),
                         )
                     }
                 }
@@ -260,7 +258,7 @@ fun SettingsScreen(
                             trailing = {
                                 if (isClearingCache) {
                                     CircularProgressIndicator(
-                                        modifier = Modifier.size(18.dp),
+                                        modifier = Modifier.size(17.dp),
                                         strokeWidth = 2.dp,
                                     )
                                 }
@@ -352,7 +350,7 @@ fun SettingsScreen(
     if (showClearCacheConfirm) {
         AlertDialog(
             onDismissRequest = { showClearCacheConfirm = false },
-            shape = RoundedCornerShape(26.dp),
+            shape = RoundedCornerShape(22.dp),
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             title = { Text("Clear cache?") },
             text = { Text("Temporary images and stale cached data will be removed. Your MAL list, tokens and settings stay safe.") },
@@ -392,9 +390,9 @@ private fun SettingsSection(
         Text(
             text = title.uppercase(),
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 12.dp, bottom = 7.dp),
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+            modifier = Modifier.padding(start = 12.dp, bottom = 5.dp),
         )
         content()
     }
@@ -423,40 +421,40 @@ private fun AccountRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
+            .height(60.dp)
             .clickable(enabled = !isLoggingIn, onClick = onClick)
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (avatarUrl.isNotBlank()) {
             AsyncImage(
                 model = avatarUrl,
                 contentDescription = null,
-                modifier = Modifier.size(38.dp).clip(CircleShape),
+                modifier = Modifier.size(34.dp).clip(CircleShape),
                 contentScale = ContentScale.Crop,
             )
         } else {
             Surface(
-                modifier = Modifier.size(38.dp),
+                modifier = Modifier.size(34.dp),
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                color = MaterialTheme.colorScheme.primary,
             ) {
                 Icon(
                     imageVector = Icons.Default.AccountCircle,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(7.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.padding(6.dp),
                 )
             }
         }
         Column(
-            modifier = Modifier.weight(1f).padding(horizontal = 11.dp),
+            modifier = Modifier.weight(1f).padding(horizontal = 10.dp),
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = if (isLoggedIn && username.isNotBlank()) username else "MyAnimeList",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -468,7 +466,7 @@ private fun AccountRow(
             )
         }
         if (isLoggingIn) {
-            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+            CircularProgressIndicator(modifier = Modifier.size(17.dp), strokeWidth = 2.dp)
         } else {
             val actionColor = if (isLoggedIn) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary
             Text(
@@ -481,7 +479,7 @@ private fun AccountRow(
                 imageVector = if (isLoggedIn) Icons.AutoMirrored.Filled.ExitToApp else Icons.AutoMirrored.Filled.Login,
                 contentDescription = null,
                 tint = actionColor,
-                modifier = Modifier.padding(start = 5.dp).size(17.dp),
+                modifier = Modifier.padding(start = 4.dp).size(16.dp),
             )
         }
     }
@@ -500,31 +498,31 @@ private fun SettingsRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 56.dp)
+            .heightIn(min = 54.dp)
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 10.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Surface(
-            modifier = Modifier.size(30.dp),
+            modifier = Modifier.size(29.dp),
             shape = SettingsRowIconShape,
-            color = iconTint.copy(alpha = 0.14f),
+            color = iconTint,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = iconTint,
+                tint = Color.White,
                 modifier = Modifier.padding(6.dp),
             )
         }
         Column(
-            modifier = Modifier.weight(1f).padding(start = 11.dp, end = 8.dp),
+            modifier = Modifier.weight(1f).padding(start = 10.dp, end = 7.dp),
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Normal,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -543,8 +541,8 @@ private fun SettingsRow(
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
-                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.64f),
+                modifier = Modifier.size(17.dp),
             )
         }
     }
@@ -553,9 +551,9 @@ private fun SettingsRow(
 @Composable
 private fun SettingsDivider() {
     HorizontalDivider(
-        modifier = Modifier.padding(start = 53.dp),
+        modifier = Modifier.padding(start = 49.dp),
         thickness = 0.5.dp,
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.52f),
     )
 }
 
@@ -563,7 +561,7 @@ private fun SettingsDivider() {
 private fun AccentSwatch(color: Color) {
     Box(
         modifier = Modifier
-            .size(20.dp)
+            .size(18.dp)
             .clip(CircleShape)
             .background(color),
     )
@@ -601,9 +599,9 @@ private fun PickerSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 600.dp)
+                .heightIn(max = 560.dp)
                 .clip(SettingsGroupShape)
-                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .background(MaterialTheme.colorScheme.surfaceContainerLow)
                 .verticalScroll(rememberScrollState()),
             content = content,
         )
@@ -620,14 +618,14 @@ private fun PickerRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
+                .height(48.dp)
                 .clickable(onClick = onClick)
-                .padding(horizontal = 14.dp),
+                .padding(horizontal = 13.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 modifier = Modifier.weight(1f),
@@ -638,15 +636,15 @@ private fun PickerRow(
                 Icon(
                     Icons.Default.Check,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }
         }
         HorizontalDivider(
-            modifier = Modifier.padding(start = 14.dp),
+            modifier = Modifier.padding(start = 13.dp),
             thickness = 0.5.dp,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
         )
     }
 }
@@ -682,16 +680,16 @@ private fun AccentBottomSheet(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
+                        .height(48.dp)
                         .clickable { onSelect(accent) }
-                        .padding(horizontal = 14.dp),
+                        .padding(horizontal = 13.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     AccentSwatch(accentPrimary(accent, dark = isDarkTheme()))
                     Text(
                         text = accent.displayName(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f).padding(start = 12.dp),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f).padding(start = 11.dp),
                         color = if (current == accent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                         fontWeight = if (current == accent) FontWeight.SemiBold else FontWeight.Normal,
                     )
@@ -699,15 +697,15 @@ private fun AccentBottomSheet(
                         Icon(
                             Icons.Default.Check,
                             contentDescription = null,
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(18.dp),
                             tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
                 HorizontalDivider(
-                    modifier = Modifier.padding(start = 46.dp),
+                    modifier = Modifier.padding(start = 42.dp),
                     thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
                 )
             }
         }
@@ -747,28 +745,28 @@ private fun NotifBottomSheet(
 
     PickerSheet(title = stringResource(R.string.settings_notifications), onDismiss = onDismiss) {
         Row(
-            modifier = Modifier.fillMaxWidth().height(52.dp).padding(horizontal = 14.dp),
+            modifier = Modifier.fillMaxWidth().height(50.dp).padding(horizontal = 13.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 stringResource(R.string.onboarding_notif_enable),
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
             )
-            Switch(checked = enabled, onCheckedChange = ::toggle)
+            AppSwitch(checked = enabled, onCheckedChange = ::toggle)
         }
         if (enabled) {
             HorizontalDivider(
-                modifier = Modifier.padding(start = 14.dp),
+                modifier = Modifier.padding(start = 13.dp),
                 thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
             )
             Text(
                 text = stringResource(R.string.notif_offset_title),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(start = 14.dp, top = 14.dp, bottom = 4.dp),
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(start = 13.dp, top = 12.dp, bottom = 3.dp),
             )
             notifOffsetOptions.forEach { minutes ->
                 PickerRow(
@@ -793,7 +791,7 @@ private fun CacheRetentionBottomSheet(
             text = "Older temporary data is removed automatically during daily maintenance.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(14.dp),
+            modifier = Modifier.padding(13.dp),
         )
         CacheRetentionPolicy.supportedRetentionDays.forEach { days ->
             PickerRow(
@@ -853,9 +851,9 @@ private fun TimezonePickerDialog(
             state = rememberLazyListState(),
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 560.dp)
+                .heightIn(max = 540.dp)
                 .clip(SettingsGroupShape)
-                .background(MaterialTheme.colorScheme.surfaceContainer),
+                .background(MaterialTheme.colorScheme.surfaceContainerLow),
         ) {
             items(zones) { zone ->
                 PickerRow(
