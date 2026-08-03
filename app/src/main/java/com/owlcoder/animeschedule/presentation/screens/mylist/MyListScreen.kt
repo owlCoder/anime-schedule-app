@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.FormatListBulleted
 import androidx.compose.material.icons.automirrored.filled.Login
@@ -37,7 +36,6 @@ import androidx.compose.material.icons.outlined.RemoveCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -49,7 +47,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -70,12 +67,16 @@ import com.owlcoder.animeschedule.presentation.components.AppLoadingState
 import com.owlcoder.animeschedule.presentation.components.AppSearchField
 import com.owlcoder.animeschedule.presentation.components.EmptyState
 import com.owlcoder.animeschedule.presentation.components.ErrorBanner
+import com.owlcoder.animeschedule.presentation.components.GlassSurface
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.displayName
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
+import com.owlcoder.animeschedule.ui.theme.GlassBlur
+import com.owlcoder.animeschedule.ui.theme.GlassTone
+import com.owlcoder.animeschedule.ui.theme.PillShape
 
 private val statusTabs = listOf(
     WatchStatus.WATCHING,
@@ -149,7 +150,7 @@ fun MyListScreen(
                 AppLargeHeader(
                     title = stringResource(R.string.mylist_title),
                     subtitle = if (totalCount > 0) "$totalCount anime" else null,
-                    modifier = Modifier.padding(top = 6.dp, bottom = 8.dp),
+                    modifier = Modifier.padding(top = 8.dp, bottom = 10.dp),
                 )
                 AppSearchField(
                     value = uiState.searchQuery,
@@ -157,13 +158,13 @@ fun MyListScreen(
                     placeholder = stringResource(R.string.mylist_search_placeholder),
                     leadingIcon = Icons.Default.Search,
                     onClear = { viewModel.setSearchQuery("") },
-                    modifier = Modifier.height(40.dp),
+                    modifier = Modifier.height(42.dp),
                 )
                 StatusFilterRow(
                     activeFilter = uiState.activeFilter,
                     counts = uiState.statusCounts,
                     onFilterSelected = viewModel::setFilter,
-                    modifier = Modifier.padding(top = 10.dp, bottom = 7.dp),
+                    modifier = Modifier.padding(top = 12.dp, bottom = 9.dp),
                 )
             }
         },
@@ -199,10 +200,10 @@ fun MyListScreen(
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
-                        top = 3.dp,
-                        bottom = LocalNavBarHeight.current + 14.dp,
+                        top = 5.dp,
+                        bottom = LocalNavBarHeight.current + 18.dp,
                     ),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     if (showError) {
                         item(key = "sync-error", contentType = "error") {
@@ -264,32 +265,30 @@ private fun StatusFilterRow(
         modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(7.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         statusTabs.forEach { status ->
             val selected = status == activeFilter
-            Surface(
+            GlassSurface(
                 modifier = Modifier
-                    .height(34.dp)
+                    .height(38.dp)
                     .clickable(onClick = { onFilterSelected(status) })
                     .semantics { role = Role.Tab },
-                shape = RoundedCornerShape(percent = 50),
-                color = if (selected) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainerHigh
-                },
-                tonalElevation = 0.dp,
+                shape = PillShape,
+                tone = if (selected) GlassTone.Accent else GlassTone.Neutral,
+                blur = if (selected) GlassBlur.Soft else GlassBlur.None,
+                contentColor = if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 11.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Icon(
                         status.tabIcon(selected),
                         contentDescription = null,
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(17.dp),
                         tint = if (selected) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -301,23 +300,12 @@ private fun StatusFilterRow(
                         else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     counts[status]?.takeIf { it > 0 }?.let { count ->
-                        Box(
-                            modifier = Modifier
-                                .size(17.dp)
-                                .background(
-                                    color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
-                                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.12f),
-                                    shape = CircleShape,
-                                ),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = count.toString(),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (selected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                        Text(
+                            text = count.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (selected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
             }
@@ -336,7 +324,7 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
     ) {
         AppLargeHeader(
             title = stringResource(R.string.mylist_title),
-            modifier = Modifier.padding(top = 6.dp),
+            modifier = Modifier.padding(top = 8.dp),
         )
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -344,34 +332,37 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(7.dp),
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 56.dp),
+                verticalArrangement = Arrangement.spacedBy(9.dp),
+                modifier = Modifier.padding(horizontal = 28.dp, vertical = 64.dp),
             ) {
-                Surface(
-                    modifier = Modifier.size(48.dp),
+                GlassSurface(
+                    modifier = Modifier.size(64.dp),
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    tone = GlassTone.Neutral,
+                    blur = GlassBlur.Soft,
                 ) {
-                    Icon(
-                        Icons.Default.AccountCircle,
-                        contentDescription = null,
-                        modifier = Modifier.padding(9.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.AccountCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(31.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
                 Text(
-                    stringResource(R.string.mylist_not_logged_in_title),
-                    style = MaterialTheme.typography.titleLarge,
+                    text = stringResource(R.string.mylist_not_logged_in_title),
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
                 )
                 Text(
-                    stringResource(R.string.mylist_not_logged_in_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = stringResource(R.string.mylist_not_logged_in_subtitle),
+                    style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
-                Box(Modifier.height(6.dp))
+                Box(Modifier.height(10.dp))
                 AppButton(
                     label = stringResource(R.string.profile_login),
                     onClick = onLogin,
