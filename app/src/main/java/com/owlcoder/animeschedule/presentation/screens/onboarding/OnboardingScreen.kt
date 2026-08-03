@@ -471,7 +471,7 @@ private fun ProductPage(
     eyebrow: String,
     title: String,
     subtitle: String,
-    content: @Composable Column.() -> Unit,
+    content: @Composable () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 18.dp),
@@ -482,7 +482,6 @@ private fun ProductPage(
             text = eyebrow,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            letterSpacing = androidx.compose.ui.unit.TextUnit.Unspecified,
         )
         Spacer(Modifier.height(8.dp))
         Text(
