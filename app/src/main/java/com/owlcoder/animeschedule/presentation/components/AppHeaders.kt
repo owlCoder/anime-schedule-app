@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -40,13 +41,13 @@ fun AppLargeHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = if (subtitle.isNullOrBlank()) 44.dp else 62.dp),
+            .heightIn(min = if (subtitle.isNullOrBlank()) 52.dp else 72.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(0.dp),
+            verticalArrangement = Arrangement.spacedBy(1.dp),
         ) {
             Text(
                 text = title,
@@ -79,9 +80,9 @@ fun AppInlineHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 46.dp),
+            .heightIn(min = 52.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
         if (onBack != null) {
             GlassIconButton(
@@ -111,9 +112,9 @@ fun GlassToolbarGroup(
         shape = PillShape,
     ) {
         Row(
-            modifier = Modifier.height(38.dp).padding(horizontal = 2.dp),
+            modifier = Modifier.height(44.dp).padding(horizontal = 3.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(0.dp),
+            horizontalArrangement = Arrangement.spacedBy(1.dp),
             content = content,
         )
     }
@@ -130,10 +131,10 @@ fun GlassToolbarButton(
 ) {
     Box(
         modifier = modifier
-            .size(34.dp)
+            .size(38.dp)
             .background(
-                color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.13f) else Color.Transparent,
-                shape = androidx.compose.foundation.shape.CircleShape,
+                color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.20f) else Color.Transparent,
+                shape = CircleShape,
             )
             .clickable(enabled = enabled, onClick = onClick)
             .semantics { role = Role.Button },
@@ -142,7 +143,7 @@ fun GlassToolbarButton(
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            modifier = Modifier.size(16.dp),
+            modifier = Modifier.size(18.dp),
             tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
         )
     }
