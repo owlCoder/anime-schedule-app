@@ -46,7 +46,7 @@ fun SearchResultCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 78.dp)
+                .heightIn(min = 76.dp)
                 .clickable(onClick = onCardClick)
                 .semantics(mergeDescendants = true) { role = Role.Button }
                 .padding(start = 12.dp, end = 8.dp, top = 7.dp, bottom = 7.dp),
@@ -56,15 +56,15 @@ fun SearchResultCard(
             MediaThumbnail.Small(
                 url = result.coverImageUrl,
                 contentDescription = result.title,
-                modifier = Modifier.size(48.dp, 64.dp),
+                modifier = Modifier.size(46.dp, 62.dp),
             )
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(3.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(
                     text = result.title,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -82,19 +82,19 @@ fun SearchResultCard(
             if (onEditStatus != null) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(42.dp)
                         .clickable(onClick = onEditStatus)
                         .semantics { role = Role.Button },
                     contentAlignment = Alignment.Center,
                 ) {
                     GlassSurface(
-                        modifier = Modifier.size(34.dp),
+                        modifier = Modifier.size(32.dp),
                         shape = CircleShape,
                         tone = if (result.userListEntry != null) GlassTone.Neutral else GlassTone.Accent,
                         blur = GlassBlur.Soft,
-                        contentColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
                     ) {
-                        Box(Modifier.size(34.dp), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = if (result.userListEntry != null) Icons.Default.Edit else Icons.Default.Add,
                                 contentDescription = if (result.userListEntry != null) {
@@ -102,8 +102,8 @@ fun SearchResultCard(
                                 } else {
                                     stringResource(R.string.detail_add_to_list)
                                 },
-                                modifier = Modifier.size(17.dp),
-                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
@@ -112,9 +112,9 @@ fun SearchResultCard(
         }
         if (showDivider) {
             HorizontalDivider(
-                modifier = Modifier.padding(start = 72.dp),
+                modifier = Modifier.padding(start = 70.dp),
                 thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.38f),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.30f),
             )
         }
     }
