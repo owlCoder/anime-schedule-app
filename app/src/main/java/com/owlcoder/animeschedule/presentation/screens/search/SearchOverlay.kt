@@ -19,17 +19,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
@@ -65,22 +62,19 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.core.view.WindowCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
+import com.owlcoder.animeschedule.presentation.components.AppButton
+import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
 import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
-import com.owlcoder.animeschedule.presentation.components.GlassSurface
+import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 import com.owlcoder.animeschedule.presentation.components.LocalToast
-import com.owlcoder.animeschedule.ui.theme.GlassTone
 
-/**
- * Search as a normal destination. It intentionally owns no page-sized card: the page
- * background remains visible and only the input uses the glass treatment.
- */
 @Composable
 fun SearchScreen(
     onAnimeClick: (Int) -> Unit,
@@ -156,11 +150,11 @@ fun SearchScreen(
         if (!isFocused) {
             AppLargeHeader(
                 title = stringResource(R.string.search_title),
-                modifier = Modifier.padding(top = 12.dp),
+                modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
             )
         }
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -196,7 +190,7 @@ fun SearchScreen(
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(if (isFocused) 12.dp else 18.dp))
         SearchContent(
             query = query,
             recentSearches = recentSearches,
@@ -238,7 +232,6 @@ fun SearchScreen(
     }
 }
 
-/** Compatibility bridge for the old shell. New navigation should use [SearchScreen]. */
 @Deprecated("Use SearchScreen as a navigation destination")
 @Composable
 fun SearchOverlay(
@@ -273,69 +266,74 @@ private fun SearchField(
     onClear: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    GlassSurface(
+    val shape = ContinuousRoundedShape(12.dp)
+    Row(
         modifier = modifier
-            .height(44.dp)
+            .height(40.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh, shape)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onFieldTap,
-            ),
-        shape = RoundedCornerShape(14.dp),
-        tone = GlassTone.Neutral,
-    ) {
-        Row(
-            modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                Icons.Default.Search,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.primary,
             )
-            Box(
-                modifier = Modifier.weight(1f).padding(horizontal = 10.dp),
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                if (query.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.search_placeholder),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                    )
-                }
-                BasicTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    singleLine = true,
-                    textStyle = TextStyle(
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                    ),
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { onSubmit() }),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(focusRequester)
-                        .onFocusChanged { onFocusChanged(it.isFocused) },
+            .padding(start = 11.dp, end = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            Icons.Default.Search,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Box(
+            modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            if (query.isEmpty()) {
+                Text(
+                    text = stringResource(R.string.search_placeholder),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
                 )
             }
-            if (query.isNotEmpty()) {
+            BasicTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                singleLine = true,
+                textStyle = TextStyle(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                    lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
+                ),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { onSubmit() }),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { onFocusChanged(it.isFocused) },
+            )
+        }
+        if (query.isNotEmpty()) {
+            Box(
+                modifier = Modifier
+                    .size(34.dp)
+                    .clickable(onClick = onClear)
+                    .semantics { role = Role.Button },
+                contentAlignment = Alignment.Center,
+            ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clickable(onClick = onClear)
-                        .semantics { role = Role.Button },
+                        .size(18.dp)
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f), CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         Icons.Default.Close,
                         contentDescription = stringResource(R.string.search_clear_recent),
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(12.dp),
+                        tint = MaterialTheme.colorScheme.background,
                     )
                 }
             }
@@ -343,7 +341,6 @@ private fun SearchField(
     }
 }
 
-/** Search owns a black/white page background, so its status icons must follow that page. */
 @Composable
 private fun SearchStatusBarStyle() {
     val view = LocalView.current
@@ -415,9 +412,9 @@ private fun RecentSearches(
     onClear: () -> Unit,
     onSelect: (String) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -428,35 +425,38 @@ private fun RecentSearches(
             TextButton(
                 onClick = onClear,
                 contentPadding = PaddingValues(horizontal = 4.dp),
-            ) { Text(stringResource(R.string.search_clear_recent)) }
+            ) {
+                Text(stringResource(R.string.search_clear_recent))
+            }
         }
         InsetGroup {
             searches.forEachIndexed { index, recent ->
                 if (index > 0) {
                     HorizontalDivider(
-                        modifier = Modifier.padding(start = 52.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
+                        modifier = Modifier.padding(start = 46.dp),
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
                     )
                 }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(48.dp)
                         .clickable(onClick = { onSelect(recent) })
                         .semantics { role = Role.Button }
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Icon(
                         Icons.Default.History,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
                         text = recent,
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                     )
                 }
@@ -477,23 +477,24 @@ private fun SearchResults(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(7.dp),
     ) {
         item(key = "results_header") {
             Text(
                 text = stringResource(R.string.search_title),
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
             )
         }
         item(key = "results_group") {
             InsetGroup {
-                results.forEach { result ->
+                results.forEachIndexed { index, result ->
                     SearchResultCard(
                         result = result,
                         onCardClick = { onAnimeClick(result) },
                         onEditStatus = if (result.malId != null) ({ onEditStatus(result) }) else null,
+                        showDivider = index < results.lastIndex,
                     )
                 }
             }
@@ -506,7 +507,9 @@ private fun SearchResults(
                 Box(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
-                ) { CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp) }
+                ) {
+                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                }
             }
         }
     }
@@ -514,28 +517,44 @@ private fun SearchResults(
 
 @Composable
 private fun SearchLoadingState() {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
         Text(
             text = stringResource(R.string.search_title),
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 4.dp),
+            modifier = Modifier.padding(horizontal = 8.dp),
         )
         InsetGroup {
             repeat(4) { index ->
-                if (index > 0) HorizontalDivider(modifier = Modifier.padding(start = 80.dp))
+                if (index > 0) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(start = 66.dp),
+                        thickness = 0.5.dp,
+                    )
+                }
                 Row(
-                    modifier = Modifier.fillMaxWidth().height(88.dp).padding(horizontal = 12.dp, vertical = 8.dp),
+                    modifier = Modifier.fillMaxWidth().height(74.dp).padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Box(
-                        Modifier.size(52.dp, 70.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp)),
+                        Modifier
+                            .size(44.dp, 58.dp)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(9.dp)),
                     )
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Box(Modifier.fillMaxWidth(0.62f).height(13.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape))
-                        Box(Modifier.fillMaxWidth(0.38f).height(11.dp).background(MaterialTheme.colorScheme.surfaceVariant, CircleShape))
+                    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth(0.58f)
+                                .height(11.dp)
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape),
+                        )
+                        Box(
+                            Modifier
+                                .fillMaxWidth(0.34f)
+                                .height(9.dp)
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape),
+                        )
                     }
                 }
             }
@@ -552,24 +571,29 @@ private fun CompactSearchState(
     onAction: (() -> Unit)? = null,
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 36.dp, horizontal = 24.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp, horizontal = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(28.dp),
+            modifier = Modifier.size(24.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(text = title, style = MaterialTheme.typography.titleMedium)
         Text(
             text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         if (actionLabel != null && onAction != null) {
-            TextButton(onClick = onAction) { Text(actionLabel) }
+            Spacer(Modifier.height(4.dp))
+            AppButton(
+                label = actionLabel,
+                onClick = onAction,
+                variant = AppButtonVariant.Plain,
+            )
         }
     }
 }
