@@ -242,10 +242,10 @@ private fun TodayHomeContent(
         contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
-            top = 6.dp,
-            bottom = LocalNavBarHeight.current + 16.dp,
+            top = 8.dp,
+            bottom = LocalNavBarHeight.current + 18.dp,
         ),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item(key = "today-header") {
             AppLargeHeader(
@@ -285,7 +285,7 @@ private fun TodayHomeContent(
                     icon = Icons.Default.CalendarMonth,
                     title = stringResource(R.string.schedule_empty_title),
                     subtitle = stringResource(R.string.schedule_empty_subtitle),
-                    modifier = Modifier.fillMaxWidth().height(220.dp),
+                    modifier = Modifier.fillMaxWidth().height(240.dp),
                 )
             }
         } else {
@@ -303,16 +303,16 @@ private fun TodayHomeContent(
 
             item(key = "dashboard-section-header") {
                 Row(
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 46.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(
                         modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(0.dp),
+                        verticalArrangement = Arrangement.spacedBy(1.dp),
                     ) {
                         Text(
                             text = sectionTitle,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold,
                         )
                         Text(
@@ -323,15 +323,15 @@ private fun TodayHomeContent(
                     }
                     TextButton(
                         onClick = onSeeAll,
-                        modifier = Modifier.height(38.dp),
+                        modifier = Modifier.height(42.dp),
                         contentPadding = PaddingValues(horizontal = 6.dp),
                     ) {
                         Text(stringResource(R.string.schedule_see_all))
-                        Spacer(Modifier.width(2.dp))
+                        Spacer(Modifier.width(3.dp))
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
-                            modifier = Modifier.size(14.dp),
+                            modifier = Modifier.size(15.dp),
                         )
                     }
                 }
@@ -371,39 +371,39 @@ private fun FeaturedAiring(
     AppSurface(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 92.dp)
+            .heightIn(min = 118.dp)
             .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.large,
+        shape = MaterialTheme.shapes.extraLarge,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 9.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(11.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             MediaThumbnail.Small(
                 url = episode.coverImageUrl,
                 contentDescription = episode.title,
-                modifier = Modifier.size(width = 56.dp, height = 74.dp),
+                modifier = Modifier.size(width = 70.dp, height = 94.dp),
             )
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
                     text = status,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
                     text = episode.title,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    maxLines = 2,
+                    maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
                         text = "${airingTimeLabel(episode)} · " + stringResource(
                             R.string.schedule_episode_label,
@@ -420,11 +420,11 @@ private fun FeaturedAiring(
                 GlassButton(
                     onClick = onIncrement,
                     enabled = !isIncrementing,
-                    contentPadding = PaddingValues(horizontal = 10.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp),
                 ) { contentColor ->
                     if (isIncrementing) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(15.dp),
+                            modifier = Modifier.size(16.dp),
                             strokeWidth = 2.dp,
                             color = contentColor,
                         )
@@ -432,7 +432,7 @@ private fun FeaturedAiring(
                         Icon(
                             Icons.Default.Add,
                             contentDescription = stringResource(R.string.schedule_hero_action_watched),
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(18.dp),
                             tint = contentColor,
                         )
                     }
@@ -441,7 +441,7 @@ private fun FeaturedAiring(
                 Icon(
                     Icons.Default.ChevronRight,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(19.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -460,7 +460,7 @@ private fun UpcomingAiringList(
 ) {
     AppSurface(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
+        shape = MaterialTheme.shapes.large,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Column {
@@ -475,9 +475,9 @@ private fun UpcomingAiringList(
                 )
                 if (index < episodes.lastIndex) {
                     HorizontalDivider(
-                        modifier = Modifier.padding(start = 104.dp),
+                        modifier = Modifier.padding(start = 120.dp),
                         thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.38f),
                     )
                 }
             }
@@ -497,20 +497,20 @@ private fun UpcomingAiringRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 66.dp)
+            .heightIn(min = 78.dp)
             .clickable(onClick = onClick)
-            .padding(horizontal = 9.dp, vertical = 5.dp),
+            .padding(horizontal = 11.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(7.dp),
+        horizontalArrangement = Arrangement.spacedBy(9.dp),
     ) {
         Column(
-            modifier = Modifier.width(42.dp),
+            modifier = Modifier.width(48.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(0.dp),
+            verticalArrangement = Arrangement.spacedBy(1.dp),
         ) {
             Text(
                 text = airingTimeLabel(episode),
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
             )
             CountdownText(episode.airingAtEpochSeconds)
@@ -518,15 +518,15 @@ private fun UpcomingAiringRow(
         MediaThumbnail.Small(
             url = episode.coverImageUrl,
             contentDescription = episode.title,
-            modifier = Modifier.size(width = 42.dp, height = 56.dp),
+            modifier = Modifier.size(width = 48.dp, height = 64.dp),
         )
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(1.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
                 text = episode.title,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -545,34 +545,34 @@ private fun UpcomingAiringRow(
             androidx.compose.material3.IconButton(
                 onClick = onIncrement,
                 enabled = !isIncrementing,
-                modifier = Modifier.size(36.dp),
+                modifier = Modifier.size(40.dp),
             ) {
                 if (isIncrementing) {
-                    CircularProgressIndicator(Modifier.size(15.dp), strokeWidth = 2.dp)
+                    CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                 } else {
                     Icon(
                         Icons.Default.Add,
                         contentDescription = stringResource(R.string.schedule_hero_action_watched),
-                        modifier = Modifier.size(17.dp),
+                        modifier = Modifier.size(18.dp),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
             androidx.compose.material3.IconButton(
                 onClick = onEditStatus,
-                modifier = Modifier.size(36.dp),
+                modifier = Modifier.size(40.dp),
             ) {
                 Icon(
                     Icons.Default.ChevronRight,
                     contentDescription = stringResource(R.string.schedule_edit_status_action),
-                    modifier = Modifier.size(17.dp),
+                    modifier = Modifier.size(18.dp),
                 )
             }
         } else {
             Icon(
                 Icons.Default.ChevronRight,
                 contentDescription = null,
-                modifier = Modifier.size(17.dp),
+                modifier = Modifier.size(18.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -598,12 +598,12 @@ fun AllTodayScreen(
                 AppInlineHeader(
                     title = stringResource(R.string.schedule_section_today),
                     onBack = onBack,
-                    modifier = Modifier.padding(bottom = 8.dp),
+                    modifier = Modifier.padding(bottom = 12.dp),
                 )
             } else {
                 AppLargeHeader(
                     title = stringResource(R.string.schedule_section_today),
-                    modifier = Modifier.padding(bottom = 8.dp),
+                    modifier = Modifier.padding(bottom = 12.dp),
                 )
             }
         }
@@ -620,9 +620,9 @@ fun AllTodayScreen(
                 onEditStatus = { onEditStatus(episode) },
             )
             HorizontalDivider(
-                modifier = Modifier.padding(start = 104.dp),
+                modifier = Modifier.padding(start = 120.dp),
                 thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.46f),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.34f),
             )
         }
     }
@@ -647,11 +647,11 @@ private fun SeeAllSheet(
     ) {
         AppSurface(
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium,
+            shape = MaterialTheme.shapes.large,
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ) {
             LazyColumn(
-                modifier = Modifier.fillMaxWidth().heightIn(max = 620.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(max = 640.dp),
                 contentPadding = PaddingValues(vertical = 2.dp),
             ) {
                 items(
@@ -667,9 +667,9 @@ private fun SeeAllSheet(
                         onEditStatus = { onEditStatus(episode) },
                     )
                     HorizontalDivider(
-                        modifier = Modifier.padding(start = 104.dp),
+                        modifier = Modifier.padding(start = 120.dp),
                         thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.46f),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.34f),
                     )
                 }
             }
