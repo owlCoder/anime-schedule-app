@@ -71,9 +71,9 @@ internal fun SeasonTabRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(44.dp)
-            .clip(RoundedCornerShape(13.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .height(40.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
@@ -82,16 +82,13 @@ internal fun SeasonTabRow(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(38.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .height(34.dp)
+                    .clip(RoundedCornerShape(9.dp))
                     .background(
-                        if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                        if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
                         else Color.Transparent,
                     )
-                    .clickable(
-                        role = Role.Tab,
-                        onClick = { onSelect(season, currentYear) },
-                    )
+                    .clickable(role = Role.Tab) { onSelect(season, currentYear) }
                     .semantics { role = Role.Tab },
                 contentAlignment = Alignment.Center,
             ) {
@@ -123,17 +120,17 @@ internal fun SeasonalAnimeCard(
 
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(12.dp))
             .clickable(role = Role.Button, onClick = onClick)
             .semantics(mergeDescendants = true) { role = Role.Button },
-        verticalArrangement = Arrangement.spacedBy(5.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         MediaThumbnail.Large(
             url = item.coverImageUrl,
             contentDescription = item.title,
             modifier = Modifier
                 .fillMaxWidth()
-                .aspectRatio(0.72f),
+                .aspectRatio(0.70f),
         )
         Text(
             text = item.title,
@@ -145,7 +142,7 @@ internal fun SeasonalAnimeCard(
         if (meta.isNotEmpty()) {
             Text(
                 text = meta,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -180,7 +177,7 @@ internal fun SeasonalFilterSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             FilterSection(title = stringResource(R.string.seasonal_sort_label)) {
                 SeasonalSortOrder.entries.forEach { order ->
@@ -223,7 +220,7 @@ private fun FilterSection(
     title: String,
     content: @Composable FlowRowScope.() -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = title,
             style = MaterialTheme.typography.labelMedium,
@@ -231,8 +228,8 @@ private fun FilterSection(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+            verticalArrangement = Arrangement.spacedBy(7.dp),
             content = content,
         )
     }
@@ -245,21 +242,21 @@ private fun CompactFilterChip(
     onClick: () -> Unit,
 ) {
     val borderColor = if (selected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.48f)
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.42f)
     } else {
-        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.85f)
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.72f)
     }
     Row(
         modifier = Modifier
-            .sizeIn(minHeight = 36.dp)
+            .sizeIn(minHeight = 34.dp)
             .clip(PillShape)
             .background(
-                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
                 else Color.Transparent,
             )
-            .border(1.dp, borderColor, PillShape)
+            .border(0.5.dp, borderColor, PillShape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 7.dp),
+            .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
