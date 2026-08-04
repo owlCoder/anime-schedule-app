@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,7 +15,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -77,18 +78,30 @@ fun InsetListRow(
         .heightIn(min = if (supportingText.isNullOrBlank()) 44.dp else 50.dp)
         .then(
             if (onClick != null) {
+                Modifier.clickable(
+                    enabled = enabled,
+                    role = Role.Button,
+                    onClick = onClick,
+                )
+            } else {
                 Modifier
-                    .clickable(enabled = enabled, onClick = onClick)
-                    .semantics { role = Role.Button }
-            } else Modifier
+            },
         )
+        .semantics { this.selected = selected }
         .padding(horizontal = 13.dp, vertical = 4.dp)
 
-    CompositionLocalProvider(
-        androidx.compose.material3.LocalContentColor provides
-            if (enabled) MaterialTheme.colorScheme.onSurface
-            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.42f),
-    ) {
+    val primaryColor = if (enabled) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.42f)
+    }
+    val supportingColor = if (enabled) {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.48f)
+    }
+
+    CompositionLocalProvider(LocalContentColor provides primaryColor) {
         Row(
             modifier = rowModifier,
             verticalAlignment = Alignment.CenterVertically,
@@ -103,7 +116,7 @@ fun InsetListRow(
                     text = label,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                    color = androidx.compose.material3.LocalContentColor.current,
+                    color = LocalContentColor.current,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -111,7 +124,7 @@ fun InsetListRow(
                     Text(
                         text = supportingText,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = supportingColor,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
