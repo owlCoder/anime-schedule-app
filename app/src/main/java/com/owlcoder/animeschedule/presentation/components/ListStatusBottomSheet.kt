@@ -25,12 +25,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -103,17 +101,12 @@ fun ListStatusBottomSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         title = stringResource(R.string.list_status_title),
         trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onDismiss, modifier = Modifier.size(38.dp)) {
-                    Icon(Icons.Default.Close, contentDescription = "Close", modifier = Modifier.size(19.dp))
-                }
-                TextButton(onClick = ::save) {
-                    Text(
-                        text = stringResource(R.string.common_save),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
+            TextButton(onClick = ::save) {
+                Text(
+                    text = stringResource(R.string.common_save),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
         },
     ) {
@@ -140,9 +133,7 @@ fun ListStatusBottomSheet(
                                 modifier = Modifier.weight(1f),
                                 onClick = {
                                     selectedStatus = status
-                                    if (status == WatchStatus.COMPLETED && total != null) {
-                                        episodesWatched = total
-                                    }
+                                    if (status == WatchStatus.COMPLETED && total != null) episodesWatched = total
                                 },
                             )
                         }
@@ -223,10 +214,7 @@ fun ListStatusBottomSheet(
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    SectionLabel(
-                        text = "Score",
-                        modifier = Modifier.weight(1f),
-                    )
+                    SectionLabel(text = "Score", modifier = Modifier.weight(1f))
                     AnimatedContent(
                         targetState = score,
                         transitionSpec = {
@@ -238,8 +226,7 @@ fun ListStatusBottomSheet(
                         Text(
                             text = if (value == 0) stringResource(R.string.list_status_score_unrated) else "$value / 10",
                             style = MaterialTheme.typography.labelLarge,
-                            color = if (value == 0) MaterialTheme.colorScheme.onSurfaceVariant
-                            else MaterialTheme.colorScheme.primary,
+                            color = if (value == 0) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold,
                         )
                     }
@@ -291,14 +278,12 @@ private fun StatusChoice(
 ) {
     val motion = LocalMotionPolicy.current
     val fill by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.13f)
-        else MaterialTheme.colorScheme.surface,
+        targetValue = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.13f) else MaterialTheme.colorScheme.surface,
         animationSpec = motion.iosTween(IosMotion.Standard),
         label = "status-choice-fill",
     )
     val contentColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
         animationSpec = motion.iosTween(IosMotion.Standard),
         label = "status-choice-color",
     )
@@ -315,8 +300,7 @@ private fun StatusChoice(
         contentColor = contentColor,
         border = BorderStroke(
             0.5.dp,
-            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
-            else MaterialTheme.colorScheme.outlineVariant,
+            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.32f) else MaterialTheme.colorScheme.outlineVariant,
         ),
         tonalElevation = 0.dp,
     ) {
@@ -360,14 +344,12 @@ private fun ScoreChoice(
 ) {
     val motion = LocalMotionPolicy.current
     val fill by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.13f)
-        else MaterialTheme.colorScheme.surface,
+        targetValue = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.13f) else MaterialTheme.colorScheme.surface,
         animationSpec = motion.iosTween(IosMotion.Standard),
         label = "score-choice-fill",
     )
     val contentColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
         animationSpec = motion.iosTween(IosMotion.Standard),
         label = "score-choice-color",
     )
@@ -378,8 +360,7 @@ private fun ScoreChoice(
         contentColor = contentColor,
         border = BorderStroke(
             0.5.dp,
-            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
-            else MaterialTheme.colorScheme.outlineVariant,
+            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.32f) else MaterialTheme.colorScheme.outlineVariant,
         ),
         tonalElevation = 0.dp,
     ) {
@@ -413,21 +394,14 @@ private fun StepperButton(
     onClick: () -> Unit,
 ) {
     Surface(
-        modifier = Modifier
-            .size(36.dp)
-            .clickable(enabled = enabled, onClick = onClick),
+        modifier = Modifier.size(36.dp).clickable(enabled = enabled, onClick = onClick),
         shape = PillShape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        contentColor = if (enabled) MaterialTheme.colorScheme.onSurface
-        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
+        contentColor = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
         tonalElevation = 0.dp,
     ) {
         Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) {
-            Icon(
-                imageVector = icon,
-                contentDescription = description,
-                modifier = Modifier.size(17.dp),
-            )
+            Icon(imageVector = icon, contentDescription = description, modifier = Modifier.size(17.dp))
         }
     }
 }
