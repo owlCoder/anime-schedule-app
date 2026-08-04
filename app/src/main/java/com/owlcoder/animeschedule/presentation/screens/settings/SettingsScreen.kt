@@ -47,7 +47,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -126,9 +125,9 @@ fun SettingsScreen(
                 start = 16.dp,
                 end = 16.dp,
                 top = 6.dp,
-                bottom = 92.dp,
+                bottom = 120.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
                 AppLargeHeader(
@@ -189,18 +188,25 @@ fun SettingsScreen(
                         )
                         SettingsDivider()
                         SettingsRow(
-                            icon = Icons.Default.PlayCircle,
-                            title = stringResource(R.string.settings_watch_sources),
-                            value = stringResource(R.string.settings_watch_sources_subtitle),
-                            onClick = onManageWatchSources,
+                            icon = Icons.Default.Translate,
+                            title = stringResource(R.string.settings_language),
+                            value = languageLabel(uiState.appLanguage),
+                            onClick = { showLanguagePicker = true },
                         )
                     }
                 }
             }
 
             item {
-                SettingsSection("Storage") {
+                SettingsSection("Data & Sources") {
                     SettingsGroup {
+                        SettingsRow(
+                            icon = Icons.Default.PlayCircle,
+                            title = stringResource(R.string.settings_watch_sources),
+                            value = stringResource(R.string.settings_watch_sources_subtitle),
+                            onClick = onManageWatchSources,
+                        )
+                        SettingsDivider()
                         SettingsRow(
                             icon = Icons.Default.Storage,
                             title = "Cache",
@@ -221,19 +227,6 @@ fun SettingsScreen(
                                     CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                                 }
                             },
-                        )
-                    }
-                }
-            }
-
-            item {
-                SettingsSection("General") {
-                    SettingsGroup {
-                        SettingsRow(
-                            icon = Icons.Default.Translate,
-                            title = stringResource(R.string.settings_language),
-                            value = languageLabel(uiState.appLanguage),
-                            onClick = { showLanguagePicker = true },
                         )
                     }
                 }
@@ -391,7 +384,8 @@ private fun AccountRow(
         if (isLoggingIn) {
             CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
         } else {
-            val actionColor = if (isLoggedIn) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary
+            val actionColor = if (isLoggedIn) MaterialTheme.colorScheme.onSurfaceVariant
+            else MaterialTheme.colorScheme.primary
             Text(
                 text = if (isLoggedIn) "Sign out" else "Sign in",
                 style = MaterialTheme.typography.labelMedium,
@@ -399,7 +393,8 @@ private fun AccountRow(
                 fontWeight = FontWeight.SemiBold,
             )
             Icon(
-                imageVector = if (isLoggedIn) Icons.AutoMirrored.Filled.ExitToApp else Icons.AutoMirrored.Filled.Login,
+                imageVector = if (isLoggedIn) Icons.AutoMirrored.Filled.ExitToApp
+                else Icons.AutoMirrored.Filled.Login,
                 contentDescription = null,
                 tint = actionColor,
                 modifier = Modifier.padding(start = 4.dp).size(16.dp),
@@ -422,16 +417,16 @@ private fun SettingsRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 50.dp)
+            .heightIn(min = 48.dp)
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier.size(26.dp),
+            modifier = Modifier.size(24.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(icon, null, Modifier.size(20.dp), tint = iconColor)
+            Icon(icon, null, Modifier.size(19.dp), tint = iconColor)
         }
         Column(
             modifier = Modifier.weight(1f).padding(start = 10.dp, end = 6.dp),
@@ -450,7 +445,7 @@ private fun SettingsRow(
                     text = value,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
@@ -460,7 +455,7 @@ private fun SettingsRow(
             Icon(
                 Icons.Default.ChevronRight,
                 contentDescription = null,
-                modifier = Modifier.size(17.dp),
+                modifier = Modifier.size(16.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
@@ -470,7 +465,7 @@ private fun SettingsRow(
 @Composable
 private fun SettingsDivider() {
     HorizontalDivider(
-        modifier = Modifier.padding(start = 48.dp),
+        modifier = Modifier.padding(start = 46.dp),
         thickness = 0.5.dp,
         color = MaterialTheme.colorScheme.outlineVariant,
     )
@@ -502,7 +497,7 @@ private fun PickerSheet(
         title = title,
     ) {
         AppMaterialSurface(
-            modifier = Modifier.fillMaxWidth().heightIn(max = 410.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(max = 440.dp),
             material = AppMaterial.Grouped,
             shape = SettingsGroupShape,
         ) {
@@ -518,14 +513,19 @@ private fun PickerSheet(
 private fun PickerRow(label: String, selected: Boolean, onClick: () -> Unit) {
     Column {
         Row(
-            modifier = Modifier.fillMaxWidth().height(44.dp).clickable(onClick = onClick).padding(horizontal = 13.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(44.dp)
+                .clickable(onClick = onClick)
+                .padding(horizontal = 13.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                color = if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -543,7 +543,11 @@ private fun PickerRow(label: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ThemeBottomSheet(current: ThemeMode, onSelect: (ThemeMode) -> Unit, onDismiss: () -> Unit) {
+private fun ThemeBottomSheet(
+    current: ThemeMode,
+    onSelect: (ThemeMode) -> Unit,
+    onDismiss: () -> Unit,
+) {
     PickerSheet("Theme", onDismiss) {
         ThemeMode.entries.forEach { mode ->
             PickerRow(themeModeLabel(mode), current == mode) { onSelect(mode) }
@@ -588,33 +592,40 @@ private fun NotifBottomSheet(
         title = stringResource(R.string.settings_notifications),
     ) {
         AppMaterialSurface(
-            modifier = Modifier.fillMaxWidth().heightIn(max = 410.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(max = 520.dp),
             material = AppMaterial.Grouped,
             shape = SettingsGroupShape,
         ) {
-            Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 13.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(R.string.onboarding_notif_enable),
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                    )
-                    AppSwitch(checked = enabled, onCheckedChange = ::toggle)
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(bottom = 10.dp),
+            ) {
+                item(key = "notification-enable") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().height(50.dp).padding(horizontal = 13.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.onboarding_notif_enable),
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                        )
+                        AppSwitch(checked = enabled, onCheckedChange = ::toggle)
+                    }
                 }
                 if (enabled) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    Text(
-                        text = stringResource(R.string.notif_offset_title),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(start = 13.dp, top = 9.dp, bottom = 2.dp),
-                    )
-                    notifOffsetOptions.forEach { minutes ->
+                    item(key = "notification-label") {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Text(
+                            text = stringResource(R.string.notif_offset_title),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(start = 13.dp, top = 10.dp, bottom = 2.dp),
+                        )
+                    }
+                    items(notifOffsetOptions, key = { it }) { minutes ->
                         PickerRow(notifOffsetLabel(minutes), minutes == currentOffset) {
                             onOffsetSelect(minutes)
                         }
@@ -684,7 +695,8 @@ private fun TimezonePickerDialog(
     ) {
         LazyColumn(
             state = rememberLazyListState(),
-            modifier = Modifier.fillMaxWidth().heightIn(max = 440.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(max = 460.dp),
+            contentPadding = PaddingValues(bottom = 8.dp),
         ) {
             items(zones) { zone ->
                 PickerRow(zone, selected == zone) { selected = zone }
