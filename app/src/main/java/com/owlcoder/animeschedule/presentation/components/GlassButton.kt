@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.GlassBlur
 import com.owlcoder.animeschedule.ui.theme.GlassTone
@@ -30,7 +31,7 @@ import com.owlcoder.animeschedule.ui.theme.PillShape
 
 enum class AppButtonVariant { Primary, Secondary, Plain, Destructive }
 
-private val AppButtonHeight = 48.dp
+private val AppButtonHeight = 44.dp
 
 @Composable
 fun AppButton(
@@ -44,20 +45,19 @@ fun AppButton(
     val accent = MaterialTheme.colorScheme.primary
     val neutral = MaterialTheme.colorScheme.onSurface
     when (variant) {
-        AppButtonVariant.Plain -> {
-            androidx.compose.material3.TextButton(
-                onClick = onClick,
-                enabled = enabled,
-                modifier = modifier.heightIn(min = 44.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-            ) {
-                ButtonContent(label, icon, accent, enabled)
-            }
+        AppButtonVariant.Plain -> androidx.compose.material3.TextButton(
+            onClick = onClick,
+            enabled = enabled,
+            modifier = modifier.heightIn(min = 40.dp),
+            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+        ) {
+            ButtonContent(label, icon, accent, enabled)
         }
+
         AppButtonVariant.Primary -> {
-            val container = if (enabled) accent else accent.copy(alpha = 0.34f)
+            val container = if (enabled) accent.copy(alpha = 0.94f) else accent.copy(alpha = 0.28f)
             val contentColor = if (enabled) MaterialTheme.colorScheme.onPrimary
-            else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.62f)
+            else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.52f)
             Surface(
                 modifier = modifier
                     .height(AppButtonHeight)
@@ -66,13 +66,28 @@ fun AppButton(
                 shape = PillShape,
                 color = container,
                 contentColor = contentColor,
-                shadowElevation = if (enabled) 1.dp else 0.dp,
+                shadowElevation = 0.dp,
                 tonalElevation = 0.dp,
             ) {
                 ButtonRow(label, icon, contentColor, enabled = true)
             }
         }
-        AppButtonVariant.Secondary -> {
+
+        AppButtonVariant.Secondary -> GlassSurface(
+            modifier = modifier
+                .height(AppButtonHeight)
+                .clickable(enabled = enabled, onClick = onClick)
+                .semantics { role = Role.Button },
+            shape = PillShape,
+            tone = GlassTone.Neutral,
+            blur = GlassBlur.None,
+            contentColor = neutral,
+        ) {
+            ButtonRow(label, icon, neutral, enabled)
+        }
+
+        AppButtonVariant.Destructive -> {
+            val error = MaterialTheme.colorScheme.error
             GlassSurface(
                 modifier = modifier
                     .height(AppButtonHeight)
@@ -80,23 +95,8 @@ fun AppButton(
                     .semantics { role = Role.Button },
                 shape = PillShape,
                 tone = GlassTone.Neutral,
-                blur = GlassBlur.Soft,
-                contentColor = neutral,
-            ) {
-                ButtonRow(label, icon, neutral, enabled)
-            }
-        }
-        AppButtonVariant.Destructive -> {
-            val error = MaterialTheme.colorScheme.error
-            Surface(
-                modifier = modifier
-                    .height(AppButtonHeight)
-                    .clickable(enabled = enabled, onClick = onClick)
-                    .semantics { role = Role.Button },
-                shape = PillShape,
-                color = error.copy(alpha = if (enabled) 0.14f else 0.06f),
+                blur = GlassBlur.None,
                 contentColor = error,
-                tonalElevation = 0.dp,
             ) {
                 ButtonRow(label, icon, error, enabled)
             }
@@ -105,16 +105,11 @@ fun AppButton(
 }
 
 @Composable
-private fun ButtonRow(
-    label: String,
-    icon: ImageVector?,
-    color: Color,
-    enabled: Boolean,
-) {
+private fun ButtonRow(label: String, icon: ImageVector?, color: Color, enabled: Boolean) {
     Row(
-        modifier = Modifier.height(AppButtonHeight).padding(horizontal = 18.dp),
+        modifier = Modifier.height(AppButtonHeight).padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
     ) {
         ButtonContent(label, icon, color, enabled)
     }
@@ -127,7 +122,7 @@ private fun ButtonContent(label: String, icon: ImageVector?, color: Color, enabl
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(18.dp),
+            modifier = Modifier.size(17.dp),
             tint = resolved,
         )
     }
@@ -135,6 +130,7 @@ private fun ButtonContent(label: String, icon: ImageVector?, color: Color, enabl
         text = label,
         color = resolved,
         style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.SemiBold,
         maxLines = 1,
     )
 }
@@ -147,7 +143,7 @@ fun GlassButton(
     shape: Shape = PillShape,
     accent: Color = MaterialTheme.colorScheme.onSurface,
     onImagery: Boolean = false,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 15.dp),
     content: @Composable (contentColor: Color) -> Unit,
 ) {
     val contentColor = if (onImagery) Color.White else if (enabled) accent else accent.copy(alpha = 0.38f)
@@ -158,20 +154,20 @@ fun GlassButton(
             .semantics { role = Role.Button },
         shape = shape,
         tone = if (onImagery) GlassTone.OnImage else GlassTone.Neutral,
-        blur = GlassBlur.Soft,
+        blur = GlassBlur.None,
         contentColor = contentColor,
     ) {
         Row(
             modifier = Modifier.height(AppButtonHeight).padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
         ) {
             content(contentColor)
         }
     }
 }
 
-/** 40dp visible liquid-glass disc nested inside a full 48dp accessibility target. */
+/** 36dp visible lens nested inside a 44dp accessibility target. */
 @Composable
 fun GlassIconButton(
     icon: ImageVector,
@@ -183,23 +179,23 @@ fun GlassIconButton(
 ) {
     Box(
         modifier = modifier
-            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+            .sizeIn(minWidth = 44.dp, minHeight = 44.dp)
             .clickable(enabled = enabled, onClick = onClick)
             .semantics { role = Role.Button },
         contentAlignment = Alignment.Center,
     ) {
         GlassSurface(
-            modifier = Modifier.size(40.dp),
+            modifier = Modifier.size(36.dp),
             shape = androidx.compose.foundation.shape.CircleShape,
             tone = if (onImagery) GlassTone.OnImage else GlassTone.Neutral,
-            blur = GlassBlur.Soft,
+            blur = GlassBlur.None,
             contentColor = if (onImagery) Color.White else MaterialTheme.colorScheme.onSurface,
         ) {
-            Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = icon,
                     contentDescription = contentDescription,
-                    modifier = Modifier.size(19.dp),
+                    modifier = Modifier.size(18.dp),
                 )
             }
         }
