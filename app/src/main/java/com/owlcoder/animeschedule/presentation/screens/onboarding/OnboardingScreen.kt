@@ -22,15 +22,18 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -56,11 +59,11 @@ import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import com.owlcoder.animeschedule.presentation.components.AppButton
 import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
+import com.owlcoder.animeschedule.presentation.components.AppMaterial
+import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
-import com.owlcoder.animeschedule.presentation.components.GlassSurface
-import com.owlcoder.animeschedule.ui.theme.GlassBlur
-import com.owlcoder.animeschedule.ui.theme.GlassTone
+import com.owlcoder.animeschedule.presentation.components.GlassChrome
 import com.owlcoder.animeschedule.ui.theme.PillShape
 import kotlinx.coroutines.launch
 
@@ -89,11 +92,8 @@ fun OnboardingScreen(
     var notificationOffset by remember { mutableIntStateOf(0) }
     val currentPage = pagerState.currentPage
 
-    Box(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
-    ) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         NeutralOnboardingBackdrop()
-
         Column(modifier = Modifier.fillMaxSize()) {
             HorizontalPager(
                 state = pagerState,
@@ -118,10 +118,7 @@ fun OnboardingScreen(
                             onNotifSettingsChange(notificationsEnabled, it)
                         },
                     )
-                    3 -> MalPreviewPage(
-                        language = selectedLanguage,
-                        onLogin = { onLogin(context) },
-                    )
+                    3 -> MalPreviewPage(selectedLanguage) { onLogin(context) }
                     else -> PersonalizePage(
                         language = selectedLanguage,
                         selectedTheme = selectedTheme,
@@ -132,54 +129,41 @@ fun OnboardingScreen(
                 }
             }
 
-            GlassSurface(
+            GlassChrome(
                 modifier = Modifier
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
-                shape = ContinuousRoundedShape(30.dp),
-                tone = GlassTone.Neutral,
-                blur = GlassBlur.Medium,
+                    .padding(horizontal = 14.dp, vertical = 9.dp),
+                shape = ContinuousRoundedShape(28.dp),
             ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(9.dp),
                 ) {
                     PageIndicator(currentPage, OnboardingPageCount)
                     AppButton(
                         label = if (currentPage == OnboardingPageCount - 1) {
                             selectedLanguage.t("Start using AnimeSchedule", "Počni da koristiš AnimeSchedule")
-                        } else {
-                            selectedLanguage.t("Continue", "Nastavi")
-                        },
+                        } else selectedLanguage.t("Continue", "Nastavi"),
                         onClick = {
-                            if (currentPage == OnboardingPageCount - 1) {
-                                onComplete()
-                            } else {
-                                scope.launch { pagerState.animateScrollToPage(currentPage + 1) }
-                            }
+                            if (currentPage == OnboardingPageCount - 1) onComplete()
+                            else scope.launch { pagerState.animateScrollToPage(currentPage + 1) }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         variant = AppButtonVariant.Primary,
                     )
                     TextButton(
                         onClick = {
-                            if (currentPage > 0) {
-                                scope.launch { pagerState.animateScrollToPage(currentPage - 1) }
-                            } else {
-                                onComplete()
-                            }
+                            if (currentPage > 0) scope.launch { pagerState.animateScrollToPage(currentPage - 1) }
+                            else onComplete()
                         },
-                        modifier = Modifier.height(34.dp),
+                        modifier = Modifier.height(32.dp),
                         contentPadding = PaddingValues(horizontal = 10.dp),
                     ) {
                         Text(
-                            text = if (currentPage > 0) {
-                                selectedLanguage.t("Back", "Nazad")
-                            } else {
-                                selectedLanguage.t("Set up later", "Podesi kasnije")
-                            },
+                            text = if (currentPage > 0) selectedLanguage.t("Back", "Nazad")
+                            else selectedLanguage.t("Set up later", "Podesi kasnije"),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -198,21 +182,13 @@ private fun NeutralOnboardingBackdrop() {
             .fillMaxSize()
             .background(
                 Brush.radialGradient(
-                    colors = listOf(
-                        light.copy(alpha = 0.09f),
-                        light.copy(alpha = 0.025f),
-                        Color.Transparent,
-                    ),
-                    radius = 1050f,
+                    colors = listOf(light.copy(alpha = 0.065f), light.copy(alpha = 0.018f), Color.Transparent),
+                    radius = 980f,
                 ),
             )
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(
-                        Color.Transparent,
-                        MaterialTheme.colorScheme.background.copy(alpha = 0.30f),
-                        MaterialTheme.colorScheme.background,
-                    ),
+                    colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background.copy(alpha = 0.36f), MaterialTheme.colorScheme.background),
                 ),
             ),
     )
@@ -224,13 +200,10 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
         repeat(pageCount) { index ->
             Box(
                 modifier = Modifier
-                    .width(if (index == currentPage) 20.dp else 6.dp)
+                    .width(if (index == currentPage) 18.dp else 6.dp)
                     .height(6.dp)
                     .clip(PillShape)
-                    .background(
-                        if (index == currentPage) MaterialTheme.colorScheme.onSurface
-                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f),
-                    ),
+                    .background(if (index == currentPage) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f)),
             )
         }
     }
@@ -246,23 +219,14 @@ private fun WelcomePage(language: AppLanguage) {
             "Miran raspored, nove epizode i tvoja lista u jednoj fokusiranoj aplikaciji.",
         ),
     ) {
-        GlassSurface(
-            modifier = Modifier.size(154.dp),
+        Surface(
+            modifier = Modifier.size(128.dp),
             shape = CircleShape,
-            tone = GlassTone.Accent,
-            blur = GlassBlur.Medium,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            tonalElevation = 0.dp,
         ) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarMonth,
-                        contentDescription = null,
-                        modifier = Modifier.size(54.dp),
-                        tint = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text("AS", style = MaterialTheme.typography.headlineLarge)
-                }
+                Icon(Icons.Default.CalendarMonth, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -283,20 +247,13 @@ private fun SchedulePreviewPage(language: AppLanguage) {
             "Prođi kroz nedelju i otvori kompletan raspored za bilo koji dan.",
         ),
     ) {
-        GlassSurface(
+        AppMaterialSurface(
             modifier = Modifier.fillMaxWidth(),
-            shape = ContinuousRoundedShape(24.dp),
-            tone = GlassTone.Neutral,
-            blur = GlassBlur.Medium,
+            material = AppMaterial.Elevated,
+            shape = ContinuousRoundedShape(22.dp),
         ) {
-            Column(
-                modifier = Modifier.padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
+            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     listOf("Mon" to "3", "Tue" to "4", "Wed" to "5", "Thu" to "6", "Fri" to "7").forEachIndexed { index, pair ->
                         DatePreviewCell(pair.first, pair.second, selected = index == 0)
                     }
@@ -326,21 +283,13 @@ private fun NotificationPreviewPage(
         ),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            GlassSurface(
+            AppMaterialSurface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = ContinuousRoundedShape(22.dp),
-                tone = GlassTone.Neutral,
-                blur = GlassBlur.Medium,
+                material = AppMaterial.Elevated,
+                shape = ContinuousRoundedShape(20.dp),
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        Icons.Default.Notifications,
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp),
-                    )
+                Row(modifier = Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.NotificationsNone, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
                     Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                         Text(language.t("Episode reminders", "Podsetnici za epizode"), style = MaterialTheme.typography.titleMedium)
                         Text(language.t("Only for titles you follow", "Samo za naslove koje pratiš"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -349,19 +298,15 @@ private fun NotificationPreviewPage(
                 }
             }
             if (enabled) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
+                Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                     listOf(-15, 0, 15).forEach { minutes ->
-                        SelectionPill(
+                        SelectionRow(
                             label = when (minutes) {
                                 -15 -> language.t("15 min before", "15 min ranije")
                                 0 -> language.t("At air time", "U vreme emitovanja")
                                 else -> language.t("15 min after", "15 min kasnije")
                             },
                             selected = offsetMinutes == minutes,
-                            modifier = Modifier.weight(1f),
                             onClick = { onOffsetChange(minutes) },
                         )
                     }
@@ -381,29 +326,20 @@ private fun MalPreviewPage(language: AppLanguage, onLogin: () -> Unit) {
             "Ažuriraj epizode i status bez napuštanja rasporeda.",
         ),
     ) {
-        GlassSurface(
+        AppMaterialSurface(
             modifier = Modifier.fillMaxWidth(),
-            shape = ContinuousRoundedShape(24.dp),
-            tone = GlassTone.Neutral,
-            blur = GlassBlur.Medium,
+            material = AppMaterial.Elevated,
+            shape = ContinuousRoundedShape(22.dp),
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(15.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    GlassSurface(
-                        modifier = Modifier.size(48.dp),
-                        shape = CircleShape,
-                        tone = GlassTone.Accent,
-                        blur = GlassBlur.Soft,
-                    ) {
+                    Surface(modifier = Modifier.size(44.dp), shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.AccountCircle, contentDescription = null, modifier = Modifier.size(28.dp))
+                            Icon(Icons.Default.AccountCircle, null, Modifier.size(27.dp))
                         }
                     }
-                    Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                        Text("MyAnimeList", style = MaterialTheme.typography.titleLarge)
+                    Column(Modifier.weight(1f).padding(start = 11.dp)) {
+                        Text("MyAnimeList", style = MaterialTheme.typography.titleMedium)
                         Text(language.t("Not connected", "Nije povezano"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
@@ -431,210 +367,138 @@ private fun PersonalizePage(
         eyebrow = language.t("FINISH SETUP", "ZAVRŠI PODEŠAVANJE"),
         title = language.t("Make it comfortable", "Podesi kako ti odgovara"),
         subtitle = language.t(
-            "Liquid glass stays neutral. Choose only appearance and language.",
-            "Liquid glass ostaje neutralan. Izaberi samo izgled i jezik.",
+            "Liquid Glass stays neutral. Choose appearance and language.",
+            "Liquid Glass ostaje neutralan. Izaberi izgled i jezik.",
         ),
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            ChoiceGroup(
-                title = language.t("Appearance", "Izgled"),
-                options = ThemeMode.entries,
-                selected = selectedTheme,
-                label = {
-                    when (it) {
-                        ThemeMode.SYSTEM -> language.t("System", "Sistem")
-                        ThemeMode.LIGHT -> language.t("Light", "Svetlo")
-                        ThemeMode.DARK -> language.t("Dark", "Tamno")
-                    }
-                },
-                onSelect = onThemeChange,
-            )
-            ChoiceGroup(
-                title = language.t("Language", "Jezik"),
-                options = listOf(AppLanguage.SYSTEM, AppLanguage.ENGLISH, AppLanguage.SERBIAN_LATIN),
-                selected = selectedLanguage,
-                label = {
-                    when (it) {
-                        AppLanguage.SYSTEM -> language.t("System", "Sistem")
-                        AppLanguage.ENGLISH -> "English"
-                        AppLanguage.SERBIAN_LATIN -> "Srpski (latinica)"
-                    }
-                },
-                onSelect = onLanguageChange,
-            )
+        AppMaterialSurface(
+            modifier = Modifier.fillMaxWidth(),
+            material = AppMaterial.Elevated,
+            shape = ContinuousRoundedShape(22.dp),
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                SettingsChoiceTitle(language.t("Appearance", "Izgled"))
+                ThemeMode.entries.forEachIndexed { index, mode ->
+                    ChoiceRow(
+                        label = when (mode) {
+                            ThemeMode.SYSTEM -> language.t("System", "Sistemski")
+                            ThemeMode.LIGHT -> language.t("Light", "Svetli")
+                            ThemeMode.DARK -> language.t("Dark", "Tamni")
+                        },
+                        selected = selectedTheme == mode,
+                        onClick = { onThemeChange(mode) },
+                    )
+                    if (index < ThemeMode.entries.lastIndex) ChoiceDivider()
+                }
+                SettingsChoiceTitle(language.t("Language", "Jezik"))
+                listOf(
+                    AppLanguage.SYSTEM to language.t("System", "Sistemski"),
+                    AppLanguage.ENGLISH to "English",
+                    AppLanguage.SERBIAN_LATIN to "Srpski",
+                ).forEachIndexed { index, (option, label) ->
+                    ChoiceRow(label, selectedLanguage == option) { onLanguageChange(option) }
+                    if (index < 2) ChoiceDivider()
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun ProductPage(
-    eyebrow: String,
-    title: String,
-    subtitle: String,
-    content: @Composable () -> Unit,
-) {
+private fun ProductPage(eyebrow: String, title: String, subtitle: String, content: @Composable Column.() -> Unit) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 18.dp),
+        modifier = Modifier.fillMaxSize().padding(horizontal = 22.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
     ) {
-        Text(
-            text = eyebrow,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Spacer(Modifier.weight(0.45f))
+        Text(eyebrow, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+        Text(title, Modifier.padding(top = 7.dp), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+        Text(subtitle, Modifier.padding(top = 8.dp, bottom = 24.dp), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            content = content,
         )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(0.90f),
-        )
-        Spacer(Modifier.height(26.dp))
-        content()
+        Spacer(Modifier.weight(0.55f))
     }
 }
 
 @Composable
 private fun FeatureOrb(icon: ImageVector, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        GlassSurface(
-            modifier = Modifier.size(48.dp),
-            shape = CircleShape,
-            tone = GlassTone.Neutral,
-            blur = GlassBlur.Soft,
-        ) {
+        Surface(modifier = Modifier.size(44.dp), shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Icon(icon, contentDescription = null, modifier = Modifier.size(21.dp))
+                Icon(icon, null, Modifier.size(20.dp))
             }
         }
-        Spacer(Modifier.height(5.dp))
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(label, Modifier.padding(top = 5.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
 private fun DatePreviewCell(day: String, date: String, selected: Boolean) {
-    val modifier = Modifier.size(width = 48.dp, height = 54.dp)
-    if (selected) {
-        GlassSurface(
-            modifier = modifier,
-            shape = PillShape,
-            tone = GlassTone.Accent,
-            blur = GlassBlur.Soft,
-        ) {
-            DatePreviewContent(day, date)
+    Surface(
+        modifier = Modifier.size(width = 48.dp, height = 52.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent,
+    ) {
+        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Text(day, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(date, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
         }
-    } else {
-        DatePreviewContent(day, date, modifier)
     }
 }
 
 @Composable
-private fun DatePreviewContent(day: String, date: String, modifier: Modifier = Modifier.fillMaxSize()) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(day, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(date, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
-    }
-}
-
-@Composable
-private fun PreviewScheduleRow(time: String, title: String, metadata: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(time, modifier = Modifier.width(52.dp), style = MaterialTheme.typography.labelMedium)
+private fun PreviewScheduleRow(time: String, title: String, detail: String) {
+    Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(time, Modifier.width(48.dp), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(metadata, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(detail, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
-private fun SelectionPill(
-    label: String,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    GlassSurface(
-        modifier = modifier.height(44.dp).clickable(onClick = onClick),
-        shape = PillShape,
-        tone = if (selected) GlassTone.Accent else GlassTone.Neutral,
-        blur = GlassBlur.Soft,
+private fun SelectionRow(label: String, selected: Boolean, onClick: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().height(42.dp).clickable(onClick = onClick),
+        shape = RoundedCornerShape(13.dp),
+        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.11f) else MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
-        Box(Modifier.fillMaxSize().padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-            )
+        Row(Modifier.fillMaxSize().padding(horizontal = 13.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            if (selected) Icon(Icons.Default.Check, null, Modifier.size(17.dp), tint = MaterialTheme.colorScheme.primary)
         }
     }
 }
 
 @Composable
-private fun <T> ChoiceGroup(
-    title: String,
-    options: List<T>,
-    selected: T,
-    label: (T) -> String,
-    onSelect: (T) -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        GlassSurface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = ContinuousRoundedShape(20.dp),
-            tone = GlassTone.Neutral,
-            blur = GlassBlur.Soft,
-        ) {
-            Column {
-                options.forEachIndexed { index, option ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                            .clickable { onSelect(option) }
-                            .padding(horizontal = 14.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(label(option), modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-                        if (option == selected) {
-                            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                        }
-                    }
-                    if (index < options.lastIndex) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 14.dp)
-                                .height(0.5.dp)
-                                .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.30f)),
-                        )
-                    }
-                }
-            }
-        }
+private fun SettingsChoiceTitle(text: String) {
+    Text(
+        text.uppercase(),
+        Modifier.fillMaxWidth().padding(start = 13.dp, top = 11.dp, bottom = 4.dp),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        fontWeight = FontWeight.SemiBold,
+    )
+}
+
+@Composable
+private fun ChoiceRow(label: String, selected: Boolean, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().height(42.dp).clickable(onClick = onClick).padding(horizontal = 13.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        if (selected) Icon(Icons.Default.Check, null, Modifier.size(17.dp), tint = MaterialTheme.colorScheme.primary)
     }
+}
+
+@Composable
+private fun ChoiceDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = 13.dp),
+        thickness = 0.5.dp,
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f),
+    )
 }
