@@ -39,7 +39,7 @@ fun AppLargeHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = if (subtitle.isNullOrBlank()) 50.dp else 66.dp),
+            .heightIn(min = if (subtitle.isNullOrBlank()) 46.dp else 58.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -49,7 +49,7 @@ fun AppLargeHeader(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.displayLarge,
+                style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -57,8 +57,8 @@ fun AppLargeHeader(
             if (!subtitle.isNullOrBlank()) {
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.88f),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -77,7 +77,7 @@ fun AppInlineHeader(
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth().heightIn(min = 48.dp),
+        modifier = modifier.fillMaxWidth().heightIn(min = 44.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
@@ -110,9 +110,9 @@ fun GlassToolbarGroup(
         shape = PillShape,
     ) {
         Row(
-            modifier = Modifier.height(40.dp).padding(horizontal = 3.dp),
+            modifier = Modifier.height(38.dp).padding(horizontal = 3.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(1.dp),
+            horizontalArrangement = Arrangement.spacedBy(0.dp),
             content = content,
         )
     }
@@ -129,7 +129,7 @@ fun GlassToolbarButton(
 ) {
     Box(
         modifier = modifier
-            .size(34.dp)
+            .size(32.dp)
             .clickable(enabled = enabled, onClick = onClick)
             .semantics { role = Role.Button },
         contentAlignment = Alignment.Center,
@@ -137,7 +137,7 @@ fun GlassToolbarButton(
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            modifier = Modifier.size(17.dp),
+            modifier = Modifier.size(16.dp),
             tint = when {
                 !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.40f)
                 selected -> MaterialTheme.colorScheme.primary
