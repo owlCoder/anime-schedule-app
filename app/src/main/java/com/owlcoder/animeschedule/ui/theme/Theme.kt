@@ -13,124 +13,107 @@ import com.owlcoder.animeschedule.data.local.datastore.AccentColor
 import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import com.owlcoder.animeschedule.presentation.components.ProvideMotionPolicy
 
-/** Compact content shapes; larger curvature is reserved for sheets and floating chrome. */
+/** Compact content shapes; large curvature is reserved for sheets and floating chrome. */
 val AnimeScheduleShapes = Shapes().copy(
-    extraSmall = RoundedCornerShape(7.dp),
-    small = RoundedCornerShape(10.dp),
-    medium = RoundedCornerShape(13.dp),
-    large = RoundedCornerShape(17.dp),
-    extraLarge = RoundedCornerShape(26.dp),
+    extraSmall = RoundedCornerShape(6.dp),
+    small = RoundedCornerShape(9.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(24.dp),
 )
 
 val PillShape = RoundedCornerShape(percent = 50)
 
 fun accentPrimary(accent: AccentColor, dark: Boolean = false): Color = when (accent) {
-    AccentColor.TELEGRAM_BLUE -> if (dark) Color(0xFF64B5E8) else Color(0xFF087EBA)
-    AccentColor.PURPLE -> if (dark) Color(0xFFD0BCFF) else Color(0xFF6750A4)
-    AccentColor.GREEN -> if (dark) Color(0xFF75DC91) else Color(0xFF087F3D)
-    AccentColor.ORANGE -> if (dark) Color(0xFFFFB77A) else Color(0xFF9A4300)
-    AccentColor.PINK -> if (dark) Color(0xFFFFB0C8) else Color(0xFF9B1746)
-    AccentColor.RED -> if (dark) Color(0xFFFFB4AB) else Color(0xFFBA1A1A)
-    AccentColor.CYAN -> if (dark) Color(0xFF6DDAF5) else Color(0xFF006877)
-    AccentColor.INDIGO -> if (dark) Color(0xFFBFC4FF) else Color(0xFF4F5FBA)
-    AccentColor.TEAL -> if (dark) Color(0xFF70DBC7) else Color(0xFF006A5B)
-    AccentColor.YELLOW -> if (dark) Color(0xFFEFC238) else Color(0xFF765900)
-    AccentColor.DEEP_PURPLE -> if (dark) Color(0xFFE0B9FF) else Color(0xFF7A3DA0)
+    AccentColor.TELEGRAM_BLUE -> if (dark) Color(0xFF0A84FF) else Color(0xFF007AFF)
+    AccentColor.PURPLE -> if (dark) Color(0xFFBF5AF2) else Color(0xFFAF52DE)
+    AccentColor.GREEN -> if (dark) Color(0xFF30D158) else Color(0xFF34C759)
+    AccentColor.ORANGE -> if (dark) Color(0xFFFF9F0A) else Color(0xFFFF9500)
+    AccentColor.PINK -> if (dark) Color(0xFFFF375F) else Color(0xFFFF2D55)
+    AccentColor.RED -> if (dark) Color(0xFFFF453A) else Color(0xFFFF3B30)
+    AccentColor.CYAN -> if (dark) Color(0xFF64D2FF) else Color(0xFF32ADE6)
+    AccentColor.INDIGO -> if (dark) Color(0xFF5E5CE6) else Color(0xFF5856D6)
+    AccentColor.TEAL -> if (dark) Color(0xFF40C8E0) else Color(0xFF30B0C7)
+    AccentColor.YELLOW -> if (dark) Color(0xFFFFD60A) else Color(0xFFFFCC00)
+    AccentColor.DEEP_PURPLE -> if (dark) Color(0xFFAC8E68) else Color(0xFF8E6E53)
 }
 
 private fun darkColors(primary: Color) = darkColorScheme(
     primary = primary,
-    onPrimary = readableOn(primary, dark = true),
+    onPrimary = Color.White,
     primaryContainer = primary.copy(alpha = 0.20f).compositeOver(AppDarkGrouped),
     onPrimaryContainer = primary,
-    secondary = Color(0xFFBEC6DC),
-    onSecondary = Color(0xFF293041),
-    secondaryContainer = Color(0xFF40485A),
-    onSecondaryContainer = Color(0xFFDAE2F9),
+    secondary = Color(0xFFEBEBF5).copy(alpha = 0.72f),
+    onSecondary = Color.Black,
+    secondaryContainer = AppDarkSecondary,
+    onSecondaryContainer = Color.White,
     background = AppDarkBackground,
     onBackground = Color.White,
     surface = AppDarkGrouped,
     onSurface = Color.White,
     surfaceVariant = AppDarkSecondary,
-    onSurfaceVariant = Color(0xFFEBEBF5).copy(alpha = 0.60f),
-    surfaceContainerLowest = Color.Black,
+    onSurfaceVariant = Color(0xFFEBEBF5).copy(alpha = 0.68f),
+    surfaceContainerLowest = AppDarkBackground,
     surfaceContainerLow = AppDarkGrouped,
     surfaceContainer = AppDarkGrouped,
     surfaceContainerHigh = AppDarkElevated,
     surfaceContainerHighest = AppDarkSecondary,
-    outline = Color(0xFF545458),
-    outlineVariant = Color(0xFF545458).copy(alpha = 0.48f),
-    error = Color(0xFFFFB4AB),
-    onError = Color(0xFF690005),
-    errorContainer = Color(0xFF93000A),
+    outline = Color(0xFF8E8E93),
+    outlineVariant = Color(0xFF545458).copy(alpha = 0.55f),
+    error = Color(0xFFFF453A),
+    onError = Color.White,
+    errorContainer = Color(0xFF4A1512),
     onErrorContainer = Color(0xFFFFDAD6),
-    inverseSurface = Color(0xFFE6E1E6),
-    inverseOnSurface = Color(0xFF303034),
+    inverseSurface = Color(0xFFF2F2F7),
+    inverseOnSurface = Color.Black,
     inversePrimary = primary,
 )
 
 private fun lightColors(primary: Color) = lightColorScheme(
     primary = primary,
-    onPrimary = readableOn(primary, dark = false),
+    onPrimary = Color.White,
     primaryContainer = primary.copy(alpha = 0.12f).compositeOver(AppLightGrouped),
     onPrimaryContainer = primary,
-    secondary = Color(0xFF5D5F72),
+    secondary = Color(0xFF3C3C43),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFE1E2F2),
-    onSecondaryContainer = Color(0xFF191A2B),
+    secondaryContainer = AppLightSecondary,
+    onSecondaryContainer = Color.Black,
     background = AppLightBackground,
     onBackground = Color.Black,
     surface = AppLightGrouped,
     onSurface = Color.Black,
     surfaceVariant = AppLightSecondary,
-    onSurfaceVariant = Color(0xFF3C3C43).copy(alpha = 0.60f),
+    onSurfaceVariant = Color(0xFF3C3C43).copy(alpha = 0.72f),
     surfaceContainerLowest = Color.White,
     surfaceContainerLow = AppLightGrouped,
     surfaceContainer = AppLightGrouped,
     surfaceContainerHigh = AppLightElevated,
     surfaceContainerHighest = AppLightSecondary,
     outline = Color(0xFF8E8E93),
-    outlineVariant = Color(0xFF3C3C43).copy(alpha = 0.16f),
-    error = Color(0xFFBA1A1A),
+    outlineVariant = Color(0xFF3C3C43).copy(alpha = 0.20f),
+    error = Color(0xFFFF3B30),
     onError = Color.White,
-    errorContainer = Color(0xFFFFDAD6),
-    onErrorContainer = Color(0xFF410002),
-    inverseSurface = Color(0xFF2F3035),
-    inverseOnSurface = Color(0xFFF1EFF4),
+    errorContainer = Color(0xFFFFE7E5),
+    onErrorContainer = Color(0xFF7A120D),
+    inverseSurface = Color(0xFF1C1C1E),
+    inverseOnSurface = Color.White,
     inversePrimary = primary,
 )
 
-private fun readableOn(color: Color, dark: Boolean): Color {
-    val luminance = (0.299f * color.red) + (0.587f * color.green) + (0.114f * color.blue)
-    return if (luminance > if (dark) 0.48f else 0.62f) Color(0xFF1A1B20) else Color.White
-}
-
 private fun Color.compositeOver(background: Color): Color {
-    val alpha = this.alpha
+    val sourceAlpha = alpha
     return Color(
-        red = red * alpha + background.red * (1f - alpha),
-        green = green * alpha + background.green * (1f - alpha),
-        blue = blue * alpha + background.blue * (1f - alpha),
+        red = red * sourceAlpha + background.red * (1f - sourceAlpha),
+        green = green * sourceAlpha + background.green * (1f - sourceAlpha),
+        blue = blue * sourceAlpha + background.blue * (1f - sourceAlpha),
         alpha = 1f,
-    )
-}
-
-private fun ColorScheme.withAccent(accent: Color, dark: Boolean): ColorScheme {
-    val container = accent.copy(alpha = if (dark) 0.20f else 0.12f)
-        .compositeOver(if (dark) surfaceContainer else surface)
-    return copy(
-        primary = accent,
-        onPrimary = readableOn(accent, dark),
-        primaryContainer = container,
-        onPrimaryContainer = accent,
-        inversePrimary = accent,
     )
 }
 
 @Composable
 fun AnimeScheduleTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
-    accentColor: AccentColor = AccentColor.INDIGO,
+    accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
@@ -140,11 +123,12 @@ fun AnimeScheduleTheme(
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
     }
-    val colorScheme = if (darkTheme) {
+    val colorScheme: ColorScheme = if (darkTheme) {
         darkColors(accentPrimary(accentColor, dark = true))
     } else {
         lightColors(accentPrimary(accentColor, dark = false))
     }
+
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
