@@ -10,10 +10,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.ErrorOutline
@@ -22,6 +20,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,6 +41,7 @@ import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
+import com.owlcoder.animeschedule.presentation.components.InsetGroup
 
 private data class ReleaseNote(
     val icon: ImageVector,
@@ -49,37 +49,37 @@ private data class ReleaseNote(
     val description: String,
 )
 
-private val latestReleaseNotes = listOf(
-    ReleaseNote(
-        Icons.AutoMirrored.Outlined.ViewList,
-        "Refined bottom navigation",
-        "Cleaner selection states and smoother tap feedback.",
-    ),
-    ReleaseNote(
-        Icons.Outlined.Layers,
-        "Smoother transitions and sheet animations",
-        "Navigation, tabs and modal content now move with one consistent motion system.",
-    ),
-    ReleaseNote(
-        Icons.Outlined.Tune,
-        "Redesigned filters",
-        "Clearer selected states, compact options and persistent actions.",
-    ),
-    ReleaseNote(
-        Icons.Outlined.ErrorOutline,
-        "Improved loading, error and empty states",
-        "Centered messaging and useful actions make every state easier to understand.",
-    ),
-    ReleaseNote(
-        Icons.Outlined.Info,
-        "Updated About section",
-        "A clearer app identity, accurate data sources and cleaner system information.",
-    ),
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangelogBottomSheet(onDismiss: () -> Unit) {
+    val notes = listOf(
+        ReleaseNote(
+            Icons.AutoMirrored.Outlined.ViewList,
+            stringResource(R.string.changelog_nav_title),
+            stringResource(R.string.changelog_nav_description),
+        ),
+        ReleaseNote(
+            Icons.Outlined.Layers,
+            stringResource(R.string.changelog_motion_title),
+            stringResource(R.string.changelog_motion_description),
+        ),
+        ReleaseNote(
+            Icons.Outlined.Tune,
+            stringResource(R.string.changelog_filters_title),
+            stringResource(R.string.changelog_filters_description),
+        ),
+        ReleaseNote(
+            Icons.Outlined.ErrorOutline,
+            stringResource(R.string.changelog_states_title),
+            stringResource(R.string.changelog_states_description),
+        ),
+        ReleaseNote(
+            Icons.Outlined.Info,
+            stringResource(R.string.changelog_about_title),
+            stringResource(R.string.changelog_about_description),
+        ),
+    )
+
     AppSheet(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.changelog_title),
@@ -87,21 +87,21 @@ fun ChangelogBottomSheet(onDismiss: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 660.dp)
+                .heightIn(max = 560.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 6.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(bottom = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(11.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Box(
                     modifier = Modifier
-                        .clip(ContinuousRoundedShape(12.dp))
+                        .clip(ContinuousRoundedShape(11.dp))
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                        .padding(horizontal = 11.dp, vertical = 7.dp),
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
                 ) {
                     Text(
                         text = "v${BuildConfig.VERSION_NAME}",
@@ -111,8 +111,8 @@ fun ChangelogBottomSheet(onDismiss: () -> Unit) {
                     )
                 }
                 Text(
-                    text = "May 20, 2026",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = stringResource(R.string.changelog_release_date),
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -120,7 +120,7 @@ fun ChangelogBottomSheet(onDismiss: () -> Unit) {
             AppMaterialSurface(
                 modifier = Modifier.fillMaxWidth(),
                 material = AppMaterial.Interactive,
-                shape = ContinuousRoundedShape(20.dp),
+                shape = ContinuousRoundedShape(18.dp),
             ) {
                 Row(
                     modifier = Modifier
@@ -128,78 +128,76 @@ fun ChangelogBottomSheet(onDismiss: () -> Unit) {
                         .background(
                             Brush.horizontalGradient(
                                 listOf(
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.11f),
-                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.05f),
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
+                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.03f),
                                 ),
                             ),
                         )
-                        .padding(horizontal = 17.dp, vertical = 17.dp),
+                        .padding(horizontal = 15.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(15.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Column(
                         modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Text(
-                            text = "What’s new",
-                            style = MaterialTheme.typography.headlineSmall,
+                            text = stringResource(R.string.changelog_whats_new),
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
-                            text = "A smoother experience, polished in every detail.",
-                            style = MaterialTheme.typography.bodyMedium,
+                            text = stringResource(R.string.changelog_hero_description),
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     Box(
                         modifier = Modifier
-                            .size(68.dp)
-                            .clip(RoundedCornerShape(20.dp))
+                            .size(54.dp)
+                            .clip(ContinuousRoundedShape(16.dp))
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.13f)),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.AutoAwesome,
                             contentDescription = null,
-                            modifier = Modifier.size(34.dp),
+                            modifier = Modifier.size(28.dp),
                             tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
             }
 
-            latestReleaseNotes.forEach { note ->
-                ReleaseNoteCard(note)
+            InsetGroup {
+                notes.forEachIndexed { index, note ->
+                    ReleaseNoteRow(note)
+                    if (index < notes.lastIndex) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(start = 58.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                        )
+                    }
+                }
             }
 
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 5.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(7.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.FavoriteBorder,
-                        contentDescription = null,
-                        modifier = Modifier.size(19.dp),
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                        text = "Made with love by the Anime Tracker team",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Outlined.FavoriteBorder,
+                    contentDescription = null,
+                    modifier = Modifier.size(17.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
                 Text(
-                    text = "Thank you for your support!",
-                    style = MaterialTheme.typography.labelMedium,
+                    text = stringResource(R.string.changelog_footer),
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
@@ -209,57 +207,45 @@ fun ChangelogBottomSheet(onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun ReleaseNoteCard(note: ReleaseNote) {
-    AppMaterialSurface(
-        modifier = Modifier.fillMaxWidth(),
-        material = AppMaterial.Grouped,
-        shape = ContinuousRoundedShape(18.dp),
+private fun ReleaseNoteRow(note: ReleaseNote) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 13.dp, vertical = 11.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .size(36.dp)
+                .clip(ContinuousRoundedShape(11.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(ContinuousRoundedShape(13.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = note.icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(3.dp),
-            ) {
-                Text(
-                    text = note.title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = note.description,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                imageVector = note.icon,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+                modifier = Modifier.size(19.dp),
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(1.dp),
+        ) {
+            Text(
+                text = note.title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = note.description,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
