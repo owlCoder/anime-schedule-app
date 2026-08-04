@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -405,7 +406,7 @@ private fun PersonalizePage(
 }
 
 @Composable
-private fun ProductPage(eyebrow: String, title: String, subtitle: String, content: @Composable Column.() -> Unit) {
+private fun ProductPage(eyebrow: String, title: String, subtitle: String, content: @Composable ColumnScope.() -> Unit) {
     Column(
         modifier = Modifier.fillMaxSize().padding(horizontal = 22.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -464,7 +465,7 @@ private fun PreviewScheduleRow(time: String, title: String, detail: String) {
 @Composable
 private fun SelectionRow(label: String, selected: Boolean, onClick: () -> Unit) {
     Surface(
-        modifier = Modifier.fillMaxWidth().height(42.dp).clickable(onClick = onClick),
+        modifier = Modifier.fillMaxWidth().height(44.dp).clickable(onClick = onClick),
         shape = RoundedCornerShape(13.dp),
         color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.11f) else MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
@@ -488,7 +489,7 @@ private fun SettingsChoiceTitle(text: String) {
 
 @Composable
 private fun ChoiceRow(label: String, selected: Boolean, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().height(42.dp).clickable(onClick = onClick).padding(horizontal = 13.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().height(44.dp).clickable(onClick = onClick).padding(horizontal = 13.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
         if (selected) Icon(Icons.Default.Check, null, Modifier.size(17.dp), tint = MaterialTheme.colorScheme.primary)
     }
