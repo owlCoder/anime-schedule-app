@@ -1,7 +1,5 @@
 package com.owlcoder.animeschedule.presentation.screens.schedule
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,12 +7,16 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -22,16 +24,17 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
+import com.owlcoder.animeschedule.presentation.components.GlassSurface
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.InsetListRow
+import com.owlcoder.animeschedule.ui.theme.GlassBlur
+import com.owlcoder.animeschedule.ui.theme.GlassTone
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
 private val FORMAT_LABELS = mapOf(
@@ -59,20 +62,20 @@ fun ScheduleFilterSheet(
 ) {
     AppSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         title = stringResource(R.string.filter_title),
         trailingContent = {
-            TextButton(onClick = onClear) {
-                Text(stringResource(R.string.filter_reset))
+            TextButton(onClick = onClear, enabled = filter.isActive) {
+                Text(stringResource(R.string.filter_reset), fontWeight = FontWeight.SemiBold)
             }
         },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 560.dp)
+                .heightIn(max = 520.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             if (isLoggedIn) {
                 InsetGroup {
@@ -122,9 +125,10 @@ private fun FilterSection(
     title: String,
     content: @Composable androidx.compose.foundation.layout.FlowRowScope.() -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
         Text(
             text = title,
+            modifier = Modifier.padding(start = 2.dp),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.SemiBold,
@@ -143,31 +147,28 @@ private fun CompactScheduleFilterChip(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    val borderColor = if (selected) {
-        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.24f)
-    } else {
-        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.56f)
-    }
-    Row(
-        modifier = Modifier
-            .sizeIn(minHeight = 34.dp)
-            .clip(PillShape)
-            .background(
-                if (selected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
-                else Color.Transparent,
-            )
-            .border(0.5.dp, borderColor, PillShape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    GlassSurface(
+        modifier = Modifier.height(34.dp).clickable(onClick = onClick),
+        shape = PillShape,
+        tone = if (selected) GlassTone.Accent else GlassTone.Neutral,
+        blur = GlassBlur.None,
+        contentColor = if (selected) MaterialTheme.colorScheme.onSurface
+        else MaterialTheme.colorScheme.onSurfaceVariant,
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            color = if (selected) MaterialTheme.colorScheme.onSurface
-            else MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 11.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            if (selected) {
+                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(13.dp))
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                maxLines = 1,
+            )
+        }
     }
 }
