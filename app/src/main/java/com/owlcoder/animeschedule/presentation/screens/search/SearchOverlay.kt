@@ -33,6 +33,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -60,6 +61,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
@@ -67,17 +69,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
-import com.owlcoder.animeschedule.presentation.components.AppButton
-import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
 import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
-import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
+import com.owlcoder.animeschedule.presentation.components.AppMaterial
+import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.EmptyState
-import com.owlcoder.animeschedule.presentation.components.GlassSurface
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 import com.owlcoder.animeschedule.presentation.components.LocalToast
-import com.owlcoder.animeschedule.ui.theme.GlassBlur
-import com.owlcoder.animeschedule.ui.theme.GlassTone
 
 @Composable
 fun SearchScreen(
@@ -154,7 +152,7 @@ fun SearchScreen(
         if (!isFocused) {
             AppLargeHeader(
                 title = stringResource(R.string.search_title),
-                modifier = Modifier.padding(top = 8.dp, bottom = 10.dp),
+                modifier = Modifier.padding(top = 6.dp, bottom = 8.dp),
             )
         }
         Row(
@@ -189,12 +187,12 @@ fun SearchScreen(
                     },
                     contentPadding = PaddingValues(horizontal = 4.dp),
                 ) {
-                    Text(stringResource(R.string.common_cancel))
+                    Text(stringResource(R.string.common_cancel), fontWeight = FontWeight.SemiBold)
                 }
             }
         }
 
-        Spacer(Modifier.height(if (isFocused) 12.dp else 20.dp))
+        Spacer(Modifier.height(if (isFocused) 10.dp else 16.dp))
         SearchContent(
             query = query,
             recentSearches = recentSearches,
@@ -270,8 +268,7 @@ private fun SearchField(
     onClear: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val shape = ContinuousRoundedShape(15.dp)
-    GlassSurface(
+    AppMaterialSurface(
         modifier = modifier
             .height(44.dp)
             .clickable(
@@ -279,12 +276,11 @@ private fun SearchField(
                 indication = null,
                 onClick = onFieldTap,
             ),
-        shape = shape,
-        tone = GlassTone.Neutral,
-        blur = GlassBlur.Soft,
+        material = AppMaterial.Elevated,
+        shape = RoundedCornerShape(14.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 4.dp),
+            modifier = Modifier.fillMaxSize().padding(start = 12.dp, end = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
@@ -324,24 +320,21 @@ private fun SearchField(
                 )
             }
             if (query.isNotEmpty()) {
-                Box(
+                Surface(
                     modifier = Modifier
-                        .size(34.dp)
+                        .size(30.dp)
                         .clickable(onClick = onClear)
                         .semantics { role = Role.Button },
-                    contentAlignment = Alignment.Center,
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tonalElevation = 0.dp,
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(18.dp)
-                            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.24f), CircleShape),
-                        contentAlignment = Alignment.Center,
-                    ) {
+                    Box(Modifier.size(30.dp), contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.Default.Close,
                             contentDescription = stringResource(R.string.search_clear_recent),
-                            modifier = Modifier.size(12.dp),
-                            tint = MaterialTheme.colorScheme.background,
+                            modifier = Modifier.size(15.dp),
                         )
                     }
                 }
@@ -421,57 +414,49 @@ private fun RecentSearches(
     onClear: () -> Unit,
     onSelect: (String) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = stringResource(R.string.search_recent),
                 modifier = Modifier.weight(1f),
                 style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
             )
             TextButton(
                 onClick = onClear,
                 contentPadding = PaddingValues(horizontal = 4.dp),
             ) {
-                Text(stringResource(R.string.search_clear_recent))
+                Text(stringResource(R.string.search_clear_recent), fontWeight = FontWeight.SemiBold)
             }
         }
         InsetGroup {
             searches.forEachIndexed { index, recent ->
                 if (index > 0) {
                     HorizontalDivider(
-                        modifier = Modifier.padding(start = 52.dp),
+                        modifier = Modifier.padding(start = 46.dp),
                         thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.30f),
+                        color = MaterialTheme.colorScheme.outlineVariant,
                     )
                 }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp)
+                        .height(46.dp)
                         .clickable(onClick = { onSelect(recent) })
                         .semantics { role = Role.Button }
                         .padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    GlassSurface(
-                        modifier = Modifier.size(28.dp),
-                        shape = CircleShape,
-                        tone = GlassTone.Neutral,
-                        blur = GlassBlur.None,
-                    ) {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Default.History,
-                                contentDescription = null,
-                                modifier = Modifier.size(15.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
+                    Icon(
+                        Icons.Default.History,
+                        contentDescription = null,
+                        modifier = Modifier.size(19.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     Text(
                         text = recent,
                         style = MaterialTheme.typography.bodyMedium,
@@ -494,17 +479,8 @@ private fun SearchResults(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(bottom = 20.dp),
     ) {
-        item(key = "results_header") {
-            Text(
-                text = stringResource(R.string.search_title),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-            )
-        }
         item(key = "results_group") {
             InsetGroup {
                 results.forEachIndexed { index, result ->
@@ -535,45 +511,38 @@ private fun SearchResults(
 
 @Composable
 private fun SearchLoadingState() {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = stringResource(R.string.search_title),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 8.dp),
-        )
-        InsetGroup {
-            repeat(4) { index ->
-                if (index > 0) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(start = 70.dp),
-                        thickness = 0.5.dp,
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth().height(76.dp).padding(horizontal = 12.dp, vertical = 7.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(11.dp),
-                ) {
+    InsetGroup {
+        repeat(4) { index ->
+            if (index > 0) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(start = 60.dp),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 10.dp, vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Box(
+                    Modifier
+                        .size(40.dp, 54.dp)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(9.dp)),
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                     Box(
                         Modifier
-                            .size(46.dp, 62.dp)
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(10.dp)),
+                            .fillMaxWidth(0.58f)
+                            .height(11.dp)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape),
                     )
-                    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                        Box(
-                            Modifier
-                                .fillMaxWidth(0.58f)
-                                .height(11.dp)
-                                .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape),
-                        )
-                        Box(
-                            Modifier
-                                .fillMaxWidth(0.34f)
-                                .height(9.dp)
-                                .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape),
-                        )
-                    }
+                    Box(
+                        Modifier
+                            .fillMaxWidth(0.34f)
+                            .height(9.dp)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape),
+                    )
                 }
             }
         }
@@ -592,7 +561,7 @@ private fun CompactSearchState(
         icon = icon,
         title = title,
         subtitle = subtitle,
-        modifier = Modifier.fillMaxWidth().height(280.dp),
+        modifier = Modifier.fillMaxWidth().height(220.dp),
         actionLabel = actionLabel,
         onAction = onAction,
     )
