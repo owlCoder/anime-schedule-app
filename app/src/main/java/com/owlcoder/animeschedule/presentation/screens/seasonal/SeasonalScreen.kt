@@ -389,7 +389,7 @@ private fun SortSegmentedControl(
                         .weight(1f)
                         .height(36.dp)
                         .clickable(role = Role.RadioButton) { onSelect(option) }
-                        .semantics { selected = isSelected },
+                        .semantics { this.selected = isSelected },
                     shape = ContinuousRoundedShape(11.dp),
                     color = container,
                     contentColor = content,
