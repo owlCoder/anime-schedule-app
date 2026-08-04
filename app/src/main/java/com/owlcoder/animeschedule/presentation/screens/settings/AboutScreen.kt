@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -31,6 +32,12 @@ import com.owlcoder.animeschedule.BuildConfig
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
+
+private data class AboutItem(
+    val label: String,
+    val value: String,
+    val codeValue: Boolean = false,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,9 +49,9 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 410.dp)
+                .heightIn(max = 500.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 6.dp),
+                .padding(bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
@@ -78,10 +85,14 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
 
             AboutGroup(
                 items = listOf(
-                    stringResource(R.string.about_version_label) to BuildConfig.VERSION_NAME,
-                    stringResource(R.string.about_build_label) to BuildConfig.VERSION_CODE.toString(),
-                    stringResource(R.string.about_platform_label) to "Android 12+",
-                    stringResource(R.string.about_package_label) to BuildConfig.APPLICATION_ID,
+                    AboutItem(stringResource(R.string.about_version_label), BuildConfig.VERSION_NAME),
+                    AboutItem(stringResource(R.string.about_build_label), BuildConfig.VERSION_CODE.toString()),
+                    AboutItem(stringResource(R.string.about_platform_label), "Android 12+"),
+                    AboutItem(
+                        stringResource(R.string.about_package_label),
+                        BuildConfig.APPLICATION_ID.replace(".", ".\u200B"),
+                        codeValue = true,
+                    ),
                 ),
             )
 
@@ -90,9 +101,9 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
             Spacer(Modifier.height(5.dp))
             AboutGroup(
                 items = listOf(
-                    stringResource(R.string.about_data_schedule) to "AniList",
-                    stringResource(R.string.about_data_list) to "MyAnimeList",
-                    stringResource(R.string.about_data_fallback) to "Jikan",
+                    AboutItem(stringResource(R.string.about_data_schedule), "AniList"),
+                    AboutItem(stringResource(R.string.about_data_list), "MyAnimeList"),
+                    AboutItem(stringResource(R.string.about_data_fallback), "Jikan"),
                 ),
             )
 
@@ -126,29 +137,34 @@ private fun AboutSectionHeader(title: String) {
 }
 
 @Composable
-private fun AboutGroup(items: List<Pair<String, String>>) {
+private fun AboutGroup(items: List<AboutItem>) {
     InsetGroup {
-        items.forEachIndexed { index, (label, value) ->
+        items.forEachIndexed { index, item ->
             Row(
-                modifier = Modifier.fillMaxWidth().heightIn(min = 42.dp).padding(horizontal = 13.dp, vertical = 6.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 42.dp)
+                    .padding(horizontal = 13.dp, vertical = 7.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    text = label,
+                    text = item.label,
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(0.42f),
+                    modifier = Modifier.weight(0.38f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = value,
+                    text = item.value,
                     style = MaterialTheme.typography.bodySmall,
+                    fontFamily = if (item.codeValue) FontFamily.Monospace else FontFamily.Default,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(0.58f),
+                    modifier = Modifier.weight(0.62f),
                     textAlign = TextAlign.End,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+                    maxLines = if (item.codeValue) 3 else 2,
+                    overflow = if (item.codeValue) TextOverflow.Clip else TextOverflow.Ellipsis,
+                    softWrap = true,
                 )
             }
             if (index < items.lastIndex) {
