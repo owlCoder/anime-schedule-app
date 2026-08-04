@@ -1,14 +1,12 @@
 package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,8 +18,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.owlcoder.animeschedule.ui.theme.GlassBlur
-import com.owlcoder.animeschedule.ui.theme.GlassTone
 
 @Composable
 fun EmptyState(
@@ -35,37 +31,27 @@ fun EmptyState(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 28.dp, vertical = 20.dp)
+            .padding(horizontal = 28.dp, vertical = 18.dp)
             .semantics(mergeDescendants = true) { },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        GlassSurface(
-            modifier = Modifier.size(58.dp),
-            shape = CircleShape,
-            tone = GlassTone.Neutral,
-            blur = GlassBlur.Soft,
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        ) {
-            Box(Modifier.size(58.dp), contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(25.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-        Spacer(Modifier.height(14.dp))
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(34.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(12.dp))
         Text(
             text = title,
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
         if (!subtitle.isNullOrBlank()) {
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(5.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium,
@@ -74,7 +60,7 @@ fun EmptyState(
             )
         }
         if (actionLabel != null && onAction != null) {
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(14.dp))
             AppButton(
                 label = actionLabel,
                 onClick = onAction,
