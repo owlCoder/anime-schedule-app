@@ -27,17 +27,25 @@ fun AppSwitch(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
+    val motion = LocalMotionPolicy.current
     val trackColor by animateColorAsState(
         targetValue = when {
             !enabled -> MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.46f)
             checked -> MaterialTheme.colorScheme.primary
             else -> MaterialTheme.colorScheme.surfaceContainerHighest
         },
-        label = "switchTrack",
+        animationSpec = motion.iosTween(IosMotion.Standard),
+        label = "switch-track",
     )
     val thumbOffset by animateDpAsState(
         targetValue = if (checked) 20.dp else 2.dp,
-        label = "switchThumb",
+        animationSpec = motion.iosSpring(),
+        label = "switch-thumb",
+    )
+    val thumbColor by animateColorAsState(
+        targetValue = if (enabled) Color.White else Color.White.copy(alpha = 0.76f),
+        animationSpec = motion.iosTween(IosMotion.Quick),
+        label = "switch-thumb-color",
     )
 
     Box(
@@ -64,7 +72,7 @@ fun AppSwitch(
                     .size(24.dp)
                     .shadow(1.5.dp, CircleShape, clip = false)
                     .clip(CircleShape)
-                    .background(if (enabled) Color.White else Color.White.copy(alpha = 0.76f)),
+                    .background(thumbColor),
             )
         }
     }
