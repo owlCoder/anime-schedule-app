@@ -4,7 +4,6 @@ import android.app.ActivityManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -59,8 +58,8 @@ fun GlassSurface(
             .background(palette.fill)
             .border(GlassTokens.hairline, palette.border, shape),
     ) {
-        // matchParentSize participates only in placement, so optical layers never force a
-        // wrap-content glass control to consume its parent's full constraints.
+        // BoxScope.matchParentSize participates only in placement, so optical layers never force
+        // a wrap-content glass control to consume its parent's full constraints.
         if (backdrop != null) {
             Box(Modifier.matchParentSize()) { backdrop() }
             Box(
