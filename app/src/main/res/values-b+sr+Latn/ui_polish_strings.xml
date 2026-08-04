@@ -21,7 +21,7 @@
     <string name="settings_cache_cleared">Keš je obrisan</string>
     <string name="settings_cache_clear_failed">Keš nije moguće obrisati</string>
 
-    <!-- Seasonal filters -->
+    <!-- Filteri -->
     <string name="seasonal_filter_selected_count">Izabrano: %d</string>
     <string name="seasonal_filter_custom_sort">Prilagođeno sortiranje</string>
     <string name="seasonal_filter_apply">Primeni filtere</string>
@@ -32,6 +32,25 @@
     <string name="format_ova">OVA</string>
     <string name="format_ona">ONA</string>
     <string name="format_music">Muzika</string>
+    <string name="genre_action">Akcija</string>
+    <string name="genre_adventure">Avantura</string>
+    <string name="genre_comedy">Komedija</string>
+    <string name="genre_drama">Drama</string>
+    <string name="genre_ecchi">Ecchi</string>
+    <string name="genre_fantasy">Fantazija</string>
+    <string name="genre_hentai">Hentai</string>
+    <string name="genre_horror">Horor</string>
+    <string name="genre_mahou_shoujo">Mahou Shoujo</string>
+    <string name="genre_mecha">Mecha</string>
+    <string name="genre_music">Muzika</string>
+    <string name="genre_mystery">Misterija</string>
+    <string name="genre_psychological">Psihološki</string>
+    <string name="genre_romance">Romansa</string>
+    <string name="genre_scifi">Naučna fantastika</string>
+    <string name="genre_slice_of_life">Svakodnevni život</string>
+    <string name="genre_sports">Sport</string>
+    <string name="genre_supernatural">Natprirodno</string>
+    <string name="genre_thriller">Triler</string>
 
     <!-- About -->
     <string name="about_anilist_description">Raspored, podaci i ilustracije animea</string>
