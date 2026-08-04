@@ -1,8 +1,6 @@
 package com.owlcoder.animeschedule.presentation.screens.seasonal
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,12 +12,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,7 +30,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -39,8 +40,13 @@ import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeSeason
 import com.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
+import com.owlcoder.animeschedule.presentation.components.AppMaterial
+import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.GlassSurface
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
+import com.owlcoder.animeschedule.ui.theme.GlassBlur
+import com.owlcoder.animeschedule.ui.theme.GlassTone
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
 private val FORMAT_LABELS = mapOf(
@@ -68,41 +74,56 @@ internal fun SeasonTabRow(
     onSelect: (AnimeSeason, Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(40.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
-            .padding(3.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+    AppMaterialSurface(
+        modifier = modifier.fillMaxWidth().height(38.dp),
+        material = AppMaterial.Grouped,
+        shape = RoundedCornerShape(12.dp),
     ) {
-        AnimeSeason.entries.forEach { season ->
-            val selected = season == currentSeason
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(34.dp)
-                    .clip(RoundedCornerShape(9.dp))
-                    .background(
-                        if (selected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
-                        else Color.Transparent,
-                    )
-                    .clickable(role = Role.Tab) { onSelect(season, currentYear) }
-                    .semantics { role = Role.Tab },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(season.labelRes()),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                    color = if (selected) MaterialTheme.colorScheme.onSurface
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+        Row(
+            modifier = Modifier.fillMaxWidth().height(38.dp).padding(3.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            AnimeSeason.entries.forEach { season ->
+                val selected = season == currentSeason
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(32.dp)
+                        .clip(RoundedCornerShape(9.dp))
+                        .clickable(role = Role.Tab) { onSelect(season, currentYear) }
+                        .semantics { role = Role.Tab },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (selected) {
+                        GlassSurface(
+                            modifier = Modifier.fillMaxWidth().height(32.dp),
+                            shape = RoundedCornerShape(9.dp),
+                            tone = GlassTone.Accent,
+                            blur = GlassBlur.None,
+                        ) {
+                            SeasonLabel(season, true)
+                        }
+                    } else {
+                        SeasonLabel(season, false)
+                    }
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun SeasonLabel(season: AnimeSeason, selected: Boolean) {
+    Box(Modifier.fillMaxWidth().height(32.dp), contentAlignment = Alignment.Center) {
+        Text(
+            text = stringResource(season.labelRes()),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+            color = if (selected) MaterialTheme.colorScheme.onSurface
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -120,17 +141,15 @@ internal fun SeasonalAnimeCard(
 
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(11.dp))
             .clickable(role = Role.Button, onClick = onClick)
             .semantics(mergeDescendants = true) { role = Role.Button },
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         MediaThumbnail.Large(
             url = item.coverImageUrl,
             contentDescription = item.title,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(0.70f),
+            modifier = Modifier.fillMaxWidth().aspectRatio(0.70f),
         )
         Text(
             text = item.title,
@@ -165,21 +184,22 @@ internal fun SeasonalFilterSheet(
 ) {
     AppSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         title = stringResource(R.string.seasonal_filter_title),
         trailingContent = {
-            TextButton(onClick = onClear) {
-                Text(stringResource(R.string.seasonal_filter_reset))
+            TextButton(onClick = onClear, enabled = filter.isActive) {
+                Text(stringResource(R.string.seasonal_filter_reset), fontWeight = FontWeight.SemiBold)
             }
         },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(max = 520.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            FilterSection(title = stringResource(R.string.seasonal_sort_label)) {
+            FilterSection(stringResource(R.string.seasonal_sort_label)) {
                 SeasonalSortOrder.entries.forEach { order ->
                     CompactFilterChip(
                         label = stringResource(order.labelRes),
@@ -189,7 +209,7 @@ internal fun SeasonalFilterSheet(
                 }
             }
             if (availableFormats.isNotEmpty()) {
-                FilterSection(title = stringResource(R.string.filter_format)) {
+                FilterSection(stringResource(R.string.filter_format)) {
                     availableFormats.forEach { format ->
                         CompactFilterChip(
                             label = FORMAT_LABELS[format] ?: format,
@@ -200,7 +220,7 @@ internal fun SeasonalFilterSheet(
                 }
             }
             if (availableGenres.isNotEmpty()) {
-                FilterSection(title = stringResource(R.string.filter_genre)) {
+                FilterSection(stringResource(R.string.filter_genre)) {
                     availableGenres.forEach { genre ->
                         CompactFilterChip(
                             label = genre,
@@ -220,9 +240,10 @@ private fun FilterSection(
     title: String,
     content: @Composable FlowRowScope.() -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
         Text(
             text = title,
+            modifier = Modifier.padding(start = 2.dp),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -236,37 +257,28 @@ private fun FilterSection(
 }
 
 @Composable
-private fun CompactFilterChip(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val borderColor = if (selected) {
-        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.24f)
-    } else {
-        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.56f)
-    }
-    Row(
-        modifier = Modifier
-            .sizeIn(minHeight = 34.dp)
-            .clip(PillShape)
-            .background(
-                if (selected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
-                else Color.Transparent,
-            )
-            .border(0.5.dp, borderColor, PillShape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
+private fun CompactFilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    GlassSurface(
+        modifier = Modifier.height(34.dp).clickable(onClick = onClick),
+        shape = PillShape,
+        tone = if (selected) GlassTone.Accent else GlassTone.Neutral,
+        blur = GlassBlur.None,
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            color = if (selected) MaterialTheme.colorScheme.onSurface
-            else MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 11.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            if (selected) Icon(Icons.Default.Check, null, Modifier.size(13.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                color = if (selected) MaterialTheme.colorScheme.onSurface
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+        }
     }
 }
 
