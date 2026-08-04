@@ -1,6 +1,7 @@
 package com.owlcoder.animeschedule.presentation.screens.search
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -31,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
+import com.owlcoder.animeschedule.presentation.components.iosPressScale
 
 @Composable
 fun SearchResultCard(
@@ -51,7 +54,7 @@ fun SearchResultCard(
                 .heightIn(min = 64.dp)
                 .clickable(onClick = onCardClick)
                 .semantics(mergeDescendants = true) { role = Role.Button }
-                .padding(start = 10.dp, end = 8.dp, top = 5.dp, bottom = 5.dp),
+                .padding(start = 10.dp, end = 5.dp, top = 5.dp, bottom = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -82,27 +85,45 @@ fun SearchResultCard(
                 }
             }
             if (onEditStatus != null) {
-                Surface(
+                val interactionSource = remember { MutableInteractionSource() }
+                Box(
                     modifier = Modifier
-                        .size(34.dp)
-                        .clickable(onClick = onEditStatus)
-                        .semantics { role = Role.Button },
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    contentColor = if (result.userListEntry == null) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurface,
-                    tonalElevation = 0.dp,
+                        .iosPressScale(interactionSource, pressedScale = 0.93f)
+                        .size(44.dp)
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null,
+                            role = Role.Button,
+                            onClick = onEditStatus,
+                        ),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Box(Modifier.size(34.dp), contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = if (result.userListEntry != null) Icons.Outlined.Edit else Icons.Outlined.Add,
-                            contentDescription = if (result.userListEntry != null) {
-                                stringResource(R.string.cd_edit_list_status)
-                            } else {
-                                stringResource(R.string.detail_add_to_list)
-                            },
-                            modifier = Modifier.size(17.dp),
-                        )
+                    Surface(
+                        modifier = Modifier.size(30.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = if (result.userListEntry == null) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                        tonalElevation = 0.dp,
+                    ) {
+                        Box(Modifier.size(30.dp), contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (result.userListEntry != null) {
+                                    Icons.Outlined.Edit
+                                } else {
+                                    Icons.Outlined.Add
+                                },
+                                contentDescription = if (result.userListEntry != null) {
+                                    stringResource(R.string.cd_edit_list_status)
+                                } else {
+                                    stringResource(R.string.detail_add_to_list)
+                                },
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
                     }
                 }
             }
