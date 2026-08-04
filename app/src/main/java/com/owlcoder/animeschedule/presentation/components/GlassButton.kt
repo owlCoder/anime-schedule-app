@@ -32,8 +32,8 @@ import com.owlcoder.animeschedule.ui.theme.PillShape
 
 enum class AppButtonVariant { Primary, Secondary, Plain, Destructive }
 
-private val AppButtonHeight = 44.dp
-private val AppButtonShape = ContinuousRoundedShape(14.dp)
+private val AppButtonHeight = 48.dp
+private val AppButtonShape = ContinuousRoundedShape(19.dp)
 
 @Composable
 fun AppButton(
@@ -145,9 +145,9 @@ private fun ButtonRow(label: String, icon: ImageVector?, color: Color, enabled: 
     Row(
         modifier = Modifier
             .height(AppButtonHeight)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 17.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
     ) {
         ButtonContent(label, icon, color, enabled)
     }
@@ -160,7 +160,7 @@ private fun ButtonContent(label: String, icon: ImageVector?, color: Color, enabl
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(17.dp),
+            modifier = Modifier.size(18.dp),
             tint = resolved,
         )
     }
