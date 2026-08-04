@@ -4,17 +4,6 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.core.result.AppResult
 import com.owlcoder.animeschedule.domain.model.AnimeDetail
@@ -28,6 +17,18 @@ import com.owlcoder.animeschedule.domain.usecase.GetWatchSourcesUseCase
 import com.owlcoder.animeschedule.domain.usecase.IncrementEpisodeUseCase
 import com.owlcoder.animeschedule.domain.usecase.RemoveMalListEntryUseCase
 import com.owlcoder.animeschedule.domain.usecase.UpdateMalListEntryUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class DetailUiState(
@@ -49,7 +50,7 @@ data class CharacterOverlayState(
 @HiltViewModel
 class DetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    getAnimeDetailUseCase: GetAnimeDetailUseCase,
+    private val getAnimeDetailUseCase: GetAnimeDetailUseCase,
     getWatchSourcesUseCase: GetWatchSourcesUseCase,
     authRepository: AuthRepository,
     private val getCharacterDetailUseCase: GetCharacterDetailUseCase,
@@ -72,8 +73,10 @@ class DetailViewModel @Inject constructor(
     val updateEvent = _updateEvent.receiveAsFlow()
 
     private val _isIncrementing = MutableStateFlow(false)
+    private val reloadSignal = MutableStateFlow(0)
 
-    val uiState: StateFlow<DetailUiState> = getAnimeDetailUseCase(animeId)
+    val uiState: StateFlow<DetailUiState> = reloadSignal
+        .flatMapLatest { getAnimeDetailUseCase(animeId) }
         .map { result ->
             when (result) {
                 is AppResult.Success -> DetailUiState(detail = result.data, isLoading = false)
@@ -84,6 +87,10 @@ class DetailViewModel @Inject constructor(
         .combine(getWatchSourcesUseCase()) { state, sources -> state.copy(watchSources = sources) }
         .combine(_isIncrementing) { state, incrementing -> state.copy(isIncrementing = incrementing) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DetailUiState())
+
+    fun reload() {
+        reloadSignal.value += 1
+    }
 
     /** Mirrors [ScheduleViewModel.incrementEpisode] — "+1" only ever applies to a WATCHING
      *  entry (gated in the UI), so no DROPPED-specific guard is needed here either. */
@@ -106,8 +113,6 @@ class DetailViewModel @Inject constructor(
     fun updateListEntry(update: MalListUpdate) {
         val malId = uiState.value.detail?.malId ?: uiState.value.detail?.malListEntry?.animeId
         viewModelScope.launch {
-            // No MAL mapping for this AniList entry — surface the failure instead of
-            // silently dropping the user's edit.
             if (malId == null) {
                 _updateEvent.send(UpdateEvent.Error)
                 return@launch
