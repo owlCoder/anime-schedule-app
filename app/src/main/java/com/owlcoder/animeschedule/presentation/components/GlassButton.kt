@@ -33,6 +33,7 @@ import com.owlcoder.animeschedule.ui.theme.PillShape
 enum class AppButtonVariant { Primary, Secondary, Plain, Destructive }
 
 private val AppButtonHeight = 44.dp
+private val AppButtonShape = ContinuousRoundedShape(14.dp)
 
 @Composable
 fun AppButton(
@@ -54,6 +55,7 @@ fun AppButton(
             modifier = animatedModifier.heightIn(min = AppButtonHeight),
             interactionSource = interactionSource,
             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+            shape = AppButtonShape,
         ) {
             ButtonContent(label, icon, accent, enabled)
         }
@@ -75,7 +77,7 @@ fun AppButton(
                         role = Role.Button,
                         onClick = onClick,
                     ),
-                shape = PillShape,
+                shape = AppButtonShape,
                 color = container,
                 contentColor = contentColor,
                 shadowElevation = 0.dp,
@@ -127,7 +129,7 @@ private fun StandardOutlinedButton(
                 role = Role.Button,
                 onClick = onClick,
             ),
-        shape = PillShape,
+        shape = AppButtonShape,
         color = appMaterialColor(AppMaterial.Interactive),
         contentColor = color,
         border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant),
