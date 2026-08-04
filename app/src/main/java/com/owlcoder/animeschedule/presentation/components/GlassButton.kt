@@ -22,8 +22,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.GlassBlur
@@ -48,7 +46,7 @@ fun AppButton(
         AppButtonVariant.Plain -> androidx.compose.material3.TextButton(
             onClick = onClick,
             enabled = enabled,
-            modifier = modifier.heightIn(min = 40.dp),
+            modifier = modifier.heightIn(min = AppButtonHeight),
             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
         ) {
             ButtonContent(label, icon, accent, enabled)
@@ -56,13 +54,19 @@ fun AppButton(
 
         AppButtonVariant.Primary -> {
             val container = if (enabled) accent else accent.copy(alpha = 0.30f)
-            val contentColor = if (enabled) MaterialTheme.colorScheme.onPrimary
-            else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.58f)
+            val contentColor = if (enabled) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.58f)
+            }
             Surface(
                 modifier = modifier
                     .height(AppButtonHeight)
-                    .clickable(enabled = enabled, onClick = onClick)
-                    .semantics { role = Role.Button },
+                    .clickable(
+                        enabled = enabled,
+                        role = Role.Button,
+                        onClick = onClick,
+                    ),
                 shape = PillShape,
                 color = container,
                 contentColor = contentColor,
@@ -105,10 +109,13 @@ private fun StandardOutlinedButton(
     Surface(
         modifier = modifier
             .height(AppButtonHeight)
-            .clickable(enabled = enabled, onClick = onClick)
-            .semantics { role = Role.Button },
+            .clickable(
+                enabled = enabled,
+                role = Role.Button,
+                onClick = onClick,
+            ),
         shape = PillShape,
-        color = MaterialTheme.colorScheme.surface,
+        color = appMaterialColor(AppMaterial.Interactive),
         contentColor = color,
         border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant),
         tonalElevation = 0.dp,
@@ -121,7 +128,9 @@ private fun StandardOutlinedButton(
 @Composable
 private fun ButtonRow(label: String, icon: ImageVector?, color: Color, enabled: Boolean) {
     Row(
-        modifier = Modifier.height(AppButtonHeight).padding(horizontal = 16.dp),
+        modifier = Modifier
+            .height(AppButtonHeight)
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
     ) {
@@ -160,19 +169,30 @@ fun GlassButton(
     contentPadding: PaddingValues = PaddingValues(horizontal = 15.dp),
     content: @Composable (contentColor: Color) -> Unit,
 ) {
-    val contentColor = if (onImagery) Color.White else if (enabled) accent else accent.copy(alpha = 0.42f)
+    val contentColor = if (onImagery) {
+        Color.White
+    } else if (enabled) {
+        accent
+    } else {
+        accent.copy(alpha = 0.42f)
+    }
     GlassSurface(
         modifier = modifier
             .height(AppButtonHeight)
-            .clickable(enabled = enabled, onClick = onClick)
-            .semantics { role = Role.Button },
+            .clickable(
+                enabled = enabled,
+                role = Role.Button,
+                onClick = onClick,
+            ),
         shape = shape,
         tone = if (onImagery) GlassTone.OnImage else GlassTone.Neutral,
         blur = GlassBlur.None,
         contentColor = contentColor,
     ) {
         Row(
-            modifier = Modifier.height(AppButtonHeight).padding(contentPadding),
+            modifier = Modifier
+                .height(AppButtonHeight)
+                .padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),
         ) {
@@ -194,8 +214,11 @@ fun GlassIconButton(
     Box(
         modifier = modifier
             .sizeIn(minWidth = 44.dp, minHeight = 44.dp)
-            .clickable(enabled = enabled, onClick = onClick)
-            .semantics { role = Role.Button },
+            .clickable(
+                enabled = enabled,
+                role = Role.Button,
+                onClick = onClick,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         GlassSurface(
