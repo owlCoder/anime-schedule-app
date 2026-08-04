@@ -3,6 +3,7 @@ package com.owlcoder.animeschedule.presentation.screens.mylist
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -62,6 +64,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -155,7 +158,7 @@ fun MyListScreen(
         modifier = Modifier.fillMaxSize(),
         transitionSpec = {
             (fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
-                scaleIn(initialScale = 0.99f, animationSpec = motion.iosTween(IosMotion.Standard))) togetherWith
+                scaleIn(initialScale = 0.985f, animationSpec = motion.iosTween(IosMotion.Standard))) togetherWith
                 (fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
                     scaleOut(targetScale = 0.995f, animationSpec = motion.iosTween(IosMotion.Quick)))
         },
@@ -230,13 +233,13 @@ private fun LoggedInList(
                     placeholder = stringResource(R.string.mylist_search_placeholder),
                     leadingIcon = Icons.Default.Search,
                     onClear = { onSearchQueryChange("") },
-                    modifier = Modifier.height(42.dp),
+                    modifier = Modifier.height(44.dp),
                 )
                 StatusFilterRow(
                     activeFilter = uiState.activeFilter,
                     counts = uiState.statusCounts,
                     onFilterSelected = onFilterSelected,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 7.dp),
+                    modifier = Modifier.padding(top = 7.dp, bottom = 6.dp),
                 )
             }
         },
@@ -332,7 +335,7 @@ private fun StatusFilterRow(
         modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(7.dp),
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         statusTabs.forEach { status ->
             val isSelected = status == activeFilter
@@ -348,56 +351,70 @@ private fun StatusFilterRow(
                 animationSpec = motion.iosTween(IosMotion.Standard),
                 label = "my-list-tab-fill",
             )
-            Surface(
+            val scale by animateFloatAsState(
+                targetValue = if (isSelected) 1f else 0.97f,
+                animationSpec = motion.iosSpring(),
+                label = "my-list-tab-scale",
+            )
+            Box(
                 modifier = Modifier
-                    .height(34.dp)
+                    .sizeIn(minHeight = 44.dp)
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    }
                     .clickable(onClick = { onFilterSelected(status) })
                     .semantics {
                         role = Role.Tab
                         selected = isSelected
                     },
-                shape = PillShape,
-                color = containerColor,
-                contentColor = contentColor,
-                border = BorderStroke(
-                    0.5.dp,
-                    if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
-                    else MaterialTheme.colorScheme.outlineVariant,
-                ),
-                tonalElevation = 0.dp,
+                contentAlignment = Alignment.Center,
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 11.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                Surface(
+                    modifier = Modifier.height(34.dp),
+                    shape = PillShape,
+                    color = containerColor,
+                    contentColor = contentColor,
+                    border = BorderStroke(
+                        0.5.dp,
+                        if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
+                        else MaterialTheme.colorScheme.outlineVariant,
+                    ),
+                    tonalElevation = 0.dp,
                 ) {
-                    AnimatedContent(
-                        targetState = isSelected,
-                        transitionSpec = {
-                            fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
-                                fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
-                        },
-                        label = "my-list-tab-icon",
-                    ) { selectedState ->
-                        Icon(
-                            status.tabIcon(selectedState),
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = contentColor,
-                        )
-                    }
-                    Text(
-                        text = status.displayName(),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                        color = contentColor,
-                    )
-                    counts[status]?.takeIf { it > 0 }?.let { count ->
+                    Row(
+                        modifier = Modifier.padding(horizontal = 11.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    ) {
+                        AnimatedContent(
+                            targetState = isSelected,
+                            transitionSpec = {
+                                fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
+                                    fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
+                            },
+                            label = "my-list-tab-icon",
+                        ) { selectedState ->
+                            Icon(
+                                status.tabIcon(selectedState),
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = contentColor,
+                            )
+                        }
                         Text(
-                            text = count.toString(),
-                            style = MaterialTheme.typography.labelSmall,
+                            text = status.displayName(),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                             color = contentColor,
                         )
+                        counts[status]?.takeIf { it > 0 }?.let { count ->
+                            Text(
+                                text = count.toString(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = contentColor,
+                            )
+                        }
                     }
                 }
             }
@@ -425,22 +442,22 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(9.dp),
+                verticalArrangement = Arrangement.spacedBy(7.dp),
                 modifier = Modifier
-                    .widthIn(max = 360.dp)
-                    .padding(horizontal = 20.dp, vertical = 48.dp),
+                    .widthIn(max = 340.dp)
+                    .padding(horizontal = 14.dp, vertical = 28.dp),
             ) {
                 Surface(
-                    modifier = Modifier.size(54.dp),
+                    modifier = Modifier.size(50.dp),
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     tonalElevation = 0.dp,
                 ) {
-                    Box(Modifier.size(54.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(50.dp), contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.Default.AccountCircle,
                             contentDescription = null,
-                            modifier = Modifier.size(30.dp),
+                            modifier = Modifier.size(28.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -458,23 +475,30 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
                     textAlign = TextAlign.Center,
                 )
                 AppMaterialSurface(
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 7.dp),
                     material = AppMaterial.Grouped,
                     shape = MaterialTheme.shapes.large,
                 ) {
                     Column(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
-                        verticalArrangement = Arrangement.spacedBy(9.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(7.dp),
                     ) {
                         BenefitRow(Icons.Default.CloudSync, "Keep progress synced with MyAnimeList")
                         BenefitRow(Icons.Default.Bookmark, "Update watch status and episode progress")
                         BenefitRow(Icons.Default.Star, "Save scores without leaving the app")
                     }
                 }
-                Box(Modifier.height(5.dp))
                 AppButton(
                     label = stringResource(R.string.profile_login),
                     onClick = onLogin,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 240.dp)
+                        .padding(top = 5.dp),
                     variant = AppButtonVariant.Primary,
                     icon = Icons.AutoMirrored.Filled.Login,
                 )
