@@ -44,6 +44,7 @@ fun AppSheet(
     title: String? = null,
     trailingContent: @Composable (() -> Unit)? = null,
     showCloseButton: Boolean = true,
+    showDragHandle: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
@@ -60,7 +61,7 @@ fun AppSheet(
         contentColor = MaterialTheme.colorScheme.onSurface,
         scrimColor = scrim,
         tonalElevation = 0.dp,
-        dragHandle = { AppSheetHandle() },
+        dragHandle = if (showDragHandle) ({ AppSheetHandle() }) else null,
     ) {
         Column(
             modifier = Modifier
