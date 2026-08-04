@@ -36,6 +36,7 @@ import androidx.compose.material.icons.outlined.RemoveCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -67,15 +68,12 @@ import com.owlcoder.animeschedule.presentation.components.AppLoadingState
 import com.owlcoder.animeschedule.presentation.components.AppSearchField
 import com.owlcoder.animeschedule.presentation.components.EmptyState
 import com.owlcoder.animeschedule.presentation.components.ErrorBanner
-import com.owlcoder.animeschedule.presentation.components.GlassSurface
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.displayName
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
-import com.owlcoder.animeschedule.ui.theme.GlassBlur
-import com.owlcoder.animeschedule.ui.theme.GlassTone
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
 private val statusTabs = listOf(
@@ -269,16 +267,18 @@ private fun StatusFilterRow(
     ) {
         statusTabs.forEach { status ->
             val selected = status == activeFilter
-            GlassSurface(
+            val contentColor = if (selected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant
+            Surface(
                 modifier = Modifier
-                    .height(38.dp)
+                    .height(36.dp)
                     .clickable(onClick = { onFilterSelected(status) })
                     .semantics { role = Role.Tab },
                 shape = PillShape,
-                tone = if (selected) GlassTone.Accent else GlassTone.Neutral,
-                blur = if (selected) GlassBlur.Soft else GlassBlur.None,
-                contentColor = if (selected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)
+                else MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = contentColor,
+                tonalElevation = 0.dp,
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 12.dp),
@@ -289,22 +289,19 @@ private fun StatusFilterRow(
                         status.tabIcon(selected),
                         contentDescription = null,
                         modifier = Modifier.size(17.dp),
-                        tint = if (selected) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = contentColor,
                     )
                     Text(
                         text = status.displayName(),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                        color = if (selected) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = contentColor,
                     )
                     counts[status]?.takeIf { it > 0 }?.let { count ->
                         Text(
                             text = count.toString(),
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (selected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = contentColor,
                         )
                     }
                 }
@@ -328,31 +325,31 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
         )
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.TopCenter,
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(9.dp),
-                modifier = Modifier.padding(horizontal = 28.dp, vertical = 64.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.padding(horizontal = 28.dp, vertical = 92.dp),
             ) {
-                GlassSurface(
-                    modifier = Modifier.size(64.dp),
+                Surface(
+                    modifier = Modifier.size(56.dp),
                     shape = CircleShape,
-                    tone = GlassTone.Neutral,
-                    blur = GlassBlur.Soft,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    tonalElevation = 0.dp,
                 ) {
-                    Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(56.dp), contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.Default.AccountCircle,
                             contentDescription = null,
-                            modifier = Modifier.size(31.dp),
+                            modifier = Modifier.size(30.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
                 Text(
                     text = stringResource(R.string.mylist_not_logged_in_title),
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
                 )
