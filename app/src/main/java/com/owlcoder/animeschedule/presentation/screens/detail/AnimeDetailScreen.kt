@@ -81,9 +81,12 @@ import com.owlcoder.animeschedule.domain.model.WatchSource
 import com.owlcoder.animeschedule.domain.model.WatchStatus
 import com.owlcoder.animeschedule.presentation.components.AppButton
 import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
+import com.owlcoder.animeschedule.presentation.components.AppErrorState
+import com.owlcoder.animeschedule.presentation.components.AppLoadingState
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.ErrorBanner
 import com.owlcoder.animeschedule.presentation.components.FaviconImage
 import com.owlcoder.animeschedule.presentation.components.GlassIconButton
@@ -99,6 +102,7 @@ import com.owlcoder.animeschedule.presentation.components.iosSpring
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.PillShape
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -154,21 +158,27 @@ fun AnimeDetailScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
                     .windowInsetsPadding(WindowInsets.statusBars)
-                    .navigationBarsPadding()
-                    .verticalScroll(rememberScrollState()),
-                contentAlignment = Alignment.TopCenter,
+                    .navigationBarsPadding(),
             ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    GlassIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.cd_back),
-                        onClick = onBack,
-                    )
-                    ErrorBanner(message = stringResource(uiState.errorRes ?: R.string.error_load_details))
-                }
+                GlassIconButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.cd_back),
+                    onClick = onBack,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(start = 10.dp, top = 6.dp),
+                )
+                AppErrorState(
+                    title = stringResource(uiState.errorRes ?: R.string.error_load_details),
+                    message = "We ran into a problem while loading this content. Check your connection and try again.",
+                    retryLabel = stringResource(R.string.common_retry),
+                    onRetry = viewModel::reload,
+                    secondaryLabel = "Go back",
+                    onSecondary = onBack,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp, vertical = 72.dp),
+                )
             }
             else -> {
                 val detail = uiState.detail ?: return@Scaffold
@@ -302,7 +312,7 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
         detail.format?.toDisplayFormat(),
         detail.seasonYear?.toString(),
         detail.episodes?.let { "$it ep" },
-        detail.averageScore?.let { "★ ${it / 10.0}" },
+        (detail.averageScore ?: detail.meanScore)?.let { "★ ${formatCommunityScore(it)}" },
     )
 
     Box(modifier = Modifier.fillMaxWidth().height(280.dp)) {
@@ -475,9 +485,9 @@ private fun ProgressPanel(detail: AnimeDetail, entry: MalListEntry) {
                 )
                 if (entry.score > 0) {
                     Text(
-                        text = "${stringResource(R.string.detail_score)} ${entry.score}/10",
+                        text = "Your score ★ ${entry.score}/10",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
@@ -595,28 +605,77 @@ private fun HorizontalSection(title: String, content: LazyListScope.() -> Unit) 
 
 @Composable
 private fun DetailLoadingState(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.navigationBarsPadding().verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        Box(Modifier.fillMaxWidth().height(280.dp).background(MaterialTheme.colorScheme.surfaceContainer))
+    Box(modifier = modifier.navigationBarsPadding()) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Box(
-                Modifier.fillMaxWidth().height(44.dp).clip(PillShape)
+                Modifier
+                    .fillMaxWidth()
+                    .height(280.dp)
                     .background(MaterialTheme.colorScheme.surfaceContainer),
             )
-            Box(
-                Modifier.fillMaxWidth().height(96.dp).clip(MaterialTheme.shapes.large)
-                    .background(MaterialTheme.colorScheme.surfaceContainer),
-            )
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp),
-                strokeWidth = 2.dp,
-            )
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(44.dp)
+                        .clip(ContinuousRoundedShape(14.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainer),
+                )
+                repeat(3) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(72.dp)
+                            .clip(ContinuousRoundedShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainer)
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            Modifier
+                                .size(50.dp)
+                                .clip(ContinuousRoundedShape(11.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                        )
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(7.dp),
+                        ) {
+                            Box(
+                                Modifier
+                                    .fillMaxWidth(0.72f)
+                                    .height(10.dp)
+                                    .clip(ContinuousRoundedShape(5.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                            )
+                            Box(
+                                Modifier
+                                    .fillMaxWidth(0.46f)
+                                    .height(8.dp)
+                                    .clip(ContinuousRoundedShape(4.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                            )
+                        }
+                    }
+                }
+            }
         }
+        AppLoadingState(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 28.dp),
+            label = "Loading details",
+            message = "Fetching the latest information",
+        )
     }
 }
 
@@ -685,6 +744,11 @@ private fun relationSortPriority(type: String?): Int = when (type) {
 
 private fun sortRelatedAnime(relations: List<RelatedAnime>): List<RelatedAnime> =
     relations.filter { it.relationType !in hiddenRelationTypes }.sortedBy { relationSortPriority(it.relationType) }
+
+private fun formatCommunityScore(score: Int): String {
+    val normalized = if (score > 10) score / 10.0 else score.toDouble()
+    return String.format(Locale.ROOT, "%.1f", normalized)
+}
 
 private fun String.toDisplayFormat(): String = when (this) {
     "TV_SHORT" -> "TV Short"
