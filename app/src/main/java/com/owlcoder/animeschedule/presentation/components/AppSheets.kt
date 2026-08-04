@@ -10,14 +10,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
@@ -49,8 +46,8 @@ fun AppSheet(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    val container = if (dark) Color(0xFF1C1C1E) else Color(0xFFF9F9FB)
-    val scrim = Color.Black.copy(alpha = if (dark) 0.42f else 0.26f)
+    val container = if (dark) Color(0xFF1C1C1E) else Color(0xFFFBFBFD)
+    val scrim = Color.Black.copy(alpha = if (dark) 0.44f else 0.28f)
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -72,39 +69,33 @@ fun AppSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .imePadding()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                .padding(start = 18.dp, end = 18.dp, bottom = 18.dp),
         ) {
             if (!title.isNullOrBlank()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 42.dp)
-                        .padding(bottom = 5.dp),
+                        .heightIn(min = 48.dp)
+                        .padding(bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = title,
                         modifier = Modifier
                             .weight(1f)
-                            .padding(end = 6.dp),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
+                            .padding(end = 8.dp),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
                     trailingContent?.invoke()
                     if (showCloseButton) {
-                        IconButton(
+                        GlassIconButton(
+                            icon = Icons.Default.Close,
+                            contentDescription = stringResource(android.R.string.cancel),
                             onClick = onDismissRequest,
-                            modifier = Modifier.size(44.dp),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(android.R.string.cancel),
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                        )
                     }
                 }
             }
@@ -117,13 +108,13 @@ fun AppSheet(
 fun AppSheetHandle(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(top = 7.dp, bottom = 4.dp)
+            .padding(top = 8.dp, bottom = 5.dp)
             .fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
-                .width(36.dp)
+                .width(38.dp)
                 .requiredHeight(5.dp)
                 .clip(MaterialTheme.shapes.extraLarge)
                 .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.24f)),
