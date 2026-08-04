@@ -22,17 +22,13 @@ fun appMaterialColor(material: AppMaterial): Color {
     val dark = colors.background.luminance() < 0.35f
     return when (material) {
         AppMaterial.Background -> colors.background
-        AppMaterial.Grouped -> if (dark) Color.White.copy(alpha = 0.075f) else Color.Black.copy(alpha = 0.040f)
-        AppMaterial.Elevated -> if (dark) Color.White.copy(alpha = 0.105f) else Color.White.copy(alpha = 0.90f)
-        AppMaterial.Interactive -> if (dark) Color.White.copy(alpha = 0.125f) else Color.Black.copy(alpha = 0.055f)
+        AppMaterial.Grouped -> if (dark) Color.White.copy(alpha = 0.060f) else Color.Black.copy(alpha = 0.038f)
+        AppMaterial.Elevated -> if (dark) Color.White.copy(alpha = 0.085f) else Color.White.copy(alpha = 0.86f)
+        AppMaterial.Interactive -> if (dark) Color.White.copy(alpha = 0.105f) else Color.Black.copy(alpha = 0.050f)
     }
 }
 
-/**
- * Quiet content material. It intentionally stays lighter than chrome and never competes with
- * floating liquid-glass controls. A very soft hairline keeps grouped content readable without
- * turning every section into a heavy grey card.
- */
+/** Quiet standard material for the content layer beneath Liquid Glass chrome. */
 @Composable
 fun AppMaterialSurface(
     modifier: Modifier = Modifier,
@@ -46,11 +42,11 @@ fun AppMaterialSurface(
         AppMaterial.Background -> null
         AppMaterial.Grouped -> BorderStroke(
             0.5.dp,
-            if (dark) Color.White.copy(alpha = 0.055f) else Color.Black.copy(alpha = 0.055f),
+            if (dark) Color.White.copy(alpha = 0.045f) else Color.Black.copy(alpha = 0.050f),
         )
         AppMaterial.Elevated, AppMaterial.Interactive -> BorderStroke(
             0.5.dp,
-            if (dark) Color.White.copy(alpha = 0.085f) else Color.Black.copy(alpha = 0.065f),
+            if (dark) Color.White.copy(alpha = 0.070f) else Color.Black.copy(alpha = 0.060f),
         )
     }
     Surface(
