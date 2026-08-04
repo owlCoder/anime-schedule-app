@@ -79,7 +79,7 @@ fun NotificationsOverlay(
     val unread = notifications.filter { !it.isRead }
     val read = notifications.filter { it.isRead }
     var selectedTab by remember { mutableIntStateOf(0) }
-    val maxListHeight = LocalConfiguration.current.screenHeightDp.dp * 0.56f
+    val maxListHeight = LocalConfiguration.current.screenHeightDp.dp * 0.38f
     val motion = LocalMotionPolicy.current
 
     AppSheet(
@@ -119,7 +119,7 @@ fun NotificationsOverlay(
                 targetState = selectedTab,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 250.dp, max = maxListHeight),
+                    .heightIn(min = 310.dp, max = maxListHeight),
                 transitionSpec = {
                     (fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
                         scaleIn(
@@ -190,14 +190,14 @@ private fun NotificationTabs(
     AppMaterialSurface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(42.dp),
+            .height(44.dp),
         material = AppMaterial.Interactive,
-        shape = ContinuousRoundedShape(14.dp),
+        shape = ContinuousRoundedShape(15.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(42.dp)
+                .height(44.dp)
                 .padding(3.dp),
             horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
@@ -217,13 +217,13 @@ private fun NotificationTabs(
                 Surface(
                     modifier = Modifier
                         .weight(1f)
-                        .height(36.dp)
+                        .height(38.dp)
                         .clickable(role = Role.Tab) { onTabSelected(index) }
                         .semantics {
                             role = Role.Tab
                             selected = isSelected
                         },
-                    shape = ContinuousRoundedShape(11.dp),
+                    shape = ContinuousRoundedShape(12.dp),
                     color = fill,
                     contentColor = contentColor,
                     tonalElevation = 0.dp,
@@ -247,7 +247,7 @@ private fun NotificationTabContent(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(36.dp),
+            .height(38.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
@@ -255,7 +255,7 @@ private fun NotificationTabContent(
         Text(
             text = stringResource(labelRes),
             modifier = Modifier.padding(start = 5.dp),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             color = color,
         )
@@ -281,33 +281,33 @@ private fun NotificationEmptyState(selectedTab: Int) {
         verticalArrangement = Arrangement.Center,
     ) {
         Surface(
-            modifier = Modifier.size(72.dp),
+            modifier = Modifier.size(82.dp),
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.07f),
-            contentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.075f),
+            contentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.52f),
             tonalElevation = 0.dp,
         ) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Outlined.NotificationsNone,
                     contentDescription = null,
-                    modifier = Modifier.size(34.dp),
+                    modifier = Modifier.size(38.dp),
                 )
             }
         }
         Text(
             text = if (selectedTab == 0) stringResource(R.string.notif_empty_unread)
             else stringResource(R.string.notif_empty_read),
-            modifier = Modifier.padding(top = 14.dp),
-            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(top = 16.dp),
+            style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
         )
         if (selectedTab == 0) {
             Text(
                 text = stringResource(R.string.notif_screen_empty_subtitle),
-                modifier = Modifier.padding(top = 5.dp),
-                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 6.dp),
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
