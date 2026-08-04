@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings dashboard -->
+    <string name="settings_appearance">Izgled</string>
+    <string name="settings_section_data_sources">Podaci i izvori</string>
+    <string name="settings_section_about">O aplikaciji</string>
+    <string name="settings_theme_system">Sistemska</string>
+    <string name="settings_theme_light">Svetla</string>
+    <string name="settings_theme_dark">Tamna</string>
+    <string name="settings_timezone_system">Sistemska vremenska zona</string>
+    <string name="settings_timezone_search">Pretraži vremenske zone</string>
+    <string name="settings_cache">Keš</string>
+    <string name="settings_cache_value">%1$s · %2$d dana</string>
+    <string name="settings_clear_cache">Obriši keš</string>
+    <string name="settings_clear_cache_subtitle">Ukloni privremene slike i zastarele podatke</string>
+    <string name="settings_cache_retention_title">Čuvanje keša</string>
+    <string name="settings_cache_retention_subtitle">Izaberi koliko dugo se čuvaju privremeni lokalni podaci.</string>
+    <string name="settings_cache_retention_days">%d dana</string>
+    <string name="settings_clear_cache_message">Ovo uklanja privremene slike i keširane podatke rasporeda. Nalog i lista ostaju sačuvani.</string>
+    <string name="settings_clear_cache_confirm">Obriši</string>
+    <string name="settings_cache_cleared">Keš je obrisan</string>
+    <string name="settings_cache_clear_failed">Keš nije moguće obrisati</string>
+
+    <!-- Seasonal filters -->
+    <string name="seasonal_filter_selected_count">Izabrano: %d</string>
+    <string name="seasonal_filter_custom_sort">Prilagođeno sortiranje</string>
+    <string name="seasonal_filter_apply">Primeni filtere</string>
+    <string name="format_tv">TV</string>
+    <string name="format_tv_short">Kratki TV</string>
+    <string name="format_movie">Film</string>
+    <string name="format_special">Specijal</string>
+    <string name="format_ova">OVA</string>
+    <string name="format_ona">ONA</string>
+    <string name="format_music">Muzika</string>
+
+    <!-- About -->
+    <string name="about_anilist_description">Raspored, podaci i ilustracije animea</string>
+    <string name="about_mal_description">Nalog, napredak liste i lične ocene</string>
+    <string name="about_official_api_note">Koriste se samo zvanični javni API-ji ovih provajdera.</string>
+    <string name="about_source_code">Izvorni kod</string>
+    <string name="about_licenses">Licence</string>
+    <string name="about_privacy">Privatnost</string>
+
+    <!-- Changelog -->
+    <string name="changelog_release_date">20. maj 2026.</string>
+    <string name="changelog_whats_new">Šta je novo</string>
+    <string name="changelog_hero_description">Glatkije iskustvo, doterano u svakom detalju.</string>
+    <string name="changelog_nav_title">Doterana donja navigacija</string>
+    <string name="changelog_nav_description">Jasniji izbor i glađa reakcija na dodir.</string>
+    <string name="changelog_motion_title">Glatkiji prelazi i paneli</string>
+    <string name="changelog_motion_description">Navigacija, tabovi i modalni sadržaj koriste isti sistem animacija.</string>
+    <string name="changelog_filters_title">Redizajnirani filteri</string>
+    <string name="changelog_filters_description">Kompaktne opcije, jasniji izbor i jedna stalna akcija.</string>
+    <string name="changelog_states_title">Bolja stanja učitavanja, greške i praznog sadržaja</string>
+    <string name="changelog_states_description">Centrirane poruke i korisne akcije olakšavaju razumevanje svakog stanja.</string>
+    <string name="changelog_about_title">Ažuriran odeljak O aplikaciji</string>
+    <string name="changelog_about_description">Bezbedniji identitet aplikacije, tačni izvori podataka i urednije sistemske informacije.</string>
+    <string name="changelog_footer">Napravljeno pažljivo od strane AnimeSchedule tima</string>
+
+    <!-- Watch sources -->
+    <string name="watch_sources_empty_title">Nema izvora za gledanje</string>
+    <string name="watch_sources_empty_subtitle">Dodaj pouzdanog provajdera za brzo otvaranje pretrage animea.</string>
+    <string name="watch_sources_add_subtitle">Dodaj pouzdanog provajdera pretrage</string>
+    <string name="watch_sources_mode_external">Instalirana aplikacija</string>
+    <string name="watch_sources_mode_internal">Pregledač u aplikaciji</string>
+
+    <!-- Schedule dashboard copy -->
+    <string name="schedule_status_up_next">Sledeće</string>
+    <string name="schedule_status_just_aired">Upravo emitovano</string>
+    <string name="schedule_status_latest_today">Najnovije danas</string>
+    <string name="schedule_status_first_broadcast">Prvo emitovanje</string>
+    <string name="schedule_section_next_90">Narednih 90 minuta</string>
+    <string name="schedule_section_later_today">Kasnije danas</string>
+    <string name="schedule_section_earlier_today">Ranije danas</string>
+    <string name="schedule_section_schedule">Raspored</string>
+    <string name="schedule_latest_broadcasts_today">Najnovija današnja emitovanja</string>
+    <string name="schedule_no_broadcasts">Nema emitovanja</string>
+    <string name="schedule_one_broadcast">1 emitovanje</string>
+    <string name="schedule_broadcasts_count">%d emitovanja</string>
+    <string name="schedule_upcoming_count">Predstoji: %d</string>
+    <string name="schedule_remaining_count">Preostalo emitovanja: %d</string>
+    <string name="schedule_no_more_soon">Uskoro nema novih emitovanja</string>
+    <string name="schedule_nothing_else">Ništa drugo se ne emituje u ovom periodu. Otvori ceo dnevni raspored.</string>
+    <string name="schedule_nothing_date">Nema zakazanih emitovanja za %s.</string>
+</resources>
