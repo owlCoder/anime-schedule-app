@@ -61,6 +61,7 @@ import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
+import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.EmptyState
 import com.owlcoder.animeschedule.presentation.components.FaviconImage
 import com.owlcoder.animeschedule.presentation.components.GlassIconButton
@@ -101,95 +102,13 @@ fun WatchSourcesScreen(
                     )
                 },
             )
-            Text(
-                text = stringResource(R.string.watch_sources_disclaimer),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(start = 4.dp, top = 3.dp, end = 4.dp, bottom = 10.dp),
+            WatchSourcesContent(
+                sources = sources,
+                modifier = Modifier.weight(1f),
+                onAdd = { showAddSheet = true },
+                onDelete = viewModel::deleteSource,
+                onOpenExternallyChange = viewModel::setOpenExternally,
             )
-
-            if (sources.isEmpty()) {
-                EmptyState(
-                    icon = Icons.Default.PlayCircle,
-                    title = stringResource(R.string.watch_sources_title),
-                    subtitle = stringResource(R.string.watch_sources_disclaimer),
-                    actionLabel = stringResource(R.string.watch_sources_add),
-                    onAction = { showAddSheet = true },
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f).fillMaxWidth(),
-                    contentPadding = PaddingValues(bottom = 28.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    item(key = "source-list") {
-                        InsetGroup {
-                            sources.forEachIndexed { index, source ->
-                                SourceRow(
-                                    source = source,
-                                    onDelete = { viewModel.deleteSource(source) },
-                                    onOpenExternallyChange = { viewModel.setOpenExternally(source, it) },
-                                )
-                                if (index < sources.lastIndex) {
-                                    HorizontalDivider(
-                                        modifier = Modifier.padding(start = 58.dp),
-                                        thickness = 0.5.dp,
-                                        color = MaterialTheme.colorScheme.outlineVariant,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    item(key = "add-source-shortcut") {
-                        AppMaterialSurface(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 50.dp)
-                                .clickable { showAddSheet = true },
-                            material = AppMaterial.Interactive,
-                            shape = MaterialTheme.shapes.large,
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 13.dp, vertical = 9.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(30.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Icon(
-                                        Icons.Default.Add,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(17.dp),
-                                        tint = MaterialTheme.colorScheme.primary,
-                                    )
-                                }
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.watch_sources_add),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.SemiBold,
-                                    )
-                                    Text(
-                                        text = "Add a trusted search provider",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -201,6 +120,156 @@ fun WatchSourcesScreen(
                 showAddSheet = false
             },
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WatchSourcesBottomSheet(
+    onDismiss: () -> Unit,
+    viewModel: WatchSourcesViewModel = hiltViewModel(),
+) {
+    val sources by viewModel.sources.collectAsState()
+    var showAddSheet by remember { mutableStateOf(false) }
+
+    AppSheet(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.watch_sources_title),
+        trailingContent = {
+            GlassIconButton(
+                icon = Icons.Default.Add,
+                contentDescription = stringResource(R.string.watch_sources_add),
+                onClick = { showAddSheet = true },
+            )
+        },
+    ) {
+        WatchSourcesContent(
+            sources = sources,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 590.dp),
+            onAdd = { showAddSheet = true },
+            onDelete = viewModel::deleteSource,
+            onOpenExternallyChange = viewModel::setOpenExternally,
+        )
+    }
+
+    if (showAddSheet) {
+        AddWatchSourceSheet(
+            onDismiss = { showAddSheet = false },
+            onConfirm = { name, urlTemplate, openExternally ->
+                viewModel.addSource(name, urlTemplate, openExternally)
+                showAddSheet = false
+            },
+        )
+    }
+}
+
+@Composable
+private fun WatchSourcesContent(
+    sources: List<WatchSource>,
+    modifier: Modifier = Modifier,
+    onAdd: () -> Unit,
+    onDelete: (WatchSource) -> Unit,
+    onOpenExternallyChange: (WatchSource, Boolean) -> Unit,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.watch_sources_disclaimer),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 4,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 4.dp),
+        )
+
+        if (sources.isEmpty()) {
+            EmptyState(
+                icon = Icons.Default.PlayCircle,
+                title = stringResource(R.string.watch_sources_empty_title),
+                subtitle = stringResource(R.string.watch_sources_empty_subtitle),
+                actionLabel = stringResource(R.string.watch_sources_add),
+                onAction = onAdd,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(280.dp),
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(bottom = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(9.dp),
+            ) {
+                item(key = "watch-source-list") {
+                    InsetGroup {
+                        sources.forEachIndexed { index, source ->
+                            SourceRow(
+                                source = source,
+                                onDelete = { onDelete(source) },
+                                onOpenExternallyChange = { onOpenExternallyChange(source, it) },
+                            )
+                            if (index < sources.lastIndex) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(start = 58.dp),
+                                    thickness = 0.5.dp,
+                                    color = MaterialTheme.colorScheme.outlineVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+                item(key = "add-watch-source") {
+                    AppMaterialSurface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 54.dp)
+                            .clickable(onClick = onAdd),
+                        material = AppMaterial.Interactive,
+                        shape = ContinuousRoundedShape(17.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 13.dp, vertical = 9.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(ContinuousRoundedShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.watch_sources_add),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                                Text(
+                                    text = stringResource(R.string.watch_sources_add_subtitle),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -224,15 +293,25 @@ private fun SourceRow(
             FaviconImage(
                 faviconUrl = source.faviconUrl,
                 siteUrl = source.urlTemplate,
-                modifier = Modifier.size(34.dp).clip(CircleShape),
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(ContinuousRoundedShape(10.dp)),
             )
         } else {
             Box(
                 modifier = Modifier
-                    .size(34.dp)
-                    .clip(RoundedCornerShape(9.dp))
+                    .size(36.dp)
+                    .clip(ContinuousRoundedShape(10.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-            )
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Default.PlayCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(19.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
 
         Column(
@@ -248,41 +327,42 @@ private fun SourceRow(
             )
             Text(
                 text = source.urlTemplate.displayHost(),
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = if (source.openExternally) "Installed app" else "In-app browser",
+                text = stringResource(
+                    if (source.openExternally) {
+                        R.string.watch_sources_mode_external
+                    } else {
+                        R.string.watch_sources_mode_internal
+                    },
+                ),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
                 maxLines = 1,
             )
         }
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(1.dp),
+        AppSwitch(
+            checked = source.openExternally,
+            onCheckedChange = onOpenExternallyChange,
+        )
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clickable(onClick = onDelete)
+                .semantics { role = Role.Button },
+            contentAlignment = Alignment.Center,
         ) {
-            AppSwitch(
-                checked = source.openExternally,
-                onCheckedChange = onOpenExternallyChange,
+            Icon(
+                Icons.Default.DeleteOutline,
+                contentDescription = stringResource(R.string.watch_sources_delete),
+                modifier = Modifier.size(18.dp),
+                tint = MaterialTheme.colorScheme.error,
             )
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clickable(onClick = onDelete)
-                    .semantics { role = Role.Button },
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    Icons.Default.DeleteOutline,
-                    contentDescription = stringResource(R.string.watch_sources_delete),
-                    modifier = Modifier.size(17.dp),
-                    tint = MaterialTheme.colorScheme.error,
-                )
-            }
         }
     }
 }
@@ -307,7 +387,10 @@ private fun AddWatchSourceSheet(
                 enabled = isValid,
                 contentPadding = PaddingValues(horizontal = 8.dp),
             ) {
-                Text(stringResource(R.string.common_save), fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = stringResource(R.string.common_save),
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
         },
     ) {
@@ -322,7 +405,7 @@ private fun AddWatchSourceSheet(
             AppMaterialSurface(
                 modifier = Modifier.fillMaxWidth(),
                 material = AppMaterial.Grouped,
-                shape = MaterialTheme.shapes.large,
+                shape = ContinuousRoundedShape(18.dp),
             ) {
                 Column(
                     modifier = Modifier
@@ -346,11 +429,16 @@ private fun AddWatchSourceSheet(
                         color = MaterialTheme.colorScheme.outlineVariant,
                     )
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 1.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 1.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
                             Text(
                                 text = stringResource(R.string.watch_sources_open_externally),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -393,7 +481,9 @@ private fun FormField(
             value = value,
             onValueChange = onValueChange,
             singleLine = true,
-            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                color = MaterialTheme.colorScheme.onSurface,
+            ),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             modifier = Modifier
                 .fillMaxWidth()
@@ -432,4 +522,4 @@ private fun FormField(
 
 private fun String.displayHost(): String = runCatching {
     Uri.parse(this).host?.removePrefix("www.")
-}.getOrNull().orEmpty().ifBlank { this.substringBefore("/{query}").take(36) }
+}.getOrNull().orEmpty().ifBlank { substringBefore("/{query}").take(36) }
