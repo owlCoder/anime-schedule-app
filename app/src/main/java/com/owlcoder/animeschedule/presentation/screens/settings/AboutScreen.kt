@@ -49,9 +49,9 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 500.dp)
+                .heightIn(max = 520.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 8.dp),
+                .padding(bottom = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
@@ -90,7 +90,7 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
                     AboutItem(stringResource(R.string.about_platform_label), "Android 12+"),
                     AboutItem(
                         stringResource(R.string.about_package_label),
-                        BuildConfig.APPLICATION_ID.replace(".", ".\u200B"),
+                        BuildConfig.APPLICATION_ID,
                         codeValue = true,
                     ),
                 ),
@@ -132,7 +132,9 @@ private fun AboutSectionHeader(title: String) {
         style = MaterialTheme.typography.labelSmall,
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.fillMaxWidth().padding(start = 12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 12.dp),
     )
 }
 
@@ -140,32 +142,55 @@ private fun AboutSectionHeader(title: String) {
 private fun AboutGroup(items: List<AboutItem>) {
     InsetGroup {
         items.forEachIndexed { index, item ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 42.dp)
-                    .padding(horizontal = 13.dp, vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(
-                    text = item.label,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(0.38f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = item.value,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontFamily = if (item.codeValue) FontFamily.Monospace else FontFamily.Default,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(0.62f),
-                    textAlign = TextAlign.End,
-                    maxLines = if (item.codeValue) 3 else 2,
-                    overflow = if (item.codeValue) TextOverflow.Clip else TextOverflow.Ellipsis,
-                    softWrap = true,
-                )
+            if (item.codeValue) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 13.dp, vertical = 9.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                ) {
+                    Text(
+                        text = item.label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                    )
+                    Text(
+                        text = item.value,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        softWrap = true,
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 42.dp)
+                        .padding(horizontal = 13.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        text = item.label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(0.44f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = item.value,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(0.56f),
+                        textAlign = TextAlign.End,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
             if (index < items.lastIndex) {
                 HorizontalDivider(
