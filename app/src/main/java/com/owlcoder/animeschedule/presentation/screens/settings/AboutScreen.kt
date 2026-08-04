@@ -1,6 +1,5 @@
 package com.owlcoder.animeschedule.presentation.screens.settings
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +14,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Description
@@ -32,9 +33,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -72,10 +73,10 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 650.dp)
+                .heightIn(max = 610.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 6.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+                .padding(bottom = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             AppIdentityHeader()
 
@@ -111,12 +112,12 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
                     DataSourceItem(
                         monogram = "A",
                         name = "AniList",
-                        description = "Anime schedule, metadata and artwork",
+                        description = stringResource(R.string.about_anilist_description),
                     ),
                     DataSourceItem(
                         monogram = "MAL",
                         name = "MyAnimeList",
-                        description = "Account, list progress and personal scores",
+                        description = stringResource(R.string.about_mal_description),
                     ),
                 ),
             )
@@ -133,7 +134,7 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = "Only official public APIs from these providers are used.",
+                    text = stringResource(R.string.about_official_api_note),
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -152,16 +153,46 @@ private fun AppIdentityHeader() {
             .fillMaxWidth()
             .padding(horizontal = 4.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(15.dp),
     ) {
-        Image(
-            painter = painterResource(R.mipmap.ic_launcher),
-            contentDescription = stringResource(R.string.app_name),
-            contentScale = ContentScale.Crop,
+        Box(
             modifier = Modifier
-                .size(78.dp)
-                .clip(ContinuousRoundedShape(23.dp)),
-        )
+                .size(76.dp)
+                .clip(ContinuousRoundedShape(22.dp))
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.72f),
+                        ),
+                    ),
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(ContinuousRoundedShape(15.dp))
+                    .background(Color.White.copy(alpha = 0.94f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CalendarMonth,
+                    contentDescription = null,
+                    modifier = Modifier.size(31.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(5.dp)
+                        .size(15.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -189,7 +220,7 @@ private fun AboutSectionHeader(title: String) {
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(start = 12.dp, top = 2.dp),
+        modifier = Modifier.padding(start = 12.dp, top = 1.dp),
     )
 }
 
@@ -200,8 +231,8 @@ private fun AboutGroup(items: List<AboutItem>) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = if (item.codeValue) 58.dp else 50.dp)
-                    .padding(horizontal = 13.dp, vertical = 8.dp),
+                    .heightIn(min = if (item.codeValue) 54.dp else 48.dp)
+                    .padding(horizontal = 13.dp, vertical = 7.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(11.dp),
             ) {
@@ -270,14 +301,14 @@ private fun DataSourcesGroup(items: List<DataSourceItem>) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 13.dp, vertical = 10.dp),
+                    .padding(horizontal = 13.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
-                        .clip(ContinuousRoundedShape(13.dp))
+                        .size(40.dp)
+                        .clip(ContinuousRoundedShape(12.dp))
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -290,11 +321,11 @@ private fun DataSourcesGroup(items: List<DataSourceItem>) {
                 }
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalArrangement = Arrangement.spacedBy(1.dp),
                 ) {
                     Text(
                         text = item.name,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
@@ -308,7 +339,7 @@ private fun DataSourcesGroup(items: List<DataSourceItem>) {
             }
             if (index < items.lastIndex) {
                 HorizontalDivider(
-                    modifier = Modifier.padding(start = 69.dp),
+                    modifier = Modifier.padding(start = 65.dp),
                     thickness = 0.5.dp,
                     color = MaterialTheme.colorScheme.outlineVariant,
                 )
@@ -322,29 +353,29 @@ private fun FooterLinks() {
     AppMaterialSurface(
         modifier = Modifier.fillMaxWidth(),
         material = AppMaterial.Grouped,
-        shape = ContinuousRoundedShape(18.dp),
+        shape = ContinuousRoundedShape(17.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(54.dp),
+                .height(50.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             FooterLink(
                 icon = Icons.Outlined.Code,
-                label = "Source Code",
+                label = stringResource(R.string.about_source_code),
                 modifier = Modifier.weight(1f),
             )
             FooterDivider()
             FooterLink(
                 icon = Icons.Outlined.Description,
-                label = "Licenses",
+                label = stringResource(R.string.about_licenses),
                 modifier = Modifier.weight(1f),
             )
             FooterDivider()
             FooterLink(
                 icon = Icons.Outlined.PrivacyTip,
-                label = "Privacy",
+                label = stringResource(R.string.about_privacy),
                 modifier = Modifier.weight(1f),
             )
         }
@@ -359,23 +390,24 @@ private fun FooterLink(
 ) {
     Row(
         modifier = modifier
-            .height(54.dp)
-            .padding(horizontal = 6.dp),
+            .height(50.dp)
+            .padding(horizontal = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(19.dp),
+            modifier = Modifier.size(18.dp),
             tint = MaterialTheme.colorScheme.primary,
         )
         Text(
             text = label,
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -385,7 +417,7 @@ private fun FooterDivider() {
     Box(
         modifier = Modifier
             .width(0.5.dp)
-            .height(24.dp)
+            .height(22.dp)
             .background(MaterialTheme.colorScheme.outlineVariant),
     )
 }
