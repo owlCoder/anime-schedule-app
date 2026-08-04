@@ -1,5 +1,6 @@
 package com.owlcoder.animeschedule.presentation.components
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,8 +12,13 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
@@ -37,11 +43,13 @@ fun AppSheet(
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
     title: String? = null,
     trailingContent: @Composable (() -> Unit)? = null,
+    showCloseButton: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
     val container = if (dark) Color(0xFF1C1C1E) else Color(0xFFF9F9FB)
-    val scrim = Color.Black.copy(alpha = if (dark) 0.44f else 0.28f)
+    val scrim = Color.Black.copy(alpha = if (dark) 0.46f else 0.30f)
+    val motion = LocalMotionPolicy.current
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -57,15 +65,16 @@ fun AppSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .animateContentSize(animationSpec = motion.iosSpring())
                 .imePadding()
                 .navigationBarsPadding()
-                .padding(start = 18.dp, end = 18.dp, bottom = 16.dp),
+                .padding(start = 18.dp, end = 18.dp, bottom = 24.dp),
         ) {
             if (!title.isNullOrBlank()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 42.dp)
+                        .heightIn(min = 44.dp)
                         .padding(bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -76,7 +85,20 @@ fun AppSheet(
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                     )
-                    trailingContent?.invoke()
+                    when {
+                        trailingContent != null -> trailingContent()
+                        showCloseButton -> IconButton(
+                            onClick = onDismissRequest,
+                            modifier = Modifier.size(36.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close",
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                 }
             }
             content()
