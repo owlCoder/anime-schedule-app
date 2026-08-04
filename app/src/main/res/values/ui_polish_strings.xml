@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Settings dashboard -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_section_data_sources">Data &amp; Sources</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_timezone_system">System time zone</string>
+    <string name="settings_timezone_search">Search time zones</string>
+    <string name="settings_cache">Cache</string>
+    <string name="settings_cache_value">%1$s · %2$d days</string>
+    <string name="settings_clear_cache">Clear cache</string>
+    <string name="settings_clear_cache_subtitle">Remove temporary images and stale data</string>
+    <string name="settings_cache_retention_title">Cache retention</string>
+    <string name="settings_cache_retention_subtitle">Choose how long temporary local data is kept.</string>
+    <string name="settings_cache_retention_days">%d days</string>
+    <string name="settings_clear_cache_message">This removes temporary images and cached schedule data. Your account and list are not affected.</string>
+    <string name="settings_clear_cache_confirm">Clear</string>
+    <string name="settings_cache_cleared">Cache cleared</string>
+    <string name="settings_cache_clear_failed">Couldn\'t clear cache</string>
+
+    <!-- Seasonal filters -->
+    <string name="seasonal_filter_selected_count">%d selected</string>
+    <string name="seasonal_filter_custom_sort">Custom sorting</string>
+    <string name="seasonal_filter_apply">Apply filters</string>
+    <string name="format_tv">TV</string>
+    <string name="format_tv_short">TV Short</string>
+    <string name="format_movie">Movie</string>
+    <string name="format_special">Special</string>
+    <string name="format_ova">OVA</string>
+    <string name="format_ona">ONA</string>
+    <string name="format_music">Music</string>
+
+    <!-- About -->
+    <string name="about_anilist_description">Anime schedule, metadata and artwork</string>
+    <string name="about_mal_description">Account, list progress and personal scores</string>
+    <string name="about_official_api_note">Only official public APIs from these providers are used.</string>
+    <string name="about_source_code">Source Code</string>
+    <string name="about_licenses">Licenses</string>
+    <string name="about_privacy">Privacy</string>
+
+    <!-- Changelog -->
+    <string name="changelog_release_date">May 20, 2026</string>
+    <string name="changelog_whats_new">What\'s new</string>
+    <string name="changelog_hero_description">A smoother experience, polished in every detail.</string>
+    <string name="changelog_nav_title">Refined bottom navigation</string>
+    <string name="changelog_nav_description">Cleaner selection states and smoother tap feedback.</string>
+    <string name="changelog_motion_title">Smoother transitions and sheets</string>
+    <string name="changelog_motion_description">Navigation, tabs and modal content now share one motion system.</string>
+    <string name="changelog_filters_title">Redesigned filters</string>
+    <string name="changelog_filters_description">Compact options, clearer selection and one persistent action.</string>
+    <string name="changelog_states_title">Improved loading, error and empty states</string>
+    <string name="changelog_states_description">Centered messaging and useful actions make every state easier to understand.</string>
+    <string name="changelog_about_title">Updated About section</string>
+    <string name="changelog_about_description">Safer app identity, accurate data sources and cleaner system information.</string>
+    <string name="changelog_footer">Made with care by the AnimeSchedule team</string>
+
+    <!-- Watch sources -->
+    <string name="watch_sources_empty_title">No watch sources</string>
+    <string name="watch_sources_empty_subtitle">Add a trusted provider to open anime searches quickly.</string>
+    <string name="watch_sources_add_subtitle">Add a trusted search provider</string>
+    <string name="watch_sources_mode_external">Installed app</string>
+    <string name="watch_sources_mode_internal">In-app browser</string>
+
+    <!-- Schedule dashboard copy -->
+    <string name="schedule_status_up_next">Up next</string>
+    <string name="schedule_status_just_aired">Just aired</string>
+    <string name="schedule_status_latest_today">Latest today</string>
+    <string name="schedule_status_first_broadcast">First broadcast</string>
+    <string name="schedule_section_next_90">Next 90 minutes</string>
+    <string name="schedule_section_later_today">Later today</string>
+    <string name="schedule_section_earlier_today">Earlier today</string>
+    <string name="schedule_section_schedule">Schedule</string>
+    <string name="schedule_latest_broadcasts_today">Latest broadcasts from today</string>
+    <string name="schedule_no_broadcasts">No broadcasts</string>
+    <string name="schedule_one_broadcast">1 broadcast</string>
+    <string name="schedule_broadcasts_count">%d broadcasts</string>
+    <string name="schedule_upcoming_count">%d upcoming</string>
+    <string name="schedule_remaining_count">%d broadcasts remaining</string>
+    <string name="schedule_no_more_soon">No more broadcasts soon</string>
+    <string name="schedule_nothing_else">Nothing else is airing in this window. Open the full day schedule.</string>
+    <string name="schedule_nothing_date">Nothing is scheduled for %s.</string>
+</resources>
