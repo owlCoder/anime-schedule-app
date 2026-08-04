@@ -85,8 +85,8 @@ private val items = listOf(
     BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings, Icons.Outlined.Settings),
 )
 
-private val DockShape = ContinuousRoundedShape(23.dp)
-private val DockHeight = 50.dp
+private val DockShape = ContinuousRoundedShape(22.dp)
+private val DockHeight = 48.dp
 
 @Composable
 fun AnimeBottomBar(
@@ -149,7 +149,7 @@ private fun BottomNavItemView(
     val interactionSource = remember { MutableInteractionSource() }
     val motion = LocalMotionPolicy.current
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    val selectedFill = if (dark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.52f)
+    val selectedFill = if (dark) Color.White.copy(alpha = 0.065f) else Color.White.copy(alpha = 0.38f)
     val fill by animateColorAsState(
         targetValue = if (selected) selectedFill else Color.Transparent,
         animationSpec = motion.iosTween(IosMotion.Standard),
@@ -157,7 +157,7 @@ private fun BottomNavItemView(
     )
     val borderColor by animateColorAsState(
         targetValue = if (selected) {
-            if (dark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.58f)
+            if (dark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.44f)
         } else {
             Color.Transparent
         },
@@ -193,9 +193,9 @@ private fun BottomNavItemView(
     ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth(0.90f)
+                .fillMaxWidth(0.86f)
                 .fillMaxHeight(),
-            shape = ContinuousRoundedShape(17.dp),
+            shape = ContinuousRoundedShape(16.dp),
             color = fill,
             border = BorderStroke(0.5.dp, borderColor),
             tonalElevation = 0.dp,
@@ -229,7 +229,7 @@ private fun TabVisual(
         label = "bottom-tab-color",
     )
     val inactiveAlpha by animateFloatAsState(
-        targetValue = if (selected) 1f else 0.80f,
+        targetValue = if (selected) 1f else 0.76f,
         animationSpec = motion.iosTween(IosMotion.Standard),
         label = "bottom-tab-alpha",
     )
