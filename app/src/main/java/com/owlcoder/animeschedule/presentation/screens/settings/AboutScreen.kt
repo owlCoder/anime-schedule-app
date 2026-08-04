@@ -42,29 +42,29 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 430.dp)
+                .heightIn(max = 410.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 8.dp),
+                .padding(bottom = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(13.dp))
+                    .size(42.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = stringResource(R.string.about_logo_monogram),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(7.dp))
             Text(
                 text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
@@ -74,7 +74,7 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(12.dp))
 
             AboutGroup(
                 items = listOf(
@@ -85,7 +85,7 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
                 ),
             )
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(12.dp))
             AboutSectionHeader(stringResource(R.string.about_section_data_sources))
             Spacer(Modifier.height(5.dp))
             AboutGroup(
@@ -96,7 +96,7 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
                 ),
             )
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(12.dp))
             Text(
                 text = "Kotlin · Jetpack Compose · Room · Hilt",
                 style = MaterialTheme.typography.bodySmall,
@@ -105,7 +105,7 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
             )
             Text(
                 text = stringResource(R.string.about_footer_copyright, java.time.Year.now().value),
-                modifier = Modifier.padding(top = 5.dp),
+                modifier = Modifier.padding(top = 4.dp),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -130,14 +130,14 @@ private fun AboutGroup(items: List<Pair<String, String>>) {
     InsetGroup {
         items.forEachIndexed { index, (label, value) ->
             Row(
-                modifier = Modifier.fillMaxWidth().height(44.dp).padding(horizontal = 13.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 42.dp).padding(horizontal = 13.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(0.42f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -145,8 +145,9 @@ private fun AboutGroup(items: List<Pair<String, String>>) {
                     text = value,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(0.58f),
                     textAlign = TextAlign.End,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
@@ -154,7 +155,7 @@ private fun AboutGroup(items: List<Pair<String, String>>) {
                 HorizontalDivider(
                     modifier = Modifier.padding(start = 13.dp),
                     thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.44f),
+                    color = MaterialTheme.colorScheme.outlineVariant,
                 )
             }
         }
