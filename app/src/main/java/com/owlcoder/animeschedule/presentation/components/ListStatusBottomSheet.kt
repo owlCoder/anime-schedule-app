@@ -1,7 +1,9 @@
 package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -9,21 +11,26 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,50 +69,93 @@ fun ListStatusBottomSheet(
         return if (total != null) floored.coerceAtMost(total) else floored
     }
 
-    var selectedStatus by remember { mutableStateOf(currentEntry?.status ?: WatchStatus.PLAN_TO_WATCH) }
-    var episodesWatched by remember { mutableIntStateOf(clampEpisodes(currentEntry?.episodesWatched ?: 0)) }
-    var score by remember { mutableFloatStateOf(currentEntry?.score?.toFloat() ?: 0f) }
+    var selectedStatus by remember(currentEntry) {
+        mutableStateOf(currentEntry?.status ?: WatchStatus.PLAN_TO_WATCH)
+    }
+    var episodesWatched by remember(currentEntry) {
+        mutableIntStateOf(clampEpisodes(currentEntry?.episodesWatched ?: 0))
+    }
+    var score by remember(currentEntry) { mutableIntStateOf(currentEntry?.score ?: 0) }
     val statuses = WatchStatus.entries.filter { it != WatchStatus.NOT_IN_LIST }
+
+    fun save() {
+        onConfirm(
+            animeId,
+            MalListUpdate(
+                status = selectedStatus,
+                episodesWatched = clampEpisodes(episodesWatched),
+                score = score,
+            ),
+        )
+        onDismiss()
+    }
 
     AppSheet(
         onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         title = stringResource(R.string.list_status_title),
+        trailingContent = {
+            TextButton(onClick = ::save) {
+                Text(
+                    text = stringResource(R.string.common_save),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        },
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 620.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                statuses.forEach { status ->
-                    val selected = selectedStatus == status
-                    GlassSurface(
-                        modifier = Modifier
-                            .height(40.dp)
-                            .clickable {
-                                selectedStatus = status
-                                if (status == WatchStatus.COMPLETED && total != null) {
-                                    episodesWatched = total
+            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                SectionLabel(stringResource(R.string.list_status_title))
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(7.dp),
+                    verticalArrangement = Arrangement.spacedBy(7.dp),
+                ) {
+                    statuses.forEach { status ->
+                        val selected = selectedStatus == status
+                        GlassSurface(
+                            modifier = Modifier
+                                .height(36.dp)
+                                .clickable {
+                                    selectedStatus = status
+                                    if (status == WatchStatus.COMPLETED && total != null) {
+                                        episodesWatched = total
+                                    }
                                 }
-                            }
-                            .semantics { role = Role.RadioButton },
-                        shape = PillShape,
-                        tone = if (selected) GlassTone.Accent else GlassTone.Neutral,
-                        blur = if (selected) GlassBlur.Soft else GlassBlur.None,
-                        contentColor = if (selected) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                    ) {
-                        Text(
-                            text = status.displayName(),
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = if (selected) MaterialTheme.colorScheme.primary
+                                .semantics { role = Role.RadioButton },
+                            shape = PillShape,
+                            tone = if (selected) GlassTone.Accent else GlassTone.Neutral,
+                            blur = GlassBlur.None,
+                            contentColor = if (selected) MaterialTheme.colorScheme.onSurface
                             else MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                        )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            ) {
+                                if (selected) {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp),
+                                    )
+                                }
+                                Text(
+                                    text = status.displayName(),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                                    maxLines = 1,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -115,13 +165,10 @@ fun ListStatusBottomSheet(
                 material = AppMaterial.Grouped,
                 shape = MaterialTheme.shapes.large,
             ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 13.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
@@ -129,117 +176,146 @@ fun ListStatusBottomSheet(
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium,
                             )
-                            Text(
-                                text = if (total != null) "$episodesWatched of $total" else episodesWatched.toString(),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            if (total != null) {
+                                Text(
+                                    text = "$episodesWatched of $total",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
-                        GlassIconButton(
+                        StepperButton(
                             icon = Icons.Default.Remove,
-                            contentDescription = stringResource(R.string.list_status_decrease_episode),
-                            onClick = { episodesWatched = clampEpisodes(episodesWatched - 1) },
+                            description = stringResource(R.string.list_status_decrease_episode),
                             enabled = episodesWatched > 0,
+                            onClick = { episodesWatched = clampEpisodes(episodesWatched - 1) },
                         )
                         Text(
                             text = episodesWatched.toString(),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.width(48.dp),
+                            modifier = Modifier.width(42.dp),
                             textAlign = TextAlign.Center,
                         )
-                        GlassIconButton(
+                        StepperButton(
                             icon = Icons.Default.Add,
-                            contentDescription = stringResource(R.string.list_status_increase_episode),
-                            onClick = { episodesWatched = clampEpisodes(episodesWatched + 1) },
+                            description = stringResource(R.string.list_status_increase_episode),
                             enabled = total == null || episodesWatched < total,
+                            onClick = { episodesWatched = clampEpisodes(episodesWatched + 1) },
                         )
                     }
-
                     if (total != null) {
                         LinearProgressIndicator(
                             progress = { episodesWatched.toFloat() / total.toFloat() },
-                            modifier = Modifier.fillMaxWidth().height(4.dp).clip(PillShape),
-                            color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.fillMaxWidth().height(3.dp).clip(PillShape),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f),
+                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
                         )
                     }
                 }
             }
 
-            AppMaterialSurface(
-                modifier = Modifier.fillMaxWidth(),
-                material = AppMaterial.Grouped,
-                shape = MaterialTheme.shapes.large,
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = stringResource(R.string.list_status_score_label, ""),
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
-                        )
-                        Text(
-                            text = score.toInt().takeIf { it > 0 }?.let { "$it / 10" }
-                                ?: stringResource(R.string.list_status_score_unrated),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                    Slider(
-                        value = score,
-                        onValueChange = { score = it },
-                        valueRange = 0f..10f,
-                        steps = 9,
+            Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SectionLabel(
+                        text = stringResource(R.string.list_status_score_label, "").trim(),
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = if (score == 0) stringResource(R.string.list_status_score_unrated) else "$score / 10",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                AppButton(
-                    label = stringResource(R.string.common_cancel),
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f),
-                    variant = AppButtonVariant.Plain,
-                )
-                AppButton(
-                    label = stringResource(R.string.common_save),
-                    onClick = {
-                        onConfirm(
-                            animeId,
-                            MalListUpdate(
-                                status = selectedStatus,
-                                episodesWatched = clampEpisodes(episodesWatched),
-                                score = score.toInt(),
-                            ),
-                        )
-                        onDismiss()
-                    },
-                    modifier = Modifier.weight(1f),
-                    variant = AppButtonVariant.Primary,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(7.dp),
+                ) {
+                    (0..10).forEach { value ->
+                        val selected = score == value
+                        GlassSurface(
+                            modifier = Modifier
+                                .size(if (value == 0) 54.dp else 36.dp, 36.dp)
+                                .clickable { score = value },
+                            shape = PillShape,
+                            tone = if (selected) GlassTone.Accent else GlassTone.Neutral,
+                            blur = GlassBlur.None,
+                        ) {
+                            Box(Modifier.fillMaxWidth().height(36.dp), contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = if (value == 0) "—" else value.toString(),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                                    color = if (selected) MaterialTheme.colorScheme.onSurface
+                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             if (currentEntry != null && onRemove != null) {
-                AppButton(
-                    label = stringResource(R.string.list_status_remove),
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                TextButton(
                     onClick = {
                         onRemove(animeId)
                         onDismiss()
                     },
-                    modifier = Modifier.fillMaxWidth(),
-                    variant = AppButtonVariant.Destructive,
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                ) {
+                    Text(
+                        text = stringResource(R.string.list_status_remove),
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+            Spacer(Modifier.height(2.dp))
+        }
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        modifier = modifier,
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun StepperButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    description: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(38.dp)
+            .clip(PillShape)
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        GlassSurface(
+            modifier = Modifier.size(34.dp),
+            shape = PillShape,
+            tone = GlassTone.Neutral,
+            blur = GlassBlur.None,
+        ) {
+            Box(Modifier.size(34.dp), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = description,
+                    modifier = Modifier.size(17.dp),
+                    tint = if (enabled) MaterialTheme.colorScheme.onSurface
+                    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
                 )
             }
-
-            Spacer(Modifier.height(2.dp))
         }
     }
 }
