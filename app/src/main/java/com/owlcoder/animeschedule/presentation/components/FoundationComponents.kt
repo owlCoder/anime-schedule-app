@@ -1,20 +1,25 @@
 package com.owlcoder.animeschedule.presentation.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -23,46 +28,30 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.owlcoder.animeschedule.ui.theme.AppSpacing
-import com.owlcoder.animeschedule.ui.theme.GlassTokens
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
-/** Root semantic background. Screens should place scrolling content inside this surface. */
 @Composable
-fun AppBackground(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
+fun AppBackground(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Box(
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         content = { content() },
     )
 }
 
-/** Compact screen shell with consistent horizontal rhythm and safe content sizing. */
 @Composable
 fun AppScreen(
     modifier: Modifier = Modifier,
@@ -76,7 +65,6 @@ fun AppScreen(
     }
 }
 
-/** Small section label/action row used above inset groups and compact lists. */
 @Composable
 fun SectionHeader(
     title: String,
@@ -97,14 +85,13 @@ fun SectionHeader(
             overflow = TextOverflow.Ellipsis,
         )
         if (actionLabel != null && onAction != null) {
-            TextButton(onClick = onAction, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp)) {
-                Text(actionLabel, color = MaterialTheme.colorScheme.primary)
+            TextButton(onClick = onAction, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 7.dp)) {
+                Text(actionLabel)
             }
         }
     }
 }
 
-/** Compact, tokenized search field. The result area remains content-sized by design. */
 @Composable
 fun AppSearchField(
     value: String,
@@ -116,22 +103,26 @@ fun AppSearchField(
     onSearch: (() -> Unit)? = null,
     enabled: Boolean = true,
 ) {
-    val shape = RoundedCornerShape(12.dp)
+    val shape = RoundedCornerShape(13.dp)
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
+    val fill = if (dark) Color.White.copy(alpha = 0.075f) else Color.Black.copy(alpha = 0.040f)
+    val edge = if (dark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.055f)
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 44.dp)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f), shape)
+            .heightIn(min = 42.dp)
+            .background(fill, shape)
+            .border(0.5.dp, edge, shape)
             .semantics { contentDescription = placeholder }
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (leadingIcon != null) {
-            androidx.compose.material3.Icon(
+            Icon(
                 leadingIcon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(18.dp),
             )
             Spacer(Modifier.width(8.dp))
         }
@@ -141,32 +132,35 @@ fun AppSearchField(
             modifier = Modifier.weight(1f),
             enabled = enabled,
             singleLine = true,
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
             keyboardOptions = KeyboardOptions(imeAction = if (onSearch != null) ImeAction.Search else ImeAction.Default),
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { onSearch?.invoke() }),
             decorationBox = { inner ->
                 Box(contentAlignment = Alignment.CenterStart) {
                     if (value.isEmpty()) {
-                        Text(placeholder, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            placeholder,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                     inner()
                 }
             },
         )
         if (value.isNotEmpty() && onClear != null) {
-            androidx.compose.material3.IconButton(onClick = onClear, modifier = Modifier.size(40.dp)) {
-                androidx.compose.material3.Icon(
+            IconButton(onClick = onClear, modifier = Modifier.size(34.dp)) {
+                Icon(
                     Icons.Default.Close,
                     contentDescription = "Clear",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(16.dp),
                 )
             }
         }
     }
 }
 
-/** Reusable media row contract for later screen migration; no per-row glass background. */
 @Composable
 fun MediaRow(
     modifier: Modifier = Modifier,
@@ -186,7 +180,6 @@ fun MediaRow(
     )
 }
 
-/** Tonal surface primitive for cards and grouped settings rows. */
 @Composable
 fun AppSurface(
     modifier: Modifier = Modifier,
@@ -194,17 +187,22 @@ fun AppSurface(
     containerColor: Color = MaterialTheme.colorScheme.surface,
     content: @Composable () -> Unit,
 ) {
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
     Surface(
         modifier = modifier,
         shape = shape,
-        color = containerColor,
+        color = containerColor.copy(alpha = if (dark) 0.74f else 0.94f),
         contentColor = MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(
+            0.5.dp,
+            if (dark) Color.White.copy(alpha = 0.055f) else Color.Black.copy(alpha = 0.045f),
+        ),
         tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
         content = content,
     )
 }
 
-/** Consistent section heading with an optional trailing action. */
 @Composable
 fun AppSectionHeader(
     title: String,
@@ -224,20 +222,17 @@ fun AppSectionHeader(
             modifier = Modifier.weight(1f),
         )
         if (actionLabel != null && onAction != null) {
-            TextButton(onClick = onAction, shape = PillShape) {
-                Text(actionLabel)
-            }
+            TextButton(onClick = onAction, shape = PillShape) { Text(actionLabel) }
         }
     }
 }
 
-/** Small status/filter pill with a stable semantic label and no hard-coded colors. */
 @Composable
 fun AppStatusPill(
     label: String,
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
-    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
+    containerColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+    contentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     icon: ImageVector? = null,
 ) {
     Row(
@@ -247,14 +242,11 @@ fun AppStatusPill(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
     ) {
-        if (icon != null) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = contentColor)
-        }
+        if (icon != null) Icon(icon, null, Modifier.size(15.dp), tint = contentColor)
         Text(label, style = MaterialTheme.typography.labelMedium, color = contentColor)
     }
 }
 
-/** Primary action with a guaranteed comfortable touch target. */
 @Composable
 fun AppPrimaryButton(
     label: String,
@@ -265,20 +257,19 @@ fun AppPrimaryButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 48.dp),
+        modifier = modifier.heightIn(min = 44.dp),
         enabled = enabled,
-        shape = MaterialTheme.shapes.small,
+        shape = PillShape,
         contentPadding = ButtonDefaults.ContentPadding,
     ) {
         if (icon != null) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
-            androidx.compose.foundation.layout.Spacer(Modifier.size(AppSpacing.xs))
+            Icon(icon, contentDescription = null, modifier = Modifier.size(17.dp))
+            Spacer(Modifier.size(AppSpacing.xs))
         }
         Text(label)
     }
 }
 
-/** Icon-only action that keeps Material's 48dp touch target and button semantics. */
 @Composable
 fun AppIconButton(
     icon: ImageVector,
