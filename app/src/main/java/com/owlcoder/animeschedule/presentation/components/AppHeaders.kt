@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -28,8 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.AppSpacing
-import com.owlcoder.animeschedule.ui.theme.GlassBlur
-import com.owlcoder.animeschedule.ui.theme.GlassTone
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
 @Composable
@@ -42,7 +39,7 @@ fun AppLargeHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = if (subtitle.isNullOrBlank()) 50.dp else 68.dp),
+            .heightIn(min = if (subtitle.isNullOrBlank()) 50.dp else 66.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -137,30 +134,15 @@ fun GlassToolbarButton(
             .semantics { role = Role.Button },
         contentAlignment = Alignment.Center,
     ) {
-        if (selected) {
-            GlassSurface(
-                modifier = Modifier.size(29.dp),
-                shape = CircleShape,
-                tone = GlassTone.Accent,
-                blur = GlassBlur.None,
-            ) {
-                ToolbarIcon(icon, contentDescription, enabled)
-            }
-        } else {
-            ToolbarIcon(icon, contentDescription, enabled)
-        }
-    }
-}
-
-@Composable
-private fun ToolbarIcon(icon: ImageVector, contentDescription: String, enabled: Boolean) {
-    Box(modifier = Modifier.size(29.dp), contentAlignment = Alignment.Center) {
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
             modifier = Modifier.size(17.dp),
-            tint = if (enabled) MaterialTheme.colorScheme.onSurface
-            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.40f),
+            tint = when {
+                !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.40f)
+                selected -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurface
+            },
         )
     }
 }
