@@ -12,16 +12,16 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.MarkEmailRead
 import androidx.compose.material.icons.filled.MarkEmailUnread
-import androidx.compose.material.icons.filled.NotificationsNone
+import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,10 +47,7 @@ import com.owlcoder.animeschedule.domain.model.AppNotification
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
-import com.owlcoder.animeschedule.presentation.components.GlassSurface
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
-import com.owlcoder.animeschedule.ui.theme.GlassBlur
-import com.owlcoder.animeschedule.ui.theme.GlassTone
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -67,7 +65,7 @@ fun NotificationsOverlay(
     val read = notifications.filter { it.isRead }
     var selectedTab by remember { mutableIntStateOf(0) }
     val list = if (selectedTab == 0) unread else read
-    val maxListHeight = LocalConfiguration.current.screenHeightDp.dp * 0.46f
+    val maxListHeight = LocalConfiguration.current.screenHeightDp.dp * 0.42f
 
     AppSheet(
         onDismissRequest = onDismiss,
@@ -76,7 +74,7 @@ fun NotificationsOverlay(
             if (unread.isNotEmpty()) {
                 TextButton(
                     onClick = viewModel::markAllRead,
-                    contentPadding = PaddingValues(horizontal = 8.dp),
+                    contentPadding = PaddingValues(horizontal = 6.dp),
                 ) {
                     Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(16.dp))
                     Text("Mark all", modifier = Modifier.padding(start = 4.dp), fontWeight = FontWeight.SemiBold)
@@ -86,7 +84,7 @@ fun NotificationsOverlay(
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             NotificationTabs(
                 selectedTab = selectedTab,
@@ -101,15 +99,16 @@ fun NotificationsOverlay(
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth().heightIn(max = maxListHeight),
                     contentPadding = PaddingValues(top = 2.dp, bottom = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     groupedByDay(list).forEach { (dayLabel, items) ->
                         item(key = "notification_day_$dayLabel") {
                             Text(
                                 text = dayLabel,
-                                modifier = Modifier.padding(horizontal = 10.dp),
+                                modifier = Modifier.padding(horizontal = 8.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.SemiBold,
                             )
                         }
                         item(key = "notification_group_$dayLabel") {
@@ -145,36 +144,34 @@ private fun NotificationTabs(
         Triple(R.string.notif_tab_read, Icons.Default.MarkEmailRead, readCount),
     )
     AppMaterialSurface(
-        modifier = Modifier.fillMaxWidth().height(42.dp),
-        material = AppMaterial.Grouped,
-        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth().height(40.dp),
+        material = AppMaterial.Interactive,
+        shape = RoundedCornerShape(10.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().height(42.dp).padding(3.dp),
+            modifier = Modifier.fillMaxWidth().height(40.dp).padding(3.dp),
             horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             tabs.forEachIndexed { index, (labelRes, icon, count) ->
                 val isSelected = selectedTab == index
-                Box(
+                Surface(
                     modifier = Modifier
                         .weight(1f)
-                        .height(36.dp)
+                        .height(34.dp)
                         .clickable(role = Role.Tab) { onTabSelected(index) }
-                        .semantics { role = Role.Tab },
-                    contentAlignment = Alignment.Center,
+                        .semantics {
+                            role = Role.Tab
+                            selected = isSelected
+                        },
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (isSelected) MaterialTheme.colorScheme.surface
+                    else androidx.compose.ui.graphics.Color.Transparent,
+                    contentColor = if (isSelected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    tonalElevation = 0.dp,
+                    shadowElevation = if (isSelected) 1.dp else 0.dp,
                 ) {
-                    if (isSelected) {
-                        GlassSurface(
-                            modifier = Modifier.fillMaxWidth().height(36.dp),
-                            shape = RoundedCornerShape(9.dp),
-                            tone = GlassTone.Accent,
-                            blur = GlassBlur.None,
-                        ) {
-                            NotificationTabContent(labelRes, icon, count, selected = true)
-                        }
-                    } else {
-                        NotificationTabContent(labelRes, icon, count, selected = false)
-                    }
+                    NotificationTabContent(labelRes, icon, count, selected = isSelected)
                 }
             }
         }
@@ -191,7 +188,7 @@ private fun NotificationTabContent(
     val color = if (selected) MaterialTheme.colorScheme.primary
     else MaterialTheme.colorScheme.onSurfaceVariant
     Row(
-        modifier = Modifier.fillMaxWidth().height(36.dp),
+        modifier = Modifier.fillMaxWidth().height(34.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
@@ -218,25 +215,20 @@ private fun NotificationTabContent(
 @Composable
 private fun NotificationEmptyState(selectedTab: Int) {
     Column(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp).padding(horizontal = 20.dp, vertical = 14.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 22.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Box(
-            modifier = Modifier.size(44.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Default.NotificationsNone,
-                contentDescription = null,
-                modifier = Modifier.size(28.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        Icon(
+            imageVector = Icons.Outlined.NotificationsNone,
+            contentDescription = null,
+            modifier = Modifier.size(30.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Text(
             text = if (selectedTab == 0) stringResource(R.string.notif_empty_unread)
             else stringResource(R.string.notif_empty_read),
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = 10.dp),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
