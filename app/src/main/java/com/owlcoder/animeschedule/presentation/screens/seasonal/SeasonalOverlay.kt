@@ -3,14 +3,14 @@ package com.owlcoder.animeschedule.presentation.screens.seasonal
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -64,13 +64,17 @@ fun SeasonalOverlay(
     AppSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        modifier = Modifier.fillMaxSize(),
-        showDragHandle = false,
         showCloseButton = false,
+        showDragHandle = true,
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.92f),
+        ) {
             AppInlineHeader(
                 title = "${stringResource(uiState.season.labelRes())} ${uiState.year}",
+                modifier = Modifier.padding(bottom = 2.dp),
                 onBack = onDismiss,
                 backContentDescription = stringResource(R.string.common_cancel),
                 trailingContent = {
@@ -105,7 +109,7 @@ fun SeasonalOverlay(
                 currentSeason = uiState.season,
                 currentYear = uiState.year,
                 onSelect = { season, year -> viewModel.setSeason(season, year) },
-                modifier = Modifier.padding(top = 4.dp),
+                modifier = Modifier.padding(top = 4.dp, bottom = 2.dp),
             )
 
             val mode = when {
@@ -118,12 +122,21 @@ fun SeasonalOverlay(
 
             AnimatedContent(
                 targetState = contentKey,
-                modifier = Modifier.fillMaxWidth().weight(1f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
                 transitionSpec = {
+                    val direction = if (targetState.first >= initialState.first) 1 else -1
                     (fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
-                        scaleIn(initialScale = 0.99f, animationSpec = motion.iosTween(IosMotion.Standard))) togetherWith
+                        slideInHorizontally(
+                            animationSpec = motion.iosTween(IosMotion.Standard),
+                            initialOffsetX = { if (motion.animationsEnabled) direction * it / 12 else 0 },
+                        )) togetherWith
                         (fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                            scaleOut(targetScale = 0.995f, animationSpec = motion.iosTween(IosMotion.Quick)))
+                            slideOutHorizontally(
+                                animationSpec = motion.iosTween(IosMotion.Quick),
+                                targetOffsetX = { if (motion.animationsEnabled) -direction * it / 16 else 0 },
+                            ))
                 },
                 label = "seasonal-content",
             ) { (_, _, contentMode) ->
@@ -156,9 +169,9 @@ fun SeasonalOverlay(
                     SeasonalContentMode.Grid -> LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = 10.dp, bottom = 42.dp),
+                        contentPadding = PaddingValues(top = 10.dp, bottom = 28.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
                         items(
                             items = uiState.filteredItems,
