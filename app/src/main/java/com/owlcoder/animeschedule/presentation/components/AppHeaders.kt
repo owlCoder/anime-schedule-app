@@ -1,6 +1,5 @@
 package com.owlcoder.animeschedule.presentation.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,14 +20,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.AppSpacing
+import com.owlcoder.animeschedule.ui.theme.GlassBlur
+import com.owlcoder.animeschedule.ui.theme.GlassTone
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
 @Composable
@@ -41,9 +42,9 @@ fun AppLargeHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = if (subtitle.isNullOrBlank()) 50.dp else 70.dp),
+            .heightIn(min = if (subtitle.isNullOrBlank()) 50.dp else 68.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Column(
             modifier = Modifier.weight(1f),
@@ -52,6 +53,7 @@ fun AppLargeHeader(
             Text(
                 text = title,
                 style = MaterialTheme.typography.displayLarge,
+                fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -59,7 +61,7 @@ fun AppLargeHeader(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.88f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -78,9 +80,7 @@ fun AppInlineHeader(
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 50.dp),
+        modifier = modifier.fillMaxWidth().heightIn(min = 48.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
@@ -95,6 +95,7 @@ fun AppInlineHeader(
             text = title,
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -112,7 +113,7 @@ fun GlassToolbarGroup(
         shape = PillShape,
     ) {
         Row(
-            modifier = Modifier.height(42.dp).padding(horizontal = 3.dp),
+            modifier = Modifier.height(40.dp).padding(horizontal = 3.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(1.dp),
             content = content,
@@ -131,28 +132,35 @@ fun GlassToolbarButton(
 ) {
     Box(
         modifier = modifier
-            .size(36.dp)
-            .background(
-                color = if (selected) {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.11f)
-                } else {
-                    Color.Transparent
-                },
-                shape = CircleShape,
-            )
+            .size(34.dp)
             .clickable(enabled = enabled, onClick = onClick)
             .semantics { role = Role.Button },
         contentAlignment = Alignment.Center,
     ) {
+        if (selected) {
+            GlassSurface(
+                modifier = Modifier.size(29.dp),
+                shape = CircleShape,
+                tone = GlassTone.Accent,
+                blur = GlassBlur.None,
+            ) {
+                ToolbarIcon(icon, contentDescription, enabled)
+            }
+        } else {
+            ToolbarIcon(icon, contentDescription, enabled)
+        }
+    }
+}
+
+@Composable
+private fun ToolbarIcon(icon: ImageVector, contentDescription: String, enabled: Boolean) {
+    Box(modifier = Modifier.size(29.dp), contentAlignment = Alignment.Center) {
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            modifier = Modifier.size(18.dp),
-            tint = if (enabled) {
-                MaterialTheme.colorScheme.onSurface
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
-            },
+            modifier = Modifier.size(17.dp),
+            tint = if (enabled) MaterialTheme.colorScheme.onSurface
+            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.40f),
         )
     }
 }
