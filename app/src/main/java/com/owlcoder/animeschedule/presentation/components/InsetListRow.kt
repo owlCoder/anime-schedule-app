@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
@@ -29,14 +30,15 @@ fun InsetGroup(
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(5.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         if (!title.isNullOrBlank()) {
             Text(
                 text = title,
-                modifier = Modifier.padding(horizontal = 12.dp),
+                modifier = Modifier.padding(horizontal = 11.dp),
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -51,9 +53,9 @@ fun InsetGroup(
         if (!footer.isNullOrBlank()) {
             Text(
                 text = footer,
-                modifier = Modifier.padding(horizontal = 12.dp),
+                modifier = Modifier.padding(horizontal = 11.dp),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.86f),
             )
         }
     }
@@ -72,7 +74,7 @@ fun InsetListRow(
 ) {
     val rowModifier = modifier
         .fillMaxWidth()
-        .heightIn(min = 50.dp)
+        .heightIn(min = if (supportingText.isNullOrBlank()) 46.dp else 52.dp)
         .then(
             if (onClick != null) {
                 Modifier
@@ -80,7 +82,7 @@ fun InsetListRow(
                     .semantics { role = Role.Button }
             } else Modifier
         )
-        .padding(horizontal = 14.dp, vertical = 3.dp)
+        .padding(horizontal = 13.dp, vertical = 4.dp)
 
     CompositionLocalProvider(
         androidx.compose.material3.LocalContentColor provides
@@ -95,13 +97,13 @@ fun InsetListRow(
             leadingContent?.invoke()
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(1.dp),
+                verticalArrangement = Arrangement.spacedBy(0.dp),
             ) {
                 Text(
                     text = label,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = if (selected) MaterialTheme.colorScheme.primary
-                    else androidx.compose.material3.LocalContentColor.current,
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                    color = androidx.compose.material3.LocalContentColor.current,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -109,7 +111,7 @@ fun InsetListRow(
                     Text(
                         text = supportingText,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.84f),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
