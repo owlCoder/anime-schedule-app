@@ -1,9 +1,14 @@
 package com.owlcoder.animeschedule.presentation.navigation
 
 import androidx.annotation.StringRes
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -149,7 +154,7 @@ private fun BottomNavItemView(
     val interactionSource = remember { MutableInteractionSource() }
     val motion = LocalMotionPolicy.current
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    val selectedFill = if (dark) Color.White.copy(alpha = 0.065f) else Color.White.copy(alpha = 0.38f)
+    val selectedFill = if (dark) Color.White.copy(alpha = 0.065f) else Color.White.copy(alpha = 0.34f)
     val fill by animateColorAsState(
         targetValue = if (selected) selectedFill else Color.Transparent,
         animationSpec = motion.iosTween(IosMotion.Standard),
@@ -157,7 +162,7 @@ private fun BottomNavItemView(
     )
     val borderColor by animateColorAsState(
         targetValue = if (selected) {
-            if (dark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.44f)
+            if (dark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.40f)
         } else {
             Color.Transparent
         },
@@ -193,9 +198,9 @@ private fun BottomNavItemView(
     ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth(0.86f)
+                .fillMaxWidth(0.82f)
                 .fillMaxHeight(),
-            shape = ContinuousRoundedShape(16.dp),
+            shape = ContinuousRoundedShape(14.dp),
             color = fill,
             border = BorderStroke(0.5.dp, borderColor),
             tonalElevation = 0.dp,
@@ -229,7 +234,7 @@ private fun TabVisual(
         label = "bottom-tab-color",
     )
     val inactiveAlpha by animateFloatAsState(
-        targetValue = if (selected) 1f else 0.76f,
+        targetValue = if (selected) 1f else 0.74f,
         animationSpec = motion.iosTween(IosMotion.Standard),
         label = "bottom-tab-alpha",
     )
@@ -249,9 +254,14 @@ private fun TabVisual(
                 null
             },
         ) {
-            Crossfade(
+            AnimatedContent(
                 targetState = selected,
-                animationSpec = motion.iosTween(IosMotion.Quick),
+                transitionSpec = {
+                    (fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) +
+                        scaleIn(initialScale = 0.88f, animationSpec = motion.iosTween(IosMotion.Quick))) togetherWith
+                        (fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
+                            scaleOut(targetScale = 1.06f, animationSpec = motion.iosTween(IosMotion.Quick)))
+                },
                 label = "bottom-tab-icon",
             ) { active ->
                 Icon(
