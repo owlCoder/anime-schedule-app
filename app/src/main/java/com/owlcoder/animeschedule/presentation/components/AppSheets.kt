@@ -41,7 +41,7 @@ import com.owlcoder.animeschedule.ui.theme.GlassTokens
 fun AppSheet(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
+    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     title: String? = null,
     trailingContent: @Composable (() -> Unit)? = null,
     showCloseButton: Boolean = true,
@@ -72,21 +72,21 @@ fun AppSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .imePadding()
-                .padding(start = 18.dp, end = 18.dp, bottom = 18.dp),
+                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
         ) {
             if (!title.isNullOrBlank()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 44.dp)
-                        .padding(bottom = 7.dp),
+                        .heightIn(min = 42.dp)
+                        .padding(bottom = 5.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = title,
                         modifier = Modifier
                             .weight(1f)
-                            .padding(end = 8.dp),
+                            .padding(end = 6.dp),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 2,
@@ -117,7 +117,7 @@ fun AppSheet(
 fun AppSheetHandle(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(top = 8.dp, bottom = 5.dp)
+            .padding(top = 7.dp, bottom = 4.dp)
             .fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
