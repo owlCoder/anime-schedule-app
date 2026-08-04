@@ -1,7 +1,6 @@
 package com.owlcoder.animeschedule.presentation.screens.settings
 
 import android.content.Context
-import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -63,8 +62,8 @@ class SettingsViewModel @Inject constructor(
     private val _isClearingCache = MutableStateFlow(false)
     val isClearingCache: StateFlow<Boolean> = _isClearingCache
 
-    private val _cacheActionMessage = MutableStateFlow<Int?>(null)
-    val cacheActionMessage: StateFlow<Int?> = _cacheActionMessage
+    private val _cacheActionMessage = MutableStateFlow<String?>(null)
+    val cacheActionMessage: StateFlow<String?> = _cacheActionMessage
 
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsRepository.userPreferencesFlow,
@@ -135,9 +134,9 @@ class SettingsViewModel @Inject constructor(
                 cacheMaintenance.run(clearImageCacheNow = true)
                 refreshCacheSizeAndWait()
             }.onSuccess {
-                _cacheActionMessage.value = R.string.settings_cache_cleared
+                _cacheActionMessage.value = context.getString(R.string.settings_cache_cleared)
             }.onFailure {
-                _cacheActionMessage.value = R.string.settings_cache_clear_failed
+                _cacheActionMessage.value = context.getString(R.string.settings_cache_clear_failed)
             }
             _isClearingCache.value = false
         }
