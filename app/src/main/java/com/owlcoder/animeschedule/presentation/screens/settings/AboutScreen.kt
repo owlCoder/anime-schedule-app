@@ -49,26 +49,26 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 520.dp)
+                .heightIn(max = 450.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 14.dp),
+                .padding(bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
                 modifier = Modifier
-                    .size(42.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(11.dp))
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = stringResource(R.string.about_logo_monogram),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
-            Spacer(Modifier.height(7.dp))
+            Spacer(Modifier.height(5.dp))
             Text(
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.titleMedium,
@@ -76,12 +76,14 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
             )
             Text(
                 text = stringResource(R.string.about_tagline),
-                modifier = Modifier.padding(top = 2.dp),
+                modifier = Modifier.padding(top = 1.dp, start = 12.dp, end = 12.dp),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(9.dp))
 
             AboutGroup(
                 items = listOf(
@@ -96,9 +98,9 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
                 ),
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(9.dp))
             AboutSectionHeader(stringResource(R.string.about_section_data_sources))
-            Spacer(Modifier.height(5.dp))
+            Spacer(Modifier.height(4.dp))
             AboutGroup(
                 items = listOf(
                     AboutItem(stringResource(R.string.about_data_schedule), "AniList"),
@@ -107,17 +109,17 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
                 ),
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(9.dp))
             Text(
                 text = "Kotlin · Jetpack Compose · Room · Hilt",
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
             Text(
                 text = stringResource(R.string.about_footer_copyright, java.time.Year.now().value),
-                modifier = Modifier.padding(top = 4.dp),
-                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 2.dp),
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
@@ -134,7 +136,7 @@ private fun AboutSectionHeader(title: String) {
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 12.dp),
+            .padding(start = 11.dp),
     )
 }
 
@@ -146,38 +148,40 @@ private fun AboutGroup(items: List<AboutItem>) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 13.dp, vertical = 9.dp),
-                    verticalArrangement = Arrangement.spacedBy(3.dp),
+                        .padding(horizontal = 12.dp, vertical = 7.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     Text(
                         text = item.label,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
                         maxLines = 1,
                     )
                     Text(
                         text = item.value,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.labelSmall,
                         fontFamily = FontFamily.Monospace,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxWidth(),
-                        maxLines = 2,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        softWrap = true,
+                        softWrap = false,
                     )
                 }
             } else {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 42.dp)
-                        .padding(horizontal = 13.dp, vertical = 7.dp),
+                        .heightIn(min = 38.dp)
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Text(
                         text = item.label,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(0.44f),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.weight(0.46f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -185,16 +189,16 @@ private fun AboutGroup(items: List<AboutItem>) {
                         text = item.value,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.weight(0.56f),
+                        modifier = Modifier.weight(0.54f),
                         textAlign = TextAlign.End,
-                        maxLines = 2,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
             if (index < items.lastIndex) {
                 HorizontalDivider(
-                    modifier = Modifier.padding(start = 13.dp),
+                    modifier = Modifier.padding(start = 12.dp),
                     thickness = 0.5.dp,
                     color = MaterialTheme.colorScheme.outlineVariant,
                 )
