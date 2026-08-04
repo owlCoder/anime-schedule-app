@@ -1,5 +1,11 @@
 package com.owlcoder.animeschedule.presentation.screens.seasonal
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +44,11 @@ import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.EmptyState
 import com.owlcoder.animeschedule.presentation.components.GlassToolbarButton
 import com.owlcoder.animeschedule.presentation.components.GlassToolbarGroup
+import com.owlcoder.animeschedule.presentation.components.IosMotion
+import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
+import com.owlcoder.animeschedule.presentation.components.iosTween
+
+private enum class SeasonalContentMode { Loading, Error, Empty, Grid }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,12 +58,15 @@ fun SeasonalOverlay(
     viewModel: SeasonalViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val motion = LocalMotionPolicy.current
     var showFilterSheet by remember { mutableStateOf(false) }
 
     AppSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         modifier = Modifier.fillMaxSize(),
+        showDragHandle = false,
+        showCloseButton = false,
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             AppInlineHeader(
@@ -91,52 +105,72 @@ fun SeasonalOverlay(
                 currentSeason = uiState.season,
                 currentYear = uiState.year,
                 onSelect = { season, year -> viewModel.setSeason(season, year) },
-                modifier = Modifier.padding(top = 5.dp),
+                modifier = Modifier.padding(top = 4.dp),
             )
 
-            when {
-                uiState.isLoading -> SeasonalLoadingState()
-                uiState.errorRes != null -> Box(
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    EmptyState(
-                        icon = Icons.Outlined.Tune,
-                        title = stringResource(R.string.seasonal_error_title),
-                        subtitle = stringResource(uiState.errorRes!!),
-                        actionLabel = stringResource(R.string.common_retry),
-                        onAction = viewModel::load,
-                    )
-                }
-                uiState.filteredItems.isEmpty() -> Box(
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    EmptyState(
-                        icon = Icons.Outlined.Tune,
-                        title = stringResource(R.string.seasonal_empty_title),
-                        subtitle = stringResource(R.string.seasonal_empty_subtitle),
-                        actionLabel = stringResource(R.string.seasonal_filter_reset),
-                        onAction = viewModel::clearFilter,
-                    )
-                }
-                else -> LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                    contentPadding = PaddingValues(top = 12.dp, bottom = 26.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    verticalArrangement = Arrangement.spacedBy(18.dp),
-                ) {
-                    items(
-                        items = uiState.filteredItems,
-                        key = { "season:${it.anilistId}" },
-                        contentType = { "seasonal_poster" },
-                    ) { item ->
-                        SeasonalAnimeCard(
-                            item = item,
-                            onClick = { onAnimeClick(item.anilistId) },
-                            modifier = Modifier.fillMaxWidth(),
+            val mode = when {
+                uiState.isLoading -> SeasonalContentMode.Loading
+                uiState.errorRes != null -> SeasonalContentMode.Error
+                uiState.filteredItems.isEmpty() -> SeasonalContentMode.Empty
+                else -> SeasonalContentMode.Grid
+            }
+            val contentKey = Triple(uiState.year, uiState.season, mode)
+
+            AnimatedContent(
+                targetState = contentKey,
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                transitionSpec = {
+                    (fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
+                        scaleIn(initialScale = 0.99f, animationSpec = motion.iosTween(IosMotion.Standard))) togetherWith
+                        (fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
+                            scaleOut(targetScale = 0.995f, animationSpec = motion.iosTween(IosMotion.Quick)))
+                },
+                label = "seasonal-content",
+            ) { (_, _, contentMode) ->
+                when (contentMode) {
+                    SeasonalContentMode.Loading -> SeasonalLoadingState()
+                    SeasonalContentMode.Error -> Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        EmptyState(
+                            icon = Icons.Outlined.Tune,
+                            title = stringResource(R.string.seasonal_error_title),
+                            subtitle = uiState.errorRes?.let { stringResource(it) }.orEmpty(),
+                            actionLabel = stringResource(R.string.common_retry),
+                            onAction = viewModel::load,
                         )
+                    }
+                    SeasonalContentMode.Empty -> Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        EmptyState(
+                            icon = Icons.Outlined.Tune,
+                            title = stringResource(R.string.seasonal_empty_title),
+                            subtitle = stringResource(R.string.seasonal_empty_subtitle),
+                            actionLabel = stringResource(R.string.seasonal_filter_reset),
+                            onAction = viewModel::clearFilter,
+                        )
+                    }
+                    SeasonalContentMode.Grid -> LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(top = 10.dp, bottom = 42.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        items(
+                            items = uiState.filteredItems,
+                            key = { "season:${it.anilistId}" },
+                            contentType = { "seasonal_poster" },
+                        ) { item ->
+                            SeasonalAnimeCard(
+                                item = item,
+                                onClick = { onAnimeClick(item.anilistId) },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
                     }
                 }
             }
@@ -158,9 +192,9 @@ fun SeasonalOverlay(
 }
 
 @Composable
-private fun ColumnScope.SeasonalLoadingState() {
+private fun SeasonalLoadingState() {
     Box(
-        modifier = Modifier.fillMaxWidth().weight(1f),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         Column(
