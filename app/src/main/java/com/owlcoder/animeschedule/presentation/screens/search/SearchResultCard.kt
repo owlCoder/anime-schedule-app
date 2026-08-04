@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,21 +46,21 @@ fun SearchResultCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 76.dp)
+                .heightIn(min = 70.dp)
                 .clickable(onClick = onCardClick)
                 .semantics(mergeDescendants = true) { role = Role.Button }
-                .padding(start = 12.dp, end = 8.dp, top = 7.dp, bottom = 7.dp),
+                .padding(start = 11.dp, end = 7.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(11.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             MediaThumbnail.Small(
                 url = result.coverImageUrl,
                 contentDescription = result.title,
-                modifier = Modifier.size(46.dp, 62.dp),
+                modifier = Modifier.size(43.dp, 57.dp),
             )
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+                verticalArrangement = Arrangement.spacedBy(1.dp),
             ) {
                 Text(
                     text = result.title,
@@ -73,7 +73,7 @@ fun SearchResultCard(
                     Text(
                         text = englishTitle,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.84f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -82,27 +82,27 @@ fun SearchResultCard(
             if (onEditStatus != null) {
                 Box(
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(38.dp)
                         .clickable(onClick = onEditStatus)
                         .semantics { role = Role.Button },
                     contentAlignment = Alignment.Center,
                 ) {
                     GlassSurface(
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(30.dp),
                         shape = CircleShape,
                         tone = if (result.userListEntry != null) GlassTone.Neutral else GlassTone.Accent,
-                        blur = GlassBlur.Soft,
+                        blur = GlassBlur.None,
                         contentColor = MaterialTheme.colorScheme.onSurface,
                     ) {
-                        Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(30.dp), contentAlignment = Alignment.Center) {
                             Icon(
-                                imageVector = if (result.userListEntry != null) Icons.Default.Edit else Icons.Default.Add,
+                                imageVector = if (result.userListEntry != null) Icons.Outlined.Edit else Icons.Outlined.Add,
                                 contentDescription = if (result.userListEntry != null) {
                                     stringResource(R.string.cd_edit_list_status)
                                 } else {
                                     stringResource(R.string.detail_add_to_list)
                                 },
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(15.dp),
                                 tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
@@ -112,9 +112,9 @@ fun SearchResultCard(
         }
         if (showDivider) {
             HorizontalDivider(
-                modifier = Modifier.padding(start = 70.dp),
+                modifier = Modifier.padding(start = 64.dp),
                 thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.30f),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.26f),
             )
         }
     }
