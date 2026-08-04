@@ -1,5 +1,6 @@
 package com.owlcoder.animeschedule.presentation.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,7 +44,6 @@ fun AppButton(
     icon: ImageVector? = null,
 ) {
     val accent = MaterialTheme.colorScheme.primary
-    val neutral = MaterialTheme.colorScheme.onSurface
     when (variant) {
         AppButtonVariant.Plain -> androidx.compose.material3.TextButton(
             onClick = onClick,
@@ -55,9 +55,9 @@ fun AppButton(
         }
 
         AppButtonVariant.Primary -> {
-            val container = if (enabled) accent.copy(alpha = 0.94f) else accent.copy(alpha = 0.28f)
+            val container = if (enabled) accent else accent.copy(alpha = 0.30f)
             val contentColor = if (enabled) MaterialTheme.colorScheme.onPrimary
-            else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.52f)
+            else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.58f)
             Surface(
                 modifier = modifier
                     .height(AppButtonHeight)
@@ -73,34 +73,48 @@ fun AppButton(
             }
         }
 
-        AppButtonVariant.Secondary -> GlassSurface(
-            modifier = modifier
-                .height(AppButtonHeight)
-                .clickable(enabled = enabled, onClick = onClick)
-                .semantics { role = Role.Button },
-            shape = PillShape,
-            tone = GlassTone.Neutral,
-            blur = GlassBlur.None,
-            contentColor = neutral,
-        ) {
-            ButtonRow(label, icon, neutral, enabled)
-        }
+        AppButtonVariant.Secondary -> StandardOutlinedButton(
+            label = label,
+            icon = icon,
+            modifier = modifier,
+            enabled = enabled,
+            color = MaterialTheme.colorScheme.onSurface,
+            onClick = onClick,
+        )
 
-        AppButtonVariant.Destructive -> {
-            val error = MaterialTheme.colorScheme.error
-            GlassSurface(
-                modifier = modifier
-                    .height(AppButtonHeight)
-                    .clickable(enabled = enabled, onClick = onClick)
-                    .semantics { role = Role.Button },
-                shape = PillShape,
-                tone = GlassTone.Neutral,
-                blur = GlassBlur.None,
-                contentColor = error,
-            ) {
-                ButtonRow(label, icon, error, enabled)
-            }
-        }
+        AppButtonVariant.Destructive -> StandardOutlinedButton(
+            label = label,
+            icon = icon,
+            modifier = modifier,
+            enabled = enabled,
+            color = MaterialTheme.colorScheme.error,
+            onClick = onClick,
+        )
+    }
+}
+
+@Composable
+private fun StandardOutlinedButton(
+    label: String,
+    icon: ImageVector?,
+    modifier: Modifier,
+    enabled: Boolean,
+    color: Color,
+    onClick: () -> Unit,
+) {
+    Surface(
+        modifier = modifier
+            .height(AppButtonHeight)
+            .clickable(enabled = enabled, onClick = onClick)
+            .semantics { role = Role.Button },
+        shape = PillShape,
+        color = MaterialTheme.colorScheme.surface,
+        contentColor = color,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+    ) {
+        ButtonRow(label, icon, color, enabled)
     }
 }
 
@@ -117,7 +131,7 @@ private fun ButtonRow(label: String, icon: ImageVector?, color: Color, enabled: 
 
 @Composable
 private fun ButtonContent(label: String, icon: ImageVector?, color: Color, enabled: Boolean) {
-    val resolved = if (enabled) color else color.copy(alpha = 0.38f)
+    val resolved = if (enabled) color else color.copy(alpha = 0.42f)
     if (icon != null) {
         Icon(
             imageVector = icon,
@@ -146,7 +160,7 @@ fun GlassButton(
     contentPadding: PaddingValues = PaddingValues(horizontal = 15.dp),
     content: @Composable (contentColor: Color) -> Unit,
 ) {
-    val contentColor = if (onImagery) Color.White else if (enabled) accent else accent.copy(alpha = 0.38f)
+    val contentColor = if (onImagery) Color.White else if (enabled) accent else accent.copy(alpha = 0.42f)
     GlassSurface(
         modifier = modifier
             .height(AppButtonHeight)
