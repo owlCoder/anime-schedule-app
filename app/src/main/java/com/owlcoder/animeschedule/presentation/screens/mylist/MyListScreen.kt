@@ -48,6 +48,7 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.PauseCircle
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.RemoveCircle
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -86,6 +87,7 @@ import com.owlcoder.animeschedule.presentation.components.AppLoadingState
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSearchField
+import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.EmptyState
 import com.owlcoder.animeschedule.presentation.components.ErrorBanner
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
@@ -438,58 +440,84 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
         )
         Box(
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopCenter,
+            contentAlignment = Alignment.Center,
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(7.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier
                     .widthIn(max = 340.dp)
-                    .padding(horizontal = 14.dp, vertical = 28.dp),
+                    .padding(horizontal = 4.dp, bottom = 86.dp),
             ) {
                 Surface(
-                    modifier = Modifier.size(50.dp),
+                    modifier = Modifier.size(72.dp),
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
                     tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
                 ) {
-                    Box(Modifier.size(50.dp), contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Default.AccountCircle,
-                            contentDescription = null,
-                            modifier = Modifier.size(28.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Surface(
+                            modifier = Modifier.size(52.dp),
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        ) {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Default.AccountCircle,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(38.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
                     }
                 }
                 Text(
                     text = stringResource(R.string.mylist_not_logged_in_title),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
                 )
                 Text(
                     text = stringResource(R.string.mylist_not_logged_in_subtitle),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
                 AppMaterialSurface(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 7.dp),
+                        .padding(top = 8.dp),
                     material = AppMaterial.Grouped,
-                    shape = MaterialTheme.shapes.large,
+                    shape = ContinuousRoundedShape(20.dp),
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
-                        verticalArrangement = Arrangement.spacedBy(7.dp),
-                    ) {
-                        BenefitRow(Icons.Default.CloudSync, "Keep progress synced with MyAnimeList")
-                        BenefitRow(Icons.Default.Bookmark, "Update watch status and episode progress")
-                        BenefitRow(Icons.Default.Star, "Save scores without leaving the app")
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        BenefitRow(
+                            icon = Icons.Default.CloudSync,
+                            title = "Keep progress synced",
+                            subtitle = "Access your list across all your devices.",
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(start = 58.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                        )
+                        BenefitRow(
+                            icon = Icons.Default.Bookmark,
+                            title = "Update watch status",
+                            subtitle = "Track episodes and continue where you left off.",
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(start = 58.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                        )
+                        BenefitRow(
+                            icon = Icons.Default.Star,
+                            title = "Save scores",
+                            subtitle = "Rate anime and keep your scores safe.",
+                        )
                     }
                 }
                 AppButton(
@@ -497,8 +525,8 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
                     onClick = onLogin,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .widthIn(max = 240.dp)
-                        .padding(top = 5.dp),
+                        .widthIn(max = 320.dp)
+                        .padding(top = 10.dp),
                     variant = AppButtonVariant.Primary,
                     icon = Icons.AutoMirrored.Filled.Login,
                 )
@@ -508,22 +536,35 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
 }
 
 @Composable
-private fun BenefitRow(icon: ImageVector, label: String) {
+private fun BenefitRow(icon: ImageVector, title: String, subtitle: String) {
     Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(9.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(17.dp),
+            modifier = Modifier.size(22.dp),
             tint = MaterialTheme.colorScheme.primary,
         )
-        Text(
-            text = label,
+        Column(
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
