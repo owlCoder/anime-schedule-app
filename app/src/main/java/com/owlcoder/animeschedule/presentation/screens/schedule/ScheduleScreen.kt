@@ -1,5 +1,13 @@
 package com.owlcoder.animeschedule.presentation.screens.schedule
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -50,6 +59,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,13 +78,16 @@ import com.owlcoder.animeschedule.presentation.components.ErrorBanner
 import com.owlcoder.animeschedule.presentation.components.GlassButton
 import com.owlcoder.animeschedule.presentation.components.GlassToolbarButton
 import com.owlcoder.animeschedule.presentation.components.GlassToolbarGroup
+import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 import com.owlcoder.animeschedule.presentation.components.LoadingShimmer
+import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
+import com.owlcoder.animeschedule.presentation.components.iosSpring
+import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.screens.notifications.NotificationsOverlay
 import com.owlcoder.animeschedule.presentation.screens.seasonal.SeasonalOverlay
-import com.owlcoder.animeschedule.ui.theme.PillShape
 import java.time.Clock
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -230,9 +243,12 @@ private fun TodayHomeContent(
     onFilter: () -> Unit,
 ) {
     val today = remember { LocalDate.now() }
+    val motion = LocalMotionPolicy.current
     val selectedEpisodes = uiState.episodesForDate(selectedDate).sortedBy { it.airingAtEpochSeconds }
     val isToday = selectedDate == today
-    val todaySelection = if (isToday) DashboardScheduleSelector.select(selectedEpisodes, Clock.systemDefaultZone()) else null
+    val todaySelection = if (isToday) {
+        DashboardScheduleSelector.select(selectedEpisodes, Clock.systemDefaultZone())
+    } else null
     val featured = todaySelection?.featured ?: selectedEpisodes.firstOrNull()
     val listEpisodes = todaySelection?.upcoming ?: selectedEpisodes.drop(1).take(5)
     val hasSchedule = selectedEpisodes.isNotEmpty()
@@ -259,7 +275,7 @@ private fun TodayHomeContent(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().statusBarsPadding(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 88.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 112.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item(key = "today-header") {
@@ -300,99 +316,126 @@ private fun TodayHomeContent(
 
         scheduleError?.let { error -> item(key = "schedule-error") { ErrorBanner(error, onRetry) } }
 
-        if (!hasSchedule) {
-            item(key = "schedule-empty") {
-                EmptyState(
-                    icon = Icons.Default.CalendarMonth,
-                    title = stringResource(R.string.schedule_empty_title),
-                    subtitle = if (isToday) stringResource(R.string.schedule_empty_subtitle)
-                    else "Nothing is scheduled for ${selectedDate.shortDateLabel()}.",
-                    modifier = Modifier.fillMaxWidth().height(160.dp),
-                    actionLabel = "View full week",
-                    onAction = onSeeAll,
-                )
-            }
-        } else {
-            featured?.let { episode ->
-                item(key = "featured-${selectedDate.toEpochDay()}-${episode.airingId}") {
-                    FeaturedAiring(
-                        episode = episode,
-                        status = if (isToday) featuredStatus(episode) else "Coming up",
-                        isLoggedIn = uiState.isLoggedIn,
-                        isIncrementing = episode.malId in uiState.pendingIncrementIds,
-                        onClick = { onCardClick(episode) },
-                        onIncrement = { onIncrementEpisode(episode) },
-                    )
-                }
-            }
-
-            item(key = "dashboard-section-header-${selectedDate.toEpochDay()}") {
-                Row(
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+        item(key = "dashboard-content") {
+            AnimatedContent(
+                targetState = selectedDate.toEpochDay(),
+                transitionSpec = {
+                    val direction = if (targetState >= initialState) 1 else -1
+                    val enter = slideInHorizontally(
+                        animationSpec = motion.iosTween(IosMotion.Standard),
+                        initialOffsetX = { if (motion.animationsEnabled) direction * it / 10 else 0 },
+                    ) + fadeIn(animationSpec = motion.iosTween(IosMotion.Standard))
+                    val exit = slideOutHorizontally(
+                        animationSpec = motion.iosTween(IosMotion.Quick),
+                        targetOffsetX = { if (motion.animationsEnabled) -direction * it / 14 else 0 },
+                    ) + fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
+                    enter togetherWith exit
+                },
+                label = "schedule-date-content",
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = sectionTitle,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
+                    if (!hasSchedule) {
+                        EmptyState(
+                            icon = Icons.Default.CalendarMonth,
+                            title = stringResource(R.string.schedule_empty_title),
+                            subtitle = if (isToday) stringResource(R.string.schedule_empty_subtitle)
+                            else "Nothing is scheduled for ${selectedDate.shortDateLabel()}.",
+                            modifier = Modifier.fillMaxWidth().height(160.dp),
+                            actionLabel = "View full week",
+                            onAction = onSeeAll,
                         )
-                        Text(
-                            text = sectionSubtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    TextButton(
-                        onClick = onSeeAll,
-                        modifier = Modifier.height(36.dp),
-                        contentPadding = PaddingValues(horizontal = 4.dp),
-                    ) {
-                        Text(stringResource(R.string.schedule_see_all), fontWeight = FontWeight.SemiBold)
-                        Spacer(Modifier.width(3.dp))
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(14.dp))
-                    }
-                }
-            }
+                    } else {
+                        featured?.let { episode ->
+                            FeaturedAiring(
+                                episode = episode,
+                                status = if (isToday) featuredStatus(episode) else "First broadcast",
+                                isLoggedIn = uiState.isLoggedIn,
+                                isIncrementing = episode.malId in uiState.pendingIncrementIds,
+                                onClick = { onCardClick(episode) },
+                                onIncrement = { onIncrementEpisode(episode) },
+                            )
+                        }
 
-            if (listEpisodes.isNotEmpty()) {
-                item(key = "dashboard-list-${selectedDate.toEpochDay()}") {
-                    UpcomingAiringList(
-                        episodes = listEpisodes,
-                        isLoggedIn = uiState.isLoggedIn,
-                        pendingIncrementIds = uiState.pendingIncrementIds,
-                        onCardClick = onCardClick,
-                        onIncrementEpisode = onIncrementEpisode,
-                        onEditStatus = onEditStatus,
-                    )
-                }
-            } else {
-                item(key = "dashboard-empty-window-${selectedDate.toEpochDay()}") {
-                    AppMaterialSurface(
-                        modifier = Modifier.fillMaxWidth().clickable(onClick = onSeeAll),
-                        material = AppMaterial.Grouped,
-                        shape = MaterialTheme.shapes.large,
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = "Nothing else is airing in this window. Open the full day schedule.",
-                                modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        DashboardSectionHeader(
+                            title = sectionTitle,
+                            subtitle = sectionSubtitle,
+                            onSeeAll = onSeeAll,
+                        )
+
+                        if (listEpisodes.isNotEmpty()) {
+                            UpcomingAiringList(
+                                episodes = listEpisodes,
+                                isLoggedIn = uiState.isLoggedIn,
+                                pendingIncrementIds = uiState.pendingIncrementIds,
+                                onCardClick = onCardClick,
+                                onIncrementEpisode = onIncrementEpisode,
+                                onEditStatus = onEditStatus,
                             )
-                            Icon(
-                                Icons.Default.ChevronRight,
-                                contentDescription = null,
-                                modifier = Modifier.size(17.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                        } else {
+                            AppMaterialSurface(
+                                modifier = Modifier.fillMaxWidth().clickable(onClick = onSeeAll),
+                                material = AppMaterial.Grouped,
+                                shape = MaterialTheme.shapes.large,
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = "Nothing else is airing in this window. Open the full day schedule.",
+                                        modifier = Modifier.weight(1f),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    Icon(
+                                        Icons.Default.ChevronRight,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(17.dp),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DashboardSectionHeader(
+    title: String,
+    subtitle: String,
+    onSeeAll: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        TextButton(
+            onClick = onSeeAll,
+            modifier = Modifier.height(36.dp),
+            contentPadding = PaddingValues(horizontal = 4.dp),
+        ) {
+            Text(stringResource(R.string.schedule_see_all), fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.width(3.dp))
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, Modifier.size(14.dp))
         }
     }
 }
@@ -403,26 +446,35 @@ private fun ScheduleDateRail(
     dates: List<LocalDate>,
     onDateSelected: (LocalDate) -> Unit,
 ) {
+    val motion = LocalMotionPolicy.current
     Row(
-        modifier = Modifier.fillMaxWidth().height(48.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        modifier = Modifier.fillMaxWidth().height(46.dp),
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         dates.forEach { date ->
             val isSelected = date == selectedDate
+            val containerColor by animateColorAsState(
+                targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+                else Color.Transparent,
+                animationSpec = motion.iosTween(IosMotion.Standard),
+                label = "date-cell-fill",
+            )
+            val borderColor by animateColorAsState(
+                targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.26f)
+                else Color.Transparent,
+                animationSpec = motion.iosTween(IosMotion.Standard),
+                label = "date-cell-border",
+            )
             Surface(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
                     .clickable { onDateSelected(date) },
-                shape = RoundedCornerShape(14.dp),
-                color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                else androidx.compose.ui.graphics.Color.Transparent,
+                shape = RoundedCornerShape(13.dp),
+                color = containerColor,
                 contentColor = if (isSelected) MaterialTheme.colorScheme.primary
                 else MaterialTheme.colorScheme.onSurfaceVariant,
-                border = if (isSelected) BorderStroke(
-                    0.5.dp,
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
-                ) else null,
+                border = BorderStroke(0.5.dp, borderColor),
                 tonalElevation = 0.dp,
             ) {
                 DateCellContent(date, isSelected)
@@ -433,6 +485,13 @@ private fun ScheduleDateRail(
 
 @Composable
 private fun DateCellContent(date: LocalDate, selected: Boolean) {
+    val motion = LocalMotionPolicy.current
+    val contentColor by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = motion.iosTween(IosMotion.Standard),
+        label = "date-cell-content",
+    )
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -441,16 +500,14 @@ private fun DateCellContent(date: LocalDate, selected: Boolean) {
         Text(
             text = date.format(DateTimeFormatter.ofPattern("EEE", Locale.getDefault())),
             style = MaterialTheme.typography.labelSmall,
-            color = if (selected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = contentColor,
             maxLines = 1,
         )
         Text(
             text = date.dayOfMonth.toString(),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
-            color = if (selected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = contentColor,
         )
     }
 }
@@ -464,8 +521,13 @@ private fun FeaturedAiring(
     onClick: () -> Unit,
     onIncrement: () -> Unit,
 ) {
+    val motion = LocalMotionPolicy.current
     AppMaterialSurface(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp).clickable(onClick = onClick),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 96.dp)
+            .animateContentSize(animationSpec = motion.iosSpring())
+            .clickable(onClick = onClick),
         material = AppMaterial.Grouped,
         shape = MaterialTheme.shapes.extraLarge,
     ) {
@@ -512,6 +574,7 @@ private fun FeaturedAiring(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    Text("·", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     CountdownText(episode.airingAtEpochSeconds)
                 }
             }
@@ -521,11 +584,24 @@ private fun FeaturedAiring(
                     enabled = !isIncrementing,
                     contentPadding = PaddingValues(horizontal = 10.dp),
                 ) { color ->
-                    if (isIncrementing) CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp, color = color)
-                    else Icon(Icons.Default.Add, stringResource(R.string.schedule_hero_action_watched), Modifier.size(16.dp), tint = color)
+                    if (isIncrementing) {
+                        CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp, color = color)
+                    } else {
+                        Icon(
+                            Icons.Default.Add,
+                            stringResource(R.string.schedule_hero_action_watched),
+                            Modifier.size(16.dp),
+                            tint = color,
+                        )
+                    }
                 }
             } else {
-                Icon(Icons.Default.ChevronRight, null, Modifier.size(17.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(
+                    Icons.Default.ChevronRight,
+                    null,
+                    Modifier.size(17.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }
@@ -540,8 +616,9 @@ private fun UpcomingAiringList(
     onIncrementEpisode: (AiringEpisode) -> Unit,
     onEditStatus: (AiringEpisode) -> Unit,
 ) {
+    val motion = LocalMotionPolicy.current
     AppMaterialSurface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().animateContentSize(animationSpec = motion.iosSpring()),
         material = AppMaterial.Grouped,
         shape = MaterialTheme.shapes.large,
     ) {
@@ -557,7 +634,7 @@ private fun UpcomingAiringList(
                 )
                 if (index < episodes.lastIndex) {
                     HorizontalDivider(
-                        modifier = Modifier.padding(start = 101.dp),
+                        modifier = Modifier.padding(start = 112.dp),
                         thickness = 0.5.dp,
                         color = MaterialTheme.colorScheme.outlineVariant,
                     )
@@ -579,23 +656,28 @@ private fun UpcomingAiringRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 64.dp)
+            .heightIn(min = 66.dp)
             .clickable(onClick = onClick)
-            .padding(horizontal = 9.dp, vertical = 5.dp),
+            .padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(7.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Column(
-            modifier = Modifier.width(43.dp),
+            modifier = Modifier.width(50.dp),
             horizontalAlignment = Alignment.Start,
         ) {
-            Text(airingTimeLabel(episode), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
+            Text(
+                airingTimeLabel(episode),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+            )
             CountdownText(episode.airingAtEpochSeconds)
         }
         MediaThumbnail.Small(
             url = episode.coverImageUrl,
             contentDescription = episode.title,
-            modifier = Modifier.size(width = 40.dp, height = 54.dp),
+            modifier = Modifier.size(width = 42.dp, height = 56.dp),
         )
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
             Text(
@@ -628,7 +710,12 @@ private fun UpcomingAiringRow(
                 Icon(Icons.Default.ChevronRight, stringResource(R.string.schedule_edit_status_action), Modifier.size(16.dp))
             }
         } else {
-            Icon(Icons.Default.ChevronRight, null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(
+                Icons.Default.ChevronRight,
+                null,
+                Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -644,8 +731,8 @@ fun AllTodayScreen(
     onBack: (() -> Unit)? = null,
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize().statusBarsPadding(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 32.dp),
+        modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 28.dp),
     ) {
         item {
             if (onBack != null) {
@@ -671,7 +758,7 @@ fun AllTodayScreen(
                 onEditStatus = { onEditStatus(episode) },
             )
             HorizontalDivider(
-                modifier = Modifier.padding(start = 101.dp),
+                modifier = Modifier.padding(start = 112.dp),
                 thickness = 0.5.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
             )
@@ -697,8 +784,8 @@ private fun SeeAllSheet(
         title = title,
     ) {
         LazyColumn(
-            modifier = Modifier.fillMaxWidth().heightIn(max = 620.dp),
-            contentPadding = PaddingValues(bottom = 6.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(max = 600.dp),
+            contentPadding = PaddingValues(bottom = 18.dp),
         ) {
             items(
                 items = episodes.sortedBy { it.airingAtEpochSeconds },
@@ -713,7 +800,7 @@ private fun SeeAllSheet(
                     onEditStatus = { onEditStatus(episode) },
                 )
                 HorizontalDivider(
-                    modifier = Modifier.padding(start = 101.dp),
+                    modifier = Modifier.padding(start = 112.dp),
                     thickness = 0.5.dp,
                     color = MaterialTheme.colorScheme.outlineVariant,
                 )
