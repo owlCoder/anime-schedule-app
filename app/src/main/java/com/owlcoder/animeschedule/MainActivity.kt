@@ -43,6 +43,7 @@ import androidx.navigation.compose.rememberNavController
 import com.owlcoder.animeschedule.core.locale.LocaleHelper
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
+import com.owlcoder.animeschedule.presentation.components.AppSystemBarAppearance
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
@@ -156,6 +157,10 @@ class MainActivity : AppCompatActivity() {
                         val currentRoute = backStackEntry?.destination?.route
                         val showBottomBar = shouldShowBottomBar(currentRoute) &&
                             !(currentRoute == Screen.Search.route && searchKeyboardFocused)
+
+                        AppSystemBarAppearance(
+                            statusBarOnImagery = currentRoute == Screen.Detail.ROUTE,
+                        )
 
                         LaunchedEffect(currentRoute) {
                             if (currentRoute != Screen.Search.route) searchKeyboardFocused = false
