@@ -1,6 +1,7 @@
 package com.owlcoder.animeschedule.presentation.screens.seasonal
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,9 +32,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -73,27 +76,33 @@ internal fun SeasonTabRow(
     modifier: Modifier = Modifier,
 ) {
     AppMaterialSurface(
-        modifier = modifier.fillMaxWidth().height(38.dp),
-        material = AppMaterial.Grouped,
-        shape = RoundedCornerShape(12.dp),
+        modifier = modifier.fillMaxWidth().height(40.dp),
+        material = AppMaterial.Interactive,
+        shape = RoundedCornerShape(11.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().height(38.dp).padding(3.dp),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier.fillMaxWidth().height(40.dp).padding(3.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             AnimeSeason.entries.forEach { season ->
-                val selected = season == currentSeason
+                val isSelected = season == currentSeason
                 Surface(
                     modifier = Modifier
                         .weight(1f)
-                        .height(32.dp)
+                        .height(34.dp)
                         .clickable(role = Role.Tab) { onSelect(season, currentYear) }
-                        .semantics { role = Role.Tab },
-                    shape = RoundedCornerShape(9.dp),
-                    color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.11f) else androidx.compose.ui.graphics.Color.Transparent,
+                        .semantics {
+                            role = Role.Tab
+                            selected = isSelected
+                        },
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
+                    contentColor = if (isSelected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
                     tonalElevation = 0.dp,
+                    shadowElevation = if (isSelected) 1.dp else 0.dp,
                 ) {
-                    SeasonLabel(season, selected)
+                    SeasonLabel(season, isSelected)
                 }
             }
         }
@@ -102,10 +111,10 @@ internal fun SeasonTabRow(
 
 @Composable
 private fun SeasonLabel(season: AnimeSeason, selected: Boolean) {
-    Box(Modifier.fillMaxWidth().height(32.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxWidth().height(34.dp), contentAlignment = Alignment.Center) {
         Text(
             text = stringResource(season.labelRes()),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
@@ -131,7 +140,7 @@ internal fun SeasonalAnimeCard(
             .clip(RoundedCornerShape(11.dp))
             .clickable(role = Role.Button, onClick = onClick)
             .semantics(mergeDescendants = true) { role = Role.Button },
-        verticalArrangement = Arrangement.spacedBy(3.dp),
+        verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         MediaThumbnail.Large(
             url = item.coverImageUrl,
@@ -140,15 +149,16 @@ internal fun SeasonalAnimeCard(
         )
         Text(
             text = item.title,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.SemiBold,
+            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
         if (meta.isNotEmpty()) {
             Text(
                 text = meta,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -182,9 +192,9 @@ internal fun SeasonalFilterSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 470.dp)
+                .heightIn(max = 430.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             FilterSection(stringResource(R.string.seasonal_sort_label)) {
                 SeasonalSortOrder.entries.forEach { order ->
@@ -217,6 +227,11 @@ internal fun SeasonalFilterSheet(
                     }
                 }
             }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = onDismiss) {
+                    Text("Done", fontWeight = FontWeight.SemiBold)
+                }
+            }
         }
     }
 }
@@ -227,17 +242,17 @@ private fun FilterSection(
     title: String,
     content: @Composable FlowRowScope.() -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = title,
             modifier = Modifier.padding(start = 2.dp),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(7.dp),
-            verticalArrangement = Arrangement.spacedBy(7.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             content = content,
         )
     }
@@ -245,24 +260,29 @@ private fun FilterSection(
 
 @Composable
 private fun CompactFilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    val contentColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    val contentColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
     Surface(
-        modifier = Modifier.height(34.dp).clickable(onClick = onClick),
+        modifier = Modifier.height(36.dp).clickable(onClick = onClick),
         shape = PillShape,
-        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)
-        else MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+        else MaterialTheme.colorScheme.surface,
         contentColor = contentColor,
+        border = BorderStroke(
+            0.5.dp,
+            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+            else MaterialTheme.colorScheme.outlineVariant,
+        ),
         tonalElevation = 0.dp,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp),
+            modifier = Modifier.padding(horizontal = 13.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
-            if (selected) Icon(Icons.Default.Check, null, Modifier.size(13.dp))
+            if (selected) Icon(Icons.Default.Check, null, Modifier.size(14.dp))
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelLarge,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                 color = contentColor,
                 maxLines = 1,
