@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -32,21 +31,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.ui.theme.AppSpacing
+import com.owlcoder.animeschedule.ui.theme.GlassTokens
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
 @Composable
 fun AppBackground(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Box(
-        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         content = { content() },
     )
 }
@@ -58,7 +62,9 @@ fun AppScreen(
 ) {
     AppBackground {
         Column(
-            modifier = modifier.fillMaxSize().padding(horizontal = AppSpacing.screen),
+            modifier = modifier
+                .fillMaxSize()
+                .padding(horizontal = AppSpacing.screen),
             content = content,
         )
     }
@@ -72,7 +78,9 @@ fun SectionHeader(
     onAction: (() -> Unit)? = null,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth().padding(horizontal = AppSpacing.xs),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = AppSpacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -84,7 +92,10 @@ fun SectionHeader(
             overflow = TextOverflow.Ellipsis,
         )
         if (actionLabel != null && onAction != null) {
-            TextButton(onClick = onAction, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 7.dp)) {
+            TextButton(
+                onClick = onAction,
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 7.dp),
+            ) {
                 Text(actionLabel)
             }
         }
@@ -102,15 +113,15 @@ fun AppSearchField(
     onSearch: (() -> Unit)? = null,
     enabled: Boolean = true,
 ) {
-    val shape = RoundedCornerShape(13.dp)
+    val shape = ContinuousRoundedShape(GlassTokens.controlRadius)
+    val clearDescription = stringResource(R.string.search_clear_recent)
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 42.dp)
-            .background(MaterialTheme.colorScheme.surface, shape)
+            .heightIn(min = 44.dp)
+            .background(appMaterialColor(AppMaterial.Interactive), shape)
             .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
-            .semantics { contentDescription = placeholder }
-            .padding(start = 11.dp, end = 5.dp),
+            .padding(start = 11.dp, end = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (leadingIcon != null) {
@@ -128,9 +139,16 @@ fun AppSearchField(
             modifier = Modifier.weight(1f),
             enabled = enabled,
             singleLine = true,
-            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
-            keyboardOptions = KeyboardOptions(imeAction = if (onSearch != null) ImeAction.Search else ImeAction.Default),
-            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { onSearch?.invoke() }),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                color = MaterialTheme.colorScheme.onSurface,
+            ),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+            keyboardOptions = KeyboardOptions(
+                imeAction = if (onSearch != null) ImeAction.Search else ImeAction.Default,
+            ),
+            keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                onSearch = { onSearch?.invoke() },
+            ),
             decorationBox = { inner ->
                 Box(contentAlignment = Alignment.CenterStart) {
                     if (value.isEmpty()) {
@@ -145,12 +163,15 @@ fun AppSearchField(
             },
         )
         if (value.isNotEmpty() && onClear != null) {
-            IconButton(onClick = onClear, modifier = Modifier.size(32.dp)) {
+            IconButton(
+                onClick = onClear,
+                modifier = Modifier.size(44.dp),
+            ) {
                 Icon(
                     Icons.Default.Close,
-                    contentDescription = "Clear",
+                    contentDescription = clearDescription,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(15.dp),
+                    modifier = Modifier.size(16.dp),
                 )
             }
         }
@@ -234,7 +255,9 @@ fun AppStatusPill(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
     ) {
-        if (icon != null) Icon(icon, null, Modifier.size(15.dp), tint = contentColor)
+        if (icon != null) {
+            Icon(icon, null, Modifier.size(15.dp), tint = contentColor)
+        }
         Text(label, style = MaterialTheme.typography.labelMedium, color = contentColor)
     }
 }
@@ -270,7 +293,11 @@ fun AppIconButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    IconButton(onClick = onClick, modifier = modifier.semantics { role = Role.Button }, enabled = enabled) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier.semantics { role = Role.Button },
+        enabled = enabled,
+    ) {
         Icon(icon, contentDescription = contentDescription)
     }
 }
