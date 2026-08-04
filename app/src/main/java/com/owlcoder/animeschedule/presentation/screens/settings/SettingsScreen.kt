@@ -5,9 +5,9 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ColorLens
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayCircle
@@ -41,14 +42,12 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Update
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -67,24 +66,34 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import com.owlcoder.animeschedule.BuildConfig
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import com.owlcoder.animeschedule.data.local.datastore.CacheRetentionPolicy
 import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
+import com.owlcoder.animeschedule.presentation.components.AppButton
+import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
 import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
+import com.owlcoder.animeschedule.presentation.components.AppMaterial
+import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
+import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
+import com.owlcoder.animeschedule.presentation.components.GlassSurface
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
+import com.owlcoder.animeschedule.ui.theme.GlassBlur
+import com.owlcoder.animeschedule.ui.theme.GlassTone
+import com.owlcoder.animeschedule.ui.theme.PillShape
 import java.time.ZoneId
 
-private val SettingsGroupShape = RoundedCornerShape(16.dp)
-private val SettingsRowIconShape = RoundedCornerShape(8.dp)
-private val SettingsAccentRed = Color(0xFFFF453A)
+private val SettingsGroupShape = ContinuousRoundedShape(15.dp)
+private val SettingsIconShape = RoundedCornerShape(8.dp)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,19 +134,19 @@ fun SettingsScreen(
                 start = 16.dp,
                 end = 16.dp,
                 top = 6.dp,
-                bottom = LocalNavBarHeight.current + 20.dp,
+                bottom = LocalNavBarHeight.current + 34.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(13.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
                 AppLargeHeader(
                     title = stringResource(R.string.settings_title),
-                    modifier = Modifier.padding(bottom = 2.dp),
+                    modifier = Modifier.padding(bottom = 1.dp),
                 )
             }
 
             item {
-                SettingsSection(title = stringResource(R.string.settings_section_account)) {
+                SettingsSection(stringResource(R.string.settings_section_account)) {
                     SettingsGroup {
                         AccountRow(
                             isLoggedIn = uiState.isLoggedIn,
@@ -155,14 +164,14 @@ fun SettingsScreen(
                             text = loginError.orEmpty(),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(start = 12.dp, top = 5.dp),
+                            modifier = Modifier.padding(start = 11.dp, top = 4.dp),
                         )
                     }
                 }
             }
 
             item {
-                SettingsSection(title = "Appearance") {
+                SettingsSection("Appearance") {
                     SettingsGroup {
                         SettingsRow(
                             icon = Icons.Default.ColorLens,
@@ -175,16 +184,14 @@ fun SettingsScreen(
             }
 
             item {
-                SettingsSection(title = stringResource(R.string.settings_notifications)) {
+                SettingsSection(stringResource(R.string.settings_notifications)) {
                     SettingsGroup {
                         SettingsRow(
                             icon = Icons.Default.Notifications,
                             title = stringResource(R.string.settings_notifications),
                             value = if (uiState.notificationsEnabled) {
                                 "${stringResource(R.string.settings_notifications_on)} · ${notifOffsetLabel(uiState.notificationOffsetMinutes)}"
-                            } else {
-                                stringResource(R.string.settings_notifications_off)
-                            },
+                            } else stringResource(R.string.settings_notifications_off),
                             onClick = { showNotifPicker = true },
                         )
                     }
@@ -192,7 +199,7 @@ fun SettingsScreen(
             }
 
             item {
-                SettingsSection(title = "Schedule") {
+                SettingsSection("Schedule") {
                     SettingsGroup {
                         SettingsRow(
                             icon = Icons.Default.Schedule,
@@ -205,7 +212,7 @@ fun SettingsScreen(
             }
 
             item {
-                SettingsSection(title = "Sources") {
+                SettingsSection("Sources") {
                     SettingsGroup {
                         SettingsRow(
                             icon = Icons.Default.PlayCircle,
@@ -218,7 +225,7 @@ fun SettingsScreen(
             }
 
             item {
-                SettingsSection(title = "Storage") {
+                SettingsSection("Storage") {
                     SettingsGroup {
                         SettingsRow(
                             icon = Icons.Default.Storage,
@@ -228,18 +235,15 @@ fun SettingsScreen(
                         )
                         SettingsDivider()
                         SettingsRow(
-                            icon = Icons.Default.Storage,
-                            iconTint = SettingsAccentRed,
+                            icon = Icons.Default.DeleteSweep,
+                            iconColor = MaterialTheme.colorScheme.error,
                             title = "Clear Cache",
                             value = cacheActionMessage ?: "Remove temporary images and stale data",
                             onClick = { showClearCacheConfirm = true },
                             enabled = !isClearingCache,
                             trailing = {
                                 if (isClearingCache) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(17.dp),
-                                        strokeWidth = 2.dp,
-                                    )
+                                    CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                                 }
                             },
                         )
@@ -248,7 +252,7 @@ fun SettingsScreen(
             }
 
             item {
-                SettingsSection(title = "Language") {
+                SettingsSection("Language") {
                     SettingsGroup {
                         SettingsRow(
                             icon = Icons.Default.Translate,
@@ -261,7 +265,7 @@ fun SettingsScreen(
             }
 
             item {
-                SettingsSection(title = "About") {
+                SettingsSection("About") {
                     SettingsGroup {
                         SettingsRow(
                             icon = Icons.Default.Update,
@@ -317,22 +321,11 @@ fun SettingsScreen(
         )
     }
     if (showClearCacheConfirm) {
-        AlertDialog(
-            onDismissRequest = { showClearCacheConfirm = false },
-            shape = RoundedCornerShape(22.dp),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            title = { Text("Clear cache?") },
-            text = { Text("Temporary images and stale cached data will be removed. Your MAL list, tokens and settings stay safe.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showClearCacheConfirm = false
-                    settingsViewModel.clearCacheNow()
-                }) { Text("Clear") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showClearCacheConfirm = false }) {
-                    Text(stringResource(R.string.common_cancel))
-                }
+        ClearCacheSheet(
+            onDismiss = { showClearCacheConfirm = false },
+            onConfirm = {
+                showClearCacheConfirm = false
+                settingsViewModel.clearCacheNow()
             },
         )
     }
@@ -348,17 +341,14 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SettingsSection(
-    title: String,
-    content: @Composable () -> Unit,
-) {
+private fun SettingsSection(title: String, content: @Composable () -> Unit) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = title.uppercase(),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.74f),
-            modifier = Modifier.padding(start = 12.dp, bottom = 5.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+            modifier = Modifier.padding(start = 11.dp, bottom = 4.dp),
         )
         content()
     }
@@ -366,11 +356,10 @@ private fun SettingsSection(
 
 @Composable
 private fun SettingsGroup(content: @Composable () -> Unit) {
-    Surface(
+    AppMaterialSurface(
         modifier = Modifier.fillMaxWidth(),
+        material = AppMaterial.Grouped,
         shape = SettingsGroupShape,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 0.dp,
     ) {
         Column(modifier = Modifier.fillMaxWidth()) { content() }
     }
@@ -387,7 +376,7 @@ private fun AccountRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp)
+            .height(58.dp)
             .clickable(enabled = !isLoggingIn, onClick = onClick)
             .padding(horizontal = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -400,17 +389,15 @@ private fun AccountRow(
                 contentScale = ContentScale.Crop,
             )
         } else {
-            Surface(
+            GlassSurface(
                 modifier = Modifier.size(34.dp),
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
+                tone = GlassTone.Neutral,
+                blur = GlassBlur.None,
             ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(6.dp),
-                )
+                Box(Modifier.size(34.dp), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.AccountCircle, null, Modifier.size(22.dp))
+                }
             }
         }
         Column(
@@ -428,11 +415,10 @@ private fun AccountRow(
                 text = if (isLoggedIn) "Signed in" else "Not signed in",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
             )
         }
         if (isLoggingIn) {
-            CircularProgressIndicator(modifier = Modifier.size(17.dp), strokeWidth = 2.dp)
+            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
         } else {
             val actionColor = if (isLoggedIn) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary
             Text(
@@ -457,38 +443,35 @@ private fun SettingsRow(
     title: String,
     value: String,
     onClick: () -> Unit,
-    iconTint: Color = MaterialTheme.colorScheme.onSurface,
     enabled: Boolean = true,
+    iconColor: Color = MaterialTheme.colorScheme.onSurface,
     trailing: @Composable (() -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 54.dp)
+            .heightIn(min = 52.dp)
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 5.dp),
+            .padding(horizontal = 10.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Surface(
-            modifier = Modifier.size(29.dp),
-            shape = SettingsRowIconShape,
-            color = iconTint.copy(alpha = if (iconTint == SettingsAccentRed) 0.16f else 0.10f),
+        GlassSurface(
+            modifier = Modifier.size(30.dp),
+            shape = SettingsIconShape,
+            tone = GlassTone.Neutral,
+            blur = GlassBlur.None,
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.padding(6.dp),
-            )
+            Box(Modifier.size(30.dp), contentAlignment = Alignment.Center) {
+                Icon(icon, null, Modifier.size(17.dp), tint = iconColor)
+            }
         }
         Column(
-            modifier = Modifier.weight(1f).padding(start = 10.dp, end = 7.dp),
+            modifier = Modifier.weight(1f).padding(start = 10.dp, end = 6.dp),
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Normal,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -496,7 +479,7 @@ private fun SettingsRow(
                 Text(
                     text = value,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.84f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -505,10 +488,10 @@ private fun SettingsRow(
         trailing?.invoke()
         if (trailing == null) {
             Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
+                Icons.Default.ChevronRight,
+                null,
+                Modifier.size(16.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.58f),
-                modifier = Modifier.size(17.dp),
             )
         }
     }
@@ -517,9 +500,9 @@ private fun SettingsRow(
 @Composable
 private fun SettingsDivider() {
     HorizontalDivider(
-        modifier = Modifier.padding(start = 49.dp),
+        modifier = Modifier.padding(start = 51.dp),
         thickness = 0.5.dp,
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.34f),
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f),
     )
 }
 
@@ -548,50 +531,35 @@ private fun PickerSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         title = title,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 560.dp)
-                .clip(SettingsGroupShape)
-                .background(MaterialTheme.colorScheme.surfaceContainerLow)
-                .verticalScroll(rememberScrollState()),
-            content = content,
-        )
+        AppMaterialSurface(
+            modifier = Modifier.fillMaxWidth().heightIn(max = 520.dp),
+            material = AppMaterial.Grouped,
+            shape = SettingsGroupShape,
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                content = content,
+            )
+        }
     }
 }
 
 @Composable
-private fun PickerRow(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
+private fun PickerRow(label: String, selected: Boolean, onClick: () -> Unit) {
     Column {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .clickable(onClick = onClick)
-                .padding(horizontal = 13.dp),
+            modifier = Modifier.fillMaxWidth().height(46.dp).clickable(onClick = onClick).padding(horizontal = 13.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 modifier = Modifier.weight(1f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (selected) {
-                Icon(
-                    Icons.Default.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.onSurface,
-                )
-            }
+            if (selected) Icon(Icons.Default.Check, null, Modifier.size(17.dp))
         }
         HorizontalDivider(
             modifier = Modifier.padding(start = 13.dp),
@@ -601,20 +569,11 @@ private fun PickerRow(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ThemeBottomSheet(
-    current: ThemeMode,
-    onSelect: (ThemeMode) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    PickerSheet(title = "Theme", onDismiss = onDismiss) {
+private fun ThemeBottomSheet(current: ThemeMode, onSelect: (ThemeMode) -> Unit, onDismiss: () -> Unit) {
+    PickerSheet("Theme", onDismiss) {
         ThemeMode.entries.forEach { mode ->
-            PickerRow(
-                label = themeModeLabel(mode),
-                selected = current == mode,
-                onClick = { onSelect(mode) },
-            )
+            PickerRow(themeModeLabel(mode), current == mode) { onSelect(mode) }
         }
     }
 }
@@ -629,7 +588,6 @@ fun notifOffsetLabel(minutes: Int): String = when {
     else -> stringResource(R.string.notif_offset_after_hour, minutes / 60)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NotifBottomSheet(
     enabled: Boolean,
@@ -650,50 +608,36 @@ private fun NotifBottomSheet(
         }
     }
 
-    PickerSheet(title = stringResource(R.string.settings_notifications), onDismiss = onDismiss) {
+    PickerSheet(stringResource(R.string.settings_notifications), onDismiss) {
         Row(
-            modifier = Modifier.fillMaxWidth().height(50.dp).padding(horizontal = 13.dp),
+            modifier = Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 13.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                stringResource(R.string.onboarding_notif_enable),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyLarge,
-            )
+            Text(stringResource(R.string.onboarding_notif_enable), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
             AppSwitch(checked = enabled, onCheckedChange = ::toggle)
         }
         if (enabled) {
-            HorizontalDivider(
-                modifier = Modifier.padding(start = 13.dp),
-                thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.34f),
-            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.34f))
             Text(
                 text = stringResource(R.string.notif_offset_title),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(start = 13.dp, top = 12.dp, bottom = 3.dp),
+                modifier = Modifier.padding(start = 13.dp, top = 10.dp, bottom = 3.dp),
             )
             notifOffsetOptions.forEach { minutes ->
-                PickerRow(
-                    label = notifOffsetLabel(minutes),
-                    selected = minutes == currentOffset,
-                    onClick = { onOffsetSelect(minutes) },
-                )
+                PickerRow(notifOffsetLabel(minutes), minutes == currentOffset) { onOffsetSelect(minutes) }
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CacheRetentionBottomSheet(
     currentRetentionDays: Int,
     onSelect: (Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    PickerSheet(title = "Cache Retention", onDismiss = onDismiss) {
+    PickerSheet("Cache Retention", onDismiss) {
         Text(
             text = "Older temporary data is removed automatically during daily maintenance.",
             style = MaterialTheme.typography.bodySmall,
@@ -701,38 +645,28 @@ private fun CacheRetentionBottomSheet(
             modifier = Modifier.padding(13.dp),
         )
         CacheRetentionPolicy.supportedRetentionDays.forEach { days ->
-            PickerRow(
-                label = "$days days",
-                selected = currentRetentionDays == days,
-                onClick = { onSelect(days) },
-            )
+            PickerRow("$days days", currentRetentionDays == days) { onSelect(days) }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LanguageBottomSheet(
     currentLanguage: AppLanguage,
     onSelect: (AppLanguage) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    PickerSheet(title = stringResource(R.string.settings_language), onDismiss = onDismiss) {
+    PickerSheet(stringResource(R.string.settings_language), onDismiss) {
         listOf(
             AppLanguage.SYSTEM to stringResource(R.string.settings_language_system),
             AppLanguage.ENGLISH to stringResource(R.string.settings_language_english),
             AppLanguage.SERBIAN_LATIN to stringResource(R.string.settings_language_serbian),
         ).forEach { (language, label) ->
-            PickerRow(
-                label = label,
-                selected = currentLanguage == language,
-                onClick = { onSelect(language) },
-            )
+            PickerRow(label, currentLanguage == language) { onSelect(language) }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TimezonePickerDialog(
     currentTimezoneId: String,
@@ -743,33 +677,151 @@ private fun TimezonePickerDialog(
     var selected by remember(currentTimezoneId) {
         mutableStateOf(currentTimezoneId.ifEmpty { ZoneId.systemDefault().id })
     }
-
     AppSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         title = stringResource(R.string.timezone_title),
         trailingContent = {
             TextButton(onClick = { onConfirm(selected) }) {
-                Text(stringResource(R.string.timezone_confirm))
+                Text(stringResource(R.string.timezone_confirm), fontWeight = FontWeight.SemiBold)
             }
         },
     ) {
         LazyColumn(
             state = rememberLazyListState(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 540.dp)
-                .clip(SettingsGroupShape)
-                .background(MaterialTheme.colorScheme.surfaceContainerLow),
+            modifier = Modifier.fillMaxWidth().heightIn(max = 520.dp),
         ) {
             items(zones) { zone ->
-                PickerRow(
-                    label = zone,
-                    selected = selected == zone,
-                    onClick = { selected = zone },
+                PickerRow(zone, selected == zone) { selected = zone }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ClearCacheSheet(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    AppSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        title = "Clear cache?",
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text(
+                text = "Temporary images and stale cached data will be removed. Your MAL list, tokens and settings stay safe.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                AppButton(
+                    label = stringResource(R.string.common_cancel),
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f),
+                    variant = AppButtonVariant.Secondary,
+                )
+                AppButton(
+                    label = "Clear",
+                    onClick = onConfirm,
+                    modifier = Modifier.weight(1f),
+                    variant = AppButtonVariant.Destructive,
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ChangelogBottomSheet(onDismiss: () -> Unit) {
+    AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.settings_changelog)) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("Version ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            listOf(
+                "Neutral liquid-glass navigation and controls",
+                "Seven-day schedule selector",
+                "Compact status editor, filters and settings",
+                "Improved detail and search layouts",
+            ).forEach { item ->
+                Row(horizontalArrangement = Arrangement.spacedBy(9.dp), verticalAlignment = Alignment.Top) {
+                    Text("•", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(item, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AboutBottomSheet(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    AppSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        title = stringResource(R.string.settings_about),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            AppMaterialSurface(
+                modifier = Modifier.size(56.dp),
+                material = AppMaterial.Elevated,
+                shape = ContinuousRoundedShape(16.dp),
+            ) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("AS", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                }
+            }
+            Text("AnimeSchedule", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Track anime airing schedules, all in one place",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            GlassSurface(shape = PillShape, tone = GlassTone.Neutral, blur = GlassBlur.None) {
+                Text(
+                    text = "Version ${BuildConfig.VERSION_NAME}",
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            AppMaterialSurface(
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                material = AppMaterial.Grouped,
+                shape = SettingsGroupShape,
+            ) {
+                Column {
+                    AboutRow("Version", BuildConfig.VERSION_NAME)
+                    SettingsDivider()
+                    AboutRow("Build", BuildConfig.VERSION_CODE.toString())
+                    SettingsDivider()
+                    AboutRow("Platform", "Android ${Build.VERSION.RELEASE}+")
+                    SettingsDivider()
+                    AboutRow("Package", context.packageName)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AboutRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().height(46.dp).padding(horizontal = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        Text(
+            value,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
