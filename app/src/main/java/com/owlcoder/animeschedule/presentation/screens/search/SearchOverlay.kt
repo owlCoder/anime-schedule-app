@@ -70,6 +70,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
@@ -179,7 +180,9 @@ fun SearchScreen(
         }
 
         Row(
-            modifier = Modifier.fillMaxWidth().animateContentSize(animationSpec = motion.iosSpring()),
+            modifier = Modifier
+                .fillMaxWidth()
+                .animateContentSize(animationSpec = motion.iosSpring()),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp),
         ) {
@@ -230,6 +233,7 @@ fun SearchScreen(
             query = query,
             recentSearches = recentSearches,
             uiState = uiState,
+            bottomPadding = if (isFocused) 24.dp else 112.dp,
             onClearRecent = viewModel::clearRecentSearches,
             onRecentClick = { recent ->
                 query = recent
@@ -304,7 +308,7 @@ private fun SearchField(
     val motion = LocalMotionPolicy.current
     AppMaterialSurface(
         modifier = modifier
-            .height(42.dp)
+            .height(44.dp)
             .animateContentSize(animationSpec = motion.iosSpring())
             .clickable(
                 interactionSource = interactionSource,
@@ -315,7 +319,9 @@ private fun SearchField(
         shape = RoundedCornerShape(13.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxSize().padding(start = 11.dp, end = 5.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 11.dp, end = 0.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
@@ -325,7 +331,9 @@ private fun SearchField(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Box(
-                modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 if (query.isEmpty()) {
@@ -365,22 +373,29 @@ private fun SearchField(
                     animationSpec = motion.iosTween(IosMotion.Quick),
                 ) + fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)),
             ) {
-                Surface(
+                Box(
                     modifier = Modifier
-                        .size(28.dp)
-                        .clickable(onClick = onClear)
-                        .semantics { role = Role.Button },
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    tonalElevation = 0.dp,
+                        .size(44.dp)
+                        .clickable(
+                            role = Role.Button,
+                            onClick = onClear,
+                        ),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Box(Modifier.size(28.dp), contentAlignment = Alignment.Center) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = stringResource(R.string.search_clear_recent),
-                            modifier = Modifier.size(14.dp),
-                        )
+                    Surface(
+                        modifier = Modifier.size(28.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        tonalElevation = 0.dp,
+                    ) {
+                        Box(Modifier.size(28.dp), contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = stringResource(R.string.search_clear_recent),
+                                modifier = Modifier.size(14.dp),
+                            )
+                        }
                     }
                 }
             }
@@ -393,6 +408,7 @@ private fun SearchContent(
     query: String,
     recentSearches: List<String>,
     uiState: SearchUiState,
+    bottomPadding: Dp,
     onClearRecent: () -> Unit,
     onRecentClick: (String) -> Unit,
     onAnimeClick: (AnimeSearchResult) -> Unit,
@@ -452,6 +468,7 @@ private fun SearchContent(
                 results = uiState.results,
                 hasNextPage = uiState.hasNextPage,
                 isLoadingMore = uiState.isLoadingMore,
+                bottomPadding = bottomPadding,
                 onAnimeClick = onAnimeClick,
                 onEditStatus = onEditStatus,
                 onLoadMore = onLoadMore,
@@ -468,7 +485,9 @@ private fun RecentSearches(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -529,13 +548,14 @@ private fun SearchResults(
     results: List<AnimeSearchResult>,
     hasNextPage: Boolean,
     isLoadingMore: Boolean,
+    bottomPadding: Dp,
     onAnimeClick: (AnimeSearchResult) -> Unit,
     onEditStatus: (AnimeSearchResult) -> Unit,
     onLoadMore: () -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 30.dp),
+        contentPadding = PaddingValues(bottom = bottomPadding),
     ) {
         item(key = "results_group") {
             InsetGroup {
@@ -555,7 +575,9 @@ private fun SearchResults(
                     if (hasNextPage && !isLoadingMore) onLoadMore()
                 }
                 Box(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -577,7 +599,10 @@ private fun SearchLoadingState() {
                 )
             }
             Row(
-                modifier = Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 10.dp, vertical = 5.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
@@ -617,7 +642,9 @@ private fun CompactSearchState(
         icon = icon,
         title = title,
         subtitle = subtitle,
-        modifier = Modifier.fillMaxWidth().height(200.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp),
         actionLabel = actionLabel,
         onAction = onAction,
     )
