@@ -13,26 +13,26 @@ enum class GlassBlur(val radius: Dp) {
     Medium(18.dp),
 }
 
-/** Optical tokens shared by every floating liquid-glass control. */
+/** Optical tokens shared by floating navigation and interactive Liquid Glass controls. */
 object GlassTokens {
     val hairline: Dp = 0.5.dp
 
-    val highlight = Color.White.copy(alpha = 0.24f)
-    val darkHighlight = Color.White.copy(alpha = 0.09f)
-    val lowlight = Color.Black.copy(alpha = 0.065f)
-    val shadow = Color.Black.copy(alpha = 0.15f)
+    val highlight = Color.White.copy(alpha = 0.20f)
+    val darkHighlight = Color.White.copy(alpha = 0.08f)
+    val lowlight = Color.Black.copy(alpha = 0.055f)
+    val shadow = Color.Black.copy(alpha = 0.14f)
 
-    // Dark glass is deliberately translucent instead of a nearly-opaque charcoal card.
-    val neutralFillLight = Color.White.copy(alpha = 0.68f)
-    val neutralFillDark = Color.White.copy(alpha = 0.080f)
-    val selectedFillLight = Color.White.copy(alpha = 0.90f)
-    val selectedFillDark = Color.White.copy(alpha = 0.165f)
-    val interactiveFillLight = Color.White.copy(alpha = 0.50f)
-    val interactiveFillDark = Color.White.copy(alpha = 0.105f)
+    // Regular glass stays lightweight. Selected glass is only slightly thicker, never opaque.
+    val neutralFillLight = Color.White.copy(alpha = 0.46f)
+    val neutralFillDark = Color.White.copy(alpha = 0.085f)
+    val selectedFillLight = Color.White.copy(alpha = 0.62f)
+    val selectedFillDark = Color.White.copy(alpha = 0.145f)
+    val interactiveFillLight = Color.White.copy(alpha = 0.40f)
+    val interactiveFillDark = Color.White.copy(alpha = 0.100f)
 
     val maxBackdropBlurRadius: Dp = 20.dp
 
-    val chromeRadius: Dp = 26.dp
+    val chromeRadius: Dp = 25.dp
     val sheetRadius: Dp = 28.dp
     val contentRadius: Dp = 18.dp
     val groupRadius: Dp = 16.dp
