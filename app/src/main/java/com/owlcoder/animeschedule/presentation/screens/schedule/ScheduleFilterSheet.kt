@@ -1,21 +1,20 @@
 package com.owlcoder.animeschedule.presentation.screens.schedule
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -30,36 +29,39 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
+import com.owlcoder.animeschedule.presentation.components.AppButton
+import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
+import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
+import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.InsetListRow
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
-import com.owlcoder.animeschedule.presentation.components.appMaterialColor
-import com.owlcoder.animeschedule.presentation.components.iosSpring
 import com.owlcoder.animeschedule.presentation.components.iosTween
-import com.owlcoder.animeschedule.ui.theme.PillShape
 
-private val FORMAT_LABELS = mapOf(
-    "TV" to "TV",
-    "TV_SHORT" to "TV Short",
-    "MOVIE" to "Film",
-    "SPECIAL" to "Special",
-    "OVA" to "OVA",
-    "ONA" to "ONA",
-    "MUSIC" to "Music",
+private val FORMAT_LABEL_RES = mapOf(
+    "TV" to R.string.format_tv,
+    "TV_SHORT" to R.string.format_tv_short,
+    "MOVIE" to R.string.format_movie,
+    "SPECIAL" to R.string.format_special,
+    "OVA" to R.string.format_ova,
+    "ONA" to R.string.format_ona,
+    "MUSIC" to R.string.format_music,
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ScheduleFilterSheet(
     filter: ScheduleFilter,
@@ -72,6 +74,8 @@ fun ScheduleFilterSheet(
     onClear: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val selectionCount = filter.genres.size + filter.formats.size + if (filter.onlyMyList) 1 else 0
+
     AppSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -82,7 +86,7 @@ fun ScheduleFilterSheet(
                 enabled = filter.isActive,
             ) {
                 Text(
-                    stringResource(R.string.filter_reset),
+                    text = stringResource(R.string.filter_reset),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -92,89 +96,108 @@ fun ScheduleFilterSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 520.dp)
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .heightIn(max = 590.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            if (isLoggedIn) {
-                InsetGroup {
-                    InsetListRow(
-                        label = stringResource(R.string.filter_only_my_list),
-                        supportingText = stringResource(R.string.filter_only_my_list_subtitle),
-                        trailingContent = {
-                            AppSwitch(
-                                checked = filter.onlyMyList,
-                                onCheckedChange = onOnlyMyListChange,
-                            )
-                        },
+            if (filter.isActive) {
+                AppMaterialSurface(
+                    modifier = Modifier.fillMaxWidth(),
+                    material = AppMaterial.Interactive,
+                    shape = ContinuousRoundedShape(13.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.seasonal_filter_selected_count, selectionCount),
+                        modifier = Modifier.padding(horizontal = 13.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
 
-            if (availableFormats.isNotEmpty()) {
-                EqualOptionGrid(
-                    title = stringResource(R.string.filter_format),
-                    options = availableFormats,
-                    label = { FORMAT_LABELS[it] ?: it },
-                    selected = { it in filter.formats },
-                    onClick = onFormatToggle,
-                )
-            }
-
-            if (availableGenres.isNotEmpty()) {
-                EqualOptionGrid(
-                    title = stringResource(R.string.filter_genre),
-                    options = availableGenres,
-                    label = { it },
-                    selected = { it in filter.genres },
-                    onClick = onGenreToggle,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun <T> EqualOptionGrid(
-    title: String,
-    options: List<T>,
-    label: (T) -> String,
-    selected: (T) -> Boolean,
-    onClick: (T) -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(
-            text = title,
-            modifier = Modifier.padding(start = 2.dp, bottom = 1.dp),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.SemiBold,
-        )
-        options.chunked(2).forEach { rowItems ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(7.dp),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f, fill = false)
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 2.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                rowItems.forEach { option ->
-                    EqualOption(
-                        label = label(option),
-                        selected = selected(option),
-                        modifier = Modifier.weight(1f),
-                        onClick = { onClick(option) },
-                    )
+                if (isLoggedIn) {
+                    InsetGroup {
+                        InsetListRow(
+                            label = stringResource(R.string.filter_only_my_list),
+                            supportingText = stringResource(R.string.filter_only_my_list_subtitle),
+                            trailingContent = {
+                                AppSwitch(
+                                    checked = filter.onlyMyList,
+                                    onCheckedChange = onOnlyMyListChange,
+                                )
+                            },
+                        )
+                    }
                 }
-                if (rowItems.size == 1) Spacer(Modifier.weight(1f))
+
+                if (availableFormats.isNotEmpty()) {
+                    FilterSectionTitle(stringResource(R.string.filter_format))
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(7.dp),
+                        verticalArrangement = Arrangement.spacedBy(7.dp),
+                    ) {
+                        availableFormats.forEach { format ->
+                            CompactFilterChip(
+                                label = formatLabel(format),
+                                selected = format in filter.formats,
+                                onClick = { onFormatToggle(format) },
+                            )
+                        }
+                    }
+                }
+
+                if (availableGenres.isNotEmpty()) {
+                    FilterSectionTitle(stringResource(R.string.filter_genre))
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(7.dp),
+                        verticalArrangement = Arrangement.spacedBy(7.dp),
+                    ) {
+                        availableGenres.forEach { genre ->
+                            CompactFilterChip(
+                                label = localizedGenreLabel(genre),
+                                selected = genre in filter.genres,
+                                onClick = { onGenreToggle(genre) },
+                            )
+                        }
+                    }
+                }
             }
+
+            AppButton(
+                label = stringResource(R.string.seasonal_filter_apply),
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth(),
+                variant = AppButtonVariant.Primary,
+            )
         }
     }
 }
 
 @Composable
-private fun EqualOption(
+private fun FilterSectionTitle(title: String) {
+    Text(
+        text = title,
+        modifier = Modifier.padding(start = 2.dp),
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
+}
+
+@Composable
+private fun CompactFilterChip(
     label: String,
     selected: Boolean,
-    modifier: Modifier,
     onClick: () -> Unit,
 ) {
     val motion = LocalMotionPolicy.current
@@ -185,82 +208,86 @@ private fun EqualOption(
             MaterialTheme.colorScheme.onSurfaceVariant
         },
         animationSpec = motion.iosTween(IosMotion.Standard),
-        label = "schedule-filter-color",
+        label = "schedule-filter-chip-color",
     )
-    val fill by animateColorAsState(
+    val containerColor by animateColorAsState(
         targetValue = if (selected) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)
         } else {
-            appMaterialColor(AppMaterial.Interactive)
+            MaterialTheme.colorScheme.surface
         },
         animationSpec = motion.iosTween(IosMotion.Standard),
-        label = "schedule-filter-fill",
-    )
-    val checkProgress by animateFloatAsState(
-        targetValue = if (selected) 1f else 0f,
-        animationSpec = if (selected) motion.iosSpring() else motion.iosTween(IosMotion.Quick),
-        label = "schedule-filter-check",
+        label = "schedule-filter-chip-fill",
     )
 
-    Box(
-        modifier = modifier
-            .sizeIn(minHeight = 44.dp)
-            .toggleable(
-                value = selected,
-                role = Role.Checkbox,
-                onValueChange = { onClick() },
-            ),
-        contentAlignment = Alignment.Center,
+    Surface(
+        modifier = Modifier
+            .height(36.dp)
+            .clickable(role = Role.Checkbox, onClick = onClick)
+            .semantics { this.selected = selected },
+        shape = ContinuousRoundedShape(11.dp),
+        color = containerColor,
+        contentColor = contentColor,
+        border = BorderStroke(
+            width = 0.6.dp,
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.62f)
+            } else {
+                MaterialTheme.colorScheme.outlineVariant
+            },
+        ),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(36.dp),
-            shape = PillShape,
-            color = fill,
-            contentColor = contentColor,
-            border = BorderStroke(
-                0.5.dp,
-                if (selected) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
-                } else {
-                    MaterialTheme.colorScheme.outlineVariant
-                },
-            ),
-            tonalElevation = 0.dp,
+        Row(
+            modifier = Modifier.padding(horizontal = 11.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                Box(
-                    modifier = Modifier.size(18.dp),
-                    contentAlignment = Alignment.CenterStart,
-                ) {
-                    Icon(
-                        Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(14.dp)
-                            .graphicsLayer {
-                                alpha = checkProgress
-                                scaleX = 0.72f + 0.28f * checkProgress
-                                scaleY = 0.72f + 0.28f * checkProgress
-                            },
-                    )
-                }
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = contentColor,
+            if (selected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = contentColor,
                 )
             }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                color = contentColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
+}
+
+@Composable
+private fun formatLabel(format: String): String =
+    FORMAT_LABEL_RES[format]?.let { stringResource(it) } ?: format
+
+@Composable
+private fun localizedGenreLabel(genre: String): String = when (genre.lowercase()) {
+    "action" -> stringResource(R.string.genre_action)
+    "adventure" -> stringResource(R.string.genre_adventure)
+    "comedy" -> stringResource(R.string.genre_comedy)
+    "drama" -> stringResource(R.string.genre_drama)
+    "ecchi" -> stringResource(R.string.genre_ecchi)
+    "fantasy" -> stringResource(R.string.genre_fantasy)
+    "hentai" -> stringResource(R.string.genre_hentai)
+    "horror" -> stringResource(R.string.genre_horror)
+    "mahou shoujo" -> stringResource(R.string.genre_mahou_shoujo)
+    "mecha" -> stringResource(R.string.genre_mecha)
+    "music" -> stringResource(R.string.genre_music)
+    "mystery" -> stringResource(R.string.genre_mystery)
+    "psychological" -> stringResource(R.string.genre_psychological)
+    "romance" -> stringResource(R.string.genre_romance)
+    "sci-fi" -> stringResource(R.string.genre_scifi)
+    "slice of life" -> stringResource(R.string.genre_slice_of_life)
+    "sports" -> stringResource(R.string.genre_sports)
+    "supernatural" -> stringResource(R.string.genre_supernatural)
+    "thriller" -> stringResource(R.string.genre_thriller)
+    else -> genre
 }
