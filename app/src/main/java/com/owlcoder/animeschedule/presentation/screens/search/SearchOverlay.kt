@@ -34,6 +34,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
@@ -79,7 +80,9 @@ import com.owlcoder.animeschedule.domain.model.MalListUpdate
 import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
+import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.EmptyState
+import com.owlcoder.animeschedule.presentation.components.GlassIconButton
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
@@ -186,6 +189,22 @@ fun SearchScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp),
         ) {
+            AnimatedVisibility(
+                visible = isFocused,
+                enter = fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) +
+                    scaleIn(initialScale = 0.88f, animationSpec = motion.iosSpring()),
+                exit = fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
+                    scaleOut(targetScale = 0.9f, animationSpec = motion.iosTween(IosMotion.Quick)),
+            ) {
+                GlassIconButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.cd_back),
+                    onClick = {
+                        clearFocusAndKeyboard()
+                        onCancel()
+                    },
+                )
+            }
             SearchField(
                 query = query,
                 modifier = Modifier.weight(1f),
@@ -205,30 +224,9 @@ fun SearchScreen(
                     viewModel.setQuery("")
                 },
             )
-            AnimatedVisibility(
-                visible = isFocused,
-                enter = fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                    slideInVertically(animationSpec = motion.iosTween(IosMotion.Standard)) { it / 5 },
-                exit = fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                    slideOutVertically(animationSpec = motion.iosTween(IosMotion.Quick)) { it / 5 },
-            ) {
-                TextButton(
-                    onClick = {
-                        clearFocusAndKeyboard()
-                        onCancel()
-                    },
-                    contentPadding = PaddingValues(horizontal = 4.dp),
-                ) {
-                    Text(
-                        stringResource(R.string.common_cancel),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
         }
 
-        Spacer(Modifier.height(if (isFocused) 8.dp else 12.dp))
+        Spacer(Modifier.height(if (isFocused) 10.dp else 12.dp))
         SearchContent(
             query = query,
             recentSearches = recentSearches,
@@ -308,7 +306,7 @@ private fun SearchField(
     val motion = LocalMotionPolicy.current
     AppMaterialSurface(
         modifier = modifier
-            .height(44.dp)
+            .height(48.dp)
             .animateContentSize(animationSpec = motion.iosSpring())
             .clickable(
                 interactionSource = interactionSource,
@@ -316,24 +314,24 @@ private fun SearchField(
                 onClick = onFieldTap,
             ),
         material = AppMaterial.Elevated,
-        shape = RoundedCornerShape(13.dp),
+        shape = ContinuousRoundedShape(17.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 11.dp, end = 0.dp),
+                .padding(start = 13.dp, end = 1.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 Icons.Default.Search,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(19.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = 9.dp),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 if (query.isEmpty()) {
@@ -383,17 +381,17 @@ private fun SearchField(
                     contentAlignment = Alignment.Center,
                 ) {
                     Surface(
-                        modifier = Modifier.size(28.dp),
+                        modifier = Modifier.size(30.dp),
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.surfaceContainerHighest,
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         tonalElevation = 0.dp,
                     ) {
-                        Box(Modifier.size(28.dp), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(30.dp), contentAlignment = Alignment.Center) {
                             Icon(
                                 Icons.Default.Close,
                                 contentDescription = stringResource(R.string.search_clear_recent),
-                                modifier = Modifier.size(14.dp),
+                                modifier = Modifier.size(15.dp),
                             )
                         }
                     }
@@ -642,9 +640,7 @@ private fun CompactSearchState(
         icon = icon,
         title = title,
         subtitle = subtitle,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(200.dp),
+        modifier = Modifier.fillMaxSize(),
         actionLabel = actionLabel,
         onAction = onAction,
     )
