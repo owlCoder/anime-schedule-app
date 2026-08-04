@@ -63,7 +63,7 @@ fun SeasonalOverlay(
                     GlassToolbarGroup {
                         GlassToolbarButton(
                             icon = Icons.AutoMirrored.Filled.NavigateBefore,
-                            contentDescription = stringResource(R.string.seasonal_title),
+                            contentDescription = "Previous season",
                             onClick = {
                                 val result = prevSeason(uiState.season, uiState.year)
                                 viewModel.setSeason(result.first, result.second)
@@ -71,7 +71,7 @@ fun SeasonalOverlay(
                         )
                         GlassToolbarButton(
                             icon = Icons.AutoMirrored.Filled.NavigateNext,
-                            contentDescription = stringResource(R.string.seasonal_title),
+                            contentDescription = "Next season",
                             onClick = {
                                 val result = nextSeason(uiState.season, uiState.year)
                                 viewModel.setSeason(result.first, result.second)
@@ -91,7 +91,7 @@ fun SeasonalOverlay(
                 currentSeason = uiState.season,
                 currentYear = uiState.year,
                 onSelect = { season, year -> viewModel.setSeason(season, year) },
-                modifier = Modifier.padding(top = 7.dp),
+                modifier = Modifier.padding(top = 5.dp),
             )
 
             when {
@@ -123,9 +123,9 @@ fun SeasonalOverlay(
                 else -> LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
                     modifier = Modifier.fillMaxWidth().weight(1f),
-                    contentPadding = PaddingValues(top = 12.dp, bottom = 22.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(top = 12.dp, bottom = 26.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp),
                 ) {
                     items(
                         items = uiState.filteredItems,
