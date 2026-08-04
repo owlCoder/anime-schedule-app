@@ -6,7 +6,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,6 +20,8 @@ import androidx.navigation.navArgument
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
+import com.owlcoder.animeschedule.presentation.components.iosDecelerate
+import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.navigation.Screen.Detail
 import com.owlcoder.animeschedule.presentation.screens.detail.AnimeDetailScreen
 import com.owlcoder.animeschedule.presentation.screens.mylist.MyListScreen
@@ -42,46 +43,43 @@ fun AnimeNavHost(
     onSearchFocusChanged: (Boolean) -> Unit = {},
 ) {
     val motion = LocalMotionPolicy.current
-    val rootDuration = motion.duration(IosMotion.Standard)
-    val navigationDuration = motion.duration(IosMotion.Navigation)
-    val quickDuration = motion.duration(IosMotion.Quick)
 
     val rootEnter = fadeIn(
-        animationSpec = tween(rootDuration, easing = IosMotion.DecelerateEasing),
+        animationSpec = motion.iosDecelerate(IosMotion.Standard),
     ) + scaleIn(
         initialScale = if (motion.animationsEnabled) 0.985f else 1f,
-        animationSpec = tween(rootDuration, easing = IosMotion.StandardEasing),
+        animationSpec = motion.iosTween(IosMotion.Standard),
     )
     val rootExit = fadeOut(
-        animationSpec = tween(quickDuration, easing = IosMotion.StandardEasing),
+        animationSpec = motion.iosTween(IosMotion.Quick),
     ) + scaleOut(
         targetScale = if (motion.animationsEnabled) 0.995f else 1f,
-        animationSpec = tween(quickDuration, easing = IosMotion.StandardEasing),
+        animationSpec = motion.iosTween(IosMotion.Quick),
     )
 
     val pushEnter = slideInHorizontally(
-        animationSpec = tween(navigationDuration, easing = IosMotion.StandardEasing),
+        animationSpec = motion.iosTween(IosMotion.Navigation),
         initialOffsetX = { if (motion.animationsEnabled) it / 3 else 0 },
     ) + fadeIn(
-        animationSpec = tween(rootDuration, easing = IosMotion.DecelerateEasing),
+        animationSpec = motion.iosDecelerate(IosMotion.Standard),
     )
     val pushExit = slideOutHorizontally(
-        animationSpec = tween(navigationDuration, easing = IosMotion.StandardEasing),
+        animationSpec = motion.iosTween(IosMotion.Navigation),
         targetOffsetX = { if (motion.animationsEnabled) -it / 8 else 0 },
     ) + fadeOut(
-        animationSpec = tween(quickDuration, easing = IosMotion.StandardEasing),
+        animationSpec = motion.iosTween(IosMotion.Quick),
     )
     val popEnter = slideInHorizontally(
-        animationSpec = tween(navigationDuration, easing = IosMotion.StandardEasing),
+        animationSpec = motion.iosTween(IosMotion.Navigation),
         initialOffsetX = { if (motion.animationsEnabled) -it / 8 else 0 },
     ) + fadeIn(
-        animationSpec = tween(rootDuration, easing = IosMotion.DecelerateEasing),
+        animationSpec = motion.iosDecelerate(IosMotion.Standard),
     )
     val popExit = slideOutHorizontally(
-        animationSpec = tween(navigationDuration, easing = IosMotion.StandardEasing),
+        animationSpec = motion.iosTween(IosMotion.Navigation),
         targetOffsetX = { if (motion.animationsEnabled) it / 3 else 0 },
     ) + fadeOut(
-        animationSpec = tween(quickDuration, easing = IosMotion.StandardEasing),
+        animationSpec = motion.iosTween(IosMotion.Quick),
     )
 
     NavHost(
@@ -119,9 +117,11 @@ fun AnimeNavHost(
             )
         }
         composable(Screen.MyList.route) {
-            MyListScreen(onAnimeClick = { animeId ->
-                navController.navigate(Detail.createRoute(animeId))
-            })
+            MyListScreen(
+                onAnimeClick = { animeId ->
+                    navController.navigate(Detail.createRoute(animeId))
+                },
+            )
         }
         composable(Screen.Settings.route) {
             SettingsScreen(
