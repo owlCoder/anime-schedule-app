@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -41,87 +42,70 @@ fun AboutBottomSheet(onDismiss: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(max = 430.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 10.dp),
+                .padding(bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
                 modifier = Modifier
-                    .size(50.dp)
-                    .clip(RoundedCornerShape(15.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = stringResource(R.string.about_logo_monogram),
-                    style = MaterialTheme.typography.headlineLarge,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
-            Spacer(Modifier.height(9.dp))
+            Spacer(Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
             )
-            Spacer(Modifier.height(2.dp))
             Text(
                 text = stringResource(R.string.about_tagline),
+                modifier = Modifier.padding(top = 2.dp),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(7.dp))
-            Text(
-                text = stringResource(R.string.about_version_prefix, BuildConfig.VERSION_NAME),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                    .padding(horizontal = 10.dp, vertical = 4.dp),
-            )
+            Spacer(Modifier.height(14.dp))
 
-            Spacer(Modifier.height(18.dp))
             AboutGroup(
                 items = listOf(
                     stringResource(R.string.about_version_label) to BuildConfig.VERSION_NAME,
                     stringResource(R.string.about_build_label) to BuildConfig.VERSION_CODE.toString(),
                     stringResource(R.string.about_platform_label) to "Android 12+",
-                    stringResource(R.string.about_package_label) to "com.owlcoder.animeschedule",
+                    stringResource(R.string.about_package_label) to BuildConfig.APPLICATION_ID,
                 ),
             )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(14.dp))
             AboutSectionHeader(stringResource(R.string.about_section_data_sources))
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(5.dp))
             AboutGroup(
                 items = listOf(
-                    stringResource(R.string.about_data_schedule) to "AniList GraphQL",
-                    stringResource(R.string.about_data_list) to "MyAnimeList v2",
-                    stringResource(R.string.about_data_fallback) to "Jikan REST",
-                    stringResource(R.string.about_data_auth) to "OAuth 2.0 + PKCE",
+                    stringResource(R.string.about_data_schedule) to "AniList",
+                    stringResource(R.string.about_data_list) to "MyAnimeList",
+                    stringResource(R.string.about_data_fallback) to "Jikan",
                 ),
             )
 
-            Spacer(Modifier.height(16.dp))
-            AboutSectionHeader(stringResource(R.string.about_section_tech))
-            Spacer(Modifier.height(6.dp))
-            AboutGroup(
-                items = listOf(
-                    stringResource(R.string.about_tech_language) to "Kotlin",
-                    stringResource(R.string.about_tech_ui) to "Jetpack Compose",
-                    stringResource(R.string.about_tech_arch) to "MVVM + Clean",
-                    "DI" to "Hilt",
-                    "DB" to "Room",
-                ),
+            Spacer(Modifier.height(14.dp))
+            Text(
+                text = "Kotlin · Jetpack Compose · Room · Hilt",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
             )
-
-            Spacer(Modifier.height(18.dp))
             Text(
                 text = stringResource(R.string.about_footer_copyright, java.time.Year.now().value),
+                modifier = Modifier.padding(top = 5.dp),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -146,7 +130,7 @@ private fun AboutGroup(items: List<Pair<String, String>>) {
     InsetGroup {
         items.forEachIndexed { index, (label, value) ->
             Row(
-                modifier = Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 14.dp),
+                modifier = Modifier.fillMaxWidth().height(44.dp).padding(horizontal = 13.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
@@ -168,9 +152,9 @@ private fun AboutGroup(items: List<Pair<String, String>>) {
             }
             if (index < items.lastIndex) {
                 HorizontalDivider(
-                    modifier = Modifier.padding(start = 14.dp),
+                    modifier = Modifier.padding(start = 13.dp),
                     thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.44f),
                 )
             }
         }
