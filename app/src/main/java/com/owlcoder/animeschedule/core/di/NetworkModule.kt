@@ -3,6 +3,17 @@ package com.owlcoder.animeschedule.core.di
 import android.content.Context
 import com.apollographql.apollo.ApolloClient
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.owlcoder.animeschedule.BuildConfig
+import com.owlcoder.animeschedule.core.network.AuthInterceptor
+import com.owlcoder.animeschedule.core.network.RateLimitInterceptor
+import com.owlcoder.animeschedule.data.api.alternative.AnimeScheduleApiService
+import com.owlcoder.animeschedule.data.api.alternative.KitsuApiService
+import com.owlcoder.animeschedule.data.api.anilist.buildAniListApolloClient
+import com.owlcoder.animeschedule.data.api.mal.MalApiService
+import com.owlcoder.animeschedule.data.api.mal.auth.MalAuthService
+import com.owlcoder.animeschedule.data.local.secure.SecureTokenStore
+import com.owlcoder.animeschedule.data.provider.ProviderClock
+import com.owlcoder.animeschedule.data.provider.SystemProviderClock
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,18 +24,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import com.owlcoder.animeschedule.BuildConfig
-import com.owlcoder.animeschedule.core.network.AuthInterceptor
-import com.owlcoder.animeschedule.core.network.RateLimitInterceptor
-import com.owlcoder.animeschedule.data.provider.ProviderClock
-import com.owlcoder.animeschedule.data.provider.SystemProviderClock
-import com.owlcoder.animeschedule.data.api.anilist.buildAniListApolloClient
-import com.owlcoder.animeschedule.data.api.jikan.JikanApiService
-import com.owlcoder.animeschedule.data.api.mal.MalApiService
-import com.owlcoder.animeschedule.data.api.mal.auth.MalAuthService
-import com.owlcoder.animeschedule.data.api.alternative.AnimeScheduleApiService
-import com.owlcoder.animeschedule.data.api.alternative.KitsuApiService
-import com.owlcoder.animeschedule.data.local.secure.SecureTokenStore
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -70,13 +69,6 @@ object NetworkModule {
         .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .build()
 
-    @Provides @Singleton @Named("jikan")
-    fun provideJikanRetrofit(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
-        .baseUrl("https://api.jikan.moe/")
-        .client(okHttpClient)
-        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-        .build()
-
     @Provides @Singleton @Named("kitsu")
     fun provideKitsuRetrofit(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
         .baseUrl("https://kitsu.io/api/edge/")
@@ -98,10 +90,6 @@ object NetworkModule {
     @Provides @Singleton
     fun provideMalAuthService(@Named("malAuth") retrofit: Retrofit): MalAuthService =
         retrofit.create(MalAuthService::class.java)
-
-    @Provides @Singleton
-    fun provideJikanApiService(@Named("jikan") retrofit: Retrofit): JikanApiService =
-        retrofit.create(JikanApiService::class.java)
 
     @Provides @Singleton
     fun provideKitsuApiService(@Named("kitsu") retrofit: Retrofit): KitsuApiService =
