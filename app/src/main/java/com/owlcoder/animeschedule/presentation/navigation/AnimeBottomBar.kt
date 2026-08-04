@@ -62,8 +62,8 @@ private val items = listOf(
     BottomNavItem(Screen.Settings, "Settings", Icons.Filled.Settings, Icons.Outlined.Settings),
 )
 
-private val DockShape = ContinuousRoundedShape(24.dp)
-private val DockHeight = 50.dp
+private val DockShape = ContinuousRoundedShape(23.dp)
+private val DockHeight = 52.dp
 
 @Composable
 fun AnimeBottomBar(
@@ -77,7 +77,7 @@ fun AnimeBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-            .padding(horizontal = 18.dp, vertical = 7.dp),
+            .padding(horizontal = 16.dp, vertical = 7.dp),
     ) {
         GlassChrome(
             modifier = Modifier.fillMaxWidth().height(DockHeight),
@@ -87,7 +87,7 @@ fun AnimeBottomBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(DockHeight)
-                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                    .padding(horizontal = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 items.forEach { item ->
@@ -139,9 +139,9 @@ private fun BottomNavItemView(
 @Composable
 private fun TabVisual(item: BottomNavItem, selected: Boolean, notificationCount: Int) {
     val color = if (selected) MaterialTheme.colorScheme.primary
-    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+    else MaterialTheme.colorScheme.onSurfaceVariant
     Column(
-        modifier = Modifier.size(width = 64.dp, height = 40.dp),
+        modifier = Modifier.size(width = 70.dp, height = 44.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -153,13 +153,13 @@ private fun TabVisual(item: BottomNavItem, selected: Boolean, notificationCount:
                 imageVector = if (selected) item.activeIcon else item.inactiveIcon,
                 contentDescription = null,
                 tint = color,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(20.dp),
             )
         }
         Text(
             text = item.label,
             color = color,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, lineHeight = 10.sp),
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, lineHeight = 11.sp),
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             maxLines = 1,
         )
