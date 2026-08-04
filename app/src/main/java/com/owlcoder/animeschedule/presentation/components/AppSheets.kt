@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,13 +50,18 @@ fun AppSheet(
 ) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
     val container = if (dark) Color(0xFF1C1C1E) else Color(0xFFF9F9FB)
-    val scrim = Color.Black.copy(alpha = if (dark) 0.46f else 0.30f)
+    val scrim = Color.Black.copy(alpha = if (dark) 0.42f else 0.26f)
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         sheetState = sheetState,
-        shape = ContinuousRoundedShape(GlassTokens.sheetRadius),
+        shape = RoundedCornerShape(
+            topStart = GlassTokens.sheetRadius,
+            topEnd = GlassTokens.sheetRadius,
+            bottomStart = 0.dp,
+            bottomEnd = 0.dp,
+        ),
         containerColor = container,
         contentColor = MaterialTheme.colorScheme.onSurface,
         scrimColor = scrim,
@@ -66,14 +72,14 @@ fun AppSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .imePadding()
-                .padding(start = 18.dp, end = 18.dp, bottom = 24.dp),
+                .padding(start = 18.dp, end = 18.dp, bottom = 18.dp),
         ) {
             if (!title.isNullOrBlank()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 44.dp)
-                        .padding(bottom = 8.dp),
+                        .padding(bottom = 7.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -111,7 +117,7 @@ fun AppSheet(
 fun AppSheetHandle(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(top = 8.dp, bottom = 6.dp)
+            .padding(top = 8.dp, bottom = 5.dp)
             .fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
@@ -120,7 +126,7 @@ fun AppSheetHandle(modifier: Modifier = Modifier) {
                 .width(36.dp)
                 .requiredHeight(5.dp)
                 .clip(MaterialTheme.shapes.extraLarge)
-                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f)),
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.24f)),
         )
     }
 }
