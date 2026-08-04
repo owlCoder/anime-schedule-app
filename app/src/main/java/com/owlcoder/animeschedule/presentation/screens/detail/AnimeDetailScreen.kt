@@ -1,12 +1,12 @@
 package com.owlcoder.animeschedule.presentation.screens.detail
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
@@ -40,6 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -79,9 +80,7 @@ import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.ErrorBanner
 import com.owlcoder.animeschedule.presentation.components.FaviconImage
-import com.owlcoder.animeschedule.presentation.components.GlassButton
 import com.owlcoder.animeschedule.presentation.components.GlassIconButton
-import com.owlcoder.animeschedule.presentation.components.GlassSurface
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.InsetListRow
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
@@ -89,8 +88,6 @@ import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
 import com.owlcoder.animeschedule.presentation.components.displayName
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
-import com.owlcoder.animeschedule.ui.theme.GlassBlur
-import com.owlcoder.animeschedule.ui.theme.GlassTone
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -164,8 +161,8 @@ fun AnimeDetailScreen(
                 val sortedRelations = remember(detail.relations) { sortRelatedAnime(detail.relations) }
                 LazyColumn(
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    contentPadding = PaddingValues(bottom = 28.dp),
-                    verticalArrangement = Arrangement.spacedBy(15.dp),
+                    contentPadding = PaddingValues(bottom = 30.dp),
+                    verticalArrangement = Arrangement.spacedBy(13.dp),
                 ) {
                     item(key = "hero", contentType = "hero") {
                         DetailHero(detail = detail, onBack = onBack)
@@ -174,7 +171,7 @@ fun AnimeDetailScreen(
                     item(key = "actions", contentType = "actions") {
                         Column(
                             modifier = Modifier.padding(horizontal = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(9.dp),
                         ) {
                             DetailActions(
                                 detail = detail,
@@ -291,7 +288,7 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
         detail.averageScore?.let { "★ ${it / 10.0}" },
     )
 
-    Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
+    Box(modifier = Modifier.fillMaxWidth().height(282.dp)) {
         AsyncImage(
             model = detail.bannerImageUrl ?: detail.coverImageUrl,
             contentDescription = null,
@@ -302,9 +299,9 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
             modifier = Modifier.fillMaxSize().background(
                 Brush.verticalGradient(
                     colorStops = arrayOf(
-                        0f to Color.Black.copy(alpha = 0.08f),
-                        0.45f to Color.Black.copy(alpha = 0.14f),
-                        0.72f to Color.Black.copy(alpha = 0.58f),
+                        0f to Color.Black.copy(alpha = 0.05f),
+                        0.44f to Color.Black.copy(alpha = 0.12f),
+                        0.68f to Color.Black.copy(alpha = 0.56f),
                         1f to MaterialTheme.colorScheme.background,
                     ),
                 ),
@@ -328,7 +325,7 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -336,11 +333,11 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
                 url = detail.coverImageUrl,
                 contentDescription = title,
                 modifier = Modifier
-                    .size(width = 82.dp, height = 118.dp)
-                    .border(0.5.dp, Color.White.copy(alpha = 0.26f), MaterialTheme.shapes.large),
+                    .size(width = 76.dp, height = 108.dp)
+                    .border(0.5.dp, Color.White.copy(alpha = 0.28f), MaterialTheme.shapes.large),
             )
             Column(
-                modifier = Modifier.weight(1f).padding(bottom = 2.dp),
+                modifier = Modifier.weight(1f).padding(bottom = 1.dp),
                 verticalArrangement = Arrangement.spacedBy(3.dp),
             ) {
                 Text(
@@ -348,7 +345,7 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    maxLines = 2,
+                    maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                 )
                 detail.titleEnglish
@@ -357,16 +354,16 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
                         Text(
                             text = it,
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.76f),
-                            maxLines = 1,
+                            color = Color.White.copy(alpha = 0.80f),
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
                 if (metadata.isNotEmpty()) {
                     Text(
-                        text = metadata.joinToString("  •  "),
+                        text = metadata.joinToString(" · "),
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color.White.copy(alpha = 0.90f),
+                        color = Color.White.copy(alpha = 0.92f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -414,7 +411,7 @@ private fun DetailActions(
             AppButton(
                 label = if (isIncrementing) "…" else "+1",
                 onClick = onIncrement,
-                modifier = Modifier.width(72.dp),
+                modifier = Modifier.width(68.dp),
                 enabled = detail.malListEntry.status == WatchStatus.WATCHING && !isIncrementing,
                 variant = AppButtonVariant.Primary,
             )
@@ -430,7 +427,7 @@ private fun ProgressPanel(detail: AnimeDetail, entry: MalListEntry) {
 
     InsetGroup(title = entry.status.displayName()) {
         Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -442,7 +439,7 @@ private fun ProgressPanel(detail: AnimeDetail, entry: MalListEntry) {
                 )
                 if (entry.score > 0) {
                     Text(
-                        text = "${stringResource(R.string.detail_score)}  ${entry.score}/10",
+                        text = "${stringResource(R.string.detail_score)} ${entry.score}/10",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
@@ -453,7 +450,7 @@ private fun ProgressPanel(detail: AnimeDetail, entry: MalListEntry) {
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.fillMaxWidth().height(3.dp).clip(PillShape),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f),
+                    color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
                 )
             }
@@ -463,12 +460,18 @@ private fun ProgressPanel(detail: AnimeDetail, entry: MalListEntry) {
 
 @Composable
 private fun MetadataPill(text: String) {
-    GlassSurface(shape = PillShape, tone = GlassTone.Neutral, blur = GlassBlur.None) {
+    Surface(
+        shape = PillShape,
+        color = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant),
+        tonalElevation = 0.dp,
+    ) {
         Text(
             text = text,
             modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp),
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -507,8 +510,8 @@ private fun WatchSourcesSection(
         }
         Text(
             text = stringResource(R.string.detail_watch_on_disclaimer),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 2.dp),
         )
     }
@@ -535,7 +538,7 @@ private fun SynopsisSection(text: String) {
 private fun SectionTitle(text: String) {
     Text(
         text = text,
-        modifier = Modifier.padding(horizontal = 3.dp),
+        modifier = Modifier.padding(horizontal = 2.dp),
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurface,
@@ -548,7 +551,7 @@ private fun HorizontalSection(title: String, content: LazyListScope.() -> Unit) 
         SectionTitle(text = title)
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(11.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             content = content,
         )
     }
@@ -560,7 +563,7 @@ private fun DetailLoadingState(modifier: Modifier = Modifier) {
         modifier = modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Box(Modifier.fillMaxWidth().height(300.dp).background(MaterialTheme.colorScheme.surfaceContainer))
+        Box(Modifier.fillMaxWidth().height(282.dp).background(MaterialTheme.colorScheme.surfaceContainer))
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -682,11 +685,11 @@ private fun ExpandableSynopsis(text: String) {
                 text = stringResource(if (expanded) R.string.cd_collapse else R.string.cd_expand),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .heightIn(min = 38.dp)
+                    .heightIn(min = 36.dp)
                     .clickable { expanded = !expanded }
-                    .padding(top = 10.dp),
+                    .padding(top = 9.dp),
             )
         }
     }
@@ -694,22 +697,34 @@ private fun ExpandableSynopsis(text: String) {
 
 @Composable
 private fun WatchSourceChip(source: WatchSource, onClick: () -> Unit) {
-    GlassButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 13.dp)) { color ->
-        source.faviconUrl?.let {
-            FaviconImage(
-                faviconUrl = it,
-                siteUrl = source.urlTemplate,
-                modifier = Modifier.size(18.dp).clip(CircleShape),
+    Surface(
+        modifier = Modifier.height(38.dp).clickable(onClick = onClick),
+        shape = PillShape,
+        color = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant),
+        tonalElevation = 0.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 13.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            source.faviconUrl?.let {
+                FaviconImage(
+                    faviconUrl = it,
+                    siteUrl = source.urlTemplate,
+                    modifier = Modifier.size(18.dp).clip(CircleShape),
+                )
+            }
+            Text(
+                text = source.name,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
-        Text(
-            text = source.name,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = color,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 
@@ -761,12 +776,17 @@ private fun RelatedAnimeCard(related: RelatedAnime, onClick: () -> Unit) {
             },
     ) {
         relationTypeLabel(related.relationType)?.let { label ->
-            GlassSurface(shape = PillShape, tone = GlassTone.Neutral, blur = GlassBlur.None) {
+            Surface(
+                shape = PillShape,
+                color = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant),
+                tonalElevation = 0.dp,
+            ) {
                 Text(
                     text = label,
                     modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
