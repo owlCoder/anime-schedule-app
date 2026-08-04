@@ -1,7 +1,6 @@
 package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -29,11 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
 
-/**
- * Content-layer sheet. Liquid Glass is intentionally not used for the sheet body: Apple places
- * glass on navigation and interactive controls, while scoped modal content uses a stable standard
- * material so text and controls never compete with the parent view underneath.
- */
+/** Stable modal content surface; Liquid Glass is reserved for floating chrome and controls. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppSheet(
@@ -45,9 +40,8 @@ fun AppSheet(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    val container = if (dark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7)
-    val edge = if (dark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.08f)
-    val scrim = Color.Black.copy(alpha = if (dark) 0.40f else 0.24f)
+    val container = if (dark) Color(0xFF1C1C1E) else Color(0xFFF9F9FB)
+    val scrim = Color.Black.copy(alpha = if (dark) 0.44f else 0.28f)
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -63,24 +57,23 @@ fun AppSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(0.5.dp, edge, ContinuousRoundedShape(GlassTokens.sheetRadius))
                 .imePadding()
                 .navigationBarsPadding()
-                .padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
+                .padding(start = 18.dp, end = 18.dp, bottom = 16.dp),
         ) {
             if (!title.isNullOrBlank()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 40.dp)
-                        .padding(bottom = 5.dp),
+                        .heightIn(min = 42.dp)
+                        .padding(bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = title,
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         maxLines = 1,
                     )
                     trailingContent?.invoke()
@@ -95,14 +88,14 @@ fun AppSheet(
 fun AppSheetHandle(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(top = 7.dp, bottom = 4.dp)
+            .padding(top = 8.dp, bottom = 6.dp)
             .fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
-                .width(32.dp)
-                .requiredHeight(4.dp)
+                .width(36.dp)
+                .requiredHeight(5.dp)
                 .clip(MaterialTheme.shapes.extraLarge)
                 .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f)),
         )
