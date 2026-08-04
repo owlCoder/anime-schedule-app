@@ -4,9 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -28,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.presentation.components.AppSheet
@@ -46,7 +46,7 @@ private val FORMAT_LABELS = mapOf(
     "MUSIC" to "Music",
 )
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleFilterSheet(
     filter: ScheduleFilter,
@@ -72,7 +72,7 @@ fun ScheduleFilterSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 430.dp)
+                .heightIn(max = 440.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -92,33 +92,26 @@ fun ScheduleFilterSheet(
             }
 
             if (availableFormats.isNotEmpty()) {
-                FilterSection(title = stringResource(R.string.filter_format)) {
-                    availableFormats.forEach { format ->
-                        CompactScheduleFilterChip(
-                            label = FORMAT_LABELS[format] ?: format,
-                            selected = format in filter.formats,
-                            onClick = { onFormatToggle(format) },
-                        )
-                    }
-                }
+                EqualOptionGrid(
+                    title = stringResource(R.string.filter_format),
+                    options = availableFormats,
+                    label = { FORMAT_LABELS[it] ?: it },
+                    selected = { it in filter.formats },
+                    onClick = onFormatToggle,
+                )
             }
 
             if (availableGenres.isNotEmpty()) {
-                FilterSection(title = stringResource(R.string.filter_genre)) {
-                    availableGenres.forEach { genre ->
-                        CompactScheduleFilterChip(
-                            label = genre,
-                            selected = genre in filter.genres,
-                            onClick = { onGenreToggle(genre) },
-                        )
-                    }
-                }
+                EqualOptionGrid(
+                    title = stringResource(R.string.filter_genre),
+                    options = availableGenres,
+                    label = { it },
+                    selected = { it in filter.genres },
+                    onClick = onGenreToggle,
+                )
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(onClick = onDismiss) {
                     Text("Done", fontWeight = FontWeight.SemiBold)
                 }
@@ -127,11 +120,13 @@ fun ScheduleFilterSheet(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun FilterSection(
+private fun <T> EqualOptionGrid(
     title: String,
-    content: @Composable androidx.compose.foundation.layout.FlowRowScope.() -> Unit,
+    options: List<T>,
+    label: (T) -> String,
+    selected: (T) -> Boolean,
+    onClick: (T) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -141,24 +136,36 @@ private fun FilterSection(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.SemiBold,
         )
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            content = content,
-        )
+        options.chunked(2).forEach { rowItems ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                rowItems.forEach { option ->
+                    EqualOption(
+                        label = label(option),
+                        selected = selected(option),
+                        modifier = Modifier.weight(1f),
+                        onClick = { onClick(option) },
+                    )
+                }
+                if (rowItems.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
     }
 }
 
 @Composable
-private fun CompactScheduleFilterChip(
+private fun EqualOption(
     label: String,
     selected: Boolean,
+    modifier: Modifier,
     onClick: () -> Unit,
 ) {
     val contentColor = if (selected) MaterialTheme.colorScheme.primary
     else MaterialTheme.colorScheme.onSurface
     Surface(
-        modifier = Modifier.height(36.dp).clickable(onClick = onClick),
+        modifier = modifier.height(38.dp).clickable(onClick = onClick),
         shape = PillShape,
         color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
         else MaterialTheme.colorScheme.surface,
@@ -171,18 +178,20 @@ private fun CompactScheduleFilterChip(
         tonalElevation = 0.dp,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 13.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            horizontalArrangement = Arrangement.Center,
         ) {
             if (selected) {
                 Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.size(5.dp))
             }
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
