@@ -30,15 +30,15 @@ fun InsetGroup(
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         if (!title.isNullOrBlank()) {
             Text(
                 text = title,
                 modifier = Modifier.padding(horizontal = 11.dp),
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -55,7 +55,7 @@ fun InsetGroup(
                 text = footer,
                 modifier = Modifier.padding(horizontal = 11.dp),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.86f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -74,7 +74,7 @@ fun InsetListRow(
 ) {
     val rowModifier = modifier
         .fillMaxWidth()
-        .heightIn(min = if (supportingText.isNullOrBlank()) 46.dp else 52.dp)
+        .heightIn(min = if (supportingText.isNullOrBlank()) 44.dp else 50.dp)
         .then(
             if (onClick != null) {
                 Modifier
@@ -87,7 +87,7 @@ fun InsetListRow(
     CompositionLocalProvider(
         androidx.compose.material3.LocalContentColor provides
             if (enabled) MaterialTheme.colorScheme.onSurface
-            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.42f),
     ) {
         Row(
             modifier = rowModifier,
@@ -101,7 +101,7 @@ fun InsetListRow(
             ) {
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                     color = androidx.compose.material3.LocalContentColor.current,
                     maxLines = 2,
@@ -111,7 +111,7 @@ fun InsetListRow(
                     Text(
                         text = supportingText,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.84f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
