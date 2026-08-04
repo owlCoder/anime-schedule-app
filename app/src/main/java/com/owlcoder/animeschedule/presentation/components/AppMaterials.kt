@@ -19,6 +19,7 @@ import com.owlcoder.animeschedule.ui.theme.AppLightElevated
 import com.owlcoder.animeschedule.ui.theme.AppLightGrouped
 import com.owlcoder.animeschedule.ui.theme.AppLightSecondary
 import com.owlcoder.animeschedule.ui.theme.GlassBlur
+import com.owlcoder.animeschedule.ui.theme.GlassTokens
 
 enum class AppMaterial { Background, Grouped, Elevated, Interactive }
 
@@ -38,7 +39,7 @@ fun appMaterialColor(material: AppMaterial): Color {
 fun AppMaterialSurface(
     modifier: Modifier = Modifier,
     material: AppMaterial = AppMaterial.Grouped,
-    shape: Shape = ContinuousRoundedShape(16.dp),
+    shape: Shape = ContinuousRoundedShape(GlassTokens.contentRadius),
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     content: @Composable () -> Unit,
 ) {
@@ -53,7 +54,10 @@ fun AppMaterialSurface(
             0.5.dp,
             if (dark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.07f),
         )
-        AppMaterial.Interactive -> null
+        AppMaterial.Interactive -> BorderStroke(
+            0.5.dp,
+            if (dark) Color.White.copy(alpha = 0.09f) else Color.Black.copy(alpha = 0.06f),
+        )
     }
     Surface(
         modifier = modifier,
@@ -67,6 +71,13 @@ fun AppMaterialSurface(
     )
 }
 
+/**
+ * Compatibility host for call sites that conceptually sit over a material backdrop.
+ *
+ * No real-time blur is applied. [blur] is intentionally retained as a source-compatible depth
+ * hint while the app uses stable tonal surfaces instead of an expensive simulated backdrop blur.
+ */
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun MaterialBackdropHost(
     modifier: Modifier = Modifier,
