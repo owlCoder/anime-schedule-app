@@ -23,7 +23,12 @@ import com.owlcoder.animeschedule.ui.theme.GlassBlur
 import com.owlcoder.animeschedule.ui.theme.GlassTone
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
 
-/** Achromatic Liquid Glass for floating navigation and interactive controls only. */
+/**
+ * Achromatic Liquid Glass for floating navigation and interactive controls only.
+ *
+ * [blur] is an optical-depth token that controls shadow elevation. This component does not
+ * perform real-time backdrop blur, which keeps scrolling and selection animations predictable.
+ */
 @Composable
 fun GlassSurface(
     modifier: Modifier = Modifier,
@@ -35,7 +40,7 @@ fun GlassSurface(
     content: @Composable () -> Unit,
 ) {
     val palette = glassPalette(tone)
-    val elevation = when (blur) {
+    val shadowElevation = when (blur) {
         GlassBlur.None -> 0.dp
         GlassBlur.Soft -> 1.dp
         GlassBlur.Medium -> 3.dp
@@ -44,7 +49,7 @@ fun GlassSurface(
     Box(
         modifier = modifier
             .shadow(
-                elevation = elevation,
+                elevation = shadowElevation,
                 shape = shape,
                 clip = false,
                 ambientColor = GlassTokens.shadow,
@@ -52,16 +57,36 @@ fun GlassSurface(
             )
             .clip(shape)
             .background(palette.fill)
-            .background(palette.ambient)
-            .background(palette.specular)
-            .background(palette.lowlight)
             .border(GlassTokens.hairline, palette.border, shape),
     ) {
         if (backdrop != null) {
             Box(Modifier.fillMaxSize()) { backdrop() }
-            Box(Modifier.fillMaxSize().background(palette.backdrop))
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(palette.backdrop),
+            )
         }
-        CompositionLocalProvider(LocalContentColor provides contentColor) { content() }
+
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(palette.ambient),
+        )
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(palette.specular),
+        )
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(palette.lowlight),
+        )
+
+        CompositionLocalProvider(LocalContentColor provides contentColor) {
+            content()
+        }
     }
 }
 
@@ -100,8 +125,11 @@ private fun glassPalette(tone: GlassTone): GlassPalette {
     }
     val border = when (tone) {
         GlassTone.OnImage -> Color.White.copy(alpha = 0.22f)
-        else -> if (dark) Color.White.copy(alpha = if (selected) 0.18f else 0.11f)
-        else Color.White.copy(alpha = if (selected) 0.68f else 0.52f)
+        else -> if (dark) {
+            Color.White.copy(alpha = if (selected) 0.18f else 0.11f)
+        } else {
+            Color.White.copy(alpha = if (selected) 0.68f else 0.52f)
+        }
     }
     val topLight = when (tone) {
         GlassTone.OnImage -> Color.White.copy(alpha = 0.20f)
