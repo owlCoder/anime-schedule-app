@@ -48,6 +48,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -66,13 +67,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
-import com.owlcoder.animeschedule.BuildConfig
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import com.owlcoder.animeschedule.data.local.datastore.CacheRetentionPolicy
@@ -85,11 +84,7 @@ import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
-import com.owlcoder.animeschedule.presentation.components.GlassSurface
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
-import com.owlcoder.animeschedule.ui.theme.GlassBlur
-import com.owlcoder.animeschedule.ui.theme.GlassTone
-import com.owlcoder.animeschedule.ui.theme.PillShape
 import java.time.ZoneId
 
 private val SettingsGroupShape = ContinuousRoundedShape(15.dp)
@@ -134,9 +129,9 @@ fun SettingsScreen(
                 start = 16.dp,
                 end = 16.dp,
                 top = 6.dp,
-                bottom = LocalNavBarHeight.current + 34.dp,
+                bottom = LocalNavBarHeight.current + 24.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             item {
                 AppLargeHeader(
@@ -376,7 +371,7 @@ private fun AccountRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(58.dp)
+            .height(56.dp)
             .clickable(enabled = !isLoggingIn, onClick = onClick)
             .padding(horizontal = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -389,11 +384,11 @@ private fun AccountRow(
                 contentScale = ContentScale.Crop,
             )
         } else {
-            GlassSurface(
+            Surface(
                 modifier = Modifier.size(34.dp),
                 shape = CircleShape,
-                tone = GlassTone.Neutral,
-                blur = GlassBlur.None,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                tonalElevation = 0.dp,
             ) {
                 Box(Modifier.size(34.dp), contentAlignment = Alignment.Center) {
                     Icon(Icons.Default.AccountCircle, null, Modifier.size(22.dp))
@@ -450,16 +445,17 @@ private fun SettingsRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 52.dp)
+            .heightIn(min = 50.dp)
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 4.dp),
+            .padding(horizontal = 10.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        GlassSurface(
+        Surface(
             modifier = Modifier.size(30.dp),
             shape = SettingsIconShape,
-            tone = GlassTone.Neutral,
-            blur = GlassBlur.None,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = iconColor,
+            tonalElevation = 0.dp,
         ) {
             Box(Modifier.size(30.dp), contentAlignment = Alignment.Center) {
                 Icon(icon, null, Modifier.size(17.dp), tint = iconColor)
@@ -500,7 +496,7 @@ private fun SettingsRow(
 @Composable
 private fun SettingsDivider() {
     HorizontalDivider(
-        modifier = Modifier.padding(start = 51.dp),
+        modifier = Modifier.padding(start = 50.dp),
         thickness = 0.5.dp,
         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f),
     )
@@ -532,7 +528,7 @@ private fun PickerSheet(
         title = title,
     ) {
         AppMaterialSurface(
-            modifier = Modifier.fillMaxWidth().heightIn(max = 520.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(max = 430.dp),
             material = AppMaterial.Grouped,
             shape = SettingsGroupShape,
         ) {
@@ -548,18 +544,20 @@ private fun PickerSheet(
 private fun PickerRow(label: String, selected: Boolean, onClick: () -> Unit) {
     Column {
         Row(
-            modifier = Modifier.fillMaxWidth().height(46.dp).clickable(onClick = onClick).padding(horizontal = 13.dp),
+            modifier = Modifier.fillMaxWidth().height(44.dp).clickable(onClick = onClick).padding(horizontal = 13.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 modifier = Modifier.weight(1f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (selected) Icon(Icons.Default.Check, null, Modifier.size(17.dp))
+            if (selected) {
+                Icon(Icons.Default.Check, null, Modifier.size(17.dp), tint = MaterialTheme.colorScheme.primary)
+            }
         }
         HorizontalDivider(
             modifier = Modifier.padding(start = 13.dp),
@@ -588,6 +586,7 @@ fun notifOffsetLabel(minutes: Int): String = when {
     else -> stringResource(R.string.notif_offset_after_hour, minutes / 60)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NotifBottomSheet(
     enabled: Boolean,
@@ -608,24 +607,44 @@ private fun NotifBottomSheet(
         }
     }
 
-    PickerSheet(stringResource(R.string.settings_notifications), onDismiss) {
-        Row(
-            modifier = Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 13.dp),
-            verticalAlignment = Alignment.CenterVertically,
+    AppSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        title = stringResource(R.string.settings_notifications),
+    ) {
+        AppMaterialSurface(
+            modifier = Modifier.fillMaxWidth().heightIn(max = 430.dp),
+            material = AppMaterial.Grouped,
+            shape = SettingsGroupShape,
         ) {
-            Text(stringResource(R.string.onboarding_notif_enable), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-            AppSwitch(checked = enabled, onCheckedChange = ::toggle)
-        }
-        if (enabled) {
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.34f))
-            Text(
-                text = stringResource(R.string.notif_offset_title),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 13.dp, top = 10.dp, bottom = 3.dp),
-            )
-            notifOffsetOptions.forEach { minutes ->
-                PickerRow(notifOffsetLabel(minutes), minutes == currentOffset) { onOffsetSelect(minutes) }
+            Column(
+                modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 13.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.onboarding_notif_enable),
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    AppSwitch(checked = enabled, onCheckedChange = ::toggle)
+                }
+                if (enabled) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.34f))
+                    Text(
+                        text = stringResource(R.string.notif_offset_title),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 13.dp, top = 9.dp, bottom = 2.dp),
+                    )
+                    notifOffsetOptions.forEach { minutes ->
+                        PickerRow(notifOffsetLabel(minutes), minutes == currentOffset) {
+                            onOffsetSelect(minutes)
+                        }
+                    }
+                }
             }
         }
     }
@@ -667,6 +686,7 @@ fun LanguageBottomSheet(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TimezonePickerDialog(
     currentTimezoneId: String,
@@ -689,7 +709,7 @@ private fun TimezonePickerDialog(
     ) {
         LazyColumn(
             state = rememberLazyListState(),
-            modifier = Modifier.fillMaxWidth().heightIn(max = 520.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(max = 460.dp),
         ) {
             items(zones) { zone ->
                 PickerRow(zone, selected == zone) { selected = zone }
@@ -698,6 +718,7 @@ private fun TimezonePickerDialog(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ClearCacheSheet(onDismiss: () -> Unit, onConfirm: () -> Unit) {
     AppSheet(
@@ -705,7 +726,7 @@ private fun ClearCacheSheet(onDismiss: () -> Unit, onConfirm: () -> Unit) {
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         title = "Clear cache?",
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Text(
                 text = "Temporary images and stale cached data will be removed. Your MAL list, tokens and settings stay safe.",
                 style = MaterialTheme.typography.bodyMedium,
@@ -729,99 +750,6 @@ private fun ClearCacheSheet(onDismiss: () -> Unit, onConfirm: () -> Unit) {
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun ChangelogBottomSheet(onDismiss: () -> Unit) {
-    AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.settings_changelog)) {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Version ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            listOf(
-                "Neutral liquid-glass navigation and controls",
-                "Seven-day schedule selector",
-                "Compact status editor, filters and settings",
-                "Improved detail and search layouts",
-            ).forEach { item ->
-                Row(horizontalArrangement = Arrangement.spacedBy(9.dp), verticalAlignment = Alignment.Top) {
-                    Text("•", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(item, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AboutBottomSheet(onDismiss: () -> Unit) {
-    val context = LocalContext.current
-    AppSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        title = stringResource(R.string.settings_about),
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            AppMaterialSurface(
-                modifier = Modifier.size(56.dp),
-                material = AppMaterial.Elevated,
-                shape = ContinuousRoundedShape(16.dp),
-            ) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("AS", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                }
-            }
-            Text("AnimeSchedule", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Text(
-                text = "Track anime airing schedules, all in one place",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-            GlassSurface(shape = PillShape, tone = GlassTone.Neutral, blur = GlassBlur.None) {
-                Text(
-                    text = "Version ${BuildConfig.VERSION_NAME}",
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-            AppMaterialSurface(
-                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                material = AppMaterial.Grouped,
-                shape = SettingsGroupShape,
-            ) {
-                Column {
-                    AboutRow("Version", BuildConfig.VERSION_NAME)
-                    SettingsDivider()
-                    AboutRow("Build", BuildConfig.VERSION_CODE.toString())
-                    SettingsDivider()
-                    AboutRow("Platform", "Android ${Build.VERSION.RELEASE}+")
-                    SettingsDivider()
-                    AboutRow("Package", context.packageName)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AboutRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth().height(46.dp).padding(horizontal = 13.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        Text(
-            value,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 
