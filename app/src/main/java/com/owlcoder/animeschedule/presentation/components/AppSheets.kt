@@ -1,6 +1,5 @@
 package com.owlcoder.animeschedule.presentation.components
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
@@ -30,7 +28,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
 
@@ -50,7 +50,6 @@ fun AppSheet(
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
     val container = if (dark) Color(0xFF1C1C1E) else Color(0xFFF9F9FB)
     val scrim = Color.Black.copy(alpha = if (dark) 0.46f else 0.30f)
-    val motion = LocalMotionPolicy.current
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -66,9 +65,7 @@ fun AppSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .animateContentSize(animationSpec = motion.iosSpring())
                 .imePadding()
-                .navigationBarsPadding()
                 .padding(start = 18.dp, end = 18.dp, bottom = 24.dp),
         ) {
             if (!title.isNullOrBlank()) {
@@ -81,20 +78,23 @@ fun AppSheet(
                 ) {
                     Text(
                         text = title,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp),
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     when {
                         trailingContent != null -> trailingContent()
                         showCloseButton -> IconButton(
                             onClick = onDismissRequest,
-                            modifier = Modifier.size(36.dp),
+                            modifier = Modifier.size(44.dp),
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Close",
+                                contentDescription = stringResource(android.R.string.cancel),
                                 modifier = Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
