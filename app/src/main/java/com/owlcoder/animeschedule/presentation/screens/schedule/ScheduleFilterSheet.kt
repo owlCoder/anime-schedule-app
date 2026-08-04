@@ -1,22 +1,19 @@
 package com.owlcoder.animeschedule.presentation.screens.schedule
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -32,16 +29,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
+import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.InsetListRow
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
+import com.owlcoder.animeschedule.presentation.components.appMaterialColor
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
@@ -125,9 +125,15 @@ fun ScheduleFilterSheet(
                 )
             }
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
                 TextButton(onClick = onDismiss) {
-                    Text("Done", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        stringResource(android.R.string.ok),
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
             }
         }
@@ -178,47 +184,61 @@ private fun EqualOption(
 ) {
     val motion = LocalMotionPolicy.current
     val contentColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
         animationSpec = motion.iosTween(IosMotion.Standard),
         label = "schedule-filter-color",
     )
     val fill by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-        else MaterialTheme.colorScheme.surface,
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        } else {
+            appMaterialColor(AppMaterial.Interactive)
+        },
         animationSpec = motion.iosTween(IosMotion.Standard),
         label = "schedule-filter-fill",
     )
     Surface(
-        modifier = modifier.height(38.dp).clickable(onClick = onClick),
+        modifier = modifier
+            .sizeIn(minHeight = 44.dp)
+            .toggleable(
+                value = selected,
+                role = Role.Checkbox,
+                onValueChange = { onClick() },
+            ),
         shape = PillShape,
         color = fill,
         contentColor = contentColor,
         border = BorderStroke(
             0.5.dp,
-            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
-            else MaterialTheme.colorScheme.outlineVariant,
+            if (selected) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
+            } else {
+                MaterialTheme.colorScheme.outlineVariant
+            },
         ),
         tonalElevation = 0.dp,
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 11.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
-            AnimatedContent(
-                targetState = selected,
-                transitionSpec = {
-                    fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
-                        fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
-                },
-                label = "schedule-filter-check",
-            ) { checked ->
-                if (checked) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp))
-                        Spacer(Modifier.size(5.dp))
-                    }
+            Box(
+                modifier = Modifier.size(19.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                if (selected) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                    )
                 }
             }
             Text(
