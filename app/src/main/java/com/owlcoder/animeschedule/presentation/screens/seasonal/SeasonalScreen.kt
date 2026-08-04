@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -43,10 +44,7 @@ import com.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
-import com.owlcoder.animeschedule.presentation.components.GlassSurface
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
-import com.owlcoder.animeschedule.ui.theme.GlassBlur
-import com.owlcoder.animeschedule.ui.theme.GlassTone
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
 private val FORMAT_LABELS = mapOf(
@@ -85,27 +83,17 @@ internal fun SeasonTabRow(
         ) {
             AnimeSeason.entries.forEach { season ->
                 val selected = season == currentSeason
-                Box(
+                Surface(
                     modifier = Modifier
                         .weight(1f)
                         .height(32.dp)
-                        .clip(RoundedCornerShape(9.dp))
                         .clickable(role = Role.Tab) { onSelect(season, currentYear) }
                         .semantics { role = Role.Tab },
-                    contentAlignment = Alignment.Center,
+                    shape = RoundedCornerShape(9.dp),
+                    color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.11f) else androidx.compose.ui.graphics.Color.Transparent,
+                    tonalElevation = 0.dp,
                 ) {
-                    if (selected) {
-                        GlassSurface(
-                            modifier = Modifier.fillMaxWidth().height(32.dp),
-                            shape = RoundedCornerShape(9.dp),
-                            tone = GlassTone.Accent,
-                            blur = GlassBlur.None,
-                        ) {
-                            SeasonLabel(season, true)
-                        }
-                    } else {
-                        SeasonLabel(season, false)
-                    }
+                    SeasonLabel(season, selected)
                 }
             }
         }
@@ -119,8 +107,7 @@ private fun SeasonLabel(season: AnimeSeason, selected: Boolean) {
             text = stringResource(season.labelRes()),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            color = if (selected) MaterialTheme.colorScheme.onSurface
-            else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -195,7 +182,7 @@ internal fun SeasonalFilterSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 520.dp)
+                .heightIn(max = 470.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
@@ -258,14 +245,17 @@ private fun FilterSection(
 
 @Composable
 private fun CompactFilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
-    GlassSurface(
+    val contentColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    Surface(
         modifier = Modifier.height(34.dp).clickable(onClick = onClick),
         shape = PillShape,
-        tone = if (selected) GlassTone.Accent else GlassTone.Neutral,
-        blur = GlassBlur.None,
+        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)
+        else MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentColor = contentColor,
+        tonalElevation = 0.dp,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 11.dp),
+            modifier = Modifier.padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
@@ -274,8 +264,7 @@ private fun CompactFilterChip(label: String, selected: Boolean, onClick: () -> U
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                color = if (selected) MaterialTheme.colorScheme.onSurface
-                else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = contentColor,
                 maxLines = 1,
             )
         }
