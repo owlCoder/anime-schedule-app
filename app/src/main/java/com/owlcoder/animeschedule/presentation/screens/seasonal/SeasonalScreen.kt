@@ -1,6 +1,11 @@
 package com.owlcoder.animeschedule.presentation.screens.seasonal
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,7 +51,10 @@ import com.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.IosMotion
+import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
+import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
 private val FORMAT_LABELS = mapOf(
@@ -73,34 +82,45 @@ internal fun SeasonTabRow(
     onSelect: (AnimeSeason, Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val motion = LocalMotionPolicy.current
     AppMaterialSurface(
-        modifier = modifier.fillMaxWidth().height(40.dp),
+        modifier = modifier.fillMaxWidth().height(39.dp),
         material = AppMaterial.Interactive,
         shape = RoundedCornerShape(11.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().height(40.dp).padding(3.dp),
+            modifier = Modifier.fillMaxWidth().height(39.dp).padding(3.dp),
             horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             AnimeSeason.entries.forEach { season ->
                 val isSelected = season == currentSeason
+                val fill by animateColorAsState(
+                    targetValue = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
+                    animationSpec = motion.iosTween(IosMotion.Standard),
+                    label = "season-tab-fill",
+                )
+                val contentColor by animateColorAsState(
+                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    animationSpec = motion.iosTween(IosMotion.Standard),
+                    label = "season-tab-color",
+                )
                 Surface(
                     modifier = Modifier
                         .weight(1f)
-                        .height(34.dp)
+                        .height(33.dp)
                         .clickable(role = Role.Tab) { onSelect(season, currentYear) }
                         .semantics {
                             role = Role.Tab
                             selected = isSelected
                         },
                     shape = RoundedCornerShape(8.dp),
-                    color = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
-                    contentColor = if (isSelected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = fill,
+                    contentColor = contentColor,
                     tonalElevation = 0.dp,
-                    shadowElevation = if (isSelected) 1.dp else 0.dp,
+                    shadowElevation = 0.dp,
                 ) {
-                    SeasonLabel(season, isSelected)
+                    SeasonLabel(season, isSelected, contentColor)
                 }
             }
         }
@@ -108,13 +128,13 @@ internal fun SeasonTabRow(
 }
 
 @Composable
-private fun SeasonLabel(season: AnimeSeason, selected: Boolean) {
-    Box(Modifier.fillMaxWidth().height(34.dp), contentAlignment = Alignment.Center) {
+private fun SeasonLabel(season: AnimeSeason, selected: Boolean, contentColor: Color) {
+    Box(Modifier.fillMaxWidth().height(33.dp), contentAlignment = Alignment.Center) {
         Text(
             text = stringResource(season.labelRes()),
             style = MaterialTheme.typography.labelLarge,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = contentColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -138,7 +158,7 @@ internal fun SeasonalAnimeCard(
             .clip(RoundedCornerShape(11.dp))
             .clickable(role = Role.Button, onClick = onClick)
             .semantics(mergeDescendants = true) { role = Role.Button },
-        verticalArrangement = Arrangement.spacedBy(5.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         MediaThumbnail.Large(
             url = item.coverImageUrl,
@@ -147,9 +167,9 @@ internal fun SeasonalAnimeCard(
         )
         Text(
             text = item.title,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
-            lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
+            lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
@@ -183,16 +203,21 @@ internal fun SeasonalFilterSheet(
         title = stringResource(R.string.seasonal_filter_title),
         trailingContent = {
             TextButton(onClick = onClear, enabled = filter.isActive) {
-                Text(stringResource(R.string.seasonal_filter_reset), fontWeight = FontWeight.SemiBold)
+                Text(
+                    stringResource(R.string.seasonal_filter_reset),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
         },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 440.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .heightIn(max = 500.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(15.dp),
         ) {
             EqualOptionSection(
                 title = stringResource(R.string.seasonal_sort_label),
@@ -274,16 +299,27 @@ private fun EqualFilterOption(
     modifier: Modifier,
     onClick: () -> Unit,
 ) {
-    val contentColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+    val motion = LocalMotionPolicy.current
+    val contentColor by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = motion.iosTween(IosMotion.Standard),
+        label = "season-filter-color",
+    )
+    val containerColor by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        else MaterialTheme.colorScheme.surface,
+        animationSpec = motion.iosTween(IosMotion.Standard),
+        label = "season-filter-fill",
+    )
     Surface(
         modifier = modifier.height(38.dp).clickable(onClick = onClick),
         shape = PillShape,
-        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-        else MaterialTheme.colorScheme.surface,
+        color = containerColor,
         contentColor = contentColor,
         border = BorderStroke(
             0.5.dp,
-            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
             else MaterialTheme.colorScheme.outlineVariant,
         ),
         tonalElevation = 0.dp,
@@ -293,9 +329,20 @@ private fun EqualFilterOption(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
-            if (selected) {
-                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp))
-                Spacer(Modifier.size(4.dp))
+            AnimatedContent(
+                targetState = selected,
+                transitionSpec = {
+                    fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
+                        fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
+                },
+                label = "season-filter-check",
+            ) { checked ->
+                if (checked) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.size(4.dp))
+                    }
+                }
             }
             Text(
                 text = label,
