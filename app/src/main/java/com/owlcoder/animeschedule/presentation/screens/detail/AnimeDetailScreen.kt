@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -124,10 +123,7 @@ fun AnimeDetailScreen(
                     val entry = detail?.malListEntry
                     val total = detail?.episodes
                     if (entry != null && total != null && entry.episodesWatched + 1 >= total) {
-                        finaleOverrideEntry = entry.copy(
-                            episodesWatched = total,
-                            status = WatchStatus.COMPLETED,
-                        )
+                        finaleOverrideEntry = entry.copy(episodesWatched = total, status = WatchStatus.COMPLETED)
                         showStatusSheet = true
                     }
                 }
@@ -153,26 +149,23 @@ fun AnimeDetailScreen(
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
                     GlassIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.cd_back),
                         onClick = onBack,
                     )
-                    ErrorBanner(
-                        message = stringResource(uiState.errorRes ?: R.string.error_load_details),
-                    )
+                    ErrorBanner(message = stringResource(uiState.errorRes ?: R.string.error_load_details))
                 }
             }
             else -> {
                 val detail = uiState.detail ?: return@Scaffold
                 val sortedRelations = remember(detail.relations) { sortRelatedAnime(detail.relations) }
-
                 LazyColumn(
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    contentPadding = PaddingValues(bottom = 32.dp),
-                    verticalArrangement = Arrangement.spacedBy(18.dp),
+                    contentPadding = PaddingValues(bottom = 28.dp),
+                    verticalArrangement = Arrangement.spacedBy(15.dp),
                 ) {
                     item(key = "hero", contentType = "hero") {
                         DetailHero(detail = detail, onBack = onBack)
@@ -181,7 +174,7 @@ fun AnimeDetailScreen(
                     item(key = "actions", contentType = "actions") {
                         Column(
                             modifier = Modifier.padding(horizontal = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
                             DetailActions(
                                 detail = detail,
@@ -192,9 +185,7 @@ fun AnimeDetailScreen(
                                 onEdit = { showStatusSheet = true },
                                 onIncrement = viewModel::incrementEpisode,
                             )
-                            detail.malListEntry?.let { entry ->
-                                ProgressPanel(detail = detail, entry = entry)
-                            }
+                            detail.malListEntry?.let { ProgressPanel(detail, it) }
                         }
                     }
 
@@ -202,10 +193,10 @@ fun AnimeDetailScreen(
                         item(key = "genres", contentType = "chips") {
                             FlowRow(
                                 modifier = Modifier.padding(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(7.dp),
+                                verticalArrangement = Arrangement.spacedBy(7.dp),
                             ) {
-                                detail.genres.forEach { genre -> MetadataPill(genre) }
+                                detail.genres.forEach { MetadataPill(it) }
                             }
                         }
                     }
@@ -226,9 +217,7 @@ fun AnimeDetailScreen(
                         ?.takeIf { it.isNotBlank() }
                         ?.let { synopsis ->
                             item(key = "synopsis", contentType = "section") {
-                                DetailSection(title = stringResource(R.string.detail_synopsis)) {
-                                    ExpandableSynopsis(synopsis)
-                                }
+                                SynopsisSection(synopsis)
                             }
                         }
 
@@ -240,10 +229,7 @@ fun AnimeDetailScreen(
                                     key = { "character-${it.id}" },
                                     contentType = { "character" },
                                 ) { character ->
-                                    CharacterCard(
-                                        character = character,
-                                        onClick = { viewModel.openCharacter(character.id) },
-                                    )
+                                    CharacterCard(character) { viewModel.openCharacter(character.id) }
                                 }
                             }
                         }
@@ -257,20 +243,17 @@ fun AnimeDetailScreen(
                                     key = { "related-${it.animeId}" },
                                     contentType = { "related" },
                                 ) { related ->
-                                    RelatedAnimeCard(
-                                        related = related,
-                                        onClick = {
-                                            if (related.mediaType == null || related.mediaType == "ANIME") {
-                                                onAnimeClick(related.animeId)
-                                            } else {
-                                                val path = related.mediaType.lowercase()
-                                                val uri = android.net.Uri.parse("https://anilist.co/$path/${related.animeId}")
-                                                androidx.browser.customtabs.CustomTabsIntent.Builder()
-                                                    .build()
-                                                    .launchUrl(context, uri)
-                                            }
-                                        },
-                                    )
+                                    RelatedAnimeCard(related) {
+                                        if (related.mediaType == null || related.mediaType == "ANIME") {
+                                            onAnimeClick(related.animeId)
+                                        } else {
+                                            val path = related.mediaType.lowercase()
+                                            val uri = android.net.Uri.parse("https://anilist.co/$path/${related.animeId}")
+                                            androidx.browser.customtabs.CustomTabsIntent.Builder()
+                                                .build()
+                                                .launchUrl(context, uri)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -294,10 +277,7 @@ fun AnimeDetailScreen(
     }
 
     if (characterOverlay.isVisible) {
-        CharacterOverlaySheet(
-            state = characterOverlay,
-            onDismiss = viewModel::dismissCharacterOverlay,
-        )
+        CharacterOverlaySheet(state = characterOverlay, onDismiss = viewModel::dismissCharacterOverlay)
     }
 }
 
@@ -311,9 +291,7 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
         detail.averageScore?.let { "★ ${it / 10.0}" },
     )
 
-    Box(
-        modifier = Modifier.fillMaxWidth().height(336.dp),
-    ) {
+    Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
         AsyncImage(
             model = detail.bannerImageUrl ?: detail.coverImageUrl,
             contentDescription = null,
@@ -321,26 +299,22 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
             modifier = Modifier.fillMaxSize(),
         )
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colorStops = arrayOf(
-                            0f to Color.Black.copy(alpha = 0.08f),
-                            0.42f to Color.Black.copy(alpha = 0.10f),
-                            0.70f to Color.Black.copy(alpha = 0.48f),
-                            1f to MaterialTheme.colorScheme.background,
-                        ),
+            modifier = Modifier.fillMaxSize().background(
+                Brush.verticalGradient(
+                    colorStops = arrayOf(
+                        0f to Color.Black.copy(alpha = 0.08f),
+                        0.45f to Color.Black.copy(alpha = 0.14f),
+                        0.72f to Color.Black.copy(alpha = 0.58f),
+                        1f to MaterialTheme.colorScheme.background,
                     ),
                 ),
+            ),
         )
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(horizontal = 10.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             GlassIconButton(
@@ -350,32 +324,31 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
                 onImagery = true,
             )
         }
-
         Row(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 18.dp),
+                .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             MediaThumbnail.Large(
                 url = detail.coverImageUrl,
                 contentDescription = title,
                 modifier = Modifier
-                    .size(width = 92.dp, height = 132.dp)
-                    .border(0.7.dp, Color.White.copy(alpha = 0.30f), MaterialTheme.shapes.large),
+                    .size(width = 82.dp, height = 118.dp)
+                    .border(0.5.dp, Color.White.copy(alpha = 0.26f), MaterialTheme.shapes.large),
             )
             Column(
                 modifier = Modifier.weight(1f).padding(bottom = 2.dp),
-                verticalArrangement = Arrangement.spacedBy(5.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    maxLines = 3,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
                 detail.titleEnglish
@@ -384,8 +357,8 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
                         Text(
                             text = it,
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.78f),
-                            maxLines = 2,
+                            color = Color.White.copy(alpha = 0.76f),
+                            maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
@@ -394,7 +367,7 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
                         text = metadata.joinToString("  •  "),
                         style = MaterialTheme.typography.labelMedium,
                         color = Color.White.copy(alpha = 0.90f),
-                        maxLines = 2,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
@@ -429,7 +402,7 @@ private fun DetailActions(
         )
         else -> Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             AppButton(
                 label = stringResource(R.string.detail_status),
@@ -441,7 +414,7 @@ private fun DetailActions(
             AppButton(
                 label = if (isIncrementing) "…" else "+1",
                 onClick = onIncrement,
-                modifier = Modifier.width(88.dp),
+                modifier = Modifier.width(72.dp),
                 enabled = detail.malListEntry.status == WatchStatus.WATCHING && !isIncrementing,
                 variant = AppButtonVariant.Primary,
             )
@@ -457,13 +430,10 @@ private fun ProgressPanel(detail: AnimeDetail, entry: MalListEntry) {
 
     InsetGroup(title = entry.status.displayName()) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "${entry.episodesWatched}/${total ?: "?"} ${stringResource(R.string.detail_episodes).lowercase()}",
                     modifier = Modifier.weight(1f),
@@ -473,8 +443,8 @@ private fun ProgressPanel(detail: AnimeDetail, entry: MalListEntry) {
                 if (entry.score > 0) {
                     Text(
                         text = "${stringResource(R.string.detail_score)}  ${entry.score}/10",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
@@ -482,9 +452,9 @@ private fun ProgressPanel(detail: AnimeDetail, entry: MalListEntry) {
             if (progress != null) {
                 LinearProgressIndicator(
                     progress = { progress },
-                    modifier = Modifier.fillMaxWidth().height(4.dp).clip(PillShape),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier.fillMaxWidth().height(3.dp).clip(PillShape),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f),
+                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
                 )
             }
         }
@@ -493,48 +463,15 @@ private fun ProgressPanel(detail: AnimeDetail, entry: MalListEntry) {
 
 @Composable
 private fun MetadataPill(text: String) {
-    GlassSurface(
-        shape = PillShape,
-        tone = GlassTone.Neutral,
-        blur = GlassBlur.None,
-    ) {
+    GlassSurface(shape = PillShape, tone = GlassTone.Neutral, blur = GlassBlur.None) {
         Text(
             text = text,
-            modifier = Modifier.padding(horizontal = 13.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-    }
-}
-
-@Composable
-private fun DetailSection(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    Column(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(
-            text = title,
-            modifier = Modifier.padding(horizontal = 4.dp),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        AppMaterialSurface(
-            modifier = Modifier.fillMaxWidth(),
-            material = AppMaterial.Grouped,
-            shape = MaterialTheme.shapes.large,
-        ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                content = content,
-            )
-        }
     }
 }
 
@@ -545,53 +482,73 @@ private fun WatchSourcesSection(
     context: android.content.Context,
     onWatchSourceClick: (String) -> Unit,
 ) {
-    DetailSection(title = stringResource(R.string.detail_watch_on)) {
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SectionTitle(stringResource(R.string.detail_watch_on))
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             sources.forEach { source ->
-                WatchSourceChip(
-                    source = source,
-                    onClick = {
-                        val url = source.buildUrl(animeTitle)
-                        if (source.openExternally) {
-                            context.startActivity(
-                                android.content.Intent(
-                                    android.content.Intent.ACTION_VIEW,
-                                    android.net.Uri.parse(url),
-                                ),
-                            )
-                        } else {
-                            onWatchSourceClick(url)
-                        }
-                    },
-                )
+                WatchSourceChip(source) {
+                    val url = source.buildUrl(animeTitle)
+                    if (source.openExternally) {
+                        context.startActivity(
+                            android.content.Intent(
+                                android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse(url),
+                            ),
+                        )
+                    } else onWatchSourceClick(url)
+                }
             }
         }
         Text(
             text = stringResource(R.string.detail_watch_on_disclaimer),
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f),
+            modifier = Modifier.padding(horizontal = 2.dp),
         )
     }
 }
 
 @Composable
-private fun HorizontalSection(
-    title: String,
-    content: LazyListScope.() -> Unit,
-) {
+private fun SynopsisSection(text: String) {
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SectionTitle(stringResource(R.string.detail_synopsis))
+        AppMaterialSurface(
+            modifier = Modifier.fillMaxWidth(),
+            material = AppMaterial.Grouped,
+            shape = MaterialTheme.shapes.large,
+        ) {
+            ExpandableSynopsis(text)
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier.padding(horizontal = 3.dp),
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
+}
+
+@Composable
+private fun HorizontalSection(title: String, content: LazyListScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = title,
-            modifier = Modifier.padding(horizontal = 20.dp),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        SectionTitle(text = title)
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(11.dp),
             content = content,
         )
     }
@@ -601,26 +558,24 @@ private fun HorizontalSection(
 private fun DetailLoadingState(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Box(
-            Modifier.fillMaxWidth().height(336.dp).background(MaterialTheme.colorScheme.surfaceContainer),
-        )
+        Box(Modifier.fillMaxWidth().height(300.dp).background(MaterialTheme.colorScheme.surfaceContainer))
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Box(
-                Modifier.fillMaxWidth().height(48.dp).clip(PillShape)
+                Modifier.fillMaxWidth().height(44.dp).clip(PillShape)
                     .background(MaterialTheme.colorScheme.surfaceContainer),
             )
             Box(
-                Modifier.fillMaxWidth().height(120.dp).clip(MaterialTheme.shapes.large)
+                Modifier.fillMaxWidth().height(96.dp).clip(MaterialTheme.shapes.large)
                     .background(MaterialTheme.colorScheme.surfaceContainer),
             )
             CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 10.dp),
-                strokeWidth = 3.dp,
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp),
+                strokeWidth = 2.dp,
             )
         }
     }
@@ -628,10 +583,7 @@ private fun DetailLoadingState(modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CharacterOverlaySheet(
-    state: CharacterOverlayState,
-    onDismiss: () -> Unit,
-) {
+private fun CharacterOverlaySheet(state: CharacterOverlayState, onDismiss: () -> Unit) {
     AppSheet(
         onDismissRequest = onDismiss,
         title = state.detail?.name ?: stringResource(R.string.detail_characters),
@@ -639,14 +591,14 @@ private fun CharacterOverlaySheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 560.dp)
+                .heightIn(max = 500.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(bottom = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             when {
                 state.isLoading -> Box(
-                    Modifier.fillMaxWidth().padding(vertical = 60.dp),
+                    Modifier.fillMaxWidth().padding(vertical = 48.dp),
                     contentAlignment = Alignment.Center,
                 ) { CircularProgressIndicator() }
                 state.errorRes != null -> ErrorBanner(stringResource(state.errorRes))
@@ -660,7 +612,7 @@ private fun CharacterOverlaySheet(
                                 MediaThumbnail.Small(
                                     url = imageUrl,
                                     contentDescription = detail.name,
-                                    modifier = Modifier.size(56.dp),
+                                    modifier = Modifier.size(52.dp),
                                 )
                             }
                         },
@@ -672,7 +624,7 @@ private fun CharacterOverlaySheet(
                             InsetGroup {
                                 Text(
                                     text = it,
-                                    modifier = Modifier.padding(16.dp),
+                                    modifier = Modifier.padding(14.dp),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -710,16 +662,16 @@ private fun relationTypeLabel(type: String?): String? = when (type) {
     else -> type.takeIf { it.isNotBlank() }
 }
 
-private const val SYNOPSIS_COLLAPSED_LINES = 5
+private const val SYNOPSIS_COLLAPSED_LINES = 4
 
 @Composable
 private fun ExpandableSynopsis(text: String) {
     var expanded by remember(text) { mutableStateOf(false) }
     var isOverflowing by remember(text) { mutableStateOf(false) }
-    Column {
+    Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = if (expanded) Int.MAX_VALUE else SYNOPSIS_COLLAPSED_LINES,
             overflow = TextOverflow.Ellipsis,
@@ -730,11 +682,11 @@ private fun ExpandableSynopsis(text: String) {
                 text = stringResource(if (expanded) R.string.cd_collapse else R.string.cd_expand),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier
-                    .heightIn(min = 44.dp)
+                    .heightIn(min = 38.dp)
                     .clickable { expanded = !expanded }
-                    .padding(top = 12.dp),
+                    .padding(top = 10.dp),
             )
         }
     }
@@ -742,20 +694,18 @@ private fun ExpandableSynopsis(text: String) {
 
 @Composable
 private fun WatchSourceChip(source: WatchSource, onClick: () -> Unit) {
-    GlassButton(
-        onClick = onClick,
-        contentPadding = PaddingValues(horizontal = 15.dp),
-    ) { color ->
+    GlassButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 13.dp)) { color ->
         source.faviconUrl?.let {
             FaviconImage(
                 faviconUrl = it,
                 siteUrl = source.urlTemplate,
-                modifier = Modifier.size(21.dp).clip(CircleShape),
+                modifier = Modifier.size(18.dp).clip(CircleShape),
             )
         }
         Text(
             text = source.name,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
             color = color,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -767,7 +717,7 @@ private fun WatchSourceChip(source: WatchSource, onClick: () -> Unit) {
 private fun CharacterCard(character: Character, onClick: () -> Unit) {
     Column(
         modifier = Modifier
-            .width(104.dp)
+            .width(96.dp)
             .clickable(onClick = onClick)
             .semantics {
                 role = Role.Button
@@ -779,10 +729,11 @@ private fun CharacterCard(character: Character, onClick: () -> Unit) {
             contentDescription = null,
             modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f),
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(6.dp))
         Text(
             text = character.name,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Medium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
@@ -802,7 +753,7 @@ private fun CharacterCard(character: Character, onClick: () -> Unit) {
 private fun RelatedAnimeCard(related: RelatedAnime, onClick: () -> Unit) {
     Column(
         modifier = Modifier
-            .width(120.dp)
+            .width(112.dp)
             .clickable(onClick = onClick)
             .semantics {
                 role = Role.Button
@@ -810,28 +761,29 @@ private fun RelatedAnimeCard(related: RelatedAnime, onClick: () -> Unit) {
             },
     ) {
         relationTypeLabel(related.relationType)?.let { label ->
-            GlassSurface(shape = PillShape, tone = GlassTone.Neutral) {
+            GlassSurface(shape = PillShape, tone = GlassTone.Neutral, blur = GlassBlur.None) {
                 Text(
                     text = label,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Spacer(Modifier.height(7.dp))
+            Spacer(Modifier.height(6.dp))
         }
         MediaThumbnail.Small(
             url = related.coverImageUrl,
             contentDescription = null,
             modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f),
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(6.dp))
         Text(
             text = related.title,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Medium,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
