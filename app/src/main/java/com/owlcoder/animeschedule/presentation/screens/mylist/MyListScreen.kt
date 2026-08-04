@@ -447,7 +447,7 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier
                     .widthIn(max = 340.dp)
-                    .padding(horizontal = 4.dp, bottom = 86.dp),
+                    .padding(start = 4.dp, end = 4.dp, bottom = 86.dp),
             ) {
                 Surface(
                     modifier = Modifier.size(72.dp),
