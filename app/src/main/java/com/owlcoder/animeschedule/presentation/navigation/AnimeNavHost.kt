@@ -26,7 +26,6 @@ import com.owlcoder.animeschedule.presentation.navigation.Screen.Detail
 import com.owlcoder.animeschedule.presentation.screens.detail.AnimeDetailScreen
 import com.owlcoder.animeschedule.presentation.screens.mylist.MyListScreen
 import com.owlcoder.animeschedule.presentation.screens.schedule.AllTodayScreen
-import com.owlcoder.animeschedule.presentation.screens.schedule.ScheduleOverlay
 import com.owlcoder.animeschedule.presentation.screens.schedule.ScheduleScreen
 import com.owlcoder.animeschedule.presentation.screens.schedule.ScheduleViewModel
 import com.owlcoder.animeschedule.presentation.screens.search.SearchScreen
@@ -58,28 +57,30 @@ fun AnimeNavHost(
     )
 
     val pushEnter = slideInHorizontally(
-        animationSpec = motion.iosTween(IosMotion.Navigation),
-        initialOffsetX = { if (motion.animationsEnabled) it / 3 else 0 },
+        animationSpec = motion.iosDecelerate(IosMotion.Navigation),
+        initialOffsetX = { if (motion.animationsEnabled) it else 0 },
     ) + fadeIn(
         animationSpec = motion.iosDecelerate(IosMotion.Standard),
     )
     val pushExit = slideOutHorizontally(
         animationSpec = motion.iosTween(IosMotion.Navigation),
-        targetOffsetX = { if (motion.animationsEnabled) -it / 8 else 0 },
+        targetOffsetX = { if (motion.animationsEnabled) -it / 4 else 0 },
     ) + fadeOut(
-        animationSpec = motion.iosTween(IosMotion.Quick),
+        animationSpec = motion.iosTween(IosMotion.Standard),
+        targetAlpha = 0.82f,
     )
     val popEnter = slideInHorizontally(
-        animationSpec = motion.iosTween(IosMotion.Navigation),
-        initialOffsetX = { if (motion.animationsEnabled) -it / 8 else 0 },
+        animationSpec = motion.iosDecelerate(IosMotion.Navigation),
+        initialOffsetX = { if (motion.animationsEnabled) -it / 4 else 0 },
     ) + fadeIn(
         animationSpec = motion.iosDecelerate(IosMotion.Standard),
+        initialAlpha = 0.82f,
     )
     val popExit = slideOutHorizontally(
         animationSpec = motion.iosTween(IosMotion.Navigation),
-        targetOffsetX = { if (motion.animationsEnabled) it / 3 else 0 },
+        targetOffsetX = { if (motion.animationsEnabled) it else 0 },
     ) + fadeOut(
-        animationSpec = motion.iosTween(IosMotion.Quick),
+        animationSpec = motion.iosTween(IosMotion.Standard),
     )
 
     NavHost(
@@ -93,11 +94,15 @@ fun AnimeNavHost(
     ) {
         composable(Screen.Schedule.route) {
             val scheduleViewModel: ScheduleViewModel = hiltViewModel()
-            val openOverlay by scheduleViewModel.openOverlay.collectAsState()
-            LaunchedEffect(openOverlay) {
-                if (openOverlay is ScheduleOverlay.SeeAll) {
-                    scheduleViewModel.setOpenOverlay(ScheduleOverlay.None)
-                    navController.navigate(Screen.AllToday.route)
+            LaunchedEffect(scheduleViewModel, navController) {
+                scheduleViewModel.navigationEvent.collect { event ->
+                    when (event) {
+                        is ScheduleViewModel.NavigationEvent.OpenSeeAll -> {
+                            navController.navigate(Screen.AllToday.route) {
+                                launchSingleTop = true
+                            }
+                        }
+                    }
                 }
             }
             ScheduleScreen(
@@ -105,6 +110,7 @@ fun AnimeNavHost(
                     navController.navigate(Detail.createRoute(animeId))
                 },
                 onInitialLoadChange = onScheduleInitialLoadChange,
+                viewModel = scheduleViewModel,
             )
         }
         composable(Screen.Search.route) {
