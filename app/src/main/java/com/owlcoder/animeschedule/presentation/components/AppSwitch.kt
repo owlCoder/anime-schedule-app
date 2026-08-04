@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 
-/** Compact 46x28 control with iOS-like thumb depth and track proportions. */
+/** 46x28 visual control centered in a 50x44 accessibility target. */
 @Composable
 fun AppSwitch(
     checked: Boolean,
@@ -29,9 +29,9 @@ fun AppSwitch(
 ) {
     val trackColor by animateColorAsState(
         targetValue = when {
-            !enabled -> MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.38f)
+            !enabled -> MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.46f)
             checked -> MaterialTheme.colorScheme.primary
-            else -> MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.92f)
+            else -> MaterialTheme.colorScheme.surfaceContainerHighest
         },
         label = "switchTrack",
     )
@@ -42,24 +42,30 @@ fun AppSwitch(
 
     Box(
         modifier = modifier
-            .size(width = 46.dp, height = 28.dp)
-            .clip(CircleShape)
-            .background(trackColor)
+            .size(width = 50.dp, height = 44.dp)
             .toggleable(
                 value = checked,
                 enabled = enabled,
                 role = Role.Switch,
                 onValueChange = onCheckedChange,
             ),
-        contentAlignment = Alignment.CenterStart,
+        contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
-                .offset(x = thumbOffset)
-                .size(24.dp)
-                .shadow(1.5.dp, CircleShape, clip = false)
+                .size(width = 46.dp, height = 28.dp)
                 .clip(CircleShape)
-                .background(if (enabled) Color.White else Color.White.copy(alpha = 0.72f)),
-        )
+                .background(trackColor),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            Box(
+                modifier = Modifier
+                    .offset(x = thumbOffset)
+                    .size(24.dp)
+                    .shadow(1.5.dp, CircleShape, clip = false)
+                    .clip(CircleShape)
+                    .background(if (enabled) Color.White else Color.White.copy(alpha = 0.76f)),
+            )
+        }
     }
 }
