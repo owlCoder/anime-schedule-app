@@ -60,14 +60,14 @@ import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import java.util.Locale
 
-private val FORMAT_LABELS = mapOf(
-    "TV" to "TV",
-    "TV_SHORT" to "TV Short",
-    "MOVIE" to "Movie",
-    "SPECIAL" to "Special",
-    "OVA" to "OVA",
-    "ONA" to "ONA",
-    "MUSIC" to "Music",
+private val FORMAT_LABEL_RES = mapOf(
+    "TV" to R.string.format_tv,
+    "TV_SHORT" to R.string.format_tv_short,
+    "MOVIE" to R.string.format_movie,
+    "SPECIAL" to R.string.format_special,
+    "OVA" to R.string.format_ova,
+    "ONA" to R.string.format_ona,
+    "MUSIC" to R.string.format_music,
 )
 
 @StringRes
@@ -146,7 +146,11 @@ internal fun SeasonTabRow(
 }
 
 @Composable
-private fun SeasonLabel(season: AnimeSeason, selected: Boolean, contentColor: Color) {
+private fun SeasonLabel(
+    season: AnimeSeason,
+    selected: Boolean,
+    contentColor: Color,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -179,7 +183,7 @@ internal fun SeasonalAnimeCard(
     modifier: Modifier = Modifier,
 ) {
     val meta = listOfNotNull(
-        FORMAT_LABELS[item.format] ?: item.format,
+        localizedFormatLabel(item.format),
         item.episodes?.let { "$it ep" },
         (item.averageScore ?: item.meanScore)?.let { "★ ${formatCommunityScore(it)}" },
     ).joinToString(" · ")
@@ -237,7 +241,7 @@ internal fun SeasonalFilterSheet(
         trailingContent = {
             TextButton(onClick = onClear, enabled = filter.isActive) {
                 Text(
-                    stringResource(R.string.seasonal_filter_reset),
+                    text = stringResource(R.string.seasonal_filter_reset),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -300,7 +304,7 @@ internal fun SeasonalFilterSheet(
                     ) {
                         availableFormats.forEach { format ->
                             CompactFilterChip(
-                                label = FORMAT_LABELS[format] ?: format,
+                                label = localizedFormatLabel(format),
                                 selected = format in filter.formats,
                                 onClick = { onFormatToggle(format) },
                             )
@@ -317,7 +321,7 @@ internal fun SeasonalFilterSheet(
                     ) {
                         availableGenres.forEach { genre ->
                             CompactFilterChip(
-                                label = genre,
+                                label = localizedGenreLabel(genre),
                                 selected = genre in filter.genres,
                                 onClick = { onGenreToggle(genre) },
                             )
@@ -401,7 +405,7 @@ private fun SortSegmentedControl(
                     ) {
                         if (isSelected) {
                             Icon(
-                                Icons.Default.Check,
+                                imageVector = Icons.Default.Check,
                                 contentDescription = null,
                                 modifier = Modifier.size(14.dp),
                                 tint = content,
@@ -452,8 +456,8 @@ private fun CompactFilterChip(
         color = containerColor,
         contentColor = contentColor,
         border = BorderStroke(
-            0.6.dp,
-            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.62f)
+            width = 0.6.dp,
+            color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.62f)
             else MaterialTheme.colorScheme.outlineVariant,
         ),
         tonalElevation = 0.dp,
@@ -466,7 +470,7 @@ private fun CompactFilterChip(
         ) {
             if (selected) {
                 Icon(
-                    Icons.Default.Check,
+                    imageVector = Icons.Default.Check,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
                     tint = contentColor,
@@ -482,6 +486,34 @@ private fun CompactFilterChip(
             )
         }
     }
+}
+
+@Composable
+private fun localizedFormatLabel(format: String): String =
+    FORMAT_LABEL_RES[format]?.let { stringResource(it) } ?: format
+
+@Composable
+private fun localizedGenreLabel(genre: String): String = when (genre.lowercase()) {
+    "action" -> stringResource(R.string.genre_action)
+    "adventure" -> stringResource(R.string.genre_adventure)
+    "comedy" -> stringResource(R.string.genre_comedy)
+    "drama" -> stringResource(R.string.genre_drama)
+    "ecchi" -> stringResource(R.string.genre_ecchi)
+    "fantasy" -> stringResource(R.string.genre_fantasy)
+    "hentai" -> stringResource(R.string.genre_hentai)
+    "horror" -> stringResource(R.string.genre_horror)
+    "mahou shoujo" -> stringResource(R.string.genre_mahou_shoujo)
+    "mecha" -> stringResource(R.string.genre_mecha)
+    "music" -> stringResource(R.string.genre_music)
+    "mystery" -> stringResource(R.string.genre_mystery)
+    "psychological" -> stringResource(R.string.genre_psychological)
+    "romance" -> stringResource(R.string.genre_romance)
+    "sci-fi" -> stringResource(R.string.genre_scifi)
+    "slice of life" -> stringResource(R.string.genre_slice_of_life)
+    "sports" -> stringResource(R.string.genre_sports)
+    "supernatural" -> stringResource(R.string.genre_supernatural)
+    "thriller" -> stringResource(R.string.genre_thriller)
+    else -> genre
 }
 
 internal fun prevSeason(season: AnimeSeason, year: Int): Pair<AnimeSeason, Int> {
