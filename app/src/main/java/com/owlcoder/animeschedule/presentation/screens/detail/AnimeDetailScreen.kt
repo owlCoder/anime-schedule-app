@@ -1,5 +1,6 @@
 package com.owlcoder.animeschedule.presentation.screens.detail
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -84,9 +86,11 @@ import com.owlcoder.animeschedule.presentation.components.GlassIconButton
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.InsetListRow
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
+import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
 import com.owlcoder.animeschedule.presentation.components.displayName
+import com.owlcoder.animeschedule.presentation.components.iosSpring
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
@@ -120,7 +124,10 @@ fun AnimeDetailScreen(
                     val entry = detail?.malListEntry
                     val total = detail?.episodes
                     if (entry != null && total != null && entry.episodesWatched + 1 >= total) {
-                        finaleOverrideEntry = entry.copy(episodesWatched = total, status = WatchStatus.COMPLETED)
+                        finaleOverrideEntry = entry.copy(
+                            episodesWatched = total,
+                            status = WatchStatus.COMPLETED,
+                        )
                         showStatusSheet = true
                     }
                 }
@@ -141,6 +148,7 @@ fun AnimeDetailScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
                     .windowInsetsPadding(WindowInsets.statusBars)
+                    .navigationBarsPadding()
                     .verticalScroll(rememberScrollState()),
                 contentAlignment = Alignment.TopCenter,
             ) {
@@ -160,9 +168,9 @@ fun AnimeDetailScreen(
                 val detail = uiState.detail ?: return@Scaffold
                 val sortedRelations = remember(detail.relations) { sortRelatedAnime(detail.relations) }
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    contentPadding = PaddingValues(bottom = 30.dp),
-                    verticalArrangement = Arrangement.spacedBy(13.dp),
+                    modifier = Modifier.fillMaxSize().padding(innerPadding).navigationBarsPadding(),
+                    contentPadding = PaddingValues(bottom = 44.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     item(key = "hero", contentType = "hero") {
                         DetailHero(detail = detail, onBack = onBack)
@@ -288,7 +296,7 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
         detail.averageScore?.let { "★ ${it / 10.0}" },
     )
 
-    Box(modifier = Modifier.fillMaxWidth().height(282.dp)) {
+    Box(modifier = Modifier.fillMaxWidth().height(292.dp)) {
         AsyncImage(
             model = detail.bannerImageUrl ?: detail.coverImageUrl,
             contentDescription = null,
@@ -299,9 +307,10 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
             modifier = Modifier.fillMaxSize().background(
                 Brush.verticalGradient(
                     colorStops = arrayOf(
-                        0f to Color.Black.copy(alpha = 0.05f),
-                        0.44f to Color.Black.copy(alpha = 0.12f),
-                        0.68f to Color.Black.copy(alpha = 0.56f),
+                        0f to Color.Black.copy(alpha = 0.18f),
+                        0.38f to Color.Black.copy(alpha = 0.22f),
+                        0.62f to Color.Black.copy(alpha = 0.68f),
+                        0.82f to Color.Black.copy(alpha = 0.88f),
                         1f to MaterialTheme.colorScheme.background,
                     ),
                 ),
@@ -325,7 +334,7 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 13.dp),
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -334,7 +343,7 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
                 contentDescription = title,
                 modifier = Modifier
                     .size(width = 76.dp, height = 108.dp)
-                    .border(0.5.dp, Color.White.copy(alpha = 0.28f), MaterialTheme.shapes.large),
+                    .border(0.5.dp, Color.White.copy(alpha = 0.32f), MaterialTheme.shapes.large),
             )
             Column(
                 modifier = Modifier.weight(1f).padding(bottom = 1.dp),
@@ -345,7 +354,7 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    maxLines = 3,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
                 detail.titleEnglish
@@ -354,7 +363,7 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
                         Text(
                             text = it,
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.80f),
+                            color = Color.White.copy(alpha = 0.82f),
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
@@ -363,7 +372,7 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
                     Text(
                         text = metadata.joinToString(" · "),
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color.White.copy(alpha = 0.92f),
+                        color = Color.White.copy(alpha = 0.94f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -384,12 +393,14 @@ private fun DetailActions(
     onIncrement: () -> Unit,
 ) {
     when {
-        !isLoggedIn -> AppButton(
-            label = stringResource(R.string.detail_login_cta),
-            onClick = onLogin,
-            modifier = Modifier.fillMaxWidth(),
-            variant = AppButtonVariant.Secondary,
-        )
+        !isLoggedIn -> Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            AppButton(
+                label = stringResource(R.string.detail_login_cta),
+                onClick = onLogin,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 42.dp),
+                variant = AppButtonVariant.Secondary,
+            )
+        }
         detail.malListEntry == null -> AppButton(
             label = stringResource(R.string.detail_add_to_list),
             onClick = onAdd,
@@ -535,10 +546,10 @@ private fun SynopsisSection(text: String) {
 }
 
 @Composable
-private fun SectionTitle(text: String) {
+private fun SectionTitle(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
-        modifier = Modifier.padding(horizontal = 2.dp),
+        modifier = modifier.padding(horizontal = 2.dp),
         style = MaterialTheme.typography.titleMedium,
         fontWeight = FontWeight.SemiBold,
         color = MaterialTheme.colorScheme.onSurface,
@@ -548,9 +559,9 @@ private fun SectionTitle(text: String) {
 @Composable
 private fun HorizontalSection(title: String, content: LazyListScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SectionTitle(text = title)
+        SectionTitle(text = title, modifier = Modifier.padding(horizontal = 16.dp))
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             content = content,
         )
@@ -560,10 +571,10 @@ private fun HorizontalSection(title: String, content: LazyListScope.() -> Unit) 
 @Composable
 private fun DetailLoadingState(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.verticalScroll(rememberScrollState()),
+        modifier = modifier.navigationBarsPadding().verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Box(Modifier.fillMaxWidth().height(282.dp).background(MaterialTheme.colorScheme.surfaceContainer))
+        Box(Modifier.fillMaxWidth().height(292.dp).background(MaterialTheme.colorScheme.surfaceContainer))
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -596,7 +607,7 @@ private fun CharacterOverlaySheet(state: CharacterOverlayState, onDismiss: () ->
                 .fillMaxWidth()
                 .heightIn(max = 500.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 6.dp),
+                .padding(bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             when {
@@ -671,10 +682,15 @@ private const val SYNOPSIS_COLLAPSED_LINES = 4
 private fun ExpandableSynopsis(text: String) {
     var expanded by remember(text) { mutableStateOf(false) }
     var isOverflowing by remember(text) { mutableStateOf(false) }
-    Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
+    val motion = LocalMotionPolicy.current
+    Column(
+        modifier = Modifier
+            .animateContentSize(animationSpec = motion.iosSpring())
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+    ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = if (expanded) Int.MAX_VALUE else SYNOPSIS_COLLAPSED_LINES,
             overflow = TextOverflow.Ellipsis,
@@ -682,7 +698,7 @@ private fun ExpandableSynopsis(text: String) {
         )
         if (isOverflowing || expanded) {
             Text(
-                text = stringResource(if (expanded) R.string.cd_collapse else R.string.cd_expand),
+                text = if (expanded) "Show less" else "Read more",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,
