@@ -30,7 +30,6 @@ import com.owlcoder.animeschedule.presentation.screens.schedule.ScheduleScreen
 import com.owlcoder.animeschedule.presentation.screens.schedule.ScheduleViewModel
 import com.owlcoder.animeschedule.presentation.screens.search.SearchScreen
 import com.owlcoder.animeschedule.presentation.screens.settings.SettingsScreen
-import com.owlcoder.animeschedule.presentation.screens.settings.WatchSourcesScreen
 import com.owlcoder.animeschedule.presentation.screens.watch.WatchScreen
 
 @Composable
@@ -130,10 +129,7 @@ fun AnimeNavHost(
             )
         }
         composable(Screen.Settings.route) {
-            SettingsScreen(
-                onRestartForLanguage = onRestartForLanguage,
-                onManageWatchSources = { navController.navigate(Screen.WatchSources.route) },
-            )
+            SettingsScreen(onRestartForLanguage = onRestartForLanguage)
         }
         composable(
             route = Screen.AllToday.route,
@@ -156,15 +152,6 @@ fun AnimeNavHost(
                 },
                 onBack = { navController.popBackStack() },
             )
-        }
-        composable(
-            route = Screen.WatchSources.route,
-            enterTransition = { pushEnter },
-            exitTransition = { pushExit },
-            popEnterTransition = { popEnter },
-            popExitTransition = { popExit },
-        ) {
-            WatchSourcesScreen(onBack = { navController.popBackStack() })
         }
         composable(
             route = Detail.ROUTE,
