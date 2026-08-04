@@ -1,6 +1,9 @@
 package com.owlcoder.animeschedule.presentation.screens.detail
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -85,12 +89,14 @@ import com.owlcoder.animeschedule.presentation.components.FaviconImage
 import com.owlcoder.animeschedule.presentation.components.GlassIconButton
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.InsetListRow
+import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
 import com.owlcoder.animeschedule.presentation.components.displayName
 import com.owlcoder.animeschedule.presentation.components.iosSpring
+import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
@@ -169,7 +175,7 @@ fun AnimeDetailScreen(
                 val sortedRelations = remember(detail.relations) { sortRelatedAnime(detail.relations) }
                 LazyColumn(
                     modifier = Modifier.fillMaxSize().padding(innerPadding).navigationBarsPadding(),
-                    contentPadding = PaddingValues(bottom = 44.dp),
+                    contentPadding = PaddingValues(bottom = 56.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     item(key = "hero", contentType = "hero") {
@@ -289,14 +295,17 @@ fun AnimeDetailScreen(
 @Composable
 private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
     val title = detail.titleRomaji ?: detail.titleEnglish.orEmpty()
+    val motion = LocalMotionPolicy.current
+    var revealed by remember(detail.animeId) { mutableStateOf(false) }
+    LaunchedEffect(detail.animeId) { revealed = true }
     val metadata = listOfNotNull(
-        detail.format,
+        detail.format?.toDisplayFormat(),
         detail.seasonYear?.toString(),
         detail.episodes?.let { "$it ep" },
         detail.averageScore?.let { "★ ${it / 10.0}" },
     )
 
-    Box(modifier = Modifier.fillMaxWidth().height(292.dp)) {
+    Box(modifier = Modifier.fillMaxWidth().height(280.dp)) {
         AsyncImage(
             model = detail.bannerImageUrl ?: detail.coverImageUrl,
             contentDescription = null,
@@ -307,10 +316,10 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
             modifier = Modifier.fillMaxSize().background(
                 Brush.verticalGradient(
                     colorStops = arrayOf(
-                        0f to Color.Black.copy(alpha = 0.18f),
-                        0.38f to Color.Black.copy(alpha = 0.22f),
-                        0.62f to Color.Black.copy(alpha = 0.68f),
-                        0.82f to Color.Black.copy(alpha = 0.88f),
+                        0f to Color.Black.copy(alpha = 0.12f),
+                        0.42f to Color.Black.copy(alpha = 0.18f),
+                        0.66f to Color.Black.copy(alpha = 0.56f),
+                        0.86f to Color.Black.copy(alpha = 0.82f),
                         1f to MaterialTheme.colorScheme.background,
                     ),
                 ),
@@ -330,52 +339,63 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
                 onImagery = true,
             )
         }
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 13.dp),
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        AnimatedVisibility(
+            visible = revealed,
+            modifier = Modifier.align(Alignment.BottomStart),
+            enter = fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
+                slideInVertically(
+                    animationSpec = motion.iosTween(IosMotion.Standard),
+                    initialOffsetY = { if (motion.animationsEnabled) it / 6 else 0 },
+                ),
         ) {
-            MediaThumbnail.Large(
-                url = detail.coverImageUrl,
-                contentDescription = title,
+            Row(
                 modifier = Modifier
-                    .size(width = 76.dp, height = 108.dp)
-                    .border(0.5.dp, Color.White.copy(alpha = 0.32f), MaterialTheme.shapes.large),
-            )
-            Column(
-                modifier = Modifier.weight(1f).padding(bottom = 1.dp),
-                verticalArrangement = Arrangement.spacedBy(3.dp),
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(11.dp),
             ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+                MediaThumbnail.Large(
+                    url = detail.coverImageUrl,
+                    contentDescription = title,
+                    modifier = Modifier
+                        .size(width = 70.dp, height = 100.dp)
+                        .border(0.5.dp, Color.White.copy(alpha = 0.28f), MaterialTheme.shapes.large),
                 )
-                detail.titleEnglish
-                    ?.takeIf { it != detail.titleRomaji && it.isNotBlank() }
-                    ?.let {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(bottom = 1.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    detail.titleEnglish
+                        ?.takeIf { it != detail.titleRomaji && it.isNotBlank() }
+                        ?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(alpha = 0.80f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    if (metadata.isNotEmpty()) {
                         Text(
-                            text = it,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.82f),
-                            maxLines = 2,
+                            text = metadata.joinToString(" · "),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.92f),
+                            maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
-                if (metadata.isNotEmpty()) {
-                    Text(
-                        text = metadata.joinToString(" · "),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color.White.copy(alpha = 0.94f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
                 }
             }
         }
@@ -393,12 +413,17 @@ private fun DetailActions(
     onIncrement: () -> Unit,
 ) {
     when {
-        !isLoggedIn -> Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        !isLoggedIn -> Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+        ) {
             AppButton(
                 label = stringResource(R.string.detail_login_cta),
                 onClick = onLogin,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 42.dp),
-                variant = AppButtonVariant.Secondary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 320.dp),
+                variant = AppButtonVariant.Primary,
             )
         }
         detail.malListEntry == null -> AppButton(
@@ -521,7 +546,7 @@ private fun WatchSourcesSection(
         }
         Text(
             text = stringResource(R.string.detail_watch_on_disclaimer),
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 2.dp),
         )
@@ -561,7 +586,7 @@ private fun HorizontalSection(title: String, content: LazyListScope.() -> Unit) 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         SectionTitle(text = title, modifier = Modifier.padding(horizontal = 16.dp))
         LazyRow(
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 4.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 24.dp, bottom = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             content = content,
         )
@@ -574,7 +599,7 @@ private fun DetailLoadingState(modifier: Modifier = Modifier) {
         modifier = modifier.navigationBarsPadding().verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Box(Modifier.fillMaxWidth().height(292.dp).background(MaterialTheme.colorScheme.surfaceContainer))
+        Box(Modifier.fillMaxWidth().height(280.dp).background(MaterialTheme.colorScheme.surfaceContainer))
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -660,6 +685,16 @@ private fun relationSortPriority(type: String?): Int = when (type) {
 
 private fun sortRelatedAnime(relations: List<RelatedAnime>): List<RelatedAnime> =
     relations.filter { it.relationType !in hiddenRelationTypes }.sortedBy { relationSortPriority(it.relationType) }
+
+private fun String.toDisplayFormat(): String = when (this) {
+    "TV_SHORT" -> "TV Short"
+    "MOVIE" -> "Movie"
+    "SPECIAL" -> "Special"
+    "MUSIC" -> "Music"
+    else -> lowercase()
+        .replace('_', ' ')
+        .replaceFirstChar { it.titlecase() }
+}
 
 @Composable
 private fun relationTypeLabel(type: String?): String? = when (type) {
@@ -748,7 +783,7 @@ private fun WatchSourceChip(source: WatchSource, onClick: () -> Unit) {
 private fun CharacterCard(character: Character, onClick: () -> Unit) {
     Column(
         modifier = Modifier
-            .width(96.dp)
+            .width(92.dp)
             .clickable(onClick = onClick)
             .semantics {
                 role = Role.Button
