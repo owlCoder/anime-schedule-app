@@ -3,6 +3,7 @@ package com.owlcoder.animeschedule.presentation.screens.schedule
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -60,6 +61,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -275,8 +277,8 @@ private fun TodayHomeContent(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().statusBarsPadding(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 112.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 116.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item(key = "today-header") {
             AppLargeHeader(
@@ -335,7 +337,7 @@ private fun TodayHomeContent(
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     if (!hasSchedule) {
                         EmptyState(
@@ -343,8 +345,8 @@ private fun TodayHomeContent(
                             title = stringResource(R.string.schedule_empty_title),
                             subtitle = if (isToday) stringResource(R.string.schedule_empty_subtitle)
                             else "Nothing is scheduled for ${selectedDate.shortDateLabel()}.",
-                            modifier = Modifier.fillMaxWidth().height(160.dp),
-                            actionLabel = "View full week",
+                            modifier = Modifier.fillMaxWidth().height(150.dp),
+                            actionLabel = stringResource(R.string.schedule_see_all),
                             onAction = onSeeAll,
                         )
                     } else {
@@ -381,13 +383,13 @@ private fun TodayHomeContent(
                                 shape = MaterialTheme.shapes.large,
                             ) {
                                 Row(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
                                         text = "Nothing else is airing in this window. Open the full day schedule.",
                                         modifier = Modifier.weight(1f),
-                                        style = MaterialTheme.typography.bodyMedium,
+                                        style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                     Icon(
@@ -460,15 +462,24 @@ private fun ScheduleDateRail(
                 label = "date-cell-fill",
             )
             val borderColor by animateColorAsState(
-                targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.26f)
+                targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
                 else Color.Transparent,
                 animationSpec = motion.iosTween(IosMotion.Standard),
                 label = "date-cell-border",
+            )
+            val scale by animateFloatAsState(
+                targetValue = if (isSelected) 1f else 0.97f,
+                animationSpec = motion.iosSpring(),
+                label = "date-cell-scale",
             )
             Surface(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    }
                     .clickable { onDateSelected(date) },
                 shape = RoundedCornerShape(13.dp),
                 color = containerColor,
@@ -525,21 +536,21 @@ private fun FeaturedAiring(
     AppMaterialSurface(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 96.dp)
+            .heightIn(min = 92.dp)
             .animateContentSize(animationSpec = motion.iosSpring())
             .clickable(onClick = onClick),
         material = AppMaterial.Grouped,
         shape = MaterialTheme.shapes.extraLarge,
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 11.dp, vertical = 9.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             MediaThumbnail.Small(
                 url = episode.coverImageUrl,
                 contentDescription = episode.title,
-                modifier = Modifier.size(width = 58.dp, height = 78.dp),
+                modifier = Modifier.size(width = 54.dp, height = 74.dp),
             )
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
@@ -634,7 +645,7 @@ private fun UpcomingAiringList(
                 )
                 if (index < episodes.lastIndex) {
                     HorizontalDivider(
-                        modifier = Modifier.padding(start = 112.dp),
+                        modifier = Modifier.padding(start = 108.dp),
                         thickness = 0.5.dp,
                         color = MaterialTheme.colorScheme.outlineVariant,
                     )
@@ -658,12 +669,12 @@ private fun UpcomingAiringRow(
             .fillMaxWidth()
             .heightIn(min = 66.dp)
             .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+            .padding(horizontal = 8.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(7.dp),
     ) {
         Column(
-            modifier = Modifier.width(50.dp),
+            modifier = Modifier.width(48.dp),
             horizontalAlignment = Alignment.Start,
         ) {
             Text(
@@ -677,7 +688,7 @@ private fun UpcomingAiringRow(
         MediaThumbnail.Small(
             url = episode.coverImageUrl,
             contentDescription = episode.title,
-            modifier = Modifier.size(width = 42.dp, height = 56.dp),
+            modifier = Modifier.size(width = 40.dp, height = 54.dp),
         )
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
             Text(
@@ -701,12 +712,12 @@ private fun UpcomingAiringRow(
             androidx.compose.material3.IconButton(
                 onClick = onIncrement,
                 enabled = !isIncrementing,
-                modifier = Modifier.size(32.dp),
+                modifier = Modifier.size(44.dp),
             ) {
                 if (isIncrementing) CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
                 else Icon(Icons.Default.Add, stringResource(R.string.schedule_hero_action_watched), Modifier.size(16.dp))
             }
-            androidx.compose.material3.IconButton(onClick = onEditStatus, modifier = Modifier.size(32.dp)) {
+            androidx.compose.material3.IconButton(onClick = onEditStatus, modifier = Modifier.size(44.dp)) {
                 Icon(Icons.Default.ChevronRight, stringResource(R.string.schedule_edit_status_action), Modifier.size(16.dp))
             }
         } else {
@@ -758,7 +769,7 @@ fun AllTodayScreen(
                 onEditStatus = { onEditStatus(episode) },
             )
             HorizontalDivider(
-                modifier = Modifier.padding(start = 112.dp),
+                modifier = Modifier.padding(start = 108.dp),
                 thickness = 0.5.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
             )
@@ -800,7 +811,7 @@ private fun SeeAllSheet(
                     onEditStatus = { onEditStatus(episode) },
                 )
                 HorizontalDivider(
-                    modifier = Modifier.padding(start = 112.dp),
+                    modifier = Modifier.padding(start = 108.dp),
                     thickness = 0.5.dp,
                     color = MaterialTheme.colorScheme.outlineVariant,
                 )
