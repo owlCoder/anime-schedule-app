@@ -112,7 +112,7 @@ fun AnimeBottomBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(DockHeight)
-                    .padding(horizontal = 4.dp, vertical = 3.dp),
+                    .padding(horizontal = 3.dp, vertical = 3.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 items.forEach { item ->
@@ -149,7 +149,7 @@ private fun BottomNavItemView(
     val interactionSource = remember { MutableInteractionSource() }
     val motion = LocalMotionPolicy.current
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    val selectedFill = if (dark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.70f)
+    val selectedFill = if (dark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.52f)
     val fill by animateColorAsState(
         targetValue = if (selected) selectedFill else Color.Transparent,
         animationSpec = motion.iosTween(IosMotion.Standard),
@@ -157,7 +157,7 @@ private fun BottomNavItemView(
     )
     val borderColor by animateColorAsState(
         targetValue = if (selected) {
-            if (dark) Color.White.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.82f)
+            if (dark) Color.White.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.58f)
         } else {
             Color.Transparent
         },
@@ -188,12 +188,14 @@ private fun BottomNavItemView(
                 role = Role.Tab
                 this.selected = selected
             }
-            .padding(horizontal = 2.dp),
+            .padding(horizontal = 1.dp),
         contentAlignment = Alignment.Center,
     ) {
         Surface(
-            modifier = Modifier.fillMaxSize(),
-            shape = ContinuousRoundedShape(18.dp),
+            modifier = Modifier
+                .fillMaxWidth(0.90f)
+                .fillMaxHeight(),
+            shape = ContinuousRoundedShape(17.dp),
             color = fill,
             border = BorderStroke(0.5.dp, borderColor),
             tonalElevation = 0.dp,
@@ -227,7 +229,7 @@ private fun TabVisual(
         label = "bottom-tab-color",
     )
     val inactiveAlpha by animateFloatAsState(
-        targetValue = if (selected) 1f else 0.86f,
+        targetValue = if (selected) 1f else 0.80f,
         animationSpec = motion.iosTween(IosMotion.Standard),
         label = "bottom-tab-alpha",
     )
@@ -256,7 +258,7 @@ private fun TabVisual(
                     imageVector = if (active) item.activeIcon else item.inactiveIcon,
                     contentDescription = null,
                     tint = color,
-                    modifier = Modifier.size(19.dp),
+                    modifier = Modifier.size(18.dp),
                 )
             }
         }
@@ -264,8 +266,8 @@ private fun TabVisual(
             text = label,
             color = color,
             style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 10.sp,
-                lineHeight = 11.sp,
+                fontSize = 9.5.sp,
+                lineHeight = 10.5.sp,
             ),
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             maxLines = 1,
