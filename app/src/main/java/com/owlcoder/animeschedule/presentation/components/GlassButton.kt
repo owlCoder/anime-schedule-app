@@ -2,6 +2,7 @@ package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,11 +44,15 @@ fun AppButton(
     icon: ImageVector? = null,
 ) {
     val accent = MaterialTheme.colorScheme.primary
+    val interactionSource = remember { MutableInteractionSource() }
+    val animatedModifier = modifier.iosPressScale(interactionSource, pressedScale = 0.975f)
+
     when (variant) {
         AppButtonVariant.Plain -> androidx.compose.material3.TextButton(
             onClick = onClick,
             enabled = enabled,
-            modifier = modifier.heightIn(min = AppButtonHeight),
+            modifier = animatedModifier.heightIn(min = AppButtonHeight),
+            interactionSource = interactionSource,
             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
         ) {
             ButtonContent(label, icon, accent, enabled)
@@ -60,9 +66,11 @@ fun AppButton(
                 MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.58f)
             }
             Surface(
-                modifier = modifier
+                modifier = animatedModifier
                     .height(AppButtonHeight)
                     .clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
                         enabled = enabled,
                         role = Role.Button,
                         onClick = onClick,
@@ -80,7 +88,8 @@ fun AppButton(
         AppButtonVariant.Secondary -> StandardOutlinedButton(
             label = label,
             icon = icon,
-            modifier = modifier,
+            modifier = animatedModifier,
+            interactionSource = interactionSource,
             enabled = enabled,
             color = MaterialTheme.colorScheme.onSurface,
             onClick = onClick,
@@ -89,7 +98,8 @@ fun AppButton(
         AppButtonVariant.Destructive -> StandardOutlinedButton(
             label = label,
             icon = icon,
-            modifier = modifier,
+            modifier = animatedModifier,
+            interactionSource = interactionSource,
             enabled = enabled,
             color = MaterialTheme.colorScheme.error,
             onClick = onClick,
@@ -102,6 +112,7 @@ private fun StandardOutlinedButton(
     label: String,
     icon: ImageVector?,
     modifier: Modifier,
+    interactionSource: MutableInteractionSource,
     enabled: Boolean,
     color: Color,
     onClick: () -> Unit,
@@ -110,6 +121,8 @@ private fun StandardOutlinedButton(
         modifier = modifier
             .height(AppButtonHeight)
             .clickable(
+                interactionSource = interactionSource,
+                indication = null,
                 enabled = enabled,
                 role = Role.Button,
                 onClick = onClick,
@@ -169,6 +182,7 @@ fun GlassButton(
     contentPadding: PaddingValues = PaddingValues(horizontal = 15.dp),
     content: @Composable (contentColor: Color) -> Unit,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     val contentColor = if (onImagery) {
         Color.White
     } else if (enabled) {
@@ -178,8 +192,11 @@ fun GlassButton(
     }
     GlassSurface(
         modifier = modifier
+            .iosPressScale(interactionSource)
             .height(AppButtonHeight)
             .clickable(
+                interactionSource = interactionSource,
+                indication = null,
                 enabled = enabled,
                 role = Role.Button,
                 onClick = onClick,
@@ -211,10 +228,14 @@ fun GlassIconButton(
     enabled: Boolean = true,
     onImagery: Boolean = false,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
+            .iosPressScale(interactionSource, pressedScale = 0.94f)
             .sizeIn(minWidth = 44.dp, minHeight = 44.dp)
             .clickable(
+                interactionSource = interactionSource,
+                indication = null,
                 enabled = enabled,
                 role = Role.Button,
                 onClick = onClick,
