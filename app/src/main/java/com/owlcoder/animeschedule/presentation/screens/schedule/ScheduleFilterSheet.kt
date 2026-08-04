@@ -1,5 +1,10 @@
 package com.owlcoder.animeschedule.presentation.screens.schedule
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -34,6 +40,9 @@ import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.InsetListRow
+import com.owlcoder.animeschedule.presentation.components.IosMotion
+import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
+import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
 private val FORMAT_LABELS = mapOf(
@@ -65,16 +74,21 @@ fun ScheduleFilterSheet(
         title = stringResource(R.string.filter_title),
         trailingContent = {
             TextButton(onClick = onClear, enabled = filter.isActive) {
-                Text(stringResource(R.string.filter_reset), fontWeight = FontWeight.SemiBold)
+                Text(
+                    stringResource(R.string.filter_reset),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
         },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 440.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .heightIn(max = 500.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(15.dp),
         ) {
             if (isLoggedIn) {
                 InsetGroup {
@@ -162,17 +176,27 @@ private fun EqualOption(
     modifier: Modifier,
     onClick: () -> Unit,
 ) {
-    val contentColor = if (selected) MaterialTheme.colorScheme.primary
-    else MaterialTheme.colorScheme.onSurface
+    val motion = LocalMotionPolicy.current
+    val contentColor by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = motion.iosTween(IosMotion.Standard),
+        label = "schedule-filter-color",
+    )
+    val fill by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        else MaterialTheme.colorScheme.surface,
+        animationSpec = motion.iosTween(IosMotion.Standard),
+        label = "schedule-filter-fill",
+    )
     Surface(
         modifier = modifier.height(38.dp).clickable(onClick = onClick),
         shape = PillShape,
-        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-        else MaterialTheme.colorScheme.surface,
+        color = fill,
         contentColor = contentColor,
         border = BorderStroke(
             0.5.dp,
-            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
             else MaterialTheme.colorScheme.outlineVariant,
         ),
         tonalElevation = 0.dp,
@@ -182,9 +206,20 @@ private fun EqualOption(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
-            if (selected) {
-                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp))
-                Spacer(Modifier.size(5.dp))
+            AnimatedContent(
+                targetState = selected,
+                transitionSpec = {
+                    fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
+                        fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
+                },
+                label = "schedule-filter-check",
+            ) { checked ->
+                if (checked) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.size(5.dp))
+                    }
+                }
             }
             Text(
                 text = label,
@@ -192,6 +227,7 @@ private fun EqualOption(
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                color = contentColor,
             )
         }
     }
