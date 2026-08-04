@@ -97,12 +97,12 @@ fun WatchSourcesScreen(
                 text = stringResource(R.string.watch_sources_disclaimer),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp, top = 6.dp, end = 4.dp, bottom = 14.dp),
+                modifier = Modifier.padding(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 12.dp),
             )
 
             LazyColumn(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
-                contentPadding = PaddingValues(bottom = 24.dp),
+                contentPadding = PaddingValues(bottom = 28.dp),
             ) {
                 item {
                     InsetGroup {
@@ -114,9 +114,9 @@ fun WatchSourcesScreen(
                             )
                             if (index < sources.lastIndex) {
                                 HorizontalDivider(
-                                    modifier = Modifier.padding(start = 66.dp),
+                                    modifier = Modifier.padding(start = 58.dp),
                                     thickness = 0.5.dp,
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f),
+                                    color = MaterialTheme.colorScheme.outlineVariant,
                                 )
                             }
                         }
@@ -144,21 +144,21 @@ private fun SourceRow(
     onOpenExternallyChange: (Boolean) -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 74.dp).padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 66.dp).padding(horizontal = 11.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(9.dp),
     ) {
         if (source.faviconUrl != null) {
             FaviconImage(
                 faviconUrl = source.faviconUrl,
                 siteUrl = source.urlTemplate,
-                modifier = Modifier.size(38.dp).clip(CircleShape),
+                modifier = Modifier.size(34.dp).clip(CircleShape),
             )
         } else {
             Box(
                 modifier = Modifier
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .size(34.dp)
+                    .clip(RoundedCornerShape(9.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             )
         }
@@ -169,7 +169,7 @@ private fun SourceRow(
         ) {
             Text(
                 text = source.name,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -182,9 +182,9 @@ private fun SourceRow(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = if (source.openExternally) "Opens in installed app" else "Opens inside AnimeSchedule",
+                text = if (source.openExternally) "Installed app" else "In-app browser",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.primary,
                 maxLines = 1,
             )
         }
@@ -236,9 +236,9 @@ private fun AddWatchSourceSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 470.dp)
+                .heightIn(max = 430.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(13.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             FormField(
                 label = stringResource(R.string.watch_sources_name_label),
@@ -265,8 +265,8 @@ private fun AddWatchSourceSheet(
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(
                             text = stringResource(R.string.watch_sources_open_externally),
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
                         )
                         Text(
                             text = stringResource(R.string.watch_sources_open_externally_hint),
@@ -302,11 +302,11 @@ private fun FormField(
             value = value,
             onValueChange = onValueChange,
             singleLine = true,
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(46.dp)
+                .height(44.dp)
                 .clip(MaterialTheme.shapes.large)
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 .padding(horizontal = 14.dp),
@@ -318,7 +318,7 @@ private fun FormField(
                     if (value.isEmpty()) {
                         Text(
                             text = label,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
