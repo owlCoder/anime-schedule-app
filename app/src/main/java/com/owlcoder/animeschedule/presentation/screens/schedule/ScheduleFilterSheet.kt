@@ -1,6 +1,11 @@
 package com.owlcoder.animeschedule.presentation.screens.schedule
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -42,6 +48,7 @@ import com.owlcoder.animeschedule.presentation.components.InsetListRow
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.appMaterialColor
+import com.owlcoder.animeschedule.presentation.components.iosSpring
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
@@ -73,7 +80,10 @@ fun ScheduleFilterSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         title = stringResource(R.string.filter_title),
         trailingContent = {
-            TextButton(onClick = onClear, enabled = filter.isActive) {
+            TextButton(
+                onClick = onClear,
+                enabled = filter.isActive,
+            ) {
                 Text(
                     stringResource(R.string.filter_reset),
                     style = MaterialTheme.typography.labelLarge,
@@ -85,10 +95,10 @@ fun ScheduleFilterSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 500.dp)
+                .heightIn(max = 520.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(15.dp),
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (isLoggedIn) {
                 InsetGroup {
@@ -124,18 +134,6 @@ fun ScheduleFilterSheet(
                     onClick = onGenreToggle,
                 )
             }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                TextButton(onClick = onDismiss) {
-                    Text(
-                        stringResource(android.R.string.ok),
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
         }
     }
 }
@@ -148,10 +146,10 @@ private fun <T> EqualOptionGrid(
     selected: (T) -> Boolean,
     onClick: (T) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             text = title,
-            modifier = Modifier.padding(start = 2.dp),
+            modifier = Modifier.padding(start = 2.dp, bottom = 1.dp),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.SemiBold,
@@ -159,7 +157,7 @@ private fun <T> EqualOptionGrid(
         options.chunked(2).forEach { rowItems ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
             ) {
                 rowItems.forEach { option ->
                     EqualOption(
@@ -201,7 +199,8 @@ private fun EqualOption(
         animationSpec = motion.iosTween(IosMotion.Standard),
         label = "schedule-filter-fill",
     )
-    Surface(
+
+    Box(
         modifier = modifier
             .sizeIn(minHeight = 44.dp)
             .toggleable(
@@ -209,46 +208,63 @@ private fun EqualOption(
                 role = Role.Checkbox,
                 onValueChange = { onClick() },
             ),
-        shape = PillShape,
-        color = fill,
-        contentColor = contentColor,
-        border = BorderStroke(
-            0.5.dp,
-            if (selected) {
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
-            } else {
-                MaterialTheme.colorScheme.outlineVariant
-            },
-        ),
-        tonalElevation = 0.dp,
+        contentAlignment = Alignment.Center,
     ) {
-        Row(
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 11.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Box(
-                modifier = Modifier.size(19.dp),
-                contentAlignment = Alignment.CenterStart,
-            ) {
+                .height(36.dp),
+            shape = PillShape,
+            color = fill,
+            contentColor = contentColor,
+            border = BorderStroke(
+                0.5.dp,
                 if (selected) {
-                    Icon(
-                        Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                    )
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant
+                },
+            ),
+            tonalElevation = 0.dp,
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Box(
+                    modifier = Modifier.size(18.dp),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    AnimatedVisibility(
+                        visible = selected,
+                        enter = scaleIn(
+                            initialScale = 0.72f,
+                            animationSpec = motion.iosSpring(),
+                        ) + fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)),
+                        exit = scaleOut(
+                            targetScale = 0.72f,
+                            animationSpec = motion.iosTween(IosMotion.Quick),
+                        ) + fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)),
+                    ) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                        )
+                    }
                 }
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = contentColor,
+                )
             }
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = contentColor,
-            )
         }
     }
 }
