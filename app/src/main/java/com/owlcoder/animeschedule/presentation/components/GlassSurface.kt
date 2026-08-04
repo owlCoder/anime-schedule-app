@@ -23,7 +23,7 @@ import com.owlcoder.animeschedule.ui.theme.GlassBlur
 import com.owlcoder.animeschedule.ui.theme.GlassTone
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
 
-/** Achromatic liquid material for floating navigation, controls and transient overlays. */
+/** Achromatic Liquid Glass for floating navigation and interactive controls only. */
 @Composable
 fun GlassSurface(
     modifier: Modifier = Modifier,
@@ -38,7 +38,7 @@ fun GlassSurface(
     val elevation = when (blur) {
         GlassBlur.None -> 0.dp
         GlassBlur.Soft -> 1.dp
-        GlassBlur.Medium -> 3.dp
+        GlassBlur.Medium -> 2.dp
     }
 
     Box(
@@ -96,22 +96,22 @@ private fun glassPalette(tone: GlassTone): GlassPalette {
     val fill = when (tone) {
         GlassTone.Neutral -> if (dark) GlassTokens.neutralFillDark else GlassTokens.neutralFillLight
         GlassTone.Accent -> if (dark) GlassTokens.selectedFillDark else GlassTokens.selectedFillLight
-        GlassTone.OnImage -> Color.Black.copy(alpha = 0.22f)
+        GlassTone.OnImage -> Color.Black.copy(alpha = 0.20f)
     }
     val border = when (tone) {
-        GlassTone.Accent -> Color.White.copy(alpha = if (dark) 0.19f else 0.72f)
-        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.095f else 0.58f)
-        GlassTone.OnImage -> Color.White.copy(alpha = 0.18f)
+        GlassTone.Accent -> Color.White.copy(alpha = if (dark) 0.16f else 0.46f)
+        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.085f else 0.34f)
+        GlassTone.OnImage -> Color.White.copy(alpha = 0.17f)
     }
     val topLight = when (tone) {
-        GlassTone.Accent -> Color.White.copy(alpha = if (dark) 0.15f else 0.34f)
-        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.075f else 0.23f)
-        GlassTone.OnImage -> Color.White.copy(alpha = 0.14f)
+        GlassTone.Accent -> Color.White.copy(alpha = if (dark) 0.13f else 0.25f)
+        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.065f else 0.17f)
+        GlassTone.OnImage -> Color.White.copy(alpha = 0.13f)
     }
     val sideLight = when (tone) {
-        GlassTone.Accent -> Color.White.copy(alpha = if (dark) 0.055f else 0.11f)
-        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.025f else 0.07f)
-        GlassTone.OnImage -> Color.White.copy(alpha = 0.04f)
+        GlassTone.Accent -> Color.White.copy(alpha = if (dark) 0.045f else 0.08f)
+        GlassTone.Neutral -> Color.White.copy(alpha = if (dark) 0.022f else 0.05f)
+        GlassTone.OnImage -> Color.White.copy(alpha = 0.035f)
     }
 
     return GlassPalette(
@@ -120,25 +120,25 @@ private fun glassPalette(tone: GlassTone): GlassPalette {
         ambient = Brush.horizontalGradient(
             colorStops = arrayOf(
                 0f to sideLight,
-                0.42f to Color.Transparent,
-                1f to Color.Black.copy(alpha = if (dark) 0.015f else 0.008f),
+                0.46f to Color.Transparent,
+                1f to Color.Black.copy(alpha = if (dark) 0.012f else 0.006f),
             ),
         ),
         specular = Brush.verticalGradient(
             colorStops = arrayOf(
                 0f to topLight,
-                0.12f to topLight.copy(alpha = topLight.alpha * 0.42f),
-                0.40f to Color.Transparent,
+                0.12f to topLight.copy(alpha = topLight.alpha * 0.36f),
+                0.36f to Color.Transparent,
             ),
         ),
         lowlight = Brush.verticalGradient(
             colorStops = arrayOf(
-                0.68f to Color.Transparent,
-                1f to Color.Black.copy(alpha = if (dark) 0.055f else 0.018f),
+                0.72f to Color.Transparent,
+                1f to Color.Black.copy(alpha = if (dark) 0.045f else 0.012f),
             ),
         ),
         backdrop = Brush.verticalGradient(
-            colors = listOf(Color.White.copy(alpha = 0.018f), Color.Transparent),
+            colors = listOf(Color.White.copy(alpha = 0.014f), Color.Transparent),
         ),
     )
 }
