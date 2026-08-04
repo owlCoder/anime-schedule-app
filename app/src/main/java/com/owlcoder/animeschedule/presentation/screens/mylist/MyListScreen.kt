@@ -1,5 +1,6 @@
 package com.owlcoder.animeschedule.presentation.screens.mylist
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -53,6 +54,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -70,7 +72,6 @@ import com.owlcoder.animeschedule.presentation.components.EmptyState
 import com.owlcoder.animeschedule.presentation.components.ErrorBanner
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
-import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.displayName
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
@@ -148,7 +149,7 @@ fun MyListScreen(
                 AppLargeHeader(
                     title = stringResource(R.string.mylist_title),
                     subtitle = if (totalCount > 0) "$totalCount anime" else null,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 10.dp),
+                    modifier = Modifier.padding(top = 6.dp, bottom = 8.dp),
                 )
                 AppSearchField(
                     value = uiState.searchQuery,
@@ -162,7 +163,7 @@ fun MyListScreen(
                     activeFilter = uiState.activeFilter,
                     counts = uiState.statusCounts,
                     onFilterSelected = viewModel::setFilter,
-                    modifier = Modifier.padding(top = 12.dp, bottom = 9.dp),
+                    modifier = Modifier.padding(top = 10.dp, bottom = 8.dp),
                 )
             }
         },
@@ -197,10 +198,7 @@ fun MyListScreen(
                 )
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        top = 5.dp,
-                        bottom = LocalNavBarHeight.current + 18.dp,
-                    ),
+                    contentPadding = PaddingValues(top = 5.dp, bottom = 88.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     if (showError) {
@@ -241,13 +239,13 @@ fun MyListScreen(
         }
     }
 
-    if (editingAnimeId != null) {
+    editingAnimeId?.let { animeId ->
         ListStatusBottomSheet(
-            animeId = editingAnimeId!!,
+            animeId = animeId,
             currentEntry = editingEntry,
             onDismiss = { editingAnimeId = null },
-            onConfirm = { animeId, update -> viewModel.updateEntry(animeId, update) },
-            onRemove = { animeId -> viewModel.removeEntry(animeId) },
+            onConfirm = { id, update -> viewModel.updateEntry(id, update) },
+            onRemove = { id -> viewModel.removeEntry(id) },
         )
     }
 }
@@ -266,18 +264,26 @@ private fun StatusFilterRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         statusTabs.forEach { status ->
-            val selected = status == activeFilter
-            val contentColor = if (selected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurfaceVariant
+            val isSelected = status == activeFilter
+            val contentColor = if (isSelected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurface
             Surface(
                 modifier = Modifier
                     .height(36.dp)
                     .clickable(onClick = { onFilterSelected(status) })
-                    .semantics { role = Role.Tab },
+                    .semantics {
+                        role = Role.Tab
+                        selected = isSelected
+                    },
                 shape = PillShape,
-                color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)
-                else MaterialTheme.colorScheme.surfaceContainerHigh,
+                color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                else MaterialTheme.colorScheme.surface,
                 contentColor = contentColor,
+                border = BorderStroke(
+                    0.5.dp,
+                    if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
+                    else MaterialTheme.colorScheme.outlineVariant,
+                ),
                 tonalElevation = 0.dp,
             ) {
                 Row(
@@ -286,7 +292,7 @@ private fun StatusFilterRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Icon(
-                        status.tabIcon(selected),
+                        status.tabIcon(isSelected),
                         contentDescription = null,
                         modifier = Modifier.size(17.dp),
                         tint = contentColor,
@@ -294,7 +300,7 @@ private fun StatusFilterRow(
                     Text(
                         text = status.displayName(),
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                         color = contentColor,
                     )
                     counts[status]?.takeIf { it > 0 }?.let { count ->
@@ -321,7 +327,7 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
     ) {
         AppLargeHeader(
             title = stringResource(R.string.mylist_title),
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = 6.dp),
         )
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -329,20 +335,20 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.padding(horizontal = 28.dp, vertical = 92.dp),
+                verticalArrangement = Arrangement.spacedBy(9.dp),
+                modifier = Modifier.padding(horizontal = 28.dp, vertical = 58.dp),
             ) {
                 Surface(
-                    modifier = Modifier.size(56.dp),
+                    modifier = Modifier.size(50.dp),
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     tonalElevation = 0.dp,
                 ) {
-                    Box(Modifier.size(56.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(50.dp), contentAlignment = Alignment.Center) {
                         Icon(
                             Icons.Default.AccountCircle,
                             contentDescription = null,
-                            modifier = Modifier.size(30.dp),
+                            modifier = Modifier.size(28.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -355,11 +361,11 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
                 )
                 Text(
                     text = stringResource(R.string.mylist_not_logged_in_subtitle),
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
-                Box(Modifier.height(10.dp))
+                Box(Modifier.height(8.dp))
                 AppButton(
                     label = stringResource(R.string.profile_login),
                     onClick = onLogin,
