@@ -20,12 +20,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.ui.theme.AppSpacing
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
@@ -50,8 +52,8 @@ fun AppLargeHeader(
             Text(
                 text = title,
                 style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             if (!subtitle.isNullOrBlank()) {
@@ -73,18 +75,21 @@ fun AppInlineHeader(
     title: String,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
-    backContentDescription: String = "Back",
+    backContentDescription: String? = null,
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
+    val resolvedBackDescription = backContentDescription ?: stringResource(R.string.onboarding_back)
     Row(
-        modifier = modifier.fillMaxWidth().heightIn(min = 44.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 44.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
         if (onBack != null) {
             GlassIconButton(
                 icon = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = backContentDescription,
+                contentDescription = resolvedBackDescription,
                 onClick = onBack,
             )
         }
@@ -110,7 +115,9 @@ fun GlassToolbarGroup(
         shape = PillShape,
     ) {
         Row(
-            modifier = Modifier.height(38.dp).padding(horizontal = 3.dp),
+            modifier = Modifier
+                .height(44.dp)
+                .padding(horizontal = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(0.dp),
             content = content,
@@ -129,15 +136,19 @@ fun GlassToolbarButton(
 ) {
     Box(
         modifier = modifier
-            .size(32.dp)
-            .clickable(enabled = enabled, onClick = onClick)
-            .semantics { role = Role.Button },
+            .size(44.dp)
+            .clickable(
+                enabled = enabled,
+                role = Role.Button,
+                onClick = onClick,
+            )
+            .semantics { this.selected = selected },
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            modifier = Modifier.size(16.dp),
+            modifier = Modifier.size(17.dp),
             tint = when {
                 !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.40f)
                 selected -> MaterialTheme.colorScheme.primary
@@ -160,6 +171,6 @@ fun InlineNavigationHeader(
     title: String,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
-    backContentDescription: String = "Back",
+    backContentDescription: String? = null,
     trailingContent: @Composable (() -> Unit)? = null,
 ) = AppInlineHeader(title, modifier, onBack, backContentDescription, trailingContent)
