@@ -12,12 +12,14 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -30,11 +32,8 @@ import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
-import com.owlcoder.animeschedule.presentation.components.GlassSurface
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.InsetListRow
-import com.owlcoder.animeschedule.ui.theme.GlassBlur
-import com.owlcoder.animeschedule.ui.theme.GlassTone
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
 private val FORMAT_LABELS = mapOf(
@@ -73,7 +72,7 @@ fun ScheduleFilterSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 520.dp)
+                .heightIn(max = 470.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
@@ -147,16 +146,18 @@ private fun CompactScheduleFilterChip(
     selected: Boolean,
     onClick: () -> Unit,
 ) {
-    GlassSurface(
+    val contentColor = if (selected) MaterialTheme.colorScheme.primary
+    else MaterialTheme.colorScheme.onSurfaceVariant
+    Surface(
         modifier = Modifier.height(34.dp).clickable(onClick = onClick),
         shape = PillShape,
-        tone = if (selected) GlassTone.Accent else GlassTone.Neutral,
-        blur = GlassBlur.None,
-        contentColor = if (selected) MaterialTheme.colorScheme.onSurface
-        else MaterialTheme.colorScheme.onSurfaceVariant,
+        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)
+        else MaterialTheme.colorScheme.surfaceContainerHigh,
+        contentColor = contentColor,
+        tonalElevation = 0.dp,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 11.dp),
+            modifier = Modifier.padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
