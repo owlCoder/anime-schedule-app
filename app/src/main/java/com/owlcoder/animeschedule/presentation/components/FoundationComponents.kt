@@ -32,7 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -104,17 +103,14 @@ fun AppSearchField(
     enabled: Boolean = true,
 ) {
     val shape = RoundedCornerShape(13.dp)
-    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    val fill = if (dark) Color.White.copy(alpha = 0.075f) else Color.Black.copy(alpha = 0.040f)
-    val edge = if (dark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.055f)
     Row(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = 42.dp)
-            .background(fill, shape)
-            .border(0.5.dp, edge, shape)
+            .background(MaterialTheme.colorScheme.surface, shape)
+            .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
             .semantics { contentDescription = placeholder }
-            .padding(horizontal = 11.dp),
+            .padding(start = 11.dp, end = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (leadingIcon != null) {
@@ -149,12 +145,12 @@ fun AppSearchField(
             },
         )
         if (value.isNotEmpty() && onClear != null) {
-            IconButton(onClick = onClear, modifier = Modifier.size(34.dp)) {
+            IconButton(onClick = onClear, modifier = Modifier.size(32.dp)) {
                 Icon(
                     Icons.Default.Close,
                     contentDescription = "Clear",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(15.dp),
                 )
             }
         }
@@ -187,16 +183,12 @@ fun AppSurface(
     containerColor: Color = MaterialTheme.colorScheme.surface,
     content: @Composable () -> Unit,
 ) {
-    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
     Surface(
         modifier = modifier,
         shape = shape,
-        color = containerColor.copy(alpha = if (dark) 0.74f else 0.94f),
+        color = containerColor,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        border = BorderStroke(
-            0.5.dp,
-            if (dark) Color.White.copy(alpha = 0.055f) else Color.Black.copy(alpha = 0.045f),
-        ),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant),
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
         content = content,
