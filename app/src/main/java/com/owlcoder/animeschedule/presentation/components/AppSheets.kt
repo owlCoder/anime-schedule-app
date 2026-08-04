@@ -29,6 +29,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
 
+/**
+ * Content-layer sheet. Liquid Glass is intentionally not used for the sheet body: Apple places
+ * glass on navigation and interactive controls, while scoped modal content uses a stable standard
+ * material so text and controls never compete with the parent view underneath.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppSheet(
@@ -40,9 +45,9 @@ fun AppSheet(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    val container = if (dark) Color(0xFF171719).copy(alpha = 0.91f)
-    else Color.White.copy(alpha = 0.94f)
-    val edge = if (dark) Color.White.copy(alpha = 0.09f) else Color.Black.copy(alpha = 0.06f)
+    val container = if (dark) Color(0xFF1C1C1E) else Color(0xFFF2F2F7)
+    val edge = if (dark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.08f)
+    val scrim = Color.Black.copy(alpha = if (dark) 0.40f else 0.24f)
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -51,7 +56,7 @@ fun AppSheet(
         shape = ContinuousRoundedShape(GlassTokens.sheetRadius),
         containerColor = container,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        scrimColor = Color.Black.copy(alpha = 0.34f),
+        scrimColor = scrim,
         tonalElevation = 0.dp,
         dragHandle = { AppSheetHandle() },
     ) {
@@ -96,10 +101,10 @@ fun AppSheetHandle(modifier: Modifier = Modifier) {
     ) {
         Box(
             modifier = Modifier
-                .width(30.dp)
+                .width(32.dp)
                 .requiredHeight(4.dp)
                 .clip(MaterialTheme.shapes.extraLarge)
-                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.22f)),
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f)),
         )
     }
 }
