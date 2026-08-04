@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -46,14 +48,16 @@ fun AppLargeHeader(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Column(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .widthIn(min = 104.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             if (!subtitle.isNullOrBlank()) {
@@ -66,7 +70,14 @@ fun AppLargeHeader(
                 )
             }
         }
-        trailingContent?.invoke()
+        if (trailingContent != null) {
+            Box(
+                modifier = Modifier.wrapContentWidth(),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                trailingContent()
+            }
+        }
     }
 }
 
@@ -101,7 +112,14 @@ fun AppInlineHeader(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        trailingContent?.invoke()
+        if (trailingContent != null) {
+            Box(
+                modifier = Modifier.wrapContentWidth(),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                trailingContent()
+            }
+        }
     }
 }
 
@@ -111,11 +129,12 @@ fun GlassToolbarGroup(
     content: @Composable RowScope.() -> Unit,
 ) {
     GlassChrome(
-        modifier = modifier,
+        modifier = modifier.wrapContentWidth(),
         shape = PillShape,
     ) {
         Row(
             modifier = Modifier
+                .wrapContentWidth()
                 .height(44.dp)
                 .padding(horizontal = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
