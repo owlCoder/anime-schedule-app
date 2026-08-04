@@ -21,12 +21,19 @@ val Purple40 = Color(0xFF6650A4)
 val PurpleGrey40 = Color(0xFF625B71)
 val Pink40 = Color(0xFF7D5260)
 
-/** Neutral iOS-style layers: pure page, grouped content, then a restrained elevated layer. */
+/**
+ * iOS-like layer hierarchy. The page is grouped gray, content groups are true white,
+ * and only controls use the secondary gray. Keeping these layers distinct prevents
+ * the washed-out appearance visible when every surface shares nearly the same tone.
+ */
 val AppLightBackground = Color(0xFFF2F2F7)
 val AppLightGrouped = Color(0xFFFFFFFF)
-val AppLightElevated = Color(0xFFF7F7FA)
-val AppLightSecondary = Color(0xFFE5E5EA)
+val AppLightElevated = Color(0xFFFAFAFC)
+val AppLightSecondary = Color(0xFFE9E9EE)
+val AppLightTertiary = Color(0xFFD1D1D6)
+
 val AppDarkBackground = Color(0xFF000000)
 val AppDarkGrouped = Color(0xFF1C1C1E)
 val AppDarkElevated = Color(0xFF242426)
 val AppDarkSecondary = Color(0xFF2C2C2E)
+val AppDarkTertiary = Color(0xFF3A3A3C)
