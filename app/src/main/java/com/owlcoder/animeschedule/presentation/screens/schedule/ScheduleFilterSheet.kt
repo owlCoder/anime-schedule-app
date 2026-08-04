@@ -1,5 +1,6 @@
 package com.owlcoder.animeschedule.presentation.screens.schedule
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -72,9 +72,9 @@ fun ScheduleFilterSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 470.dp)
+                .heightIn(max = 430.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             if (isLoggedIn) {
                 InsetGroup {
@@ -114,6 +114,15 @@ fun ScheduleFilterSheet(
                     }
                 }
             }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text("Done", fontWeight = FontWeight.SemiBold)
+                }
+            }
         }
     }
 }
@@ -124,17 +133,17 @@ private fun FilterSection(
     title: String,
     content: @Composable androidx.compose.foundation.layout.FlowRowScope.() -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = title,
             modifier = Modifier.padding(start = 2.dp),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.SemiBold,
         )
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(7.dp),
-            verticalArrangement = Arrangement.spacedBy(7.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             content = content,
         )
     }
@@ -147,26 +156,31 @@ private fun CompactScheduleFilterChip(
     onClick: () -> Unit,
 ) {
     val contentColor = if (selected) MaterialTheme.colorScheme.primary
-    else MaterialTheme.colorScheme.onSurfaceVariant
+    else MaterialTheme.colorScheme.onSurface
     Surface(
-        modifier = Modifier.height(34.dp).clickable(onClick = onClick),
+        modifier = Modifier.height(36.dp).clickable(onClick = onClick),
         shape = PillShape,
-        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)
-        else MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+        else MaterialTheme.colorScheme.surface,
         contentColor = contentColor,
+        border = BorderStroke(
+            0.5.dp,
+            if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+            else MaterialTheme.colorScheme.outlineVariant,
+        ),
         tonalElevation = 0.dp,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp),
+            modifier = Modifier.padding(horizontal = 13.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
             if (selected) {
-                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(13.dp))
+                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp))
             }
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelLarge,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                 maxLines = 1,
             )
