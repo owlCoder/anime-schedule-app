@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,10 +30,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
-import com.owlcoder.animeschedule.presentation.components.GlassSurface
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
-import com.owlcoder.animeschedule.ui.theme.GlassBlur
-import com.owlcoder.animeschedule.ui.theme.GlassTone
 
 @Composable
 fun SearchResultCard(
@@ -42,80 +40,86 @@ fun SearchResultCard(
     modifier: Modifier = Modifier,
     showDivider: Boolean = true,
 ) {
+    val displayTitle = result.title.toDisplayTitle()
+    val secondaryTitle = result.titleEnglish
+        ?.takeIf { it.isNotBlank() && !it.equals(result.title, ignoreCase = true) }
+
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 70.dp)
+                .heightIn(min = 64.dp)
                 .clickable(onClick = onCardClick)
                 .semantics(mergeDescendants = true) { role = Role.Button }
-                .padding(start = 11.dp, end = 7.dp, top = 6.dp, bottom = 6.dp),
+                .padding(start = 10.dp, end = 8.dp, top = 5.dp, bottom = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             MediaThumbnail.Small(
                 url = result.coverImageUrl,
-                contentDescription = result.title,
-                modifier = Modifier.size(43.dp, 57.dp),
+                contentDescription = displayTitle,
+                modifier = Modifier.size(40.dp, 54.dp),
             )
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(1.dp),
             ) {
                 Text(
-                    text = result.title,
+                    text = displayTitle,
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                result.titleEnglish?.takeIf { it != result.title }?.let { englishTitle ->
+                secondaryTitle?.let { englishTitle ->
                     Text(
-                        text = englishTitle,
+                        text = englishTitle.toDisplayTitle(),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.84f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
             if (onEditStatus != null) {
-                Box(
+                Surface(
                     modifier = Modifier
-                        .size(38.dp)
+                        .size(34.dp)
                         .clickable(onClick = onEditStatus)
                         .semantics { role = Role.Button },
-                    contentAlignment = Alignment.Center,
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = if (result.userListEntry == null) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurface,
+                    tonalElevation = 0.dp,
                 ) {
-                    GlassSurface(
-                        modifier = Modifier.size(30.dp),
-                        shape = CircleShape,
-                        tone = if (result.userListEntry != null) GlassTone.Neutral else GlassTone.Accent,
-                        blur = GlassBlur.None,
-                        contentColor = MaterialTheme.colorScheme.onSurface,
-                    ) {
-                        Box(Modifier.size(30.dp), contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = if (result.userListEntry != null) Icons.Outlined.Edit else Icons.Outlined.Add,
-                                contentDescription = if (result.userListEntry != null) {
-                                    stringResource(R.string.cd_edit_list_status)
-                                } else {
-                                    stringResource(R.string.detail_add_to_list)
-                                },
-                                modifier = Modifier.size(15.dp),
-                                tint = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
+                    Box(Modifier.size(34.dp), contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = if (result.userListEntry != null) Icons.Outlined.Edit else Icons.Outlined.Add,
+                            contentDescription = if (result.userListEntry != null) {
+                                stringResource(R.string.cd_edit_list_status)
+                            } else {
+                                stringResource(R.string.detail_add_to_list)
+                            },
+                            modifier = Modifier.size(17.dp),
+                        )
                     }
                 }
             }
         }
         if (showDivider) {
             HorizontalDivider(
-                modifier = Modifier.padding(start = 64.dp),
+                modifier = Modifier.padding(start = 60.dp),
                 thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.26f),
+                color = MaterialTheme.colorScheme.outlineVariant,
             )
         }
     }
+}
+
+private fun String.toDisplayTitle(): String {
+    if (isBlank()) return this
+    val letters = filter(Char::isLetter)
+    if (letters.isEmpty() || letters.any(Char::isLowerCase)) return this
+    return lowercase().replaceFirstChar { it.titlecase() }
 }
