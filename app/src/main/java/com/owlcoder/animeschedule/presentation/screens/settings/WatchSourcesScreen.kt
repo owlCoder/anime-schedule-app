@@ -91,6 +91,7 @@ fun WatchSourcesScreen(
         ) {
             AppInlineHeader(
                 title = stringResource(R.string.watch_sources_title),
+                modifier = Modifier.padding(top = 2.dp),
                 onBack = onBack,
                 trailingContent = {
                     GlassIconButton(
@@ -104,7 +105,9 @@ fun WatchSourcesScreen(
                 text = stringResource(R.string.watch_sources_disclaimer),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 12.dp),
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 4.dp, top = 3.dp, end = 4.dp, bottom = 10.dp),
             )
 
             if (sources.isEmpty()) {
@@ -119,9 +122,10 @@ fun WatchSourcesScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
-                    contentPadding = PaddingValues(bottom = 32.dp),
+                    contentPadding = PaddingValues(bottom = 28.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    item {
+                    item(key = "source-list") {
                         InsetGroup {
                             sources.forEachIndexed { index, source ->
                                 SourceRow(
@@ -134,6 +138,51 @@ fun WatchSourcesScreen(
                                         modifier = Modifier.padding(start = 58.dp),
                                         thickness = 0.5.dp,
                                         color = MaterialTheme.colorScheme.outlineVariant,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    item(key = "add-source-shortcut") {
+                        AppMaterialSurface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 50.dp)
+                                .clickable { showAddSheet = true },
+                            material = AppMaterial.Interactive,
+                            shape = MaterialTheme.shapes.large,
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 13.dp, vertical = 9.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        Icons.Default.Add,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(17.dp),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.watch_sources_add),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                    Text(
+                                        text = "Add a trusted search provider",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                             }
@@ -165,9 +214,9 @@ private fun SourceRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 66.dp)
+            .heightIn(min = 64.dp)
             .animateContentSize(animationSpec = motion.iosSpring())
-            .padding(horizontal = 11.dp, vertical = 7.dp),
+            .padding(start = 11.dp, end = 5.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(9.dp),
     ) {
@@ -212,23 +261,28 @@ private fun SourceRow(
             )
         }
 
-        AppSwitch(
-            checked = source.openExternally,
-            onCheckedChange = onOpenExternallyChange,
-        )
-        Box(
-            modifier = Modifier
-                .size(34.dp)
-                .clickable(onClick = onDelete)
-                .semantics { role = Role.Button },
-            contentAlignment = Alignment.Center,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(1.dp),
         ) {
-            Icon(
-                Icons.Default.DeleteOutline,
-                contentDescription = stringResource(R.string.watch_sources_delete),
-                modifier = Modifier.size(17.dp),
-                tint = MaterialTheme.colorScheme.error,
+            AppSwitch(
+                checked = source.openExternally,
+                onCheckedChange = onOpenExternallyChange,
             )
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clickable(onClick = onDelete)
+                    .semantics { role = Role.Button },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Default.DeleteOutline,
+                    contentDescription = stringResource(R.string.watch_sources_delete),
+                    modifier = Modifier.size(17.dp),
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
         }
     }
 }
@@ -251,6 +305,7 @@ private fun AddWatchSourceSheet(
             TextButton(
                 onClick = { onConfirm(name.trim(), urlTemplate.trim(), openExternally) },
                 enabled = isValid,
+                contentPadding = PaddingValues(horizontal = 8.dp),
             ) {
                 Text(stringResource(R.string.common_save), fontWeight = FontWeight.SemiBold)
             }
@@ -259,49 +314,61 @@ private fun AddWatchSourceSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 500.dp)
+                .heightIn(max = 430.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(bottom = 6.dp),
+            verticalArrangement = Arrangement.spacedBy(9.dp),
         ) {
-            FormField(
-                label = stringResource(R.string.watch_sources_name_label),
-                value = name,
-                onValueChange = { name = it },
-            )
-            FormField(
-                label = stringResource(R.string.watch_sources_url_label),
-                value = urlTemplate,
-                onValueChange = { urlTemplate = it },
-                helper = stringResource(R.string.watch_sources_url_hint),
-            )
-
             AppMaterialSurface(
                 modifier = Modifier.fillMaxWidth(),
                 material = AppMaterial.Grouped,
                 shape = MaterialTheme.shapes.large,
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 11.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(
-                            text = stringResource(R.string.watch_sources_open_externally),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            text = stringResource(R.string.watch_sources_open_externally_hint),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    FormField(
+                        label = stringResource(R.string.watch_sources_name_label),
+                        value = name,
+                        onValueChange = { name = it },
+                    )
+                    FormField(
+                        label = stringResource(R.string.watch_sources_url_label),
+                        value = urlTemplate,
+                        onValueChange = { urlTemplate = it },
+                        helper = stringResource(R.string.watch_sources_url_hint),
+                    )
+                    HorizontalDivider(
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 1.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                text = stringResource(R.string.watch_sources_open_externally),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text(
+                                text = stringResource(R.string.watch_sources_open_externally_hint),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        AppSwitch(
+                            checked = openExternally,
+                            onCheckedChange = { openExternally = it },
                         )
                     }
-                    AppSwitch(
-                        checked = openExternally,
-                        onCheckedChange = { openExternally = it },
-                    )
                 }
             }
         }
@@ -315,12 +382,12 @@ private fun FormField(
     onValueChange: (String) -> Unit,
     helper: String? = null,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 3.dp),
+            modifier = Modifier.padding(horizontal = 2.dp),
         )
         BasicTextField(
             value = value,
@@ -331,9 +398,9 @@ private fun FormField(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(44.dp)
-                .clip(MaterialTheme.shapes.large)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .padding(horizontal = 14.dp),
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                .padding(horizontal = 13.dp),
             decorationBox = { innerTextField ->
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -353,9 +420,11 @@ private fun FormField(
         if (!helper.isNullOrBlank()) {
             Text(
                 text = helper,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 3.dp),
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 2.dp),
             )
         }
     }
