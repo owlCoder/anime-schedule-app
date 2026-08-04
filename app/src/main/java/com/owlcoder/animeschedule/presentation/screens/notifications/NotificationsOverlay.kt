@@ -5,8 +5,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +21,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.MarkEmailRead
@@ -57,6 +57,7 @@ import com.owlcoder.animeschedule.domain.model.AppNotification
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
@@ -105,7 +106,7 @@ fun NotificationsOverlay(
             modifier = Modifier
                 .fillMaxWidth()
                 .animateContentSize(animationSpec = motion.iosSpring()),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             NotificationTabs(
                 selectedTab = selectedTab,
@@ -118,18 +119,17 @@ fun NotificationsOverlay(
                 targetState = selectedTab,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 190.dp, max = maxListHeight),
+                    .heightIn(min = 250.dp, max = maxListHeight),
                 transitionSpec = {
-                    val direction = if (targetState >= initialState) 1 else -1
                     (fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
-                        slideInHorizontally(
+                        scaleIn(
+                            initialScale = 0.985f,
                             animationSpec = motion.iosTween(IosMotion.Standard),
-                            initialOffsetX = { if (motion.animationsEnabled) direction * it / 10 else 0 },
                         )) togetherWith
                         (fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                            slideOutHorizontally(
+                            scaleOut(
+                                targetScale = 0.995f,
                                 animationSpec = motion.iosTween(IosMotion.Quick),
-                                targetOffsetX = { if (motion.animationsEnabled) -direction * it / 14 else 0 },
                             ))
                 },
                 label = "notification-tab-content",
@@ -190,14 +190,14 @@ private fun NotificationTabs(
     AppMaterialSurface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(38.dp),
+            .height(42.dp),
         material = AppMaterial.Interactive,
-        shape = RoundedCornerShape(10.dp),
+        shape = ContinuousRoundedShape(14.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(38.dp)
+                .height(42.dp)
                 .padding(3.dp),
             horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
@@ -217,13 +217,13 @@ private fun NotificationTabs(
                 Surface(
                     modifier = Modifier
                         .weight(1f)
-                        .height(32.dp)
+                        .height(36.dp)
                         .clickable(role = Role.Tab) { onTabSelected(index) }
                         .semantics {
                             role = Role.Tab
                             selected = isSelected
                         },
-                    shape = RoundedCornerShape(8.dp),
+                    shape = ContinuousRoundedShape(11.dp),
                     color = fill,
                     contentColor = contentColor,
                     tonalElevation = 0.dp,
@@ -247,7 +247,7 @@ private fun NotificationTabContent(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(32.dp),
+            .height(36.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
@@ -275,22 +275,30 @@ private fun NotificationTabContent(
 private fun NotificationEmptyState(selectedTab: Int) {
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(190.dp)
-            .padding(horizontal = 20.dp),
+            .fillMaxSize()
+            .padding(horizontal = 24.dp, vertical = 18.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(
-            imageVector = Icons.Outlined.NotificationsNone,
-            contentDescription = null,
-            modifier = Modifier.size(30.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Surface(
+            modifier = Modifier.size(72.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.07f),
+            contentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+            tonalElevation = 0.dp,
+        ) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Outlined.NotificationsNone,
+                    contentDescription = null,
+                    modifier = Modifier.size(34.dp),
+                )
+            }
+        }
         Text(
             text = if (selectedTab == 0) stringResource(R.string.notif_empty_unread)
             else stringResource(R.string.notif_empty_read),
-            modifier = Modifier.padding(top = 9.dp),
+            modifier = Modifier.padding(top = 14.dp),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center,
@@ -298,7 +306,7 @@ private fun NotificationEmptyState(selectedTab: Int) {
         if (selectedTab == 0) {
             Text(
                 text = stringResource(R.string.notif_screen_empty_subtitle),
-                modifier = Modifier.padding(top = 4.dp),
+                modifier = Modifier.padding(top = 5.dp),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
