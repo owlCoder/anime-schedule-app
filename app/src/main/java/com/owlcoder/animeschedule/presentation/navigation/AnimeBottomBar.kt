@@ -66,8 +66,8 @@ private val items = listOf(
     BottomNavItem(Screen.Settings, "Settings", Icons.Filled.Settings, Icons.Outlined.Settings),
 )
 
-private val DockShape = ContinuousRoundedShape(28.dp)
-private val DockHeight = 58.dp
+private val DockShape = ContinuousRoundedShape(25.dp)
+private val DockHeight = 52.dp
 
 @Composable
 fun AnimeBottomBar(
@@ -81,7 +81,7 @@ fun AnimeBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-            .padding(horizontal = 16.dp, vertical = 6.dp),
+            .padding(horizontal = 18.dp, vertical = 7.dp),
     ) {
         GlassChrome(
             modifier = Modifier.fillMaxWidth().height(DockHeight),
@@ -91,7 +91,7 @@ fun AnimeBottomBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(DockHeight)
-                    .padding(horizontal = 5.dp),
+                    .padding(horizontal = 4.dp, vertical = 3.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 items.forEach { item ->
@@ -125,7 +125,6 @@ private fun BottomNavItemView(
     onClick: () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-
     Box(
         modifier = modifier
             .fillMaxHeight()
@@ -139,37 +138,29 @@ private fun BottomNavItemView(
     ) {
         if (selected) {
             GlassSurface(
-                modifier = Modifier.size(width = 66.dp, height = 42.dp),
+                modifier = Modifier.size(width = 59.dp, height = 36.dp),
                 shape = PillShape,
                 tone = GlassTone.Accent,
-                blur = GlassBlur.Soft,
+                blur = GlassBlur.None,
                 contentColor = MaterialTheme.colorScheme.onSurface,
             ) {
-                TabVisual(item, selected, notificationCount)
+                TabVisual(item, true, notificationCount)
             }
         } else {
             Box(
-                modifier = Modifier.size(width = 66.dp, height = 42.dp),
+                modifier = Modifier.size(width = 59.dp, height = 36.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                TabVisual(item, selected, notificationCount)
+                TabVisual(item, false, notificationCount)
             }
         }
     }
 }
 
 @Composable
-private fun TabVisual(
-    item: BottomNavItem,
-    selected: Boolean,
-    notificationCount: Int,
-) {
-    val color = if (selected) {
-        MaterialTheme.colorScheme.onSurface
-    } else {
-        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
-    }
-
+private fun TabVisual(item: BottomNavItem, selected: Boolean, notificationCount: Int) {
+    val color = if (selected) MaterialTheme.colorScheme.onSurface
+    else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
     Column(
         modifier = Modifier.fillMaxHeight(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -183,16 +174,13 @@ private fun TabVisual(
                 imageVector = if (selected) item.activeIcon else item.inactiveIcon,
                 contentDescription = null,
                 tint = color,
-                modifier = Modifier.size(19.dp),
+                modifier = Modifier.size(17.dp),
             )
         }
         Text(
             text = item.label,
             color = color,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 9.5.sp,
-                lineHeight = 11.sp,
-            ),
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.5.sp, lineHeight = 9.5.sp),
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             maxLines = 1,
         )
