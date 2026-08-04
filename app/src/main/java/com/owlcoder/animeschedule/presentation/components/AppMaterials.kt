@@ -12,23 +12,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
+import com.owlcoder.animeschedule.ui.theme.AppDarkElevated
+import com.owlcoder.animeschedule.ui.theme.AppDarkGrouped
+import com.owlcoder.animeschedule.ui.theme.AppDarkSecondary
+import com.owlcoder.animeschedule.ui.theme.AppLightElevated
+import com.owlcoder.animeschedule.ui.theme.AppLightGrouped
+import com.owlcoder.animeschedule.ui.theme.AppLightSecondary
 import com.owlcoder.animeschedule.ui.theme.GlassBlur
 
 enum class AppMaterial { Background, Grouped, Elevated, Interactive }
 
 @Composable
 fun appMaterialColor(material: AppMaterial): Color {
-    val colors = MaterialTheme.colorScheme
-    val dark = colors.background.luminance() < 0.35f
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
     return when (material) {
-        AppMaterial.Background -> colors.background
-        AppMaterial.Grouped -> if (dark) Color.White.copy(alpha = 0.060f) else Color.Black.copy(alpha = 0.038f)
-        AppMaterial.Elevated -> if (dark) Color.White.copy(alpha = 0.085f) else Color.White.copy(alpha = 0.86f)
-        AppMaterial.Interactive -> if (dark) Color.White.copy(alpha = 0.105f) else Color.Black.copy(alpha = 0.050f)
+        AppMaterial.Background -> MaterialTheme.colorScheme.background
+        AppMaterial.Grouped -> if (dark) AppDarkGrouped else AppLightGrouped
+        AppMaterial.Elevated -> if (dark) AppDarkElevated else AppLightElevated
+        AppMaterial.Interactive -> if (dark) AppDarkSecondary else AppLightSecondary
     }
 }
 
-/** Quiet standard material for the content layer beneath Liquid Glass chrome. */
+/** Stable content material. Liquid Glass is reserved for floating chrome and controls. */
 @Composable
 fun AppMaterialSurface(
     modifier: Modifier = Modifier,
@@ -42,12 +47,13 @@ fun AppMaterialSurface(
         AppMaterial.Background -> null
         AppMaterial.Grouped -> BorderStroke(
             0.5.dp,
-            if (dark) Color.White.copy(alpha = 0.045f) else Color.Black.copy(alpha = 0.050f),
+            if (dark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.08f),
         )
-        AppMaterial.Elevated, AppMaterial.Interactive -> BorderStroke(
+        AppMaterial.Elevated -> BorderStroke(
             0.5.dp,
-            if (dark) Color.White.copy(alpha = 0.070f) else Color.Black.copy(alpha = 0.060f),
+            if (dark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.07f),
         )
+        AppMaterial.Interactive -> null
     }
     Surface(
         modifier = modifier,
@@ -71,7 +77,7 @@ fun MaterialBackdropHost(
 }
 
 @Composable
-fun AppScrim(modifier: Modifier = Modifier, alpha: Float = 0.20f) {
+fun AppScrim(modifier: Modifier = Modifier, alpha: Float = 0.24f) {
     Box(
         modifier = modifier
             .fillMaxSize()
