@@ -2,10 +2,11 @@ package com.owlcoder.animeschedule.presentation.screens.notifications
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -59,6 +60,7 @@ import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
+import com.owlcoder.animeschedule.presentation.components.iosSpring
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import java.time.Instant
 import java.time.ZoneId
@@ -100,7 +102,9 @@ fun NotificationsOverlay(
         },
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .animateContentSize(animationSpec = motion.iosSpring()),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             NotificationTabs(
@@ -112,12 +116,21 @@ fun NotificationsOverlay(
 
             AnimatedContent(
                 targetState = selectedTab,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp, max = maxListHeight),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 190.dp, max = maxListHeight),
                 transitionSpec = {
+                    val direction = if (targetState >= initialState) 1 else -1
                     (fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
-                        scaleIn(initialScale = 0.99f, animationSpec = motion.iosTween(IosMotion.Standard))) togetherWith
+                        slideInHorizontally(
+                            animationSpec = motion.iosTween(IosMotion.Standard),
+                            initialOffsetX = { if (motion.animationsEnabled) direction * it / 10 else 0 },
+                        )) togetherWith
                         (fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                            scaleOut(targetScale = 0.995f, animationSpec = motion.iosTween(IosMotion.Quick)))
+                            slideOutHorizontally(
+                                animationSpec = motion.iosTween(IosMotion.Quick),
+                                targetOffsetX = { if (motion.animationsEnabled) -direction * it / 14 else 0 },
+                            ))
                 },
                 label = "notification-tab-content",
             ) { tab ->
@@ -175,12 +188,17 @@ private fun NotificationTabs(
     )
     val motion = LocalMotionPolicy.current
     AppMaterialSurface(
-        modifier = Modifier.fillMaxWidth().height(39.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(38.dp),
         material = AppMaterial.Interactive,
         shape = RoundedCornerShape(10.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().height(39.dp).padding(3.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(38.dp)
+                .padding(3.dp),
             horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             tabs.forEachIndexed { index, (labelRes, icon, count) ->
@@ -199,7 +217,7 @@ private fun NotificationTabs(
                 Surface(
                     modifier = Modifier
                         .weight(1f)
-                        .height(33.dp)
+                        .height(32.dp)
                         .clickable(role = Role.Tab) { onTabSelected(index) }
                         .semantics {
                             role = Role.Tab
@@ -227,7 +245,9 @@ private fun NotificationTabContent(
     color: Color,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().height(33.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(32.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
@@ -254,14 +274,17 @@ private fun NotificationTabContent(
 @Composable
 private fun NotificationEmptyState(selectedTab: Int) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 24.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(190.dp)
+            .padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Icon(
             imageVector = Icons.Outlined.NotificationsNone,
             contentDescription = null,
-            modifier = Modifier.size(28.dp),
+            modifier = Modifier.size(30.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
