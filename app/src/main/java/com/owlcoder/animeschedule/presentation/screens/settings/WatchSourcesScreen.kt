@@ -1,6 +1,7 @@
 package com.owlcoder.animeschedule.presentation.screens.settings
 
 import android.net.Uri
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -26,6 +28,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -58,9 +61,12 @@ import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
+import com.owlcoder.animeschedule.presentation.components.EmptyState
 import com.owlcoder.animeschedule.presentation.components.FaviconImage
 import com.owlcoder.animeschedule.presentation.components.GlassIconButton
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
+import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
+import com.owlcoder.animeschedule.presentation.components.iosSpring
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,6 +86,7 @@ fun WatchSourcesScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .windowInsetsPadding(WindowInsets.statusBars)
+                .navigationBarsPadding()
                 .padding(horizontal = 16.dp),
         ) {
             AppInlineHeader(
@@ -100,24 +107,35 @@ fun WatchSourcesScreen(
                 modifier = Modifier.padding(start = 4.dp, top = 4.dp, end = 4.dp, bottom = 12.dp),
             )
 
-            LazyColumn(
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                contentPadding = PaddingValues(bottom = 28.dp),
-            ) {
-                item {
-                    InsetGroup {
-                        sources.forEachIndexed { index, source ->
-                            SourceRow(
-                                source = source,
-                                onDelete = { viewModel.deleteSource(source) },
-                                onOpenExternallyChange = { viewModel.setOpenExternally(source, it) },
-                            )
-                            if (index < sources.lastIndex) {
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(start = 58.dp),
-                                    thickness = 0.5.dp,
-                                    color = MaterialTheme.colorScheme.outlineVariant,
+            if (sources.isEmpty()) {
+                EmptyState(
+                    icon = Icons.Default.PlayCircle,
+                    title = stringResource(R.string.watch_sources_title),
+                    subtitle = stringResource(R.string.watch_sources_disclaimer),
+                    actionLabel = stringResource(R.string.watch_sources_add),
+                    onAction = { showAddSheet = true },
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    contentPadding = PaddingValues(bottom = 32.dp),
+                ) {
+                    item {
+                        InsetGroup {
+                            sources.forEachIndexed { index, source ->
+                                SourceRow(
+                                    source = source,
+                                    onDelete = { viewModel.deleteSource(source) },
+                                    onOpenExternallyChange = { viewModel.setOpenExternally(source, it) },
                                 )
+                                if (index < sources.lastIndex) {
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(start = 58.dp),
+                                        thickness = 0.5.dp,
+                                        color = MaterialTheme.colorScheme.outlineVariant,
+                                    )
+                                }
                             }
                         }
                     }
@@ -143,8 +161,13 @@ private fun SourceRow(
     onDelete: () -> Unit,
     onOpenExternallyChange: (Boolean) -> Unit,
 ) {
+    val motion = LocalMotionPolicy.current
     Row(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 66.dp).padding(horizontal = 11.dp, vertical = 7.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 66.dp)
+            .animateContentSize(animationSpec = motion.iosSpring())
+            .padding(horizontal = 11.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(9.dp),
     ) {
@@ -195,7 +218,7 @@ private fun SourceRow(
         )
         Box(
             modifier = Modifier
-                .size(32.dp)
+                .size(34.dp)
                 .clickable(onClick = onDelete)
                 .semantics { role = Role.Button },
             contentAlignment = Alignment.Center,
@@ -236,8 +259,9 @@ private fun AddWatchSourceSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 430.dp)
-                .verticalScroll(rememberScrollState()),
+                .heightIn(max = 500.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 10.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             FormField(
