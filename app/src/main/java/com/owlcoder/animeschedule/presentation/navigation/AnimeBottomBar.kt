@@ -1,5 +1,6 @@
 package com.owlcoder.animeschedule.presentation.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -44,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -54,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.presentation.components.AppNotificationBadge
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.GlassChrome
@@ -65,16 +68,21 @@ import com.owlcoder.animeschedule.presentation.components.iosTween
 
 private data class BottomNavItem(
     val screen: Screen,
-    val label: String,
+    @StringRes val labelRes: Int,
     val activeIcon: ImageVector,
     val inactiveIcon: ImageVector,
 )
 
 private val items = listOf(
-    BottomNavItem(Screen.Schedule, "Today", Icons.Filled.CalendarMonth, Icons.Outlined.CalendarMonth),
-    BottomNavItem(Screen.Search, "Search", Icons.Filled.Search, Icons.Outlined.Search),
-    BottomNavItem(Screen.MyList, "My List", Icons.Filled.Bookmark, Icons.Outlined.BookmarkBorder),
-    BottomNavItem(Screen.Settings, "Settings", Icons.Filled.Settings, Icons.Outlined.Settings),
+    BottomNavItem(
+        Screen.Schedule,
+        R.string.schedule_tab_today,
+        Icons.Filled.CalendarMonth,
+        Icons.Outlined.CalendarMonth,
+    ),
+    BottomNavItem(Screen.Search, R.string.nav_search, Icons.Filled.Search, Icons.Outlined.Search),
+    BottomNavItem(Screen.MyList, R.string.nav_mylist, Icons.Filled.Bookmark, Icons.Outlined.BookmarkBorder),
+    BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings, Icons.Outlined.Settings),
 )
 
 private val DockShape = ContinuousRoundedShape(23.dp)
@@ -95,7 +103,9 @@ fun AnimeBottomBar(
             .padding(horizontal = 16.dp, vertical = 6.dp),
     ) {
         GlassChrome(
-            modifier = Modifier.fillMaxWidth().height(DockHeight),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(DockHeight),
             shape = DockShape,
         ) {
             Row(
@@ -135,6 +145,7 @@ private fun BottomNavItemView(
     modifier: Modifier,
     onClick: () -> Unit,
 ) {
+    val label = stringResource(item.labelRes)
     val interactionSource = remember { MutableInteractionSource() }
     val motion = LocalMotionPolicy.current
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
@@ -147,7 +158,9 @@ private fun BottomNavItemView(
     val borderColor by animateColorAsState(
         targetValue = if (selected) {
             if (dark) Color.White.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.82f)
-        } else Color.Transparent,
+        } else {
+            Color.Transparent
+        },
         animationSpec = motion.iosTween(IosMotion.Standard),
         label = "bottom-tab-border",
     )
@@ -171,7 +184,7 @@ private fun BottomNavItemView(
                 onClick = onClick,
             )
             .semantics {
-                contentDescription = item.label
+                contentDescription = label
                 role = Role.Tab
                 this.selected = selected
             }
@@ -186,16 +199,30 @@ private fun BottomNavItemView(
             tonalElevation = 0.dp,
             shadowElevation = 0.dp,
         ) {
-            TabVisual(item, selected, notificationCount)
+            TabVisual(
+                item = item,
+                label = label,
+                selected = selected,
+                notificationCount = notificationCount,
+            )
         }
     }
 }
 
 @Composable
-private fun TabVisual(item: BottomNavItem, selected: Boolean, notificationCount: Int) {
+private fun TabVisual(
+    item: BottomNavItem,
+    label: String,
+    selected: Boolean,
+    notificationCount: Int,
+) {
     val motion = LocalMotionPolicy.current
     val color by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
         animationSpec = motion.iosTween(IosMotion.Standard),
         label = "bottom-tab-color",
     )
@@ -206,13 +233,19 @@ private fun TabVisual(item: BottomNavItem, selected: Boolean, notificationCount:
     )
 
     Column(
-        modifier = Modifier.fillMaxSize().alpha(inactiveAlpha),
+        modifier = Modifier
+            .fillMaxSize()
+            .alpha(inactiveAlpha),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         AppNotificationBadge(
             count = notificationCount,
-            contentDescription = if (notificationCount > 0) "${item.label}, $notificationCount unread" else null,
+            contentDescription = if (notificationCount > 0) {
+                "$label, $notificationCount"
+            } else {
+                null
+            },
         ) {
             Crossfade(
                 targetState = selected,
@@ -228,9 +261,12 @@ private fun TabVisual(item: BottomNavItem, selected: Boolean, notificationCount:
             }
         }
         Text(
-            text = item.label,
+            text = label,
             color = color,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.5.sp, lineHeight = 10.sp),
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 10.sp,
+                lineHeight = 11.sp,
+            ),
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             maxLines = 1,
         )
