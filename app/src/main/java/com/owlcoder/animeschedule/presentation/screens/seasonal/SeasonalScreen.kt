@@ -6,10 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -167,7 +165,7 @@ internal fun SeasonalAnimeCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SeasonalFilterSheet(
     filter: SeasonalFilter,
@@ -192,40 +190,37 @@ internal fun SeasonalFilterSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 430.dp)
+                .heightIn(max = 440.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            FilterSection(stringResource(R.string.seasonal_sort_label)) {
-                SeasonalSortOrder.entries.forEach { order ->
-                    CompactFilterChip(
-                        label = stringResource(order.labelRes),
-                        selected = filter.sortOrder == order,
-                        onClick = { onSortChange(order) },
-                    )
-                }
-            }
+            EqualOptionSection(
+                title = stringResource(R.string.seasonal_sort_label),
+                options = SeasonalSortOrder.entries,
+                columns = 3,
+                label = { stringResource(it.labelRes) },
+                selected = { filter.sortOrder == it },
+                onClick = onSortChange,
+            )
             if (availableFormats.isNotEmpty()) {
-                FilterSection(stringResource(R.string.filter_format)) {
-                    availableFormats.forEach { format ->
-                        CompactFilterChip(
-                            label = FORMAT_LABELS[format] ?: format,
-                            selected = format in filter.formats,
-                            onClick = { onFormatToggle(format) },
-                        )
-                    }
-                }
+                EqualOptionSection(
+                    title = stringResource(R.string.filter_format),
+                    options = availableFormats,
+                    columns = 2,
+                    label = { FORMAT_LABELS[it] ?: it },
+                    selected = { it in filter.formats },
+                    onClick = onFormatToggle,
+                )
             }
             if (availableGenres.isNotEmpty()) {
-                FilterSection(stringResource(R.string.filter_genre)) {
-                    availableGenres.forEach { genre ->
-                        CompactFilterChip(
-                            label = genre,
-                            selected = genre in filter.genres,
-                            onClick = { onGenreToggle(genre) },
-                        )
-                    }
-                }
+                EqualOptionSection(
+                    title = stringResource(R.string.filter_genre),
+                    options = availableGenres,
+                    columns = 2,
+                    label = { it },
+                    selected = { it in filter.genres },
+                    onClick = onGenreToggle,
+                )
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(onClick = onDismiss) {
@@ -236,11 +231,14 @@ internal fun SeasonalFilterSheet(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun FilterSection(
+private fun <T> EqualOptionSection(
     title: String,
-    content: @Composable FlowRowScope.() -> Unit,
+    options: List<T>,
+    columns: Int,
+    label: @Composable (T) -> String,
+    selected: (T) -> Boolean,
+    onClick: (T) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
@@ -250,19 +248,35 @@ private fun FilterSection(
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            content = content,
-        )
+        options.chunked(columns).forEach { rowItems ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                rowItems.forEach { option ->
+                    EqualFilterOption(
+                        label = label(option),
+                        selected = selected(option),
+                        modifier = Modifier.weight(1f),
+                        onClick = { onClick(option) },
+                    )
+                }
+                repeat(columns - rowItems.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
     }
 }
 
 @Composable
-private fun CompactFilterChip(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun EqualFilterOption(
+    label: String,
+    selected: Boolean,
+    modifier: Modifier,
+    onClick: () -> Unit,
+) {
     val contentColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
     Surface(
-        modifier = Modifier.height(36.dp).clickable(onClick = onClick),
+        modifier = modifier.height(38.dp).clickable(onClick = onClick),
         shape = PillShape,
         color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
         else MaterialTheme.colorScheme.surface,
@@ -275,17 +289,21 @@ private fun CompactFilterChip(label: String, selected: Boolean, onClick: () -> U
         tonalElevation = 0.dp,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 13.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            horizontalArrangement = Arrangement.Center,
         ) {
-            if (selected) Icon(Icons.Default.Check, null, Modifier.size(14.dp))
+            if (selected) {
+                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.size(4.dp))
+            }
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                 color = contentColor,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
