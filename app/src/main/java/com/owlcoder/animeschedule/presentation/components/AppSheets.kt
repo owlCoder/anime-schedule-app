@@ -1,6 +1,7 @@
 package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -23,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
@@ -37,30 +39,36 @@ fun AppSheet(
     trailingContent: @Composable (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
+    val container = if (dark) Color(0xFF171719).copy(alpha = 0.91f)
+    else Color.White.copy(alpha = 0.94f)
+    val edge = if (dark) Color.White.copy(alpha = 0.09f) else Color.Black.copy(alpha = 0.06f)
+
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         sheetState = sheetState,
         shape = ContinuousRoundedShape(GlassTokens.sheetRadius),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.94f),
+        containerColor = container,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        scrimColor = Color.Black.copy(alpha = 0.42f),
+        scrimColor = Color.Black.copy(alpha = 0.34f),
         tonalElevation = 0.dp,
         dragHandle = { AppSheetHandle() },
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .border(0.5.dp, edge, ContinuousRoundedShape(GlassTokens.sheetRadius))
                 .imePadding()
                 .navigationBarsPadding()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                .padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
         ) {
             if (!title.isNullOrBlank()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 42.dp)
-                        .padding(bottom = 6.dp),
+                        .heightIn(min = 40.dp)
+                        .padding(bottom = 5.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
@@ -82,16 +90,16 @@ fun AppSheet(
 fun AppSheetHandle(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .padding(top = 8.dp, bottom = 5.dp)
+            .padding(top = 7.dp, bottom = 4.dp)
             .fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
-                .width(34.dp)
+                .width(30.dp)
                 .requiredHeight(4.dp)
                 .clip(MaterialTheme.shapes.extraLarge)
-                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.24f)),
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.22f)),
         )
     }
 }
