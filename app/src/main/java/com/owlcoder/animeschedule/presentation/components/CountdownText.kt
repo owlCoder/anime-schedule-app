@@ -1,9 +1,5 @@
 package com.owlcoder.animeschedule.presentation.components
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.core.time.formatAiringCountdown
+import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.delay
 
@@ -27,38 +24,37 @@ fun CountdownText(
     airingAtEpochSeconds: Long,
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    zoneId: ZoneId = ZoneId.systemDefault(),
 ) {
     val airedLabel = stringResource(R.string.schedule_aired_label)
-    val motion = LocalMotionPolicy.current
-    var text by remember(airingAtEpochSeconds, airedLabel) {
-        mutableStateOf(formatAiringCountdown(airingAtEpochSeconds, ZoneId.systemDefault(), airedLabel))
+    var text by remember(airingAtEpochSeconds, zoneId, airedLabel) {
+        mutableStateOf(formatAiringCountdown(airingAtEpochSeconds, zoneId, airedLabel))
     }
 
-    LaunchedEffect(airingAtEpochSeconds, airedLabel) {
+    LaunchedEffect(airingAtEpochSeconds, zoneId, airedLabel) {
         while (true) {
-            text = formatAiringCountdown(airingAtEpochSeconds, ZoneId.systemDefault(), airedLabel)
-            delay(60_000L)
+            val remainingSeconds = airingAtEpochSeconds - Instant.now().epochSecond
+            text = formatAiringCountdown(airingAtEpochSeconds, zoneId, airedLabel)
+            if (remainingSeconds <= 0L) break
+            delay(countdownRefreshDelayMillis(remainingSeconds))
         }
     }
 
-    AnimatedContent(
-        targetState = text,
+    Text(
+        text = text,
         modifier = modifier,
-        transitionSpec = {
-            fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
-                fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
-        },
-        label = "countdown-text",
-    ) { value ->
-        Text(
-            text = value,
-            maxLines = 1,
-            overflow = TextOverflow.Clip,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.SemiBold,
-                fontFeatureSettings = "tnum",
-            ),
-            color = color,
-        )
-    }
+        maxLines = 1,
+        overflow = TextOverflow.Clip,
+        style = MaterialTheme.typography.labelSmall.copy(
+            fontWeight = FontWeight.SemiBold,
+            fontFeatureSettings = "tnum",
+        ),
+        color = color,
+    )
+}
+
+private fun countdownRefreshDelayMillis(remainingSeconds: Long): Long = when {
+    remainingSeconds > 6 * 60 * 60 -> 15 * 60_000L
+    remainingSeconds > 60 * 60 -> 5 * 60_000L
+    else -> 60_000L
 }
