@@ -1,5 +1,9 @@
 package com.owlcoder.animeschedule.ui.theme
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.os.Build
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -7,8 +11,12 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import com.owlcoder.animeschedule.data.local.datastore.AccentColor
 import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import com.owlcoder.animeschedule.presentation.components.ProvideMotionPolicy
@@ -129,6 +137,23 @@ fun AnimeScheduleTheme(
         lightColors(accentPrimary(accentColor, dark = false))
     }
 
+    // enableEdgeToEdge() follows the system theme by default. Keep system-bar icon
+    // contrast synchronized with the in-app theme, including forced Light/Dark modes.
+    val view = LocalView.current
+    SideEffect {
+        val activity = view.context.findActivity() ?: return@SideEffect
+        val window = activity.window
+        window.statusBarColor = Color.Transparent.toArgb()
+        window.navigationBarColor = Color.Transparent.toArgb()
+        WindowCompat.getInsetsController(window, view).apply {
+            isAppearanceLightStatusBars = !darkTheme
+            isAppearanceLightNavigationBars = !darkTheme
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
+    }
+
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
@@ -136,4 +161,10 @@ fun AnimeScheduleTheme(
     ) {
         ProvideMotionPolicy(content = content)
     }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
