@@ -1,11 +1,7 @@
 package com.owlcoder.animeschedule.presentation.screens.schedule
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -199,6 +196,11 @@ private fun EqualOption(
         animationSpec = motion.iosTween(IosMotion.Standard),
         label = "schedule-filter-fill",
     )
+    val checkProgress by animateFloatAsState(
+        targetValue = if (selected) 1f else 0f,
+        animationSpec = if (selected) motion.iosSpring() else motion.iosTween(IosMotion.Quick),
+        label = "schedule-filter-check",
+    )
 
     Box(
         modifier = modifier
@@ -238,23 +240,17 @@ private fun EqualOption(
                     modifier = Modifier.size(18.dp),
                     contentAlignment = Alignment.CenterStart,
                 ) {
-                    AnimatedVisibility(
-                        visible = selected,
-                        enter = scaleIn(
-                            initialScale = 0.72f,
-                            animationSpec = motion.iosSpring(),
-                        ) + fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)),
-                        exit = scaleOut(
-                            targetScale = 0.72f,
-                            animationSpec = motion.iosTween(IosMotion.Quick),
-                        ) + fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)),
-                    ) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(14.dp),
-                        )
-                    }
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(14.dp)
+                            .graphicsLayer {
+                                alpha = checkProgress
+                                scaleX = 0.72f + 0.28f * checkProgress
+                                scaleY = 0.72f + 0.28f * checkProgress
+                            },
+                    )
                 }
                 Text(
                     text = label,
