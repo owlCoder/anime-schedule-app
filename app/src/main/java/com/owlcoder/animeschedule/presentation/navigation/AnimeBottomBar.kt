@@ -47,10 +47,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.owlcoder.animeschedule.presentation.components.AppNotificationBadge
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.GlassChrome
-import com.owlcoder.animeschedule.presentation.components.GlassSurface
-import com.owlcoder.animeschedule.ui.theme.GlassBlur
-import com.owlcoder.animeschedule.ui.theme.GlassTone
-import com.owlcoder.animeschedule.ui.theme.PillShape
 
 private data class BottomNavItem(
     val screen: Screen,
@@ -66,8 +62,8 @@ private val items = listOf(
     BottomNavItem(Screen.Settings, "Settings", Icons.Filled.Settings, Icons.Outlined.Settings),
 )
 
-private val DockShape = ContinuousRoundedShape(25.dp)
-private val DockHeight = 52.dp
+private val DockShape = ContinuousRoundedShape(24.dp)
+private val DockHeight = 50.dp
 
 @Composable
 fun AnimeBottomBar(
@@ -91,7 +87,7 @@ fun AnimeBottomBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(DockHeight)
-                    .padding(horizontal = 4.dp, vertical = 3.dp),
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 items.forEach { item ->
@@ -136,33 +132,16 @@ private fun BottomNavItemView(
             },
         contentAlignment = Alignment.Center,
     ) {
-        if (selected) {
-            GlassSurface(
-                modifier = Modifier.size(width = 59.dp, height = 36.dp),
-                shape = PillShape,
-                tone = GlassTone.Accent,
-                blur = GlassBlur.None,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-            ) {
-                TabVisual(item, true, notificationCount)
-            }
-        } else {
-            Box(
-                modifier = Modifier.size(width = 59.dp, height = 36.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                TabVisual(item, false, notificationCount)
-            }
-        }
+        TabVisual(item, selected, notificationCount)
     }
 }
 
 @Composable
 private fun TabVisual(item: BottomNavItem, selected: Boolean, notificationCount: Int) {
-    val color = if (selected) MaterialTheme.colorScheme.onSurface
+    val color = if (selected) MaterialTheme.colorScheme.primary
     else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
     Column(
-        modifier = Modifier.fillMaxHeight(),
+        modifier = Modifier.size(width = 64.dp, height = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -174,13 +153,13 @@ private fun TabVisual(item: BottomNavItem, selected: Boolean, notificationCount:
                 imageVector = if (selected) item.activeIcon else item.inactiveIcon,
                 contentDescription = null,
                 tint = color,
-                modifier = Modifier.size(17.dp),
+                modifier = Modifier.size(18.dp),
             )
         }
         Text(
             text = item.label,
             color = color,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.5.sp, lineHeight = 9.5.sp),
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp, lineHeight = 10.sp),
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             maxLines = 1,
         )
