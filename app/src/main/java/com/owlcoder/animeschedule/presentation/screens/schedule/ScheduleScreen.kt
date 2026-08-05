@@ -892,29 +892,32 @@ private fun ScheduleSeeAllSheet(
         onDismissRequest = onDismiss,
         title = title,
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 650.dp),
-            contentPadding = PaddingValues(bottom = 12.dp),
-        ) {
-            items(
-                items = episodes.sortedBy { it.airingAtEpochSeconds },
-                key = { "schedule-overlay-${it.airingId}" },
-            ) { episode ->
-                UpcomingAiringRow(
-                    episode = episode,
-                    isLoggedIn = isLoggedIn,
-                    isIncrementing = episode.malId in pendingIncrementIds,
-                    onClick = { onAnimeClick(episode) },
-                    onIncrement = { onIncrementEpisode(episode) },
-                    onEditStatus = { onEditStatus(episode) },
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(start = 108.dp),
-                    thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                )
+        if (episodes.isEmpty()) {
+            EmptyState(
+                icon = Icons.Default.CalendarMonth,
+                title = stringResource(R.string.schedule_empty_title),
+                subtitle = stringResource(R.string.schedule_empty_subtitle),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(190.dp),
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 650.dp),
+                contentPadding = PaddingValues(bottom = 12.dp),
+            ) {
+                item(key = "schedule-overlay-timeline") {
+                    UpcomingAiringList(
+                        episodes = episodes.sortedBy { it.airingAtEpochSeconds },
+                        isLoggedIn = isLoggedIn,
+                        pendingIncrementIds = pendingIncrementIds,
+                        onCardClick = onAnimeClick,
+                        onIncrementEpisode = onIncrementEpisode,
+                        onEditStatus = onEditStatus,
+                    )
+                }
             }
         }
     }
@@ -956,22 +959,14 @@ fun AllTodayScreen(
                 )
             }
         }
-        items(
-            items = episodes.sortedBy { it.airingAtEpochSeconds },
-            key = { it.airingId },
-        ) { episode ->
-            UpcomingAiringRow(
-                episode = episode,
+        item(key = "all-today-timeline") {
+            UpcomingAiringList(
+                episodes = episodes.sortedBy { it.airingAtEpochSeconds },
                 isLoggedIn = isLoggedIn,
-                isIncrementing = episode.malId in pendingIncrementIds,
-                onClick = { onAnimeClick(episode) },
-                onIncrement = { onIncrementEpisode(episode) },
-                onEditStatus = { onEditStatus(episode) },
-            )
-            HorizontalDivider(
-                modifier = Modifier.padding(start = 108.dp),
-                thickness = 0.5.dp,
-                color = MaterialTheme.colorScheme.outlineVariant,
+                pendingIncrementIds = pendingIncrementIds,
+                onCardClick = onAnimeClick,
+                onIncrementEpisode = onIncrementEpisode,
+                onEditStatus = onEditStatus,
             )
         }
     }

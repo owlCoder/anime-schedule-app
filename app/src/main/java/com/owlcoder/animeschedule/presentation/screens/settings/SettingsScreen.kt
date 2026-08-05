@@ -5,7 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,7 +33,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Schedule
@@ -59,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -457,27 +457,16 @@ private fun AccountRow(
                 modifier = Modifier.size(20.dp),
                 strokeWidth = 2.dp,
             )
-            !isLoggedIn -> Row(
-        modifier = Modifier
-            .height(36.dp)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Icon(
-            Icons.Default.Key,
-            contentDescription = null,
-            modifier = Modifier.size(17.dp),
-            tint = MaterialTheme.colorScheme.primary,
-        )
-        Text(
-            text = stringResource(R.string.profile_login),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.SemiBold,
-        )
-    }
+            !isLoggedIn -> Text(
+                text = stringResource(R.string.profile_login),
+                modifier = Modifier
+                    .height(36.dp)
+                    .clickable(onClick = onClick)
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold,
+            )
     else -> Row(
                 modifier = Modifier
                     .height(36.dp)
@@ -510,14 +499,21 @@ private fun SettingsRow(
     value: String,
     onClick: () -> Unit,
     enabled: Boolean = true,
-    iconColor: Color = MaterialTheme.colorScheme.primary,
+    iconColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     titleColor: Color = MaterialTheme.colorScheme.onSurface,
     trailing: (@Composable () -> Unit)? = null,
 ) {
-    val tileColor = if (iconColor == MaterialTheme.colorScheme.error) {
-        MaterialTheme.colorScheme.error.copy(alpha = 0.10f)
-    } else {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+    val destructive = iconColor == MaterialTheme.colorScheme.error
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
+    val tileColor = when {
+        destructive -> MaterialTheme.colorScheme.error.copy(alpha = if (dark) 0.12f else 0.09f)
+        dark -> Color.White.copy(alpha = 0.055f)
+        else -> Color.White.copy(alpha = 0.68f)
+    }
+    val tileBorder = when {
+        destructive -> MaterialTheme.colorScheme.error.copy(alpha = 0.18f)
+        dark -> Color.White.copy(alpha = 0.10f)
+        else -> Color.White.copy(alpha = 0.86f)
     }
     Row(
         modifier = Modifier
@@ -527,19 +523,25 @@ private fun SettingsRow(
             .padding(horizontal = 11.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(ContinuousRoundedShape(9.dp))
-                .background(tileColor),
-            contentAlignment = Alignment.Center,
+        Surface(
+            modifier = Modifier.size(32.dp),
+            shape = ContinuousRoundedShape(9.dp),
+            color = tileColor,
+            border = BorderStroke(0.5.dp, tileBorder),
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = iconColor,
-            )
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = iconColor,
+                )
+            }
         }
         Column(
             modifier = Modifier
