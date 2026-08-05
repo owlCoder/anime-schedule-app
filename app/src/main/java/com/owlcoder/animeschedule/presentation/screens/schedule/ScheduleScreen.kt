@@ -72,6 +72,7 @@ import com.owlcoder.animeschedule.presentation.components.AppInlineHeader
 import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
+import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.CountdownText
 import com.owlcoder.animeschedule.presentation.components.EmptyState
 import com.owlcoder.animeschedule.presentation.components.ErrorBanner
@@ -219,7 +220,21 @@ fun ScheduleScreen(
             onAnimeClick = onAnimeClick,
             onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) },
         )
-        is ScheduleOverlay.SeeAll,
+        is ScheduleOverlay.SeeAll -> ScheduleSeeAllSheet(
+            title = selectedDate.fullDateLabel(),
+            episodes = uiState.episodesForDate(selectedDate),
+            isLoggedIn = uiState.isLoggedIn,
+            pendingIncrementIds = uiState.pendingIncrementIds,
+            onAnimeClick = { episode -> onAnimeClick(episode.animeId) },
+            onIncrementEpisode = { episode ->
+                episode.malId?.let { malId ->
+                    lastIncrementedEpisode = episode
+                    viewModel.incrementEpisode(malId)
+                }
+            },
+            onEditStatus = { editingEpisode = it },
+            onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) },
+        )
         ScheduleOverlay.None -> Unit
     }
 }
@@ -830,6 +845,50 @@ private fun UpcomingAiringRow(
                 modifier = Modifier.size(16.dp),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ScheduleSeeAllSheet(
+    title: String,
+    episodes: List<AiringEpisode>,
+    isLoggedIn: Boolean,
+    pendingIncrementIds: Set<Int>,
+    onAnimeClick: (AiringEpisode) -> Unit,
+    onIncrementEpisode: (AiringEpisode) -> Unit,
+    onEditStatus: (AiringEpisode) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AppSheet(
+        onDismissRequest = onDismiss,
+        title = title,
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 650.dp),
+            contentPadding = PaddingValues(bottom = 12.dp),
+        ) {
+            items(
+                items = episodes.sortedBy { it.airingAtEpochSeconds },
+                key = { "schedule-overlay-${it.airingId}" },
+            ) { episode ->
+                UpcomingAiringRow(
+                    episode = episode,
+                    isLoggedIn = isLoggedIn,
+                    isIncrementing = episode.malId in pendingIncrementIds,
+                    onClick = { onAnimeClick(episode) },
+                    onIncrement = { onIncrementEpisode(episode) },
+                    onEditStatus = { onEditStatus(episode) },
+                )
+                HorizontalDivider(
+                    modifier = Modifier.padding(start = 108.dp),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                )
+            }
         }
     }
 }
