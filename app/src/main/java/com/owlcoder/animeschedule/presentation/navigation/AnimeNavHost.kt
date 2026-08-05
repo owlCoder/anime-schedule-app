@@ -7,9 +7,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -25,7 +22,6 @@ import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.navigation.Screen.Detail
 import com.owlcoder.animeschedule.presentation.screens.detail.AnimeDetailScreen
 import com.owlcoder.animeschedule.presentation.screens.mylist.MyListScreen
-import com.owlcoder.animeschedule.presentation.screens.schedule.AllTodayScreen
 import com.owlcoder.animeschedule.presentation.screens.schedule.ScheduleScreen
 import com.owlcoder.animeschedule.presentation.screens.schedule.ScheduleViewModel
 import com.owlcoder.animeschedule.presentation.screens.search.SearchScreen
@@ -93,17 +89,6 @@ fun AnimeNavHost(
     ) {
         composable(Screen.Schedule.route) {
             val scheduleViewModel: ScheduleViewModel = hiltViewModel()
-            LaunchedEffect(scheduleViewModel, navController) {
-                scheduleViewModel.navigationEvent.collect { event ->
-                    when (event) {
-                        is ScheduleViewModel.NavigationEvent.OpenSeeAll -> {
-                            navController.navigate(Screen.AllToday.route) {
-                                launchSingleTop = true
-                            }
-                        }
-                    }
-                }
-            }
             ScheduleScreen(
                 onAnimeClick = { animeId ->
                     navController.navigate(Detail.createRoute(animeId))
@@ -130,28 +115,6 @@ fun AnimeNavHost(
         }
         composable(Screen.Settings.route) {
             SettingsScreen(onRestartForLanguage = onRestartForLanguage)
-        }
-        composable(
-            route = Screen.AllToday.route,
-            enterTransition = { pushEnter },
-            exitTransition = { pushExit },
-            popEnterTransition = { popEnter },
-            popExitTransition = { popExit },
-        ) {
-            val scheduleViewModel: ScheduleViewModel = hiltViewModel()
-            val uiState by scheduleViewModel.uiState.collectAsState()
-            AllTodayScreen(
-                episodes = uiState.todayEpisodes,
-                isLoggedIn = uiState.isLoggedIn,
-                pendingIncrementIds = uiState.pendingIncrementIds,
-                onAnimeClick = { episode ->
-                    navController.navigate(Detail.createRoute(episode.animeId))
-                },
-                onIncrementEpisode = { episode ->
-                    episode.malId?.let(scheduleViewModel::incrementEpisode)
-                },
-                onBack = { navController.popBackStack() },
-            )
         }
         composable(
             route = Detail.ROUTE,
