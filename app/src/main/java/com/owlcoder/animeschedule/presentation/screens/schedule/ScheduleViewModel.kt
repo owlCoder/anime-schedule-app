@@ -130,13 +130,6 @@ class ScheduleViewModel @Inject constructor(
     private val _openOverlay = MutableStateFlow<ScheduleOverlay>(ScheduleOverlay.None)
     val openOverlay: StateFlow<ScheduleOverlay> = _openOverlay
 
-    sealed interface NavigationEvent {
-        data class OpenSeeAll(val section: ScheduleSection) : NavigationEvent
-    }
-
-    private val _navigationEvent = Channel<NavigationEvent>(Channel.BUFFERED)
-    val navigationEvent = _navigationEvent.receiveAsFlow()
-
     sealed interface IncrementEvent {
         data object Success : IncrementEvent
         data object Updated : IncrementEvent
@@ -220,11 +213,7 @@ class ScheduleViewModel @Inject constructor(
     fun clearFilter() = _filter.update { ScheduleFilter() }
 
     fun setOpenOverlay(overlay: ScheduleOverlay) {
-        if (overlay is ScheduleOverlay.SeeAll) {
-            _navigationEvent.trySend(NavigationEvent.OpenSeeAll(overlay.section))
-        } else {
-            _openOverlay.value = overlay
-        }
+        _openOverlay.value = overlay
     }
 
     fun refresh() {
