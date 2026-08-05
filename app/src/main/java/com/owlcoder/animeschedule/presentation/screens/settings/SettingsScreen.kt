@@ -452,34 +452,28 @@ private fun AccountRow(
                 modifier = Modifier.size(20.dp),
                 strokeWidth = 2.dp,
             )
-            !isLoggedIn -> Surface(
-                modifier = Modifier
-                    .height(40.dp)
-                    .clickable(onClick = onClick),
-                shape = ContinuousRoundedShape(15.dp),
-                color = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                tonalElevation = 0.dp,
-                shadowElevation = 0.dp,
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 13.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(7.dp),
-                ) {
-                    Icon(
-                        Icons.Default.Key,
-                        contentDescription = null,
-                        modifier = Modifier.size(17.dp),
-                    )
-                    Text(
-                        text = stringResource(R.string.profile_login),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
-            else -> Row(
+            !isLoggedIn -> Row(
+        modifier = Modifier
+            .height(40.dp)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Icon(
+            Icons.Default.Key,
+            contentDescription = null,
+            modifier = Modifier.size(17.dp),
+            tint = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = stringResource(R.string.profile_login),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold,
+        )
+    }
+    else -> Row(
                 modifier = Modifier
                     .height(40.dp)
                     .clickable(onClick = onClick)

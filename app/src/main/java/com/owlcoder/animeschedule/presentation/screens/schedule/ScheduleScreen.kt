@@ -10,6 +10,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,6 +32,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -724,29 +727,55 @@ private fun UpcomingAiringList(
     onEditStatus: (AiringEpisode) -> Unit,
 ) {
     val motion = LocalMotionPolicy.current
-    AppMaterialSurface(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .animateContentSize(animationSpec = motion.iosSpring()),
-        material = AppMaterial.Grouped,
-        shape = MaterialTheme.shapes.large,
     ) {
-        Column {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .padding(start = 11.5.dp, top = 34.dp, bottom = 34.dp),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(1.dp)
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.outlineVariant),
+            )
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
             episodes.forEachIndexed { index, episode ->
-                UpcomingAiringRow(
-                    episode = episode,
-                    isLoggedIn = isLoggedIn,
-                    isIncrementing = episode.malId in pendingIncrementIds,
-                    onClick = { onCardClick(episode) },
-                    onIncrement = { onIncrementEpisode(episode) },
-                    onEditStatus = { onEditStatus(episode) },
-                )
-                if (index < episodes.lastIndex) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(start = 108.dp),
-                        thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier.width(24.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(if (index == 0) 9.dp else 7.dp),
+                            shape = CircleShape,
+                            color = if (index == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                            border = BorderStroke(2.dp, MaterialTheme.colorScheme.background),
+                        ) {}
+                    }
+                    AppMaterialSurface(
+                        modifier = Modifier.weight(1f),
+                        material = AppMaterial.Grouped,
+                        shape = MaterialTheme.shapes.extraLarge,
+                    ) {
+                        UpcomingAiringRow(
+                            episode = episode,
+                            isLoggedIn = isLoggedIn,
+                            isIncrementing = episode.malId in pendingIncrementIds,
+                            onClick = { onCardClick(episode) },
+                            onIncrement = { onIncrementEpisode(episode) },
+                            onEditStatus = { onEditStatus(episode) },
+                        )
+                    }
                 }
             }
         }
@@ -767,7 +796,7 @@ private fun UpcomingAiringRow(
             .fillMaxWidth()
             .heightIn(min = 66.dp)
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 5.dp),
+            .padding(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(7.dp),
     ) {

@@ -339,4 +339,10 @@
     <string name="watch_sources_url_hint">Mora sadržati {query} — zamenjuje se nazivom anime-a, npr. https://example.com/search?q={query}</string>
     <string name="watch_sources_open_externally">Otvori u aplikaciji</string>
     <string name="watch_sources_open_externally_hint">Sistem preusmerava na instaliranu aplikaciju (npr. Netflix) umesto ugrađenog pregledača</string>
+    <string name="mylist_benefit_sync_title">Sinhronizuj napredak</string>
+    <string name="mylist_benefit_sync_subtitle">Pristupi svojoj listi na svim uređajima.</string>
+    <string name="mylist_benefit_status_title">Ažuriraj status gledanja</string>
+    <string name="mylist_benefit_status_subtitle">Prati epizode i nastavi tamo gde si stao.</string>
+    <string name="mylist_benefit_scores_title">Sačuvaj ocene</string>
+    <string name="mylist_benefit_scores_subtitle">Ocenjuj anime i bezbedno čuvaj svoje ocene.</string>
 </resources>

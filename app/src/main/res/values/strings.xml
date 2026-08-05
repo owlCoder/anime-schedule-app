@@ -339,4 +339,10 @@
     <string name="watch_sources_url_hint">Must contain {query} — it\'s replaced with the anime title, e.g. https://example.com/search?q={query}</string>
     <string name="watch_sources_open_externally">Open in app</string>
     <string name="watch_sources_open_externally_hint">Lets the system hand off to an installed app (e.g. Netflix) instead of the in-app browser</string>
+    <string name="mylist_benefit_sync_title">Keep progress synced</string>
+    <string name="mylist_benefit_sync_subtitle">Access your list across all your devices.</string>
+    <string name="mylist_benefit_status_title">Update watch status</string>
+    <string name="mylist_benefit_status_subtitle">Track episodes and continue where you left off.</string>
+    <string name="mylist_benefit_scores_title">Save scores</string>
+    <string name="mylist_benefit_scores_subtitle">Rate anime and keep your scores safe.</string>
 </resources>

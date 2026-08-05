@@ -495,8 +495,8 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         BenefitRow(
                             icon = Icons.Default.CloudSync,
-                            title = "Keep progress synced",
-                            subtitle = "Access your list across all your devices.",
+                            title = stringResource(R.string.mylist_benefit_sync_title),
+                            subtitle = stringResource(R.string.mylist_benefit_sync_subtitle),
                         )
                         HorizontalDivider(
                             modifier = Modifier.padding(start = 58.dp),
@@ -505,8 +505,8 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
                         )
                         BenefitRow(
                             icon = Icons.Default.Bookmark,
-                            title = "Update watch status",
-                            subtitle = "Track episodes and continue where you left off.",
+                            title = stringResource(R.string.mylist_benefit_status_title),
+                            subtitle = stringResource(R.string.mylist_benefit_status_subtitle),
                         )
                         HorizontalDivider(
                             modifier = Modifier.padding(start = 58.dp),
@@ -515,8 +515,8 @@ private fun NotLoggedInState(onLogin: () -> Unit) {
                         )
                         BenefitRow(
                             icon = Icons.Default.Star,
-                            title = "Save scores",
-                            subtitle = "Rate anime and keep your scores safe.",
+                            title = stringResource(R.string.mylist_benefit_scores_title),
+                            subtitle = stringResource(R.string.mylist_benefit_scores_subtitle),
                         )
                     }
                 }

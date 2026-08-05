@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -157,13 +159,9 @@ private fun ButtonRow(label: String, icon: ImageVector?, color: Color, enabled: 
 @Composable
 private fun ButtonContent(label: String, icon: ImageVector?, color: Color, enabled: Boolean) {
     val resolved = if (enabled) color else color.copy(alpha = 0.42f)
-    if (icon != null) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(18.dp),
-            tint = resolved,
-        )
+    val trailingIcon = icon == Icons.AutoMirrored.Filled.ArrowForward
+    if (icon != null && !trailingIcon) {
+        Icon(icon, null, Modifier.size(18.dp), tint = resolved)
     }
     Text(
         text = label,
@@ -172,6 +170,9 @@ private fun ButtonContent(label: String, icon: ImageVector?, color: Color, enabl
         fontWeight = FontWeight.SemiBold,
         maxLines = 1,
     )
+    if (icon != null && trailingIcon) {
+        Icon(icon, null, Modifier.size(18.dp), tint = resolved)
+    }
 }
 
 @Composable

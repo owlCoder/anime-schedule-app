@@ -5,6 +5,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -692,6 +693,16 @@ private fun AppMark() {
 }
 
 @Composable
+private fun Modifier.onboardingClickable(onClick: () -> Unit): Modifier {
+    val interactionSource = remember { MutableInteractionSource() }
+    return clickable(
+        interactionSource = interactionSource,
+        indication = null,
+        onClick = onClick,
+    )
+}
+
+@Composable
 private fun FeatureTile(
     icon: ImageVector,
     label: String,
@@ -711,7 +722,7 @@ private fun FeatureTile(
         modifier = modifier
             .height(72.dp)
             .iosPressScale()
-            .clickable(onClick = onClick),
+            .onboardingClickable(onClick),
         shape = ContinuousRoundedShape(18.dp),
         color = color,
         border = if (selected) {
@@ -764,7 +775,7 @@ private fun DatePreviewCell(
         modifier = Modifier
             .size(width = 48.dp, height = 54.dp)
             .iosPressScale()
-            .clickable(onClick = onClick),
+            .onboardingClickable(onClick),
         shape = ContinuousRoundedShape(16.dp),
         color = color,
         border = if (selected) {
@@ -846,7 +857,7 @@ private fun SelectionChip(
         modifier = modifier
             .height(46.dp)
             .iosPressScale()
-            .clickable(onClick = onClick),
+            .onboardingClickable(onClick),
         shape = ContinuousRoundedShape(16.dp),
         color = background,
         border = androidx.compose.foundation.BorderStroke(
@@ -947,7 +958,7 @@ private fun AccentPicker(
                 modifier = Modifier
                     .size(38.dp)
                     .iosPressScale()
-                    .clickable { onAccentChange(accent) },
+                    .onboardingClickable { onAccentChange(accent) },
                 shape = CircleShape,
                 color = accent.swatch(),
                 border = androidx.compose.foundation.BorderStroke(

@@ -41,8 +41,8 @@ fun GlassSurface(
     val palette = glassPalette(tone)
     val shadowElevation = when (blur) {
         GlassBlur.None -> 0.dp
-        GlassBlur.Soft -> 1.dp
-        GlassBlur.Medium -> 3.dp
+        GlassBlur.Soft -> 2.dp
+        GlassBlur.Medium -> 5.dp
     }
 
     Box(
@@ -129,14 +129,14 @@ private fun glassPalette(tone: GlassTone): GlassPalette {
         else -> if (dark) {
             Color.White.copy(alpha = if (selected) 0.18f else 0.11f)
         } else {
-            Color.White.copy(alpha = if (selected) 0.68f else 0.52f)
+            Color.Black.copy(alpha = if (selected) 0.12f else 0.075f)
         }
     }
     val topLight = when (tone) {
         GlassTone.OnImage -> Color.White.copy(alpha = 0.20f)
-        else -> Color.White.copy(alpha = if (dark) 0.11f else 0.30f)
+        else -> Color.White.copy(alpha = if (dark) 0.11f else 0.58f)
     }
-    val sideLight = Color.White.copy(alpha = if (dark) 0.035f else 0.09f)
+    val sideLight = Color.White.copy(alpha = if (dark) 0.035f else 0.17f)
 
     return GlassPalette(
         fill = fill,
@@ -158,7 +158,7 @@ private fun glassPalette(tone: GlassTone): GlassPalette {
         lowlight = Brush.verticalGradient(
             colorStops = arrayOf(
                 0.74f to Color.Transparent,
-                1f to Color.Black.copy(alpha = if (dark) 0.08f else 0.025f),
+                1f to Color.Black.copy(alpha = if (dark) 0.08f else 0.045f),
             ),
         ),
         backdrop = Brush.verticalGradient(

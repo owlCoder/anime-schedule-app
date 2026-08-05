@@ -3,6 +3,7 @@ package com.owlcoder.animeschedule.presentation.navigation
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -14,6 +15,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -23,9 +25,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
@@ -100,6 +104,7 @@ fun AnimeBottomBar(
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+    val motion = LocalMotionPolicy.current
 
     Box(
         modifier = Modifier
@@ -108,34 +113,58 @@ fun AnimeBottomBar(
             .padding(horizontal = 16.dp, vertical = 6.dp),
     ) {
         GlassChrome(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(DockHeight),
+            modifier = Modifier.fillMaxWidth().height(DockHeight),
             shape = DockShape,
         ) {
-            Row(
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(DockHeight)
                     .padding(horizontal = 3.dp, vertical = 3.dp),
-                verticalAlignment = Alignment.CenterVertically,
             ) {
-                items.forEach { item ->
-                    BottomNavItemView(
-                        item = item,
-                        selected = currentRoute == item.screen.route,
-                        notificationCount = if (item.screen == Screen.Schedule) notificationCount else 0,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            if (currentRoute != item.screen.route) {
-                                navController.navigate(item.screen.route) {
-                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
+                val selectedIndex = items.indexOfFirst { currentRoute == it.screen.route }.coerceAtLeast(0)
+                val itemWidth = maxWidth / items.size.toFloat()
+                val indicatorX by animateDpAsState(
+                    targetValue = itemWidth * selectedIndex.toFloat(),
+                    animationSpec = motion.iosSpring(),
+                    label = "bottom-tab-indicator-position",
+                )
+                val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
+                Surface(
+                    modifier = Modifier
+                        .offset(x = indicatorX + itemWidth * 0.09f)
+                        .width(itemWidth * 0.82f)
+                        .fillMaxHeight(),
+                    shape = ContinuousRoundedShape(14.dp),
+                    color = if (dark) Color.White.copy(alpha = 0.065f) else Color.White.copy(alpha = 0.54f),
+                    border = BorderStroke(
+                        0.5.dp,
+                        if (dark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.075f),
+                    ),
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
+                ) {}
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    items.forEach { item ->
+                        BottomNavItemView(
+                            item = item,
+                            selected = currentRoute == item.screen.route,
+                            notificationCount = if (item.screen == Screen.Schedule) notificationCount else 0,
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                if (currentRoute != item.screen.route) {
+                                    navController.navigate(item.screen.route) {
+                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
-                            }
-                        },
-                    )
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -153,22 +182,6 @@ private fun BottomNavItemView(
     val label = stringResource(item.labelRes)
     val interactionSource = remember { MutableInteractionSource() }
     val motion = LocalMotionPolicy.current
-    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    val selectedFill = if (dark) Color.White.copy(alpha = 0.065f) else Color.White.copy(alpha = 0.34f)
-    val fill by animateColorAsState(
-        targetValue = if (selected) selectedFill else Color.Transparent,
-        animationSpec = motion.iosTween(IosMotion.Standard),
-        label = "bottom-tab-fill",
-    )
-    val borderColor by animateColorAsState(
-        targetValue = if (selected) {
-            if (dark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.40f)
-        } else {
-            Color.Transparent
-        },
-        animationSpec = motion.iosTween(IosMotion.Standard),
-        label = "bottom-tab-border",
-    )
     val scale by animateFloatAsState(
         targetValue = if (selected) 1f else 0.985f,
         animationSpec = motion.iosSpring(),
@@ -201,8 +214,8 @@ private fun BottomNavItemView(
                 .fillMaxWidth(0.82f)
                 .fillMaxHeight(),
             shape = ContinuousRoundedShape(14.dp),
-            color = fill,
-            border = BorderStroke(0.5.dp, borderColor),
+            color = Color.Transparent,
+            border = null,
             tonalElevation = 0.dp,
             shadowElevation = 0.dp,
         ) {
