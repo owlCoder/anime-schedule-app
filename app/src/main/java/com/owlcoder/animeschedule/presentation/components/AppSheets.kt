@@ -33,7 +33,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
 
-/** Stable modal content surface; Liquid Glass is reserved for floating chrome and controls. */
+/**
+ * Stable modal content surface.
+ *
+ * Sheet drag gestures are disabled by default because nested scrollable content otherwise hands
+ * its remaining drag to ModalBottomSheet at the top/bottom boundary. That makes a fully expanded
+ * overlay visibly jump a few pixels while the user is only trying to scroll its list. Every app
+ * sheet has an explicit back action, so locking the sheet position keeps navigation predictable.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppSheet(
@@ -45,6 +52,7 @@ fun AppSheet(
     showBackButton: Boolean = true,
     showCloseButton: Boolean = false,
     showDragHandle: Boolean = true,
+    sheetGesturesEnabled: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
@@ -55,6 +63,7 @@ fun AppSheet(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         sheetState = sheetState,
+        sheetGesturesEnabled = sheetGesturesEnabled,
         shape = RoundedCornerShape(
             topStart = GlassTokens.sheetRadius,
             topEnd = GlassTokens.sheetRadius,
