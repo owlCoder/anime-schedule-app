@@ -91,7 +91,7 @@ private data class BottomNavItem(
 private val items = listOf(
     BottomNavItem(
         Screen.Schedule,
-        R.string.schedule_tab_today,
+        R.string.nav_schedule,
         Icons.Filled.CalendarMonth,
         Icons.Outlined.CalendarMonth,
     ),
@@ -100,8 +100,9 @@ private val items = listOf(
     BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings, Icons.Outlined.Settings),
 )
 
-private val DockShape = ContinuousRoundedShape(24.dp)
-private val DockHeight = 48.dp
+private val DockShape = ContinuousRoundedShape(15.dp)
+private val ActiveItemShape = ContinuousRoundedShape(14.dp)
+private val DockHeight = 50.dp
 
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
@@ -119,18 +120,18 @@ fun AnimeBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-            .padding(horizontal = 16.dp, vertical = 6.dp),
+            .padding(horizontal = 14.dp, vertical = 6.dp),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(DockHeight)
                 .shadow(
-                    elevation = 8.dp,
+                    elevation = 7.dp,
                     shape = DockShape,
                     clip = false,
-                    ambientColor = Color.Black.copy(alpha = if (dark) 0.42f else 0.18f),
-                    spotColor = Color.Black.copy(alpha = if (dark) 0.42f else 0.18f),
+                    ambientColor = Color.Black.copy(alpha = if (dark) 0.34f else 0.14f),
+                    spotColor = Color.Black.copy(alpha = if (dark) 0.34f else 0.14f),
                 )
                 .clip(DockShape)
                 .hazeEffect(
@@ -138,11 +139,11 @@ fun AnimeBottomBar(
                     style = HazeMaterials.thin(),
                 )
                 .border(
-                    width = 0.75.dp,
+                    width = 0.5.dp,
                     color = if (dark) {
-                        Color.White.copy(alpha = 0.18f)
+                        Color.White.copy(alpha = 0.11f)
                     } else {
-                        Color.White.copy(alpha = 0.82f)
+                        Color.White.copy(alpha = 0.55f)
                     },
                     shape = DockShape,
                 ),
@@ -162,10 +163,10 @@ fun AnimeBottomBar(
                 )
                 Surface(
                     modifier = Modifier
-                        .offset(x = indicatorX + itemWidth * 0.06f)
-                        .width(itemWidth * 0.88f)
+                        .offset(x = indicatorX + itemWidth * 0.05f)
+                        .width(itemWidth * 0.90f)
                         .fillMaxHeight(),
-                    shape = ContinuousRoundedShape(14.dp),
+                    shape = ActiveItemShape,
                     color = if (dark) Color.White.copy(alpha = 0.075f) else Color.White.copy(alpha = 0.48f),
                     border = BorderStroke(
                         0.5.dp,
@@ -241,9 +242,9 @@ private fun BottomNavItemView(
     ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth(0.88f)
+                .fillMaxWidth(0.90f)
                 .fillMaxHeight(),
-            shape = ContinuousRoundedShape(14.dp),
+            shape = ActiveItemShape,
             color = Color.Transparent,
             border = null,
             tonalElevation = 0.dp,
