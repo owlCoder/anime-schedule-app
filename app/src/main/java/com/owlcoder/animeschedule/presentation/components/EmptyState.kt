@@ -20,6 +20,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -35,6 +37,28 @@ fun EmptyState(
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
 ) {
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
+    val outerColor = if (dark) {
+        MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.52f)
+    } else {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.075f)
+    }
+    val outerBorder = if (dark) {
+        Color.White.copy(alpha = 0.10f)
+    } else {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+    }
+    val innerColor = if (dark) {
+        Color.White.copy(alpha = 0.055f)
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.72f)
+    }
+    val innerBorder = if (dark) {
+        Color.White.copy(alpha = 0.08f)
+    } else {
+        Color.White.copy(alpha = 0.44f)
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -47,11 +71,8 @@ fun EmptyState(
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 shape = ContinuousRoundedShape(23.dp),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.075f),
-                border = BorderStroke(
-                    width = 0.75.dp,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                ),
+                color = outerColor,
+                border = BorderStroke(0.75.dp, outerBorder),
                 tonalElevation = 0.dp,
                 shadowElevation = 0.dp,
             ) {}
@@ -60,8 +81,9 @@ fun EmptyState(
                     .size(46.dp)
                     .align(Alignment.Center),
                 shape = ContinuousRoundedShape(15.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.72f),
+                color = innerColor,
                 contentColor = MaterialTheme.colorScheme.primary,
+                border = BorderStroke(0.5.dp, innerBorder),
                 tonalElevation = 0.dp,
                 shadowElevation = 0.dp,
             ) {
@@ -73,20 +95,22 @@ fun EmptyState(
                     )
                 }
             }
-            Surface(
-                modifier = Modifier
-                    .size(10.dp)
-                    .align(Alignment.TopEnd)
-                    .offset(x = (-3).dp, y = 3.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-                border = BorderStroke(
-                    width = 0.5.dp,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
-                ),
-                tonalElevation = 0.dp,
-                shadowElevation = 0.dp,
-            ) {}
+            if (!dark) {
+                Surface(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .align(Alignment.TopEnd)
+                        .offset(x = (-3).dp, y = 3.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+                    border = BorderStroke(
+                        width = 0.5.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.22f),
+                    ),
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
+                ) {}
+            }
         }
         Spacer(Modifier.height(13.dp))
         Text(
