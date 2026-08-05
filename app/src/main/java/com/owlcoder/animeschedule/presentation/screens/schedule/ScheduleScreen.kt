@@ -10,7 +10,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,7 +23,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -62,6 +60,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
@@ -727,24 +727,22 @@ private fun UpcomingAiringList(
     onEditStatus: (AiringEpisode) -> Unit,
 ) {
     val motion = LocalMotionPolicy.current
+    val timelineColor = MaterialTheme.colorScheme.outlineVariant
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .animateContentSize(animationSpec = motion.iosSpring()),
+            .animateContentSize(animationSpec = motion.iosSpring())
+            .drawBehind {
+                val x = 11.5.dp.toPx()
+                val inset = 34.dp.toPx()
+                drawLine(
+                    color = timelineColor,
+                    start = Offset(x, inset),
+                    end = Offset(x, (size.height - inset).coerceAtLeast(inset)),
+                    strokeWidth = 1.dp.toPx(),
+                )
+            },
     ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .padding(start = 11.5.dp, top = 34.dp, bottom = 34.dp),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(1.dp)
-                    .fillMaxHeight()
-                    .background(MaterialTheme.colorScheme.outlineVariant),
-            )
-        }
         Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
             episodes.forEachIndexed { index, episode ->
                 Row(
