@@ -2,10 +2,8 @@ name: Apply UI follow-up
 
 on:
   push:
-    branches:
-      - agent/ios26-ui-polish
-    paths:
-      - .github/workflows/apply-ui-followup.yml
+    branches: [agent/ios26-ui-polish]
+    paths: [.github/workflows/apply-ui-followup.yml]
 
 permissions:
   contents: write
@@ -24,63 +22,50 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
-          def replace_once(path: str, old: str, new: str) -> None:
-              p = Path(path)
-              text = p.read_text()
+          def read(path):
+              return Path(path).read_text()
+
+          def write(path, text):
+              Path(path).write_text(text)
+
+          def replace_once(text, old, new, label):
               count = text.count(old)
               if count != 1:
-                  raise SystemExit(f"Expected one match in {path}, found {count}: {old[:90]!r}")
-              p.write_text(text.replace(old, new, 1))
+                  raise SystemExit(f"{label}: expected one match, found {count}")
+              return text.replace(old, new, 1)
 
-          def append_strings(path: str, entries: str, marker: str) -> None:
-              p = Path(path)
-              text = p.read_text()
-              if marker in text:
-                  return
-              if "</resources>" not in text:
-                  raise SystemExit(f"Missing resources end tag in {path}")
-              p.write_text(text.replace("</resources>", entries + "\n</resources>", 1))
+          def regex_once(text, pattern, replacement, label):
+              result, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected one regex match, found {count}")
+              return result
 
-          # Continue arrow belongs after the label; back/login icons remain leading.
-          button = "app/src/main/java/com/owlcoder/animeschedule/presentation/components/GlassButton.kt"
-          replace_once(
-              button,
+          def add_strings(path, entries, marker):
+              text = read(path)
+              if marker not in text:
+                  text = replace_once(text, "</resources>", entries + "\n</resources>", path)
+                  write(path, text)
+
+          # Continue arrow after text.
+          path = "app/src/main/java/com/owlcoder/animeschedule/presentation/components/GlassButton.kt"
+          text = read(path)
+          text = replace_once(
+              text,
               "import androidx.compose.foundation.layout.sizeIn\nimport androidx.compose.material3.Icon",
               "import androidx.compose.foundation.layout.sizeIn\nimport androidx.compose.material.icons.Icons\nimport androidx.compose.material.icons.automirrored.filled.ArrowForward\nimport androidx.compose.material3.Icon",
+              "GlassButton imports",
           )
-          replace_once(
-              button,
-              '''@Composable
-          private fun ButtonContent(label: String, icon: ImageVector?, color: Color, enabled: Boolean) {
-              val resolved = if (enabled) color else color.copy(alpha = 0.42f)
-              if (icon != null) {
-                  Icon(
-                      imageVector = icon,
-                      contentDescription = null,
-                      modifier = Modifier.size(18.dp),
-                      tint = resolved,
-                  )
-              }
-              Text(
-                  text = label,
-                  color = resolved,
-                  style = MaterialTheme.typography.labelLarge,
-                  fontWeight = FontWeight.SemiBold,
-                  maxLines = 1,
-              )
-          }''',
+          text = regex_once(
+              text,
+              r"@Composable\nprivate fun ButtonContent\(.*?\n\}\n\n@Composable\nfun GlassButton",
               '''@Composable
           private fun ButtonContent(label: String, icon: ImageVector?, color: Color, enabled: Boolean) {
               val resolved = if (enabled) color else color.copy(alpha = 0.42f)
               val trailingIcon = icon == Icons.AutoMirrored.Filled.ArrowForward
               if (icon != null && !trailingIcon) {
-                  Icon(
-                      imageVector = icon,
-                      contentDescription = null,
-                      modifier = Modifier.size(18.dp),
-                      tint = resolved,
-                  )
+                  Icon(icon, null, Modifier.size(18.dp), tint = resolved)
               }
               Text(
                   text = label,
@@ -90,27 +75,28 @@ jobs:
                   maxLines = 1,
               )
               if (icon != null && trailingIcon) {
-                  Icon(
-                      imageVector = icon,
-                      contentDescription = null,
-                      modifier = Modifier.size(18.dp),
-                      tint = resolved,
-                  )
+                  Icon(icon, null, Modifier.size(18.dp), tint = resolved)
               }
-          }''',
-          )
+          }
 
-          # Remove rectangular hover/ripple outside rounded onboarding controls.
-          onboarding = "app/src/main/java/com/owlcoder/animeschedule/presentation/screens/onboarding/OnboardingScreen.kt"
-          replace_once(
-              onboarding,
+          @Composable
+          fun GlassButton''',
+              "ButtonContent",
+          )
+          write(path, text)
+
+          # Rounded onboarding controls own their press feedback; no rectangular hover/ripple.
+          path = "app/src/main/java/com/owlcoder/animeschedule/presentation/screens/onboarding/OnboardingScreen.kt"
+          text = read(path)
+          text = replace_once(
+              text,
               "import androidx.compose.foundation.clickable\nimport androidx.compose.foundation.layout.Arrangement",
               "import androidx.compose.foundation.clickable\nimport androidx.compose.foundation.interaction.MutableInteractionSource\nimport androidx.compose.foundation.layout.Arrangement",
+              "Onboarding imports",
           )
-          replace_once(
-              onboarding,
-              '''@Composable
-          private fun FeatureTile(''',
+          text = replace_once(
+              text,
+              "@Composable\nprivate fun FeatureTile(",
               '''@Composable
           private fun Modifier.onboardingClickable(onClick: () -> Unit): Modifier {
               val interactionSource = remember { MutableInteractionSource() }
@@ -123,237 +109,137 @@ jobs:
 
           @Composable
           private fun FeatureTile(''',
+              "Onboarding clickable helper",
           )
-          p = Path(onboarding)
-          text = p.read_text()
           text = text.replace(".clickable(onClick = onClick)", ".onboardingClickable(onClick)")
           text = text.replace(".clickable { onAccentChange(accent) }", ".onboardingClickable { onAccentChange(accent) }")
-          p.write_text(text)
+          write(path, text)
 
-          # Stronger achromatic glass separation on light backgrounds.
-          tokens = "app/src/main/java/com/owlcoder/animeschedule/ui/theme/GlassTokens.kt"
-          replace_once(tokens, "val shadow = Color.Black.copy(alpha = 0.11f)", "val shadow = Color.Black.copy(alpha = 0.16f)")
-          replace_once(tokens, "val neutralFillLight = Color.White.copy(alpha = 0.44f)", "val neutralFillLight = Color.White.copy(alpha = 0.72f)")
-          replace_once(tokens, "val selectedFillLight = Color.White.copy(alpha = 0.62f)", "val selectedFillLight = Color.White.copy(alpha = 0.82f)")
-          replace_once(tokens, "val interactiveFillLight = Color.White.copy(alpha = 0.58f)", "val interactiveFillLight = Color.White.copy(alpha = 0.78f)")
+          # Light-theme glass must remain visibly separated from the background.
+          path = "app/src/main/java/com/owlcoder/animeschedule/ui/theme/GlassTokens.kt"
+          text = read(path)
+          for old, new in [
+              ("val shadow = Color.Black.copy(alpha = 0.11f)", "val shadow = Color.Black.copy(alpha = 0.16f)"),
+              ("val neutralFillLight = Color.White.copy(alpha = 0.44f)", "val neutralFillLight = Color.White.copy(alpha = 0.72f)"),
+              ("val selectedFillLight = Color.White.copy(alpha = 0.62f)", "val selectedFillLight = Color.White.copy(alpha = 0.82f)"),
+              ("val interactiveFillLight = Color.White.copy(alpha = 0.58f)", "val interactiveFillLight = Color.White.copy(alpha = 0.78f)"),
+          ]:
+              text = replace_once(text, old, new, "GlassTokens")
+          write(path, text)
 
-          glass = "app/src/main/java/com/owlcoder/animeschedule/presentation/components/GlassSurface.kt"
-          replace_once(
-              glass,
-              '''val shadowElevation = when (blur) {
-                  GlassBlur.None -> 0.dp
-                  GlassBlur.Soft -> 1.dp
-                  GlassBlur.Medium -> 3.dp
-              }''',
-              '''val shadowElevation = when (blur) {
-                  GlassBlur.None -> 0.dp
-                  GlassBlur.Soft -> 2.dp
-                  GlassBlur.Medium -> 5.dp
-              }''',
-          )
-          replace_once(
-              glass,
-              '''        } else {
-                      Color.White.copy(alpha = if (selected) 0.68f else 0.52f)
-                  }
-              }
-              val topLight = when (tone) {
-                  GlassTone.OnImage -> Color.White.copy(alpha = 0.20f)
-                  else -> Color.White.copy(alpha = if (dark) 0.11f else 0.30f)
-              }
-              val sideLight = Color.White.copy(alpha = if (dark) 0.035f else 0.09f)''',
-              '''        } else {
-                      Color.Black.copy(alpha = if (selected) 0.12f else 0.075f)
-                  }
-              }
-              val topLight = when (tone) {
-                  GlassTone.OnImage -> Color.White.copy(alpha = 0.20f)
-                  else -> Color.White.copy(alpha = if (dark) 0.11f else 0.58f)
-              }
-              val sideLight = Color.White.copy(alpha = if (dark) 0.035f else 0.17f)''',
-          )
-          replace_once(
-              glass,
-              "1f to Color.Black.copy(alpha = if (dark) 0.08f else 0.025f)",
-              "1f to Color.Black.copy(alpha = if (dark) 0.08f else 0.045f)",
-          )
+          path = "app/src/main/java/com/owlcoder/animeschedule/presentation/components/GlassSurface.kt"
+          text = read(path)
+          text = replace_once(text, "GlassBlur.Soft -> 1.dp\n        GlassBlur.Medium -> 3.dp", "GlassBlur.Soft -> 2.dp\n        GlassBlur.Medium -> 5.dp", "Glass shadow")
+          text = replace_once(text, "Color.White.copy(alpha = if (selected) 0.68f else 0.52f)", "Color.Black.copy(alpha = if (selected) 0.12f else 0.075f)", "Glass light border")
+          text = replace_once(text, "else -> Color.White.copy(alpha = if (dark) 0.11f else 0.30f)", "else -> Color.White.copy(alpha = if (dark) 0.11f else 0.58f)", "Glass top light")
+          text = replace_once(text, "val sideLight = Color.White.copy(alpha = if (dark) 0.035f else 0.09f)", "val sideLight = Color.White.copy(alpha = if (dark) 0.035f else 0.17f)", "Glass side light")
+          text = replace_once(text, "1f to Color.Black.copy(alpha = if (dark) 0.08f else 0.025f)", "1f to Color.Black.copy(alpha = if (dark) 0.08f else 0.045f)", "Glass lowlight")
+          write(path, text)
 
-          # Sliding selection lens in the bottom navigation.
-          bottom = "app/src/main/java/com/owlcoder/animeschedule/presentation/navigation/AnimeBottomBar.kt"
-          replace_once(
-              bottom,
-              "import androidx.compose.animation.core.animateFloatAsState",
-              "import androidx.compose.animation.core.animateDpAsState\nimport androidx.compose.animation.core.animateFloatAsState",
-          )
-          replace_once(
-              bottom,
-              "import androidx.compose.foundation.layout.Box\nimport androidx.compose.foundation.layout.Column",
-              "import androidx.compose.foundation.layout.Box\nimport androidx.compose.foundation.layout.BoxWithConstraints\nimport androidx.compose.foundation.layout.Column",
-          )
-          replace_once(
-              bottom,
-              "import androidx.compose.foundation.layout.only\nimport androidx.compose.foundation.layout.padding",
-              "import androidx.compose.foundation.layout.offset\nimport androidx.compose.foundation.layout.only\nimport androidx.compose.foundation.layout.padding",
-          )
-          replace_once(
-              bottom,
-              "import androidx.compose.foundation.layout.size\nimport androidx.compose.foundation.layout.windowInsetsPadding",
-              "import androidx.compose.foundation.layout.size\nimport androidx.compose.foundation.layout.width\nimport androidx.compose.foundation.layout.windowInsetsPadding",
-          )
-          replace_once(
-              bottom,
-              '''        ) {
-                  Row(
-                      modifier = Modifier
-                          .fillMaxWidth()
-                          .height(DockHeight)
-                          .padding(horizontal = 3.dp, vertical = 3.dp),
-                      verticalAlignment = Alignment.CenterVertically,
+          # A single lens glides between bottom-navigation destinations.
+          path = "app/src/main/java/com/owlcoder/animeschedule/presentation/navigation/AnimeBottomBar.kt"
+          text = read(path)
+          text = replace_once(text, "import androidx.compose.animation.core.animateFloatAsState", "import androidx.compose.animation.core.animateDpAsState\nimport androidx.compose.animation.core.animateFloatAsState", "Bottom nav animation import")
+          text = replace_once(text, "import androidx.compose.foundation.layout.Box\n", "import androidx.compose.foundation.layout.Box\nimport androidx.compose.foundation.layout.BoxWithConstraints\n", "Bottom nav box import")
+          text = replace_once(text, "import androidx.compose.foundation.layout.only\n", "import androidx.compose.foundation.layout.offset\nimport androidx.compose.foundation.layout.only\n", "Bottom nav offset import")
+          text = replace_once(text, "import androidx.compose.foundation.layout.size\n", "import androidx.compose.foundation.layout.size\nimport androidx.compose.foundation.layout.width\n", "Bottom nav width import")
+          text = regex_once(
+              text,
+              r"@Composable\nfun AnimeBottomBar\(.*?\n\}\n\n@Composable\nprivate fun BottomNavItemView",
+              '''@Composable
+          fun AnimeBottomBar(
+              navController: NavController,
+              notificationCount: Int = 0,
+          ) {
+              val backStackEntry by navController.currentBackStackEntryAsState()
+              val currentRoute = backStackEntry?.destination?.route
+              val motion = LocalMotionPolicy.current
+
+              Box(
+                  modifier = Modifier
+                      .fillMaxWidth()
+                      .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
+                      .padding(horizontal = 16.dp, vertical = 6.dp),
+              ) {
+                  GlassChrome(
+                      modifier = Modifier.fillMaxWidth().height(DockHeight),
+                      shape = DockShape,
                   ) {
-                      items.forEach { item ->
-                          BottomNavItemView(
-                              item = item,
-                              selected = currentRoute == item.screen.route,
-                              notificationCount = if (item.screen == Screen.Schedule) notificationCount else 0,
-                              modifier = Modifier.weight(1f),
-                              onClick = {
-                                  if (currentRoute != item.screen.route) {
-                                      navController.navigate(item.screen.route) {
-                                          popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                          launchSingleTop = true
-                                          restoreState = true
-                                      }
-                                  }
-                              },
-                          )
-                      }
-                  }
-              }''',
-              '''        ) {
-                  BoxWithConstraints(
-                      modifier = Modifier
-                          .fillMaxWidth()
-                          .height(DockHeight)
-                          .padding(horizontal = 3.dp, vertical = 3.dp),
-                  ) {
-                      val selectedIndex = items.indexOfFirst { currentRoute == it.screen.route }
-                          .coerceAtLeast(0)
-                      val itemWidth = maxWidth / items.size
-                      val indicatorX by animateDpAsState(
-                          targetValue = itemWidth * selectedIndex.toFloat(),
-                          animationSpec = motion.iosSpring(),
-                          label = "bottom-tab-indicator-position",
-                      )
-                      val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-                      Surface(
+                      BoxWithConstraints(
                           modifier = Modifier
-                              .offset(x = indicatorX + itemWidth * 0.09f)
-                              .width(itemWidth * 0.82f)
-                              .fillMaxHeight(),
-                          shape = ContinuousRoundedShape(14.dp),
-                          color = if (dark) {
-                              Color.White.copy(alpha = 0.065f)
-                          } else {
-                              Color.White.copy(alpha = 0.54f)
-                          },
-                          border = BorderStroke(
-                              0.5.dp,
-                              if (dark) Color.White.copy(alpha = 0.10f)
-                              else Color.Black.copy(alpha = 0.075f),
-                          ),
-                          tonalElevation = 0.dp,
-                          shadowElevation = 0.dp,
-                      ) {}
-                      Row(
-                          modifier = Modifier.fillMaxSize(),
-                          verticalAlignment = Alignment.CenterVertically,
+                              .fillMaxWidth()
+                              .height(DockHeight)
+                              .padding(horizontal = 3.dp, vertical = 3.dp),
                       ) {
-                          items.forEach { item ->
-                              BottomNavItemView(
-                                  item = item,
-                                  selected = currentRoute == item.screen.route,
-                                  notificationCount = if (item.screen == Screen.Schedule) notificationCount else 0,
-                                  modifier = Modifier.weight(1f),
-                                  onClick = {
-                                      if (currentRoute != item.screen.route) {
-                                          navController.navigate(item.screen.route) {
-                                              popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                              launchSingleTop = true
-                                              restoreState = true
+                          val selectedIndex = items.indexOfFirst { currentRoute == it.screen.route }.coerceAtLeast(0)
+                          val itemWidth = maxWidth / items.size.toFloat()
+                          val indicatorX by animateDpAsState(
+                              targetValue = itemWidth * selectedIndex.toFloat(),
+                              animationSpec = motion.iosSpring(),
+                              label = "bottom-tab-indicator-position",
+                          )
+                          val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
+                          Surface(
+                              modifier = Modifier
+                                  .offset(x = indicatorX + itemWidth * 0.09f)
+                                  .width(itemWidth * 0.82f)
+                                  .fillMaxHeight(),
+                              shape = ContinuousRoundedShape(14.dp),
+                              color = if (dark) Color.White.copy(alpha = 0.065f) else Color.White.copy(alpha = 0.54f),
+                              border = BorderStroke(
+                                  0.5.dp,
+                                  if (dark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.075f),
+                              ),
+                              tonalElevation = 0.dp,
+                              shadowElevation = 0.dp,
+                          ) {}
+                          Row(
+                              modifier = Modifier.fillMaxSize(),
+                              verticalAlignment = Alignment.CenterVertically,
+                          ) {
+                              items.forEach { item ->
+                                  BottomNavItemView(
+                                      item = item,
+                                      selected = currentRoute == item.screen.route,
+                                      notificationCount = if (item.screen == Screen.Schedule) notificationCount else 0,
+                                      modifier = Modifier.weight(1f),
+                                      onClick = {
+                                          if (currentRoute != item.screen.route) {
+                                              navController.navigate(item.screen.route) {
+                                                  popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                                  launchSingleTop = true
+                                                  restoreState = true
+                                              }
                                           }
-                                      }
-                                  },
-                              )
+                                      },
+                                  )
+                              }
                           }
                       }
                   }
-              }''',
-          )
-          replace_once(
-              bottom,
-              '''    val motion = LocalMotionPolicy.current
-              val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-              val selectedFill = if (dark) Color.White.copy(alpha = 0.065f) else Color.White.copy(alpha = 0.34f)
-              val fill by animateColorAsState(
-                  targetValue = if (selected) selectedFill else Color.Transparent,
-                  animationSpec = motion.iosTween(IosMotion.Standard),
-                  label = "bottom-tab-fill",
-              )
-              val borderColor by animateColorAsState(
-                  targetValue = if (selected) {
-                      if (dark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.40f)
-                  } else {
-                      Color.Transparent
-                  },
-                  animationSpec = motion.iosTween(IosMotion.Standard),
-                  label = "bottom-tab-border",
-              )
-              val scale by animateFloatAsState(''',
-              '''    val motion = LocalMotionPolicy.current
-              val scale by animateFloatAsState(''',
-          )
-          replace_once(
-              bottom,
-              '''            shape = ContinuousRoundedShape(14.dp),
-                      color = fill,
-                      border = BorderStroke(0.5.dp, borderColor),''',
-              '''            shape = ContinuousRoundedShape(14.dp),
-                      color = Color.Transparent,
-                      border = null,''',
-          )
+              }
+          }
 
-          # Settings login action is plain primary icon + text, not a filled mini-button.
-          settings = "app/src/main/java/com/owlcoder/animeschedule/presentation/screens/settings/SettingsScreen.kt"
-          replace_once(
-              settings,
-              '''        !isLoggedIn -> Surface(
-                  modifier = Modifier
-                      .height(40.dp)
-                      .clickable(onClick = onClick),
-                  shape = ContinuousRoundedShape(15.dp),
-                  color = MaterialTheme.colorScheme.primary,
-                  contentColor = MaterialTheme.colorScheme.onPrimary,
-                  tonalElevation = 0.dp,
-                  shadowElevation = 0.dp,
-              ) {
-                  Row(
-                      modifier = Modifier.padding(horizontal = 13.dp),
-                      verticalAlignment = Alignment.CenterVertically,
-                      horizontalArrangement = Arrangement.spacedBy(7.dp),
-                  ) {
-                      Icon(
-                          Icons.Default.Key,
-                          contentDescription = null,
-                          modifier = Modifier.size(17.dp),
-                      )
-                      Text(
-                          text = stringResource(R.string.profile_login),
-                          style = MaterialTheme.typography.labelLarge,
-                          fontWeight = FontWeight.SemiBold,
-                      )
-                  }
-              }''',
-              '''        !isLoggedIn -> Row(
+          @Composable
+          private fun BottomNavItemView''',
+              "AnimeBottomBar function",
+          )
+          text = regex_once(
+              text,
+              r"    val motion = LocalMotionPolicy.current\n    val dark = .*?\n    val scale by animateFloatAsState\(",
+              "    val motion = LocalMotionPolicy.current\n    val scale by animateFloatAsState(",
+              "Bottom item old fill state",
+          )
+          text = replace_once(text, "color = fill,\n            border = BorderStroke(0.5.dp, borderColor),", "color = Color.Transparent,\n            border = null,", "Bottom item transparent surface")
+          write(path, text)
+
+          # Settings sign-in action: primary icon and text only.
+          path = "app/src/main/java/com/owlcoder/animeschedule/presentation/screens/settings/SettingsScreen.kt"
+          text = read(path)
+          text = regex_once(
+              text,
+              r"            !isLoggedIn -> Surface\(.*?\n            else -> Row\(",
+              '''            !isLoggedIn -> Row(
                   modifier = Modifier
                       .height(40.dp)
                       .clickable(onClick = onClick)
@@ -373,28 +259,27 @@ jobs:
                       color = MaterialTheme.colorScheme.primary,
                       fontWeight = FontWeight.SemiBold,
                   )
-              }''',
+              }
+              else -> Row(''',
+              "Settings sign-in action",
           )
+          write(path, text)
 
-          # Translate every benefit in the signed-out My List empty state.
-          mylist = "app/src/main/java/com/owlcoder/animeschedule/presentation/screens/mylist/MyListScreen.kt"
-          replacements = {
+          # Localize signed-out My List benefits.
+          path = "app/src/main/java/com/owlcoder/animeschedule/presentation/screens/mylist/MyListScreen.kt"
+          text = read(path)
+          for old, new in {
               'title = "Keep progress synced",': 'title = stringResource(R.string.mylist_benefit_sync_title),',
               'subtitle = "Access your list across all your devices.",': 'subtitle = stringResource(R.string.mylist_benefit_sync_subtitle),',
               'title = "Update watch status",': 'title = stringResource(R.string.mylist_benefit_status_title),',
               'subtitle = "Track episodes and continue where you left off.",': 'subtitle = stringResource(R.string.mylist_benefit_status_subtitle),',
               'title = "Save scores",': 'title = stringResource(R.string.mylist_benefit_scores_title),',
               'subtitle = "Rate anime and keep your scores safe.",': 'subtitle = stringResource(R.string.mylist_benefit_scores_subtitle),',
-          }
-          p = Path(mylist)
-          text = p.read_text()
-          for old, new in replacements.items():
-              if text.count(old) != 1:
-                  raise SystemExit(f"Expected one My List match for {old!r}")
-              text = text.replace(old, new, 1)
-          p.write_text(text)
+          }.items():
+              text = replace_once(text, old, new, "My List translation")
+          write(path, text)
 
-          append_strings(
+          add_strings(
               "app/src/main/res/values/strings.xml",
               '''    <string name="mylist_benefit_sync_title">Keep progress synced</string>
               <string name="mylist_benefit_sync_subtitle">Access your list across all your devices.</string>
@@ -404,7 +289,7 @@ jobs:
               <string name="mylist_benefit_scores_subtitle">Rate anime and keep your scores safe.</string>''',
               "mylist_benefit_sync_title",
           )
-          append_strings(
+          add_strings(
               "app/src/main/res/values-b+sr+Latn/strings.xml",
               '''    <string name="mylist_benefit_sync_title">Sinhronizuj napredak</string>
               <string name="mylist_benefit_sync_subtitle">Pristupi svojoj listi na svim uređajima.</string>
@@ -415,63 +300,15 @@ jobs:
               "mylist_benefit_sync_title",
           )
 
-          # Dashboard: distinct cards with a continuous timeline and more left breathing room.
-          schedule = "app/src/main/java/com/owlcoder/animeschedule/presentation/screens/schedule/ScheduleScreen.kt"
-          replace_once(
-              schedule,
-              "import androidx.compose.foundation.BorderStroke\nimport androidx.compose.foundation.clickable",
-              "import androidx.compose.foundation.BorderStroke\nimport androidx.compose.foundation.background\nimport androidx.compose.foundation.clickable",
-          )
-          replace_once(
-              schedule,
-              "import androidx.compose.foundation.layout.heightIn\nimport androidx.compose.foundation.layout.navigationBarsPadding",
-              "import androidx.compose.foundation.layout.heightIn\nimport androidx.compose.foundation.layout.matchParentSize\nimport androidx.compose.foundation.layout.navigationBarsPadding",
-          )
-          replace_once(
-              schedule,
-              "import androidx.compose.foundation.shape.RoundedCornerShape",
-              "import androidx.compose.foundation.shape.CircleShape\nimport androidx.compose.foundation.shape.RoundedCornerShape",
-          )
-          replace_once(
-              schedule,
-              '''@Composable
-          private fun UpcomingAiringList(
-              episodes: List<AiringEpisode>,
-              isLoggedIn: Boolean,
-              pendingIncrementIds: Set<Int>,
-              onCardClick: (AiringEpisode) -> Unit,
-              onIncrementEpisode: (AiringEpisode) -> Unit,
-              onEditStatus: (AiringEpisode) -> Unit,
-          ) {
-              val motion = LocalMotionPolicy.current
-              AppMaterialSurface(
-                  modifier = Modifier
-                      .fillMaxWidth()
-                      .animateContentSize(animationSpec = motion.iosSpring()),
-                  material = AppMaterial.Grouped,
-                  shape = MaterialTheme.shapes.large,
-              ) {
-                  Column {
-                      episodes.forEachIndexed { index, episode ->
-                          UpcomingAiringRow(
-                              episode = episode,
-                              isLoggedIn = isLoggedIn,
-                              isIncrementing = episode.malId in pendingIncrementIds,
-                              onClick = { onCardClick(episode) },
-                              onIncrement = { onIncrementEpisode(episode) },
-                              onEditStatus = { onEditStatus(episode) },
-                          )
-                          if (index < episodes.lastIndex) {
-                              HorizontalDivider(
-                                  modifier = Modifier.padding(start = 108.dp),
-                                  thickness = 0.5.dp,
-                                  color = MaterialTheme.colorScheme.outlineVariant,
-                              )
-                          }
-                      }
-                  }
-              }
-          }''',
+          # Dashboard cards become a connected timeline with more left breathing room.
+          path = "app/src/main/java/com/owlcoder/animeschedule/presentation/screens/schedule/ScheduleScreen.kt"
+          text = read(path)
+          text = replace_once(text, "import androidx.compose.foundation.BorderStroke\n", "import androidx.compose.foundation.BorderStroke\nimport androidx.compose.foundation.background\n", "Schedule background import")
+          text = replace_once(text, "import androidx.compose.foundation.layout.heightIn\n", "import androidx.compose.foundation.layout.heightIn\nimport androidx.compose.foundation.layout.matchParentSize\n", "Schedule match import")
+          text = replace_once(text, "import androidx.compose.foundation.shape.RoundedCornerShape", "import androidx.compose.foundation.shape.CircleShape\nimport androidx.compose.foundation.shape.RoundedCornerShape", "Schedule circle import")
+          text = regex_once(
+              text,
+              r"@Composable\nprivate fun UpcomingAiringList\(.*?\n\}\n\n@Composable\nprivate fun UpcomingAiringRow",
               '''@Composable
           private fun UpcomingAiringList(
               episodes: List<AiringEpisode>,
@@ -513,15 +350,8 @@ jobs:
                                   Surface(
                                       modifier = Modifier.size(if (index == 0) 9.dp else 7.dp),
                                       shape = CircleShape,
-                                      color = if (index == 0) {
-                                          MaterialTheme.colorScheme.primary
-                                      } else {
-                                          MaterialTheme.colorScheme.outline
-                                      },
-                                      border = BorderStroke(
-                                          2.dp,
-                                          MaterialTheme.colorScheme.background,
-                                      ),
+                                      color = if (index == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                                      border = BorderStroke(2.dp, MaterialTheme.colorScheme.background),
                                   ) {}
                               }
                               AppMaterialSurface(
@@ -542,16 +372,14 @@ jobs:
                       }
                   }
               }
-          }''',
-          )
-          replace_once(
-              schedule,
-              ".padding(horizontal = 8.dp, vertical = 5.dp),",
-              ".padding(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),",
-          )
+          }
 
-          # Self-remove so the patch workflow cannot run again.
-          Path(".github/workflows/apply-ui-followup.yml").unlink()
+          @Composable
+          private fun UpcomingAiringRow''',
+              "Upcoming timeline list",
+          )
+          text = replace_once(text, ".padding(horizontal = 8.dp, vertical = 5.dp),", ".padding(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),", "Upcoming row padding")
+          write(path, text)
           PY
 
       - name: Commit patched UI
@@ -559,6 +387,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
+          git add app/src
           git commit -m "Polish glass, navigation, dashboard and translations"
           git push origin HEAD:agent/ios26-ui-polish
