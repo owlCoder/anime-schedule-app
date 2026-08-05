@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
+// Shared empty-state artwork adapts its glass layers independently for light and dark surfaces.
 @Composable
 fun EmptyState(
     icon: ImageVector,
