@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.GlassBlur
 import com.owlcoder.animeschedule.ui.theme.GlassTone
@@ -229,6 +230,7 @@ fun GlassIconButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     onImagery: Boolean = false,
+    iconSize: Dp = 18.dp,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     Box(
@@ -255,7 +257,7 @@ fun GlassIconButton(
                 Icon(
                     imageVector = icon,
                     contentDescription = contentDescription,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(iconSize),
                 )
             }
         }
