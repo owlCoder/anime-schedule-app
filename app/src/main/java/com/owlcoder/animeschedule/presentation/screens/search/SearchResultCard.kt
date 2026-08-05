@@ -34,6 +34,7 @@ import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
 import com.owlcoder.animeschedule.presentation.components.iosPressScale
+import java.util.Locale
 
 @Composable
 fun SearchResultCard(
@@ -46,30 +47,36 @@ fun SearchResultCard(
     val displayTitle = result.title.toDisplayTitle()
     val secondaryTitle = result.titleEnglish
         ?.takeIf { it.isNotBlank() && !it.equals(result.title, ignoreCase = true) }
+    val metadata = listOfNotNull(
+        result.type?.replace('_', ' ')?.lowercase()?.replaceFirstChar { it.titlecase() },
+        result.year,
+        result.totalEpisodes?.let { "$it ep" },
+        result.meanScore?.let { "★ ${String.format(Locale.ROOT, "%.1f", it)}" },
+    ).joinToString(" · ")
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 64.dp)
+                .heightIn(min = 76.dp)
                 .clickable(onClick = onCardClick)
                 .semantics(mergeDescendants = true) { role = Role.Button }
-                .padding(start = 10.dp, end = 5.dp, top = 5.dp, bottom = 5.dp),
+                .padding(start = 11.dp, end = 6.dp, top = 7.dp, bottom = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(11.dp),
         ) {
             MediaThumbnail.Small(
                 url = result.coverImageUrl,
                 contentDescription = displayTitle,
-                modifier = Modifier.size(40.dp, 54.dp),
+                modifier = Modifier.size(46.dp, 62.dp),
             )
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(1.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(
                     text = displayTitle,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -78,6 +85,15 @@ fun SearchResultCard(
                     Text(
                         text = englishTitle.toDisplayTitle(),
                         style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (metadata.isNotEmpty()) {
+                    Text(
+                        text = metadata,
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -99,7 +115,7 @@ fun SearchResultCard(
                     contentAlignment = Alignment.Center,
                 ) {
                     Surface(
-                        modifier = Modifier.size(30.dp),
+                        modifier = Modifier.size(32.dp),
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
                         contentColor = if (result.userListEntry == null) {
@@ -109,7 +125,7 @@ fun SearchResultCard(
                         },
                         tonalElevation = 0.dp,
                     ) {
-                        Box(Modifier.size(30.dp), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = if (result.userListEntry != null) {
                                     Icons.Outlined.Edit
@@ -121,7 +137,7 @@ fun SearchResultCard(
                                 } else {
                                     stringResource(R.string.detail_add_to_list)
                                 },
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(17.dp),
                             )
                         }
                     }
@@ -130,7 +146,7 @@ fun SearchResultCard(
         }
         if (showDivider) {
             HorizontalDivider(
-                modifier = Modifier.padding(start = 60.dp),
+                modifier = Modifier.padding(start = 68.dp),
                 thickness = 0.5.dp,
                 color = MaterialTheme.colorScheme.outlineVariant,
             )
