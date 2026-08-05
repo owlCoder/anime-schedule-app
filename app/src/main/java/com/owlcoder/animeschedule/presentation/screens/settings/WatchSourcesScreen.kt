@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
@@ -47,15 +46,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.WatchSource
+import com.owlcoder.animeschedule.presentation.components.AppButton
+import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
 import com.owlcoder.animeschedule.presentation.components.AppInlineHeader
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
@@ -77,6 +75,7 @@ fun WatchSourcesScreen(
 ) {
     val sources by viewModel.sources.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
+    var editingSource by remember { mutableStateOf<WatchSource?>(null) }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -97,6 +96,7 @@ fun WatchSourcesScreen(
                 trailingContent = {
                     GlassIconButton(
                         icon = Icons.Default.Add,
+                        iconSize = 21.dp,
                         contentDescription = stringResource(R.string.watch_sources_add),
                         onClick = { showAddSheet = true },
                     )
@@ -106,21 +106,30 @@ fun WatchSourcesScreen(
                 sources = sources,
                 modifier = Modifier.weight(1f),
                 onAdd = { showAddSheet = true },
-                onDelete = viewModel::deleteSource,
+                onEdit = { editingSource = it },
                 onOpenExternallyChange = viewModel::setOpenExternally,
             )
         }
     }
 
-    if (showAddSheet) {
-        AddWatchSourceSheet(
-            onDismiss = { showAddSheet = false },
-            onConfirm = { name, urlTemplate, openExternally ->
-                viewModel.addSource(name, urlTemplate, openExternally)
-                showAddSheet = false
-            },
-        )
-    }
+    WatchSourceEditorOverlays(
+        showAddSheet = showAddSheet,
+        editingSource = editingSource,
+        onAddDismiss = { showAddSheet = false },
+        onEditDismiss = { editingSource = null },
+        onAdd = { name, url, external ->
+            viewModel.addSource(name, url, external)
+            showAddSheet = false
+        },
+        onUpdate = { source, name, url, external ->
+            viewModel.updateSource(source, name, url, external)
+            editingSource = null
+        },
+        onDelete = { source ->
+            viewModel.deleteSource(source)
+            editingSource = null
+        },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -131,6 +140,7 @@ fun WatchSourcesBottomSheet(
 ) {
     val sources by viewModel.sources.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
+    var editingSource by remember { mutableStateOf<WatchSource?>(null) }
 
     AppSheet(
         onDismissRequest = onDismiss,
@@ -138,6 +148,7 @@ fun WatchSourcesBottomSheet(
         trailingContent = {
             GlassIconButton(
                 icon = Icons.Default.Add,
+                iconSize = 21.dp,
                 contentDescription = stringResource(R.string.watch_sources_add),
                 onClick = { showAddSheet = true },
             )
@@ -149,18 +160,62 @@ fun WatchSourcesBottomSheet(
                 .fillMaxWidth()
                 .heightIn(max = 590.dp),
             onAdd = { showAddSheet = true },
-            onDelete = viewModel::deleteSource,
+            onEdit = { editingSource = it },
             onOpenExternallyChange = viewModel::setOpenExternally,
         )
     }
 
+    WatchSourceEditorOverlays(
+        showAddSheet = showAddSheet,
+        editingSource = editingSource,
+        onAddDismiss = { showAddSheet = false },
+        onEditDismiss = { editingSource = null },
+        onAdd = { name, url, external ->
+            viewModel.addSource(name, url, external)
+            showAddSheet = false
+        },
+        onUpdate = { source, name, url, external ->
+            viewModel.updateSource(source, name, url, external)
+            editingSource = null
+        },
+        onDelete = { source ->
+            viewModel.deleteSource(source)
+            editingSource = null
+        },
+    )
+}
+
+@Composable
+private fun WatchSourceEditorOverlays(
+    showAddSheet: Boolean,
+    editingSource: WatchSource?,
+    onAddDismiss: () -> Unit,
+    onEditDismiss: () -> Unit,
+    onAdd: (String, String, Boolean) -> Unit,
+    onUpdate: (WatchSource, String, String, Boolean) -> Unit,
+    onDelete: (WatchSource) -> Unit,
+) {
     if (showAddSheet) {
-        AddWatchSourceSheet(
-            onDismiss = { showAddSheet = false },
-            onConfirm = { name, urlTemplate, openExternally ->
-                viewModel.addSource(name, urlTemplate, openExternally)
-                showAddSheet = false
+        WatchSourceFormSheet(
+            title = stringResource(R.string.watch_sources_add),
+            initialName = "",
+            initialUrl = "",
+            initialOpenExternally = false,
+            onDismiss = onAddDismiss,
+            onConfirm = onAdd,
+        )
+    }
+    editingSource?.let { source ->
+        WatchSourceFormSheet(
+            title = stringResource(R.string.watch_sources_edit),
+            initialName = source.name,
+            initialUrl = source.urlTemplate,
+            initialOpenExternally = source.openExternally,
+            onDismiss = onEditDismiss,
+            onConfirm = { name, url, external ->
+                onUpdate(source, name, url, external)
             },
+            onDelete = { onDelete(source) },
         )
     }
 }
@@ -170,7 +225,7 @@ private fun WatchSourcesContent(
     sources: List<WatchSource>,
     modifier: Modifier = Modifier,
     onAdd: () -> Unit,
-    onDelete: (WatchSource) -> Unit,
+    onEdit: (WatchSource) -> Unit,
     onOpenExternallyChange: (WatchSource, Boolean) -> Unit,
 ) {
     Column(
@@ -203,66 +258,22 @@ private fun WatchSourcesContent(
                     .weight(1f, fill = false)
                     .fillMaxWidth(),
                 contentPadding = PaddingValues(bottom = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(9.dp),
             ) {
                 item(key = "watch-source-list") {
                     InsetGroup {
                         sources.forEachIndexed { index, source ->
                             SourceRow(
                                 source = source,
-                                onDelete = { onDelete(source) },
-                                onOpenExternallyChange = { onOpenExternallyChange(source, it) },
+                                onClick = { onEdit(source) },
+                                onOpenExternallyChange = {
+                                    onOpenExternallyChange(source, it)
+                                },
                             )
                             if (index < sources.lastIndex) {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(start = 58.dp),
                                     thickness = 0.5.dp,
                                     color = MaterialTheme.colorScheme.outlineVariant,
-                                )
-                            }
-                        }
-                    }
-                }
-                item(key = "add-watch-source") {
-                    AppMaterialSurface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 54.dp)
-                            .clickable(onClick = onAdd),
-                        material = AppMaterial.Interactive,
-                        shape = ContinuousRoundedShape(17.dp),
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 13.dp, vertical = 9.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(ContinuousRoundedShape(10.dp))
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(
-                                    Icons.Default.Add,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                    tint = MaterialTheme.colorScheme.primary,
-                                )
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.watch_sources_add),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                                Text(
-                                    text = stringResource(R.string.watch_sources_add_subtitle),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
@@ -276,16 +287,17 @@ private fun WatchSourcesContent(
 @Composable
 private fun SourceRow(
     source: WatchSource,
-    onDelete: () -> Unit,
+    onClick: () -> Unit,
     onOpenExternallyChange: (Boolean) -> Unit,
 ) {
     val motion = LocalMotionPolicy.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 64.dp)
+            .heightIn(min = 68.dp)
             .animateContentSize(animationSpec = motion.iosSpring())
-            .padding(start = 11.dp, end = 5.dp, top = 6.dp, bottom = 6.dp),
+            .clickable(onClick = onClick)
+            .padding(start = 11.dp, end = 8.dp, top = 7.dp, bottom = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(9.dp),
     ) {
@@ -350,40 +362,35 @@ private fun SourceRow(
             checked = source.openExternally,
             onCheckedChange = onOpenExternallyChange,
         )
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clickable(onClick = onDelete)
-                .semantics { role = Role.Button },
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                Icons.Default.DeleteOutline,
-                contentDescription = stringResource(R.string.watch_sources_delete),
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.error,
-            )
-        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddWatchSourceSheet(
+private fun WatchSourceFormSheet(
+    title: String,
+    initialName: String,
+    initialUrl: String,
+    initialOpenExternally: Boolean,
     onDismiss: () -> Unit,
     onConfirm: (name: String, urlTemplate: String, openExternally: Boolean) -> Unit,
+    onDelete: (() -> Unit)? = null,
 ) {
-    var name by remember { mutableStateOf("") }
-    var urlTemplate by remember { mutableStateOf("") }
-    var openExternally by remember { mutableStateOf(false) }
+    var name by remember(initialName) { mutableStateOf(initialName) }
+    var urlTemplate by remember(initialUrl) { mutableStateOf(initialUrl) }
+    var openExternally by remember(initialOpenExternally) {
+        mutableStateOf(initialOpenExternally)
+    }
     val isValid = name.isNotBlank() && urlTemplate.contains("{query}")
 
     AppSheet(
         onDismissRequest = onDismiss,
-        title = stringResource(R.string.watch_sources_add),
+        title = title,
         trailingContent = {
             TextButton(
-                onClick = { onConfirm(name.trim(), urlTemplate.trim(), openExternally) },
+                onClick = {
+                    onConfirm(name.trim(), urlTemplate.trim(), openExternally)
+                },
                 enabled = isValid,
                 contentPadding = PaddingValues(horizontal = 8.dp),
             ) {
@@ -397,68 +404,96 @@ private fun AddWatchSourceSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 430.dp)
+                .heightIn(max = 470.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 6.dp),
-            verticalArrangement = Arrangement.spacedBy(9.dp),
+                .padding(bottom = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             AppMaterialSurface(
                 modifier = Modifier.fillMaxWidth(),
                 material = AppMaterial.Grouped,
                 shape = ContinuousRoundedShape(18.dp),
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 11.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    FormField(
-                        label = stringResource(R.string.watch_sources_name_label),
-                        value = name,
-                        onValueChange = { name = it },
-                    )
-                    FormField(
-                        label = stringResource(R.string.watch_sources_url_label),
-                        value = urlTemplate,
-                        onValueChange = { urlTemplate = it },
-                        helper = stringResource(R.string.watch_sources_url_hint),
-                    )
-                    HorizontalDivider(
-                        thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 1.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(2.dp),
-                        ) {
-                            Text(
-                                text = stringResource(R.string.watch_sources_open_externally),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            Text(
-                                text = stringResource(R.string.watch_sources_open_externally_hint),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                        AppSwitch(
-                            checked = openExternally,
-                            onCheckedChange = { openExternally = it },
-                        )
-                    }
-                }
+                SourceForm(
+                    name = name,
+                    onNameChange = { name = it },
+                    urlTemplate = urlTemplate,
+                    onUrlChange = { urlTemplate = it },
+                    openExternally = openExternally,
+                    onOpenExternallyChange = { openExternally = it },
+                )
             }
+            if (onDelete != null) {
+                AppButton(
+                    label = stringResource(R.string.watch_sources_delete),
+                    icon = Icons.Default.DeleteOutline,
+                    onClick = onDelete,
+                    modifier = Modifier.fillMaxWidth(),
+                    variant = AppButtonVariant.Destructive,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SourceForm(
+    name: String,
+    onNameChange: (String) -> Unit,
+    urlTemplate: String,
+    onUrlChange: (String) -> Unit,
+    openExternally: Boolean,
+    onOpenExternallyChange: (Boolean) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 11.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        FormField(
+            label = stringResource(R.string.watch_sources_name_label),
+            value = name,
+            onValueChange = onNameChange,
+        )
+        FormField(
+            label = stringResource(R.string.watch_sources_url_label),
+            value = urlTemplate,
+            onValueChange = onUrlChange,
+            helper = stringResource(R.string.watch_sources_url_hint),
+        )
+        HorizontalDivider(
+            thickness = 0.5.dp,
+            color = MaterialTheme.colorScheme.outlineVariant,
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 1.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.watch_sources_open_externally),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = stringResource(R.string.watch_sources_open_externally_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            AppSwitch(
+                checked = openExternally,
+                onCheckedChange = onOpenExternallyChange,
+            )
         }
     }
 }
