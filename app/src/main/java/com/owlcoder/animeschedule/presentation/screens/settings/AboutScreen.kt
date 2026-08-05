@@ -1,10 +1,12 @@
 package com.owlcoder.animeschedule.presentation.screens.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -28,6 +30,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -35,12 +38,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.BuildConfig
 import com.owlcoder.animeschedule.R
@@ -236,18 +241,12 @@ private fun AboutGroup(items: List<AboutItem>) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(11.dp),
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(ContinuousRoundedShape(9.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)),
-                    contentAlignment = Alignment.Center,
-                ) {
+                AboutGlassTile(size = 30.dp, cornerRadius = 9.dp) {
                     Icon(
                         imageVector = item.icon,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 if (item.codeValue) {
@@ -305,18 +304,12 @@ private fun DataSourcesGroup(items: List<DataSourceItem>) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(ContinuousRoundedShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)),
-                    contentAlignment = Alignment.Center,
-                ) {
+                AboutGlassTile(size = 40.dp, cornerRadius = 12.dp) {
                     Text(
                         text = item.monogram,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Column(
@@ -344,6 +337,41 @@ private fun DataSourcesGroup(items: List<DataSourceItem>) {
                     color = MaterialTheme.colorScheme.outlineVariant,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun AboutGlassTile(
+    size: Dp,
+    cornerRadius: Dp,
+    content: @Composable () -> Unit,
+) {
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
+    Surface(
+        modifier = Modifier.size(size),
+        shape = ContinuousRoundedShape(cornerRadius),
+        color = if (dark) {
+            Color.White.copy(alpha = 0.055f)
+        } else {
+            Color.White.copy(alpha = 0.68f)
+        },
+        border = BorderStroke(
+            width = 0.5.dp,
+            color = if (dark) {
+                Color.White.copy(alpha = 0.10f)
+            } else {
+                Color.White.copy(alpha = 0.86f)
+            },
+        ),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            content()
         }
     }
 }
