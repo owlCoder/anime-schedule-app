@@ -71,8 +71,8 @@ fun MyListEntryCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(80.dp)
-                .padding(start = 11.dp, end = 7.dp, top = 8.dp, bottom = 8.dp),
+                .height(86.dp)
+                .padding(start = 12.dp, end = 7.dp, top = 9.dp, bottom = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
@@ -85,17 +85,17 @@ fun MyListEntryCard(
                 MediaThumbnail.Small(
                     url = coverImageUrl,
                     contentDescription = title,
-                    modifier = Modifier.size(46.dp, 62.dp),
+                    modifier = Modifier.size(50.dp, 68.dp),
                 )
-                Spacer(Modifier.width(10.dp))
+                Spacer(Modifier.width(11.dp))
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
                 ) {
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -129,23 +129,23 @@ fun MyListEntryCard(
                     }
                 }
             }
-            Spacer(Modifier.width(3.dp))
+            Spacer(Modifier.width(4.dp))
             if (entry.status == WatchStatus.WATCHING) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(38.dp)
                         .clickable(enabled = !isIncrementing, onClick = onIncrementEpisode)
                         .semantics { role = Role.Button },
                     contentAlignment = Alignment.Center,
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(width = 30.dp, height = 26.dp)
+                            .size(width = 32.dp, height = 28.dp)
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.13f), CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         if (isIncrementing) {
-                            CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
+                            CircularProgressIndicator(Modifier.size(15.dp), strokeWidth = 2.dp)
                         } else {
                             Text(
                                 text = "+1",
@@ -157,18 +157,18 @@ fun MyListEntryCard(
                     }
                 }
             }
-            IconButton(onClick = onEditStatus, modifier = Modifier.size(36.dp)) {
+            IconButton(onClick = onEditStatus, modifier = Modifier.size(38.dp)) {
                 Icon(
                     Icons.Default.Edit,
                     contentDescription = stringResource(R.string.cd_edit_list_status),
-                    modifier = Modifier.size(17.dp),
+                    modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
         if (showDivider) {
             HorizontalDivider(
-                modifier = Modifier.padding(start = 67.dp),
+                modifier = Modifier.padding(start = 73.dp),
                 thickness = 0.5.dp,
                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f),
             )
