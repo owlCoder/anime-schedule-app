@@ -222,11 +222,6 @@ private fun BottomNavItemView(
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .iosPressScale(interactionSource)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -243,7 +238,15 @@ private fun BottomNavItemView(
         Surface(
             modifier = Modifier
                 .fillMaxWidth(0.92f)
-                .fillMaxHeight(),
+                .fillMaxHeight()
+                .clip(ActiveItemShape)
+                .iosPressScale(interactionSource)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    shape = ActiveItemShape
+                    clip = true
+                },
             shape = ActiveItemShape,
             color = Color.Transparent,
             border = null,
