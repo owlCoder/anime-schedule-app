@@ -5,10 +5,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,13 +22,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
@@ -40,6 +33,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Schedule
@@ -70,9 +64,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -93,9 +84,6 @@ import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
-import com.owlcoder.animeschedule.presentation.components.IosMotion
-import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
-import com.owlcoder.animeschedule.presentation.components.iosTween
 import java.time.ZoneId
 import java.util.Locale
 
@@ -131,16 +119,12 @@ fun SettingsScreen(
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
-    ) { granted ->
-        settingsViewModel.setNotificationsEnabled(granted)
-    }
+    ) { granted -> settingsViewModel.setNotificationsEnabled(granted) }
 
-    fun changeNotificationsEnabled(enabled: Boolean) {
+    fun setNotificationsEnabled(enabled: Boolean) {
         if (!enabled) {
             settingsViewModel.setNotificationsEnabled(false)
-            return
-        }
-        if (
+        } else if (
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(
                 context,
@@ -266,7 +250,8 @@ fun SettingsScreen(
                         SettingsRow(
                             icon = Icons.Default.DeleteSweep,
                             title = stringResource(R.string.settings_clear_cache),
-                            value = cacheActionMessage ?: stringResource(R.string.settings_clear_cache_subtitle),
+                            value = cacheActionMessage
+                                ?: stringResource(R.string.settings_clear_cache_subtitle),
                             onClick = { activeSheet = SettingsSheet.ClearCache },
                             iconColor = MaterialTheme.colorScheme.error,
                             titleColor = MaterialTheme.colorScheme.error,
@@ -307,8 +292,11 @@ fun SettingsScreen(
     }
 
     when (activeSheet) {
-        SettingsSheet.Theme -> ThemeSheet(
-            current = uiState.themeMode,
+        SettingsSheet.Theme -> SelectionSheet(
+            title = stringResource(R.string.settings_appearance),
+            options = ThemeMode.entries,
+            selected = uiState.themeMode,
+            label = { themeModeLabel(it) },
             onSelect = {
                 settingsViewModel.setThemeMode(it)
                 activeSheet = null
@@ -318,7 +306,7 @@ fun SettingsScreen(
         SettingsSheet.Notifications -> NotificationSettingsSheet(
             enabled = uiState.notificationsEnabled,
             offset = uiState.notificationOffsetMinutes,
-            onEnabledChange = ::changeNotificationsEnabled,
+            onEnabledChange = ::setNotificationsEnabled,
             onOffsetSelect = settingsViewModel::setNotificationOffset,
             onDismiss = { activeSheet = null },
         )
@@ -330,8 +318,11 @@ fun SettingsScreen(
             },
             onDismiss = { activeSheet = null },
         )
-        SettingsSheet.Language -> LanguageSheet(
-            current = uiState.appLanguage,
+        SettingsSheet.Language -> SelectionSheet(
+            title = stringResource(R.string.settings_language),
+            options = AppLanguage.entries,
+            selected = uiState.appLanguage,
+            label = { languageLabel(it) },
             onSelect = { language ->
                 settingsViewModel.setAppLanguage(language)
                 activeSheet = null
@@ -357,8 +348,8 @@ fun SettingsScreen(
                 settingsViewModel.clearCacheNow()
             },
         )
-        SettingsSheet.Changelog -> ChangelogBottomSheet(onDismiss = { activeSheet = null })
-        SettingsSheet.About -> AboutBottomSheet(onDismiss = { activeSheet = null })
+        SettingsSheet.Changelog -> ChangelogBottomSheet { activeSheet = null }
+        SettingsSheet.About -> AboutBottomSheet { activeSheet = null }
         null -> Unit
     }
 }
@@ -403,7 +394,6 @@ private fun AccountRow(
         modifier = Modifier
             .fillMaxWidth()
             .height(72.dp)
-            .clickable(enabled = !isLoggingIn, onClick = onClick)
             .padding(horizontal = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -433,6 +423,7 @@ private fun AccountRow(
                 }
             }
         }
+
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -448,40 +439,67 @@ private fun AccountRow(
             )
             Text(
                 text = stringResource(
-                    if (isLoggedIn) R.string.profile_logged_in else R.string.profile_not_logged_in,
+                    if (isLoggedIn) R.string.profile_logged_in
+                    else R.string.profile_not_logged_in,
                 ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        if (isLoggingIn) {
-            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-        } else {
-            val actionColor = if (isLoggedIn) {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            } else {
-                MaterialTheme.colorScheme.primary
-            }
-            Text(
-                text = stringResource(
-                    if (isLoggedIn) R.string.profile_logout else R.string.profile_login,
-                ),
-                style = MaterialTheme.typography.labelLarge,
-                color = actionColor,
-                fontWeight = FontWeight.SemiBold,
+
+        when {
+            isLoggingIn -> CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp,
             )
-            Icon(
-                imageVector = if (isLoggedIn) {
-                    Icons.AutoMirrored.Filled.ExitToApp
-                } else {
-                    Icons.AutoMirrored.Filled.Login
-                },
-                contentDescription = null,
-                tint = actionColor,
+            !isLoggedIn -> Surface(
                 modifier = Modifier
-                    .padding(start = 4.dp)
-                    .size(17.dp),
-            )
+                    .height(40.dp)
+                    .clickable(onClick = onClick),
+                shape = ContinuousRoundedShape(15.dp),
+                color = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 13.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(7.dp),
+                ) {
+                    Icon(
+                        Icons.Default.Key,
+                        contentDescription = null,
+                        modifier = Modifier.size(17.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.profile_login),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+            else -> Row(
+                modifier = Modifier
+                    .height(40.dp)
+                    .clickable(onClick = onClick)
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ExitToApp,
+                    contentDescription = null,
+                    modifier = Modifier.size(17.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(R.string.profile_logout),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
         }
     }
 }
@@ -528,7 +546,6 @@ private fun SettingsRow(
             modifier = Modifier
                 .weight(1f)
                 .padding(start = 11.dp, end = 7.dp),
-            verticalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = title,
@@ -548,16 +565,12 @@ private fun SettingsRow(
                 )
             }
         }
-        if (trailing != null) {
-            trailing()
-        } else {
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
-            )
-        }
+        if (trailing != null) trailing() else Icon(
+            Icons.Default.ChevronRight,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
+        )
     }
 }
 
@@ -572,40 +585,6 @@ private fun SettingsDivider() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ThemeSheet(
-    current: ThemeMode,
-    onSelect: (ThemeMode) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    SelectionSheet(
-        title = stringResource(R.string.settings_appearance),
-        options = ThemeMode.entries,
-        selected = current,
-        label = { themeModeLabel(it) },
-        onSelect = onSelect,
-        onDismiss = onDismiss,
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun LanguageSheet(
-    current: AppLanguage,
-    onSelect: (AppLanguage) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    SelectionSheet(
-        title = stringResource(R.string.settings_language),
-        options = AppLanguage.entries,
-        selected = current,
-        label = { languageLabel(it) },
-        onSelect = onSelect,
-        onDismiss = onDismiss,
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
 private fun <T> SelectionSheet(
     title: String,
     options: List<T>,
@@ -614,10 +593,7 @@ private fun <T> SelectionSheet(
     onSelect: (T) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AppSheet(
-        onDismissRequest = onDismiss,
-        title = title,
-    ) {
+    AppSheet(onDismissRequest = onDismiss, title = title) {
         InsetGroup {
             options.forEachIndexed { index, option ->
                 SelectionRow(
@@ -648,8 +624,7 @@ private fun SelectionRow(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 50.dp)
-            .clickable(role = Role.RadioButton, onClick = onClick)
-            .semantics { role = Role.RadioButton }
+            .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -689,19 +664,12 @@ private fun NotificationSettingsSheet(
     onOffsetSelect: (Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val motion = LocalMotionPolicy.current
     val offsets = listOf(0, -5, -10, -15, -30, 10, 30, 60)
-
     AppSheet(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_notifications),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .animateContentSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             InsetGroup {
                 Row(
                     modifier = Modifier
@@ -727,12 +695,7 @@ private fun NotificationSettingsSheet(
                     )
                 }
             }
-
-            AnimatedVisibility(
-                visible = enabled,
-                enter = fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)),
-                exit = fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)),
-            ) {
+            if (enabled) {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
                         text = stringResource(R.string.settings_notif_timing).uppercase(),
@@ -801,7 +764,7 @@ private fun TimezoneSheet(
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(start = 12.dp),
+                        .padding(horizontal = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
@@ -835,21 +798,6 @@ private fun TimezoneSheet(
                             }
                         },
                     )
-                    if (query.isNotEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clickable { query = "" },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
                 }
             }
 
@@ -937,12 +885,14 @@ private fun ClearCacheSheet(
             ) {
                 AppButton(
                     label = stringResource(R.string.common_cancel),
+                    icon = Icons.Default.Close,
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f),
                     variant = AppButtonVariant.Secondary,
                 )
                 AppButton(
                     label = stringResource(R.string.settings_clear_cache_confirm),
+                    icon = Icons.Default.DeleteSweep,
                     onClick = onConfirm,
                     modifier = Modifier.weight(1f),
                     variant = AppButtonVariant.Destructive,
@@ -978,6 +928,5 @@ private fun formatBytes(bytes: Long): String {
     if (bytes < 1_024L) return "$bytes B"
     val kilobytes = bytes / 1_024.0
     if (kilobytes < 1_024.0) return String.format(Locale.ROOT, "%.1f KB", kilobytes)
-    val megabytes = kilobytes / 1_024.0
-    return String.format(Locale.ROOT, "%.1f MB", megabytes)
+    return String.format(Locale.ROOT, "%.1f MB", kilobytes / 1_024.0)
 }
