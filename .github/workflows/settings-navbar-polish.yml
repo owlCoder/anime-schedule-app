@@ -1,0 +1,215 @@
+name: Settings and floating dock polish
+
+on:
+  push:
+    branches:
+      - agent/ios26-ui-polish
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/ios26-ui-polish
+          fetch-depth: 0
+
+      - name: Apply UI polish
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(text: str, old: str, new: str, label: str) -> str:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected 1 occurrence, found {count}")
+              return text.replace(old, new, 1)
+
+          # Floating bottom dock: overlay it on content instead of reserving an opaque Scaffold strip.
+          main_path = Path("app/src/main/java/com/owlcoder/animeschedule/MainActivity.kt")
+          main = main_path.read_text()
+          if "import androidx.compose.ui.Alignment\n" not in main:
+              main = main.replace(
+                  "import androidx.compose.ui.Modifier\n",
+                  "import androidx.compose.ui.Alignment\nimport androidx.compose.ui.Modifier\n",
+                  1,
+              )
+          main = replace_once(
+              main,
+              "LocalNavBarHeight provides 0.dp,",
+              "LocalNavBarHeight provides if (showBottomBar) 78.dp else 0.dp,",
+              "nav bar composition height",
+          )
+
+          bottom_start = main.index("                                        bottomBar = {")
+          brace_start = main.index("{", bottom_start)
+          depth = 0
+          brace_end = None
+          for i in range(brace_start, len(main)):
+              if main[i] == "{":
+                  depth += 1
+              elif main[i] == "}":
+                  depth -= 1
+                  if depth == 0:
+                      brace_end = i + 1
+                      break
+          if brace_end is None:
+              raise SystemExit("Could not find bottomBar block end")
+          remove_end = brace_end
+          while remove_end < len(main) and main[remove_end] in " \t":
+              remove_end += 1
+          if remove_end < len(main) and main[remove_end] == ',':
+              remove_end += 1
+          if remove_end < len(main) and main[remove_end] == '\n':
+              remove_end += 1
+          main = main[:bottom_start] + main[remove_end:]
+
+          scaffold_start = main.index("                                    Scaffold(")
+          content_brace = main.index("{ innerPadding ->", scaffold_start)
+          content_brace = main.index("{", content_brace)
+          depth = 0
+          scaffold_end = None
+          for i in range(content_brace, len(main)):
+              if main[i] == "{":
+                  depth += 1
+              elif main[i] == "}":
+                  depth -= 1
+                  if depth == 0:
+                      scaffold_end = i + 1
+                      break
+          if scaffold_end is None:
+              raise SystemExit("Could not find Scaffold content end")
+
+          dock_overlay = '''
+
+                                    AnimatedVisibility(
+                                        visible = showBottomBar,
+                                        modifier = Modifier.align(Alignment.BottomCenter),
+                                        enter = slideInVertically(
+                                            animationSpec = motion.iosTween(IosMotion.Standard),
+                                            initialOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
+                                        ) + fadeIn(
+                                            animationSpec = motion.iosTween(IosMotion.Quick),
+                                        ),
+                                        exit = slideOutVertically(
+                                            animationSpec = motion.iosTween(IosMotion.Standard),
+                                            targetOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
+                                        ) + fadeOut(
+                                            animationSpec = motion.iosTween(IosMotion.Quick),
+                                        ),
+                                    ) {
+                                        AnimeBottomBar(navController = navController)
+                                    }'''
+          main = main[:scaffold_end] + dock_overlay + main[scaffold_end:]
+          main_path.write_text(main)
+
+          # Slightly wider active lens and a more relaxed floating dock.
+          nav_path = Path("app/src/main/java/com/owlcoder/animeschedule/presentation/navigation/AnimeBottomBar.kt")
+          nav = nav_path.read_text()
+          nav = nav.replace("private val DockShape = ContinuousRoundedShape(22.dp)", "private val DockShape = ContinuousRoundedShape(24.dp)")
+          nav = nav.replace(".offset(x = indicatorX + itemWidth * 0.09f)", ".offset(x = indicatorX + itemWidth * 0.06f)")
+          nav = nav.replace(".width(itemWidth * 0.82f)", ".width(itemWidth * 0.88f)")
+          nav = nav.replace(".fillMaxWidth(0.82f)", ".fillMaxWidth(0.88f)")
+          nav_path.write_text(nav)
+
+          # More transparent glass with a clearer light-theme specular edge.
+          tokens_path = Path("app/src/main/java/com/owlcoder/animeschedule/ui/theme/GlassTokens.kt")
+          tokens = tokens_path.read_text()
+          tokens = tokens.replace("neutralFillLight = Color.White.copy(alpha = 0.72f)", "neutralFillLight = Color.White.copy(alpha = 0.62f)")
+          tokens = tokens.replace("selectedFillLight = Color.White.copy(alpha = 0.82f)", "selectedFillLight = Color.White.copy(alpha = 0.72f)")
+          tokens_path.write_text(tokens)
+
+          glass_path = Path("app/src/main/java/com/owlcoder/animeschedule/presentation/components/GlassSurface.kt")
+          glass = glass_path.read_text()
+          glass = glass.replace("else 0.075f)", "else 0.09f)")
+          glass = glass.replace("else 0.58f)", "else 0.68f)")
+          glass = glass.replace("else 0.17f)", "else 0.21f)")
+          glass_path.write_text(glass)
+
+          # Settings density, hierarchy and bottom safe space.
+          settings_path = Path("app/src/main/java/com/owlcoder/animeschedule/presentation/screens/settings/SettingsScreen.kt")
+          settings = settings_path.read_text()
+          if "import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight\n" not in settings:
+              settings = settings.replace(
+                  "import com.owlcoder.animeschedule.presentation.components.InsetGroup\n",
+                  "import com.owlcoder.animeschedule.presentation.components.InsetGroup\nimport com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight\n",
+                  1,
+              )
+          settings = settings.replace("private val SettingsGroupShape = ContinuousRoundedShape(20.dp)", "private val SettingsGroupShape = ContinuousRoundedShape(18.dp)")
+          settings = replace_once(
+              settings,
+              "    val context = LocalContext.current\n    var activeSheet",
+              "    val context = LocalContext.current\n    val navBarHeight = LocalNavBarHeight.current\n    var activeSheet",
+              "settings nav height",
+          )
+          settings = replace_once(
+              settings,
+              '''            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 6.dp,
+                bottom = 120.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(15.dp),''',
+              '''            contentPadding = PaddingValues(
+                start = 18.dp,
+                end = 18.dp,
+                top = 2.dp,
+                bottom = navBarHeight + 24.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(12.dp),''',
+              "settings list density",
+          )
+          settings = replace_once(
+              settings,
+              '''            item(key = "settings-header") {
+                AppLargeHeader(
+                    title = stringResource(R.string.settings_title),
+                    modifier = Modifier.padding(bottom = 1.dp),
+                )
+            }''',
+              '''            item(key = "settings-header") {
+                Text(
+                    text = stringResource(R.string.settings_title),
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(start = 2.dp, top = 4.dp, bottom = 2.dp),
+                )
+            }''',
+              "settings compact header",
+          )
+          settings = settings.replace("modifier = Modifier.padding(start = 12.dp, bottom = 6.dp)", "modifier = Modifier.padding(start = 10.dp, bottom = 5.dp)")
+          settings = settings.replace(".height(72.dp)", ".height(66.dp)")
+          settings = settings.replace(".size(46.dp)", ".size(40.dp)")
+          settings = settings.replace("modifier = Modifier.size(34.dp),", "modifier = Modifier.size(29.dp),", 1)
+          settings = settings.replace(".padding(horizontal = 13.dp)", ".padding(horizontal = 12.dp)")
+          settings = settings.replace(".padding(horizontal = 11.dp)", ".padding(horizontal = 10.dp)")
+          settings = settings.replace(".height(40.dp)\n            .clickable(onClick = onClick)", ".height(36.dp)\n            .clickable(onClick = onClick)")
+          settings = settings.replace(".height(40.dp)\n                    .clickable(onClick = onClick)", ".height(36.dp)\n                    .clickable(onClick = onClick)")
+          settings = settings.replace(".heightIn(min = 58.dp)", ".heightIn(min = 54.dp)")
+          settings = settings.replace(".padding(horizontal = 12.dp, vertical = 6.dp)", ".padding(horizontal = 11.dp, vertical = 4.dp)")
+          settings = settings.replace(".size(34.dp)\n                .clip(ContinuousRoundedShape(10.dp))", ".size(32.dp)\n                .clip(ContinuousRoundedShape(9.dp))")
+          settings = settings.replace("modifier = Modifier.size(19.dp),", "modifier = Modifier.size(18.dp),", 1)
+          settings = settings.replace(".padding(start = 11.dp, end = 7.dp)", ".padding(start = 10.dp, end = 7.dp)")
+          settings = settings.replace("modifier = Modifier.padding(start = 57.dp)", "modifier = Modifier.padding(start = 54.dp)")
+          settings_path.write_text(settings)
+          PY
+
+      - name: Commit polished UI
+        shell: bash
+        run: |
+          git config user.name "OpenAI"
+          git config user.email "openai@users.noreply.github.com"
+          git rm .github/workflows/settings-navbar-polish.yml
+          git add app/src/main/java/com/owlcoder/animeschedule/MainActivity.kt \
+                  app/src/main/java/com/owlcoder/animeschedule/presentation/navigation/AnimeBottomBar.kt \
+                  app/src/main/java/com/owlcoder/animeschedule/presentation/components/GlassSurface.kt \
+                  app/src/main/java/com/owlcoder/animeschedule/presentation/screens/settings/SettingsScreen.kt \
+                  app/src/main/java/com/owlcoder/animeschedule/ui/theme/GlassTokens.kt
+          git commit -m "polish floating glass dock and settings layout"
+          git push origin HEAD:agent/ios26-ui-polish
