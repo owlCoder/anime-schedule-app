@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +42,8 @@ fun AppSheet(
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     title: String? = null,
     trailingContent: @Composable (() -> Unit)? = null,
-    showCloseButton: Boolean = true,
+    showBackButton: Boolean = true,
+    showCloseButton: Boolean = false,
     showDragHandle: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -79,6 +81,14 @@ fun AppSheet(
                         .padding(bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    if (showBackButton) {
+                        GlassIconButton(
+                            icon = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(android.R.string.cancel),
+                            onClick = onDismissRequest,
+                            modifier = Modifier.padding(end = 6.dp),
+                        )
+                    }
                     Text(
                         text = title,
                         modifier = Modifier
