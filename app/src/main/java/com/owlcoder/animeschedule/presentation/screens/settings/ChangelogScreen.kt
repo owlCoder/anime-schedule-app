@@ -1,212 +1,281 @@
 package com.owlcoder.animeschedule.presentation.screens.settings
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsBottomHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.automirrored.outlined.ViewList
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Layers
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.owlcoder.animeschedule.BuildConfig
 import com.owlcoder.animeschedule.R
+import com.owlcoder.animeschedule.presentation.components.AppMaterial
+import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
-import com.owlcoder.animeschedule.presentation.components.InsetListRow
 
-private data class ChangelogEntry(
-    val version: String,
-    val dateRes: Int,
-    val changeRes: List<Int>
+private data class ReleaseNote(
+    val icon: ImageVector,
+    val title: String,
+    val description: String,
 )
 
-private val changelogEntries = listOf(
-    ChangelogEntry(
-        version = "3.5",
-        dateRes = R.string.cl_35_date,
-        changeRes = listOf(R.string.cl_35_1)
-    ),
-    ChangelogEntry(
-        version = "3.2",
-        dateRes = R.string.cl_32_date,
-        changeRes = listOf(R.string.cl_32_1)
-    ),
-    ChangelogEntry(
-        version = "3.1",
-        dateRes = R.string.cl_31_date,
-        changeRes = listOf(
-            R.string.cl_31_1, R.string.cl_31_2, R.string.cl_31_3, R.string.cl_31_4,
-            R.string.cl_31_5, R.string.cl_31_6, R.string.cl_31_7, R.string.cl_31_8
-        )
-    ),
-    ChangelogEntry(
-        version = "2.0.1",
-        dateRes = R.string.cl_201_date,
-        changeRes = listOf(
-            R.string.cl_201_1, R.string.cl_201_2, R.string.cl_201_3, R.string.cl_201_4,
-            R.string.cl_201_5, R.string.cl_201_6, R.string.cl_201_7, R.string.cl_201_8
-        )
-    ),
-    ChangelogEntry(
-        version = "1.5.2",
-        dateRes = R.string.cl_152_date,
-        changeRes = listOf(R.string.cl_152_1, R.string.cl_152_2, R.string.cl_152_3, R.string.cl_152_4, R.string.cl_152_5)
-    ),
-    ChangelogEntry(
-        version = "1.2.54",
-        dateRes = R.string.cl_154_date,
-        changeRes = listOf(R.string.cl_154_1, R.string.cl_154_2, R.string.cl_154_3, R.string.cl_154_4, R.string.cl_154_5)
-    ),
-    ChangelogEntry(
-        version = "1.1",
-        dateRes = R.string.cl_11_date,
-        changeRes = listOf(R.string.cl_11_1, R.string.cl_11_2, R.string.cl_11_3, R.string.cl_11_4, R.string.cl_11_5, R.string.cl_11_6)
-    ),
-    ChangelogEntry(
-        version = "1.0.4",
-        dateRes = R.string.cl_104_date,
-        changeRes = listOf(R.string.cl_104_1, R.string.cl_104_2, R.string.cl_104_3)
-    ),
-    ChangelogEntry(
-        version = "1.0.3",
-        dateRes = R.string.cl_103_date,
-        changeRes = listOf(R.string.cl_103_1, R.string.cl_103_2, R.string.cl_103_3)
-    ),
-    ChangelogEntry(
-        version = "1.0.2",
-        dateRes = R.string.cl_102_date,
-        changeRes = listOf(R.string.cl_102_1, R.string.cl_102_2, R.string.cl_102_3)
-    ),
-    ChangelogEntry(
-        version = "1.0.1",
-        dateRes = R.string.cl_101_date,
-        changeRes = listOf(R.string.cl_101_1, R.string.cl_101_2, R.string.cl_101_3)
-    ),
-    ChangelogEntry(
-        version = "1.0.0",
-        dateRes = R.string.cl_100_date,
-        changeRes = listOf(R.string.cl_100_1, R.string.cl_100_2, R.string.cl_100_3)
-    )
-)
-
-/**
- * Changelog as a bottom-sheet overlay (mirrors Search/Notifications) instead of a full nav
- * destination — quick, infrequent surface that doesn't need its own back stack entry.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangelogBottomSheet(onDismiss: () -> Unit) {
+    val notes = listOf(
+        ReleaseNote(
+            Icons.AutoMirrored.Outlined.ViewList,
+            stringResource(R.string.changelog_nav_title),
+            stringResource(R.string.changelog_nav_description),
+        ),
+        ReleaseNote(
+            Icons.Outlined.Layers,
+            stringResource(R.string.changelog_motion_title),
+            stringResource(R.string.changelog_motion_description),
+        ),
+        ReleaseNote(
+            Icons.Outlined.Tune,
+            stringResource(R.string.changelog_filters_title),
+            stringResource(R.string.changelog_filters_description),
+        ),
+        ReleaseNote(
+            Icons.Outlined.ErrorOutline,
+            stringResource(R.string.changelog_states_title),
+            stringResource(R.string.changelog_states_description),
+        ),
+        ReleaseNote(
+            Icons.Outlined.Info,
+            stringResource(R.string.changelog_about_title),
+            stringResource(R.string.changelog_about_description),
+        ),
+    )
+
     AppSheet(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.changelog_title),
     ) {
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 600.dp),
-            contentPadding = PaddingValues(bottom = 12.dp),
+                .heightIn(max = 560.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            itemsIndexed(changelogEntries) { index, entry ->
-                ChangelogCard(entry = entry, expandedByDefault = index == 0)
-                Spacer(Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(ContinuousRoundedShape(11.dp))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                ) {
+                    Text(
+                        text = "v${BuildConfig.VERSION_NAME}",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.changelog_release_date),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-            item { Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars)) }
+
+            AppMaterialSurface(
+                modifier = Modifier.fillMaxWidth(),
+                material = AppMaterial.Interactive,
+                shape = ContinuousRoundedShape(18.dp),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
+                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.03f),
+                                ),
+                            ),
+                        )
+                        .padding(horizontal = 15.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.changelog_whats_new),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            text = stringResource(R.string.changelog_hero_description),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    ChangelogGlassTile(size = 54.dp, cornerRadius = 16.dp) {
+                        Icon(
+                            imageVector = Icons.Outlined.AutoAwesome,
+                            contentDescription = null,
+                            modifier = Modifier.size(28.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+
+            InsetGroup {
+                notes.forEachIndexed { index, note ->
+                    ReleaseNoteRow(note)
+                    if (index < notes.lastIndex) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(start = 58.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                        )
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.FavoriteBorder,
+                    contentDescription = null,
+                    modifier = Modifier.size(17.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(R.string.changelog_footer),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun ChangelogCard(entry: ChangelogEntry, expandedByDefault: Boolean) {
-    var expanded by remember { mutableStateOf(expandedByDefault) }
-
-    InsetGroup(
-        title = stringResource(R.string.changelog_version_prefix, entry.version),
+private fun ReleaseNoteRow(note: ReleaseNote) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 56.dp)
-                    .clickable { expanded = !expanded }
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    stringResource(entry.dateRes),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f)
-                )
-                Icon(
-                    if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = if (expanded)
-                        stringResource(R.string.cd_collapse)
-                    else
-                        stringResource(R.string.cd_expand),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
+        ChangelogGlassTile(size = 36.dp, cornerRadius = 11.dp) {
+            Icon(
+                imageVector = note.icon,
+                contentDescription = null,
+                modifier = Modifier.size(19.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(1.dp),
+        ) {
+            Text(
+                text = note.title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = note.description,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
 
-            AnimatedVisibility(
-                visible = expanded,
-                enter = expandVertically(),
-                exit = shrinkVertically()
-            ) {
-                Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 14.dp)) {
-                    entry.changeRes.forEach { resId ->
-                        Row(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .padding(top = 7.dp, end = 12.dp)
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary)
-                            )
-                            Text(
-                                stringResource(resId),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-            }
+@Composable
+private fun ChangelogGlassTile(
+    size: Dp,
+    cornerRadius: Dp,
+    content: @Composable () -> Unit,
+) {
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
+    Surface(
+        modifier = Modifier.size(size),
+        shape = ContinuousRoundedShape(cornerRadius),
+        color = if (dark) {
+            Color.White.copy(alpha = 0.055f)
+        } else {
+            Color.White.copy(alpha = 0.68f)
+        },
+        border = BorderStroke(
+            width = 0.5.dp,
+            color = if (dark) {
+                Color.White.copy(alpha = 0.10f)
+            } else {
+                Color.White.copy(alpha = 0.86f)
+            },
+        ),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            content()
         }
     }
 }

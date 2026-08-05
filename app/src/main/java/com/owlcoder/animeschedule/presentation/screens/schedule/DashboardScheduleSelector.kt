@@ -5,10 +5,17 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 
-/** The small, deterministic slice of the schedule that belongs on the Today dashboard. */
+enum class DashboardScheduleMode {
+    UPCOMING,
+    LATER_TODAY,
+    EARLIER_TODAY,
+}
+
+/** A small, deterministic slice of the full day that always keeps the dashboard useful. */
 data class DashboardScheduleSelection(
     val featured: AiringEpisode?,
     val upcoming: List<AiringEpisode>,
+    val mode: DashboardScheduleMode,
 )
 
 object DashboardScheduleSelector {
@@ -37,32 +44,68 @@ object DashboardScheduleSelector {
         maxUpcoming: Int = 4,
     ): DashboardScheduleSelection {
         if (episodes.isEmpty() || maxUpcoming <= 0 || lookAhead.isNegative || recentlyAiredWindow.isNegative) {
-            return DashboardScheduleSelection(featured = null, upcoming = emptyList())
+            return DashboardScheduleSelection(
+                featured = null,
+                upcoming = emptyList(),
+                mode = DashboardScheduleMode.UPCOMING,
+            )
         }
 
         val uniqueEpisodes = episodes
             .distinctBy { it.airingId }
             .sortedBy { it.airingAtEpochSeconds }
 
-        val featured = uniqueEpisodes
+        val recentlyAired = uniqueEpisodes
+            .asSequence()
             .filter { episode ->
                 val airedAt = Instant.ofEpochSecond(episode.airingAtEpochSeconds)
                 !airedAt.isAfter(now) && !airedAt.isBefore(now.minus(recentlyAiredWindow))
             }
             .maxByOrNull { it.airingAtEpochSeconds }
-            ?: uniqueEpisodes.firstOrNull { Instant.ofEpochSecond(it.airingAtEpochSeconds).isAfter(now) }
 
-        val end = now.plus(lookAhead)
-        val upcoming = uniqueEpisodes
-            .asSequence()
-            .filter { it.airingId != featured?.airingId }
-            .filter { episode ->
-                val airingAt = Instant.ofEpochSecond(episode.airingAtEpochSeconds)
-                airingAt.isAfter(now) && !airingAt.isAfter(end)
-            }
-            .take(maxUpcoming)
-            .toList()
+        val futureEpisodes = uniqueEpisodes.filter {
+            Instant.ofEpochSecond(it.airingAtEpochSeconds).isAfter(now)
+        }
+        val lookAheadEnd = now.plus(lookAhead)
+        val nearFuture = futureEpisodes.filter {
+            !Instant.ofEpochSecond(it.airingAtEpochSeconds).isAfter(lookAheadEnd)
+        }
 
-        return DashboardScheduleSelection(featured = featured, upcoming = upcoming)
+        val mode = when {
+            recentlyAired != null || nearFuture.isNotEmpty() -> DashboardScheduleMode.UPCOMING
+            futureEpisodes.isNotEmpty() -> DashboardScheduleMode.LATER_TODAY
+            else -> DashboardScheduleMode.EARLIER_TODAY
+        }
+
+        val featured = recentlyAired
+            ?: futureEpisodes.firstOrNull()
+            ?: uniqueEpisodes.lastOrNull()
+
+        val supporting = when (mode) {
+            DashboardScheduleMode.UPCOMING -> nearFuture
+                .asSequence()
+                .filter { it.airingId != featured?.airingId }
+                .take(maxUpcoming)
+                .toList()
+
+            DashboardScheduleMode.LATER_TODAY -> futureEpisodes
+                .asSequence()
+                .filter { it.airingId != featured?.airingId }
+                .take(maxUpcoming)
+                .toList()
+
+            DashboardScheduleMode.EARLIER_TODAY -> uniqueEpisodes
+                .asReversed()
+                .asSequence()
+                .filter { it.airingId != featured?.airingId }
+                .take(maxUpcoming)
+                .toList()
+        }
+
+        return DashboardScheduleSelection(
+            featured = featured,
+            upcoming = supporting,
+            mode = mode,
+        )
     }
 }

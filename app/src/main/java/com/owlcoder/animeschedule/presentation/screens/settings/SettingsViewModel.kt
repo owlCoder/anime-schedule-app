@@ -6,13 +6,14 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.core.result.AppResult
 import com.owlcoder.animeschedule.data.local.datastore.AccentColor
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
@@ -24,14 +25,12 @@ import com.owlcoder.animeschedule.domain.repository.SettingsRepository
 import com.owlcoder.animeschedule.domain.usecase.GetMalUserListUseCase
 import javax.inject.Inject
 
-/** Average anime episode runtime, used to turn a raw episode count into an approximate
- *  watch-time stat — same convention MyAnimeList itself uses for "Days" stats. */
 private const val AVG_EPISODE_MINUTES = 24
 
 data class ProfileStats(
     val entryCount: Int = 0,
     val episodesWatched: Int = 0,
-    val hoursWatched: Int = 0
+    val hoursWatched: Int = 0,
 )
 
 data class SettingsUiState(
@@ -45,7 +44,7 @@ data class SettingsUiState(
     val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
     val appLanguage: AppLanguage = AppLanguage.SYSTEM,
     val cacheRetentionDays: Int = CacheRetentionPolicy.DEFAULT_RETENTION_DAYS,
-    val profileStats: ProfileStats = ProfileStats()
+    val profileStats: ProfileStats = ProfileStats(),
 )
 
 @HiltViewModel
@@ -54,7 +53,7 @@ class SettingsViewModel @Inject constructor(
     authRepository: AuthRepository,
     getMalUserListUseCase: GetMalUserListUseCase,
     private val cacheMaintenance: CacheMaintenance,
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val _cacheSizeBytes = MutableStateFlow(0L)
@@ -71,28 +70,28 @@ class SettingsViewModel @Inject constructor(
         authRepository.isLoggedIn,
         authRepository.username,
         authRepository.avatarUrl,
-        getMalUserListUseCase()
-    ) { prefs, loggedIn, username, avatarUrl, listResult ->
+        getMalUserListUseCase(),
+    ) { preferences, loggedIn, username, avatarUrl, listResult ->
         val entries = (listResult as? AppResult.Success)?.data ?: emptyList()
         val episodesWatched = entries.sumOf { it.episodesWatched }
         SettingsUiState(
-            timezoneId = prefs.timezoneId,
+            timezoneId = preferences.timezoneId,
             isLoggedIn = loggedIn,
             username = username,
             avatarUrl = avatarUrl,
-            themeMode = prefs.themeMode,
-            notificationsEnabled = prefs.notificationsEnabled,
-            notificationOffsetMinutes = prefs.notificationOffsetMinutes,
-            accentColor = prefs.accentColor,
-            appLanguage = prefs.appLanguage,
-            cacheRetentionDays = prefs.cacheRetentionDays,
+            themeMode = preferences.themeMode,
+            notificationsEnabled = preferences.notificationsEnabled,
+            notificationOffsetMinutes = preferences.notificationOffsetMinutes,
+            accentColor = preferences.accentColor,
+            appLanguage = preferences.appLanguage,
+            cacheRetentionDays = preferences.cacheRetentionDays,
             profileStats = ProfileStats(
                 entryCount = entries.size,
                 episodesWatched = episodesWatched,
-                hoursWatched = (episodesWatched * AVG_EPISODE_MINUTES) / 60
-            )
+                hoursWatched = episodesWatched * AVG_EPISODE_MINUTES / 60,
+            ),
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsUiState())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
     init {
         refreshCacheSize()
@@ -135,9 +134,9 @@ class SettingsViewModel @Inject constructor(
                 cacheMaintenance.run(clearImageCacheNow = true)
                 refreshCacheSizeAndWait()
             }.onSuccess {
-                _cacheActionMessage.value = "Cache cleared"
+                _cacheActionMessage.value = context.getString(R.string.settings_cache_cleared)
             }.onFailure {
-                _cacheActionMessage.value = "Couldn’t clear cache"
+                _cacheActionMessage.value = context.getString(R.string.settings_cache_clear_failed)
             }
             _isClearingCache.value = false
         }

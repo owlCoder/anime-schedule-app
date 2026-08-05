@@ -1,11 +1,18 @@
 package com.owlcoder.animeschedule.presentation.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -14,12 +21,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.ui.theme.AppSpacing
+import com.owlcoder.animeschedule.ui.theme.PillShape
 
 @Composable
 fun AppLargeHeader(
@@ -29,31 +41,43 @@ fun AppLargeHeader(
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = if (subtitle.isNullOrBlank()) 46.dp else 58.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier
+                .weight(1f)
+                .widthIn(min = 104.dp),
+            verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.displayLarge,
-                maxLines = 2,
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             if (!subtitle.isNullOrBlank()) {
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
         }
-        trailingContent?.invoke()
+        if (trailingContent != null) {
+            Box(
+                modifier = Modifier.wrapContentWidth(),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                trailingContent()
+            }
+        }
     }
 }
 
@@ -62,34 +86,97 @@ fun AppInlineHeader(
     title: String,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
-    backContentDescription: String = "Back",
+    backContentDescription: String? = null,
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
+    val resolvedBackDescription = backContentDescription ?: stringResource(R.string.onboarding_back)
     Row(
-        modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 44.dp),
         verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
         if (onBack != null) {
             GlassIconButton(
                 icon = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = backContentDescription,
+                contentDescription = resolvedBackDescription,
                 onClick = onBack,
-                modifier = Modifier.semantics { role = Role.Button },
             )
         }
         Text(
             text = title,
-            modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+            modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.titleLarge,
-            maxLines = 2,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        trailingContent?.invoke()
+        if (trailingContent != null) {
+            Box(
+                modifier = Modifier.wrapContentWidth(),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                trailingContent()
+            }
+        }
     }
 }
 
-/** Stage 1 semantic names; existing App* names remain source-compatible for current screens. */
+@Composable
+fun GlassToolbarGroup(
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit,
+) {
+    GlassChrome(
+        modifier = modifier.wrapContentWidth(),
+        shape = PillShape,
+    ) {
+        Row(
+            modifier = Modifier
+                .wrapContentWidth()
+                .height(44.dp)
+                .padding(horizontal = 2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(0.dp),
+            content = content,
+        )
+    }
+}
+
+@Composable
+fun GlassToolbarButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    selected: Boolean = false,
+    enabled: Boolean = true,
+) {
+    Box(
+        modifier = modifier
+            .size(44.dp)
+            .clickable(
+                enabled = enabled,
+                role = Role.Button,
+                onClick = onClick,
+            )
+            .semantics { this.selected = selected },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            modifier = Modifier.size(17.dp),
+            tint = when {
+                !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.40f)
+                selected -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurface
+            },
+        )
+    }
+}
+
 @Composable
 fun LargeNavigationHeader(
     title: String,
@@ -103,6 +190,6 @@ fun InlineNavigationHeader(
     title: String,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
-    backContentDescription: String = "Back",
+    backContentDescription: String? = null,
     trailingContent: @Composable (() -> Unit)? = null,
 ) = AppInlineHeader(title, modifier, onBack, backContentDescription, trailingContent)

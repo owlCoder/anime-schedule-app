@@ -1,5 +1,9 @@
 package com.owlcoder.animeschedule.ui.theme
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.os.Build
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -7,139 +11,117 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import com.owlcoder.animeschedule.data.local.datastore.AccentColor
 import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import com.owlcoder.animeschedule.presentation.components.ProvideMotionPolicy
 
-/** Shared continuous-ish shape scale. Every component category has one geometry. */
+/** Compact content shapes; large curvature is reserved for sheets and floating chrome. */
 val AnimeScheduleShapes = Shapes().copy(
-    extraSmall = RoundedCornerShape(10.dp),
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(22.dp),
-    extraLarge = RoundedCornerShape(28.dp),
+    extraSmall = RoundedCornerShape(6.dp),
+    small = RoundedCornerShape(9.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(24.dp),
 )
 
-/** Shape for short statuses, filters and compact actions. */
 val PillShape = RoundedCornerShape(percent = 50)
 
 fun accentPrimary(accent: AccentColor, dark: Boolean = false): Color = when (accent) {
-    AccentColor.TELEGRAM_BLUE -> if (dark) Color(0xFF63B8EA) else Color(0xFF087EBA)
-    AccentColor.PURPLE        -> if (dark) Color(0xFFD0BCFF) else Color(0xFF6750A4)
-    AccentColor.GREEN         -> if (dark) Color(0xFF75DC91) else Color(0xFF087F3D)
-    AccentColor.ORANGE        -> if (dark) Color(0xFFFFB77A) else Color(0xFF9A4300)
-    AccentColor.PINK          -> if (dark) Color(0xFFFFB0C8) else Color(0xFF9B1746)
-    AccentColor.RED           -> if (dark) Color(0xFFFFB4AB) else Color(0xFFBA1A1A)
-    AccentColor.CYAN          -> if (dark) Color(0xFF6DDAF5) else Color(0xFF006877)
-    AccentColor.INDIGO        -> if (dark) Color(0xFFBFC4FF) else Color(0xFF4F5FBA)
-    AccentColor.TEAL          -> if (dark) Color(0xFF70DBC7) else Color(0xFF006A5B)
-    AccentColor.YELLOW        -> if (dark) Color(0xFFEFC238) else Color(0xFF765900)
-    AccentColor.DEEP_PURPLE   -> if (dark) Color(0xFFE0B9FF) else Color(0xFF7A3DA0)
+    AccentColor.TELEGRAM_BLUE -> if (dark) Color(0xFF0A84FF) else Color(0xFF007AFF)
+    AccentColor.PURPLE -> if (dark) Color(0xFFBF5AF2) else Color(0xFFAF52DE)
+    AccentColor.GREEN -> if (dark) Color(0xFF30D158) else Color(0xFF34C759)
+    AccentColor.ORANGE -> if (dark) Color(0xFFFF9F0A) else Color(0xFFFF9500)
+    AccentColor.PINK -> if (dark) Color(0xFFFF375F) else Color(0xFFFF2D55)
+    AccentColor.RED -> if (dark) Color(0xFFFF453A) else Color(0xFFFF3B30)
+    AccentColor.CYAN -> if (dark) Color(0xFF64D2FF) else Color(0xFF32ADE6)
+    AccentColor.INDIGO -> if (dark) Color(0xFF5E5CE6) else Color(0xFF5856D6)
+    AccentColor.TEAL -> if (dark) Color(0xFF40C8E0) else Color(0xFF30B0C7)
+    AccentColor.YELLOW -> if (dark) Color(0xFFFFD60A) else Color(0xFFFFCC00)
+    AccentColor.DEEP_PURPLE -> if (dark) Color(0xFFAC8E68) else Color(0xFF8E6E53)
 }
 
 private fun darkColors(primary: Color) = darkColorScheme(
     primary = primary,
-    onPrimary = readableOn(primary, dark = true),
-    primaryContainer = primary.copy(alpha = 0.24f).compositeOver(Color(0xFF15161A)),
+    onPrimary = Color.White,
+    primaryContainer = primary.copy(alpha = 0.20f).compositeOver(AppDarkGrouped),
     onPrimaryContainer = primary,
-    secondary = Color(0xFFBEC6DC),
-    onSecondary = Color(0xFF293041),
-    secondaryContainer = Color(0xFF40485A),
-    onSecondaryContainer = Color(0xFFDAE2F9),
+    secondary = Color(0xFFEBEBF5).copy(alpha = 0.72f),
+    onSecondary = Color.Black,
+    secondaryContainer = AppDarkSecondary,
+    onSecondaryContainer = Color.White,
     background = AppDarkBackground,
     onBackground = Color.White,
     surface = AppDarkGrouped,
     onSurface = Color.White,
     surfaceVariant = AppDarkSecondary,
-    onSurfaceVariant = Color(0xFFEBEBF5).copy(alpha = 0.60f),
-    surfaceContainerLowest = Color.Black,
+    onSurfaceVariant = Color(0xFFEBEBF5).copy(alpha = 0.68f),
+    surfaceContainerLowest = AppDarkBackground,
     surfaceContainerLow = AppDarkGrouped,
     surfaceContainer = AppDarkGrouped,
     surfaceContainerHigh = AppDarkElevated,
     surfaceContainerHighest = AppDarkSecondary,
-    outline = Color(0xFF545458),
-    outlineVariant = Color(0xFF545458).copy(alpha = 0.60f),
-    error = Color(0xFFFFB4AB),
-    onError = Color(0xFF690005),
-    errorContainer = Color(0xFF93000A),
+    outline = Color(0xFF8E8E93),
+    outlineVariant = Color(0xFF545458).copy(alpha = 0.55f),
+    error = Color(0xFFFF453A),
+    onError = Color.White,
+    errorContainer = Color(0xFF4A1512),
     onErrorContainer = Color(0xFFFFDAD6),
-    inverseSurface = Color(0xFFE6E1E6),
-    inverseOnSurface = Color(0xFF303034),
-    inversePrimary = Color(0xFF4F5FBA),
+    inverseSurface = Color(0xFFF2F2F7),
+    inverseOnSurface = Color.Black,
+    inversePrimary = primary,
 )
 
 private fun lightColors(primary: Color) = lightColorScheme(
     primary = primary,
-    onPrimary = readableOn(primary, dark = false),
-    primaryContainer = primary.copy(alpha = 0.14f).compositeOver(Color(0xFFFBF8FF)),
+    onPrimary = Color.White,
+    primaryContainer = primary.copy(alpha = 0.12f).compositeOver(AppLightGrouped),
     onPrimaryContainer = primary,
-    secondary = Color(0xFF5D5F72),
+    secondary = Color(0xFF3C3C43),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFE1E2F2),
-    onSecondaryContainer = Color(0xFF191A2B),
+    secondaryContainer = AppLightSecondary,
+    onSecondaryContainer = Color.Black,
     background = AppLightBackground,
     onBackground = Color.Black,
     surface = AppLightGrouped,
     onSurface = Color.Black,
     surfaceVariant = AppLightSecondary,
-    onSurfaceVariant = Color(0xFF3C3C43).copy(alpha = 0.60f),
+    onSurfaceVariant = Color(0xFF3C3C43).copy(alpha = 0.72f),
     surfaceContainerLowest = Color.White,
     surfaceContainerLow = AppLightGrouped,
     surfaceContainer = AppLightGrouped,
-    surfaceContainerHigh = Color(0xFFF2F2F7),
-    surfaceContainerHighest = Color(0xFFE5E5EA),
+    surfaceContainerHigh = AppLightElevated,
+    surfaceContainerHighest = AppLightSecondary,
     outline = Color(0xFF8E8E93),
-    outlineVariant = Color(0xFF3C3C43).copy(alpha = 0.18f),
-    error = Color(0xFFBA1A1A),
+    outlineVariant = Color(0xFF3C3C43).copy(alpha = 0.20f),
+    error = Color(0xFFFF3B30),
     onError = Color.White,
-    errorContainer = Color(0xFFFFDAD6),
-    onErrorContainer = Color(0xFF410002),
-    inverseSurface = Color(0xFF2F3035),
-    inverseOnSurface = Color(0xFFF1EFF4),
-    inversePrimary = Color(0xFFBEC4FF),
+    errorContainer = Color(0xFFFFE7E5),
+    onErrorContainer = Color(0xFF7A120D),
+    inverseSurface = Color(0xFF1C1C1E),
+    inverseOnSurface = Color.White,
+    inversePrimary = primary,
 )
 
-private fun readableOn(color: Color, dark: Boolean): Color {
-    val luminance = (0.299f * color.red) + (0.587f * color.green) + (0.114f * color.blue)
-    return if (luminance > if (dark) 0.48f else 0.62f) Color(0xFF1A1B20) else Color.White
-}
-
 private fun Color.compositeOver(background: Color): Color {
-    val alpha = this.alpha
+    val sourceAlpha = alpha
     return Color(
-        red = red * alpha + background.red * (1f - alpha),
-        green = green * alpha + background.green * (1f - alpha),
-        blue = blue * alpha + background.blue * (1f - alpha),
+        red = red * sourceAlpha + background.red * (1f - sourceAlpha),
+        green = green * sourceAlpha + background.green * (1f - sourceAlpha),
+        blue = blue * sourceAlpha + background.blue * (1f - sourceAlpha),
         alpha = 1f,
     )
 }
 
-/** Apply the selected accent while keeping the neutral palette stable across devices. */
-private fun ColorScheme.withAccent(accent: Color, dark: Boolean): ColorScheme {
-    val container = accent.copy(alpha = if (dark) 0.24f else 0.14f)
-        .compositeOver(if (dark) surfaceContainer else surface)
-    return copy(
-        primary = accent,
-        onPrimary = readableOn(accent, dark),
-        primaryContainer = container,
-        onPrimaryContainer = if (dark) accent else accent.copy(alpha = 1f),
-        inversePrimary = accent,
-    )
-}
-
-/**
- * Material 3 app theme.
- *
- * [dynamicColor] keeps Android 12+ system surfaces when available, while the selected
- * accent remains visible on primary actions. It is an optional parameter so existing
- * callers keep compiling and older devices still use the curated palette.
- */
 @Composable
 fun AnimeScheduleTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
-    accentColor: AccentColor = AccentColor.INDIGO,
+    accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
@@ -149,11 +131,27 @@ fun AnimeScheduleTheme(
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
     }
-
-    val colorScheme = if (darkTheme) {
+    val colorScheme: ColorScheme = if (darkTheme) {
         darkColors(accentPrimary(accentColor, dark = true))
     } else {
         lightColors(accentPrimary(accentColor, dark = false))
+    }
+
+    // enableEdgeToEdge() follows the system theme by default. Keep system-bar icon
+    // contrast synchronized with the in-app theme, including forced Light/Dark modes.
+    val view = LocalView.current
+    SideEffect {
+        val activity = view.context.findActivity() ?: return@SideEffect
+        val window = activity.window
+        window.statusBarColor = Color.Transparent.toArgb()
+        window.navigationBarColor = Color.Transparent.toArgb()
+        WindowCompat.getInsetsController(window, view).apply {
+            isAppearanceLightStatusBars = !darkTheme
+            isAppearanceLightNavigationBars = !darkTheme
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
     }
 
     MaterialTheme(
@@ -163,4 +161,10 @@ fun AnimeScheduleTheme(
     ) {
         ProvideMotionPolicy(content = content)
     }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

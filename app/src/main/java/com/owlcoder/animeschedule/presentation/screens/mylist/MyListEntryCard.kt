@@ -1,5 +1,6 @@
 package com.owlcoder.animeschedule.presentation.screens.mylist
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,9 +12,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -59,7 +60,7 @@ fun MyListEntryCard(
     onIncrementEpisode: () -> Unit,
     onEditStatus: () -> Unit,
     showDivider: Boolean = true,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val statusTint = statusColor(entry.status)
     val progress = entry.totalEpisodes
@@ -70,83 +71,107 @@ fun MyListEntryCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(92.dp)
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .height(80.dp)
+                .padding(start = 11.dp, end = 7.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
                 modifier = Modifier
                     .weight(1f)
                     .clickable(onClick = onCardClick)
                     .semantics { role = Role.Button },
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 MediaThumbnail.Small(
                     url = coverImageUrl,
                     contentDescription = title,
-                    modifier = Modifier.size(52.dp, 72.dp)
+                    modifier = Modifier.size(46.dp, 62.dp),
                 )
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(10.dp))
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     Text(
-                        title,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.SemiBold,
+                        text = title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    ) {
                         Text(
-                            episodeLabel(entry),
+                            text = episodeLabel(entry),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1
+                            maxLines = 1,
                         )
-                        Box(Modifier.size(4.dp).clip(androidx.compose.foundation.shape.CircleShape).then(Modifier)) {
-                            androidx.compose.foundation.Canvas(Modifier.fillMaxWidth()) { drawCircle(statusTint) }
-                        }
+                        Box(Modifier.size(4.dp).clip(CircleShape).background(statusTint))
                         Text(
-                            entry.status.displayName(),
+                            text = entry.status.displayName(),
                             style = MaterialTheme.typography.labelSmall,
                             color = statusTint,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                     if (progress != null) {
                         LinearProgressIndicator(
                             progress = { progress },
-                            modifier = Modifier.fillMaxWidth().height(3.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(50)),
+                            modifier = Modifier.fillMaxWidth().height(2.dp).clip(CircleShape),
                             color = statusTint,
-                            trackColor = statusTint.copy(alpha = 0.16f),
-                            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap
+                            trackColor = statusTint.copy(alpha = 0.14f),
+                            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
                         )
                     }
                 }
             }
-            Spacer(Modifier.width(4.dp))
+            Spacer(Modifier.width(3.dp))
             if (entry.status == WatchStatus.WATCHING) {
-                IconButton(
-                    onClick = onIncrementEpisode,
-                    enabled = !isIncrementing,
-                    modifier = Modifier.size(40.dp)
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clickable(enabled = !isIncrementing, onClick = onIncrementEpisode)
+                        .semantics { role = Role.Button },
+                    contentAlignment = Alignment.Center,
                 ) {
-                    if (isIncrementing) {
-                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                    } else {
-                        Text("+1", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Box(
+                        modifier = Modifier
+                            .size(width = 30.dp, height = 26.dp)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.13f), CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (isIncrementing) {
+                            CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
+                        } else {
+                            Text(
+                                text = "+1",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
                     }
                 }
             }
-            IconButton(onClick = onEditStatus, modifier = Modifier.size(40.dp)) {
-                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit_list_status), modifier = Modifier.size(19.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            IconButton(onClick = onEditStatus, modifier = Modifier.size(36.dp)) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = stringResource(R.string.cd_edit_list_status),
+                    modifier = Modifier.size(17.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
         if (showDivider) {
-            HorizontalDivider(modifier = Modifier.padding(start = 76.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f))
+            HorizontalDivider(
+                modifier = Modifier.padding(start = 67.dp),
+                thickness = 0.5.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.42f),
+            )
         }
     }
 }

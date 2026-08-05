@@ -5,54 +5,55 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-/** Android system sans-serif mapped to Apple's compact hierarchy without bundling Apple fonts. */
+/** System sans-serif mapped to an iOS editorial hierarchy and comfortable reading rhythm. */
 val AnimeScheduleTypography = Typography(
     displayLarge = TextStyle(
         fontWeight = FontWeight.Bold,
         fontSize = 34.sp,
-        lineHeight = 41.sp,
-        letterSpacing = (-0.4).sp,
+        lineHeight = 40.sp,
+        letterSpacing = (-0.82).sp,
     ),
     displayMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 28.sp,
         lineHeight = 34.sp,
+        letterSpacing = (-0.55).sp,
     ),
     displaySmall = TextStyle(
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 24.sp,
         lineHeight = 30.sp,
-        letterSpacing = (-0.2).sp,
+        letterSpacing = (-0.38).sp,
     ),
     headlineLarge = TextStyle(
         fontWeight = FontWeight.Bold,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = (-0.2).sp,
+        fontSize = 25.sp,
+        lineHeight = 31.sp,
+        letterSpacing = (-0.42).sp,
     ),
     headlineMedium = TextStyle(
-        fontWeight = FontWeight.Bold,
-        fontSize = 20.sp,
-        lineHeight = 25.sp,
-        letterSpacing = (-0.15).sp,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
+        letterSpacing = (-0.30).sp,
     ),
     headlineSmall = TextStyle(
         fontWeight = FontWeight.SemiBold,
-        fontSize = 17.sp,
-        lineHeight = 22.sp,
-        letterSpacing = (-0.2).sp,
+        fontSize = 20.sp,
+        lineHeight = 25.sp,
+        letterSpacing = (-0.22).sp,
     ),
     titleLarge = TextStyle(
         fontWeight = FontWeight.SemiBold,
-        fontSize = 17.sp,
-        lineHeight = 22.sp,
-        letterSpacing = (-0.15).sp,
+        fontSize = 18.sp,
+        lineHeight = 23.sp,
+        letterSpacing = (-0.18).sp,
     ),
     titleMedium = TextStyle(
         fontWeight = FontWeight.SemiBold,
         fontSize = 16.sp,
         lineHeight = 21.sp,
-        letterSpacing = 0.sp,
+        letterSpacing = (-0.08).sp,
     ),
     titleSmall = TextStyle(
         fontWeight = FontWeight.Medium,
@@ -62,12 +63,12 @@ val AnimeScheduleTypography = Typography(
     bodyLarge = TextStyle(
         fontWeight = FontWeight.Normal,
         fontSize = 17.sp,
-        lineHeight = 22.sp,
-        letterSpacing = 0.sp,
+        lineHeight = 23.sp,
+        letterSpacing = (-0.05).sp,
     ),
     bodyMedium = TextStyle(
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
+        fontSize = 15.sp,
         lineHeight = 21.sp,
     ),
     bodySmall = TextStyle(
@@ -77,22 +78,20 @@ val AnimeScheduleTypography = Typography(
     ),
     labelLarge = TextStyle(
         fontWeight = FontWeight.SemiBold,
-        fontSize = 17.sp,
-        lineHeight = 22.sp,
+        fontSize = 15.sp,
+        lineHeight = 20.sp,
     ),
     labelMedium = TextStyle(
         fontWeight = FontWeight.Medium,
-        fontSize = 15.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.sp,
+        fontSize = 13.sp,
+        lineHeight = 17.sp,
     ),
     labelSmall = TextStyle(
         fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
-        lineHeight = 13.sp,
-        letterSpacing = 0.sp,
+        lineHeight = 14.sp,
+        letterSpacing = 0.08.sp,
     ),
 )
 
-/** Backwards-compatible name used by older screens. */
 val Typography = AnimeScheduleTypography

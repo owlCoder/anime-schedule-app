@@ -1,5 +1,10 @@
 package com.owlcoder.animeschedule.presentation.screens.detail
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,11 +22,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -34,22 +40,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -62,7 +60,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -73,7 +70,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.owlcoder.animeschedule.R
@@ -83,19 +79,30 @@ import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.RelatedAnime
 import com.owlcoder.animeschedule.domain.model.WatchSource
 import com.owlcoder.animeschedule.domain.model.WatchStatus
+import com.owlcoder.animeschedule.presentation.components.AppButton
+import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
+import com.owlcoder.animeschedule.presentation.components.AppErrorState
+import com.owlcoder.animeschedule.presentation.components.AppLoadingState
+import com.owlcoder.animeschedule.presentation.components.AppMaterial
+import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
+import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.ErrorBanner
 import com.owlcoder.animeschedule.presentation.components.FaviconImage
-import com.owlcoder.animeschedule.presentation.components.GlassButton
-import com.owlcoder.animeschedule.presentation.components.AppInlineHeader
-import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.GlassIconButton
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.InsetListRow
+import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
+import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
 import com.owlcoder.animeschedule.presentation.components.displayName
+import com.owlcoder.animeschedule.presentation.components.iosSpring
+import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.PillShape
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -104,7 +111,7 @@ fun AnimeDetailScreen(
     onAnimeClick: (Int) -> Unit = {},
     onWatchSourceClick: (String) -> Unit = {},
     viewModel: DetailViewModel = hiltViewModel(),
-    authViewModel: AuthViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val characterOverlay by viewModel.characterOverlay.collectAsState()
@@ -129,7 +136,7 @@ fun AnimeDetailScreen(
                     if (entry != null && total != null && entry.episodesWatched + 1 >= total) {
                         finaleOverrideEntry = entry.copy(
                             episodesWatched = total,
-                            status = WatchStatus.COMPLETED
+                            status = WatchStatus.COMPLETED,
                         )
                         showStatusSheet = true
                     }
@@ -143,16 +150,6 @@ fun AnimeDetailScreen(
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            AppInlineHeader(
-                title = "Anime",
-                onBack = onBack,
-                backContentDescription = stringResource(R.string.cd_back),
-                modifier = Modifier
-                    .windowInsetsPadding(WindowInsets.statusBars)
-                    .padding(horizontal = 12.dp)
-            )
-        }
     ) { innerPadding ->
         when {
             uiState.isLoading -> DetailLoadingState(Modifier.fillMaxSize().padding(innerPadding))
@@ -160,34 +157,45 @@ fun AnimeDetailScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .verticalScroll(rememberScrollState()),
-                contentAlignment = Alignment.TopCenter
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .navigationBarsPadding(),
             ) {
-                ErrorBanner(
-                    message = stringResource(uiState.errorRes ?: R.string.error_load_details),
-                    modifier = Modifier.padding(top = 24.dp)
+                GlassIconButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.cd_back),
+                    onClick = onBack,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(start = 10.dp, top = 6.dp),
+                )
+                AppErrorState(
+                    title = stringResource(uiState.errorRes ?: R.string.error_load_details),
+                    message = "We ran into a problem while loading this content. Check your connection and try again.",
+                    retryLabel = stringResource(R.string.common_retry),
+                    onRetry = viewModel::reload,
+                    secondaryLabel = "Go back",
+                    onSecondary = onBack,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp, vertical = 72.dp),
                 )
             }
             else -> {
                 val detail = uiState.detail ?: return@Scaffold
-                val sortedRelations = remember(detail.relations) {
-                    sortRelatedAnime(detail.relations)
-                }
+                val sortedRelations = remember(detail.relations) { sortRelatedAnime(detail.relations) }
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentPadding = PaddingValues(bottom = 28.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.fillMaxSize().padding(innerPadding).navigationBarsPadding(),
+                    contentPadding = PaddingValues(bottom = 56.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     item(key = "hero", contentType = "hero") {
-                        DetailHero(detail)
+                        DetailHero(detail = detail, onBack = onBack)
                     }
 
                     item(key = "actions", contentType = "actions") {
                         Column(
                             modifier = Modifier.padding(horizontal = 16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                            verticalArrangement = Arrangement.spacedBy(9.dp),
                         ) {
                             DetailActions(
                                 detail = detail,
@@ -196,11 +204,9 @@ fun AnimeDetailScreen(
                                 onLogin = { authViewModel.launchMalLogin(context) },
                                 onAdd = { showStatusSheet = true },
                                 onEdit = { showStatusSheet = true },
-                                onIncrement = viewModel::incrementEpisode
+                                onIncrement = viewModel::incrementEpisode,
                             )
-                            detail.malListEntry?.let { entry ->
-                                ProgressPanel(detail = detail, entry = entry)
-                            }
+                            detail.malListEntry?.let { ProgressPanel(detail, it) }
                         }
                     }
 
@@ -208,12 +214,10 @@ fun AnimeDetailScreen(
                         item(key = "genres", contentType = "chips") {
                             FlowRow(
                                 modifier = Modifier.padding(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(7.dp),
+                                verticalArrangement = Arrangement.spacedBy(7.dp),
                             ) {
-                                detail.genres.forEach { genre ->
-                                    MetadataPill(genre)
-                                }
+                                detail.genres.forEach { MetadataPill(it) }
                             }
                         }
                     }
@@ -224,7 +228,7 @@ fun AnimeDetailScreen(
                                 sources = uiState.watchSources,
                                 animeTitle = detail.titleRomaji ?: detail.titleEnglish.orEmpty(),
                                 context = context,
-                                onWatchSourceClick = onWatchSourceClick
+                                onWatchSourceClick = onWatchSourceClick,
                             )
                         }
                     }
@@ -234,9 +238,7 @@ fun AnimeDetailScreen(
                         ?.takeIf { it.isNotBlank() }
                         ?.let { synopsis ->
                             item(key = "synopsis", contentType = "section") {
-                                DetailSection(title = stringResource(R.string.detail_synopsis)) {
-                                    ExpandableSynopsis(synopsis)
-                                }
+                                SynopsisSection(synopsis)
                             }
                         }
 
@@ -246,12 +248,9 @@ fun AnimeDetailScreen(
                                 items(
                                     items = detail.characters,
                                     key = { "character-${it.id}" },
-                                    contentType = { "character" }
+                                    contentType = { "character" },
                                 ) { character ->
-                                    CharacterCard(
-                                        character = character,
-                                        onClick = { viewModel.openCharacter(character.id) }
-                                    )
+                                    CharacterCard(character) { viewModel.openCharacter(character.id) }
                                 }
                             }
                         }
@@ -263,24 +262,19 @@ fun AnimeDetailScreen(
                                 items(
                                     items = sortedRelations,
                                     key = { "related-${it.animeId}" },
-                                    contentType = { "related" }
+                                    contentType = { "related" },
                                 ) { related ->
-                                    RelatedAnimeCard(
-                                        related = related,
-                                        onClick = {
-                                            if (related.mediaType == null || related.mediaType == "ANIME") {
-                                                onAnimeClick(related.animeId)
-                                            } else {
-                                                val path = related.mediaType.lowercase()
-                                                val uri = android.net.Uri.parse(
-                                                    "https://anilist.co/$path/${related.animeId}"
-                                                )
-                                                androidx.browser.customtabs.CustomTabsIntent.Builder()
-                                                    .build()
-                                                    .launchUrl(context, uri)
-                                            }
+                                    RelatedAnimeCard(related) {
+                                        if (related.mediaType == null || related.mediaType == "ANIME") {
+                                            onAnimeClick(related.animeId)
+                                        } else {
+                                            val path = related.mediaType.lowercase()
+                                            val uri = android.net.Uri.parse("https://anilist.co/$path/${related.animeId}")
+                                            androidx.browser.customtabs.CustomTabsIntent.Builder()
+                                                .build()
+                                                .launchUrl(context, uri)
                                         }
-                                    )
+                                    }
                                 }
                             }
                         }
@@ -299,108 +293,119 @@ fun AnimeDetailScreen(
                 finaleOverrideEntry = null
             },
             onConfirm = { _, update -> viewModel.updateListEntry(update) },
-            onRemove = { viewModel.removeListEntry() }
+            onRemove = { viewModel.removeListEntry() },
         )
     }
 
     if (characterOverlay.isVisible) {
-        CharacterOverlaySheet(
-            state = characterOverlay,
-            onDismiss = viewModel::dismissCharacterOverlay
-        )
+        CharacterOverlaySheet(state = characterOverlay, onDismiss = viewModel::dismissCharacterOverlay)
     }
 }
 
 @Composable
-private fun DetailHero(detail: AnimeDetail) {
+private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
     val title = detail.titleRomaji ?: detail.titleEnglish.orEmpty()
+    val motion = LocalMotionPolicy.current
+    var revealed by remember(detail.animeId) { mutableStateOf(false) }
+    LaunchedEffect(detail.animeId) { revealed = true }
     val metadata = listOfNotNull(
-        detail.format,
+        detail.format?.toDisplayFormat(),
         detail.seasonYear?.toString(),
         detail.episodes?.let { "$it ep" },
-        detail.averageScore?.let { "★ ${it / 10.0}" }
+        (detail.averageScore ?: detail.meanScore)?.let { "★ ${formatCommunityScore(it)}" },
     )
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(232.dp)
-    ) {
+
+    Box(modifier = Modifier.fillMaxWidth().height(280.dp)) {
         AsyncImage(
             model = detail.bannerImageUrl ?: detail.coverImageUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         )
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Black.copy(alpha = 0.05f),
-                            Color.Black.copy(alpha = 0.18f),
-                            MaterialTheme.colorScheme.background.copy(alpha = 0.98f)
-                        )
-                    )
-                )
+            modifier = Modifier.fillMaxSize().background(
+                Brush.verticalGradient(
+                    colorStops = arrayOf(
+                        0f to Color.Black.copy(alpha = 0.12f),
+                        0.42f to Color.Black.copy(alpha = 0.18f),
+                        0.66f to Color.Black.copy(alpha = 0.56f),
+                        0.86f to Color.Black.copy(alpha = 0.82f),
+                        1f to MaterialTheme.colorScheme.background,
+                    ),
+                ),
+            ),
         )
         Row(
             modifier = Modifier
-                .align(Alignment.BottomStart)
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            MediaThumbnail.Large(
-                url = detail.coverImageUrl,
-                contentDescription = title,
-                modifier = Modifier
-                    .size(width = 76.dp, height = 108.dp)
-                    .border(1.dp, Color.White.copy(alpha = 0.24f), MaterialTheme.shapes.medium),
+            GlassIconButton(
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.cd_back),
+                onClick = onBack,
+                onImagery = true,
             )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(5.dp)
+        }
+        AnimatedVisibility(
+            visible = revealed,
+            modifier = Modifier.align(Alignment.BottomStart),
+            enter = fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
+                slideInVertically(
+                    animationSpec = motion.iosTween(IosMotion.Standard),
+                    initialOffsetY = { if (motion.animationsEnabled) it / 6 else 0 },
+                ),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(11.dp),
             ) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                MediaThumbnail.Large(
+                    url = detail.coverImageUrl,
+                    contentDescription = title,
+                    modifier = Modifier
+                        .size(width = 70.dp, height = 100.dp)
+                        .border(0.5.dp, Color.White.copy(alpha = 0.28f), MaterialTheme.shapes.large),
                 )
-                detail.titleEnglish
-                    ?.takeIf { it != detail.titleRomaji && it.isNotBlank() }
-                    ?.let {
-                        Text(
-                            it,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.82f),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                detail.titleNative
-                    ?.takeIf { it.isNotBlank() && it != detail.titleEnglish }
-                    ?.let {
-                        Text(
-                            it,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.White.copy(alpha = 0.72f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                if (metadata.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(bottom = 1.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
                     Text(
-                        metadata.joinToString("  •  "),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color.White.copy(alpha = 0.88f),
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
                     )
+                    detail.titleEnglish
+                        ?.takeIf { it != detail.titleRomaji && it.isNotBlank() }
+                        ?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(alpha = 0.80f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    if (metadata.isNotEmpty()) {
+                        Text(
+                            text = metadata.joinToString(" · "),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.92f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
         }
@@ -415,58 +420,47 @@ private fun DetailActions(
     onLogin: () -> Unit,
     onAdd: () -> Unit,
     onEdit: () -> Unit,
-    onIncrement: () -> Unit
+    onIncrement: () -> Unit,
 ) {
-    if (!isLoggedIn) {
-        OutlinedButton(
-            onClick = onLogin,
+    when {
+        !isLoggedIn -> Box(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
+            contentAlignment = Alignment.Center,
         ) {
-            Text(
-                stringResource(R.string.detail_login_cta),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold
+            AppButton(
+                label = stringResource(R.string.detail_login_cta),
+                onClick = onLogin,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 320.dp),
+                variant = AppButtonVariant.Primary,
             )
         }
-    } else if (detail.malListEntry == null) {
-        OutlinedButton(
+        detail.malListEntry == null -> AppButton(
+            label = stringResource(R.string.detail_add_to_list),
             onClick = onAdd,
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = null)
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.detail_add_to_list), fontWeight = FontWeight.SemiBold)
-        }
-    } else {
-        Row(
+            icon = Icons.Default.Add,
+            variant = AppButtonVariant.Primary,
+        )
+        else -> Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            OutlinedButton(
+            AppButton(
+                label = stringResource(R.string.detail_status),
                 onClick = onEdit,
-                modifier = Modifier
-                    .weight(1f),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
-            ) {
-                Icon(Icons.Default.Edit, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.detail_status), fontWeight = FontWeight.SemiBold)
-            }
-            OutlinedButton(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Default.Edit,
+                variant = AppButtonVariant.Secondary,
+            )
+            AppButton(
+                label = if (isIncrementing) "…" else "+1",
                 onClick = onIncrement,
+                modifier = Modifier.width(68.dp),
                 enabled = detail.malListEntry.status == WatchStatus.WATCHING && !isIncrementing,
-                modifier = Modifier
-                    .width(86.dp),
-                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
-            ) {
-                if (isIncrementing) {
-                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                } else {
-                    Text("+1", fontWeight = FontWeight.Bold)
-                }
-            }
+                variant = AppButtonVariant.Primary,
+            )
         }
     }
 }
@@ -476,37 +470,34 @@ private fun ProgressPanel(detail: AnimeDetail, entry: MalListEntry) {
     val total = detail.episodes ?: entry.totalEpisodes
     val progress = total?.takeIf { it > 0 }
         ?.let { (entry.episodesWatched.toFloat() / it.toFloat()).coerceIn(0f, 1f) }
+
     InsetGroup(title = entry.status.displayName()) {
-        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        "${entry.episodesWatched}/${total ?: "?"} ${stringResource(R.string.detail_episodes).lowercase()}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+        Column(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "${entry.episodesWatched}/${total ?: "?"} ${stringResource(R.string.detail_episodes).lowercase()}",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 if (entry.score > 0) {
                     Text(
-                        "${stringResource(R.string.detail_score)}  ${entry.score}/10",
-                        style = MaterialTheme.typography.labelLarge,
+                        text = "Your score ★ ${entry.score}/10",
+                        style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
             if (progress != null) {
                 LinearProgressIndicator(
                     progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(4.dp)
-                        .clip(PillShape),
+                    modifier = Modifier.fillMaxWidth().height(3.dp).clip(PillShape),
                     color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
+                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
                 )
             }
         }
@@ -515,35 +506,20 @@ private fun ProgressPanel(detail: AnimeDetail, entry: MalListEntry) {
 
 @Composable
 private fun MetadataPill(text: String) {
-    Box(
-        modifier = Modifier
-            .clip(PillShape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+    Surface(
+        shape = PillShape,
+        color = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant),
+        tonalElevation = 0.dp,
     ) {
         Text(
-            text,
+            text = text,
+            modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp),
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Medium,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-@Composable
-private fun DetailSection(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    InsetGroup(
-        modifier = Modifier.padding(horizontal = 16.dp),
-        title = title
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            content = content
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -553,103 +529,159 @@ private fun WatchSourcesSection(
     sources: List<WatchSource>,
     animeTitle: String,
     context: android.content.Context,
-    onWatchSourceClick: (String) -> Unit
+    onWatchSourceClick: (String) -> Unit,
 ) {
-    DetailSection(title = stringResource(R.string.detail_watch_on)) {
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        SectionTitle(stringResource(R.string.detail_watch_on))
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             sources.forEach { source ->
-                WatchSourceChip(
-                    source = source,
-                    onClick = {
-                        val url = source.buildUrl(animeTitle)
-                        if (source.openExternally) {
-                            context.startActivity(
-                                android.content.Intent(
-                                    android.content.Intent.ACTION_VIEW,
-                                    android.net.Uri.parse(url)
-                                )
-                            )
-                        } else {
-                            onWatchSourceClick(url)
-                        }
-                    }
-                )
+                WatchSourceChip(source) {
+                    val url = source.buildUrl(animeTitle)
+                    if (source.openExternally) {
+                        context.startActivity(
+                            android.content.Intent(
+                                android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse(url),
+                            ),
+                        )
+                    } else onWatchSourceClick(url)
+                }
             }
         }
         Text(
-            stringResource(R.string.detail_watch_on_disclaimer),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            text = stringResource(R.string.detail_watch_on_disclaimer),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 2.dp),
         )
     }
 }
 
 @Composable
-private fun HorizontalSection(
-    title: String,
-    content: LazyListScope.() -> Unit
-) {
-    InsetGroup(
+private fun SynopsisSection(text: String) {
+    Column(
         modifier = Modifier.padding(horizontal = 16.dp),
-        title = title
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
+        SectionTitle(stringResource(R.string.detail_synopsis))
+        AppMaterialSurface(
+            modifier = Modifier.fillMaxWidth(),
+            material = AppMaterial.Grouped,
+            shape = MaterialTheme.shapes.large,
+        ) {
+            ExpandableSynopsis(text)
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        modifier = modifier.padding(horizontal = 2.dp),
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurface,
+    )
+}
+
+@Composable
+private fun HorizontalSection(title: String, content: LazyListScope.() -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        SectionTitle(text = title, modifier = Modifier.padding(horizontal = 16.dp))
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 24.dp, bottom = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            content = content
+            content = content,
         )
     }
 }
 
 @Composable
 private fun DetailLoadingState(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(272.dp)
-                .background(MaterialTheme.colorScheme.surfaceContainer)
-        )
+    Box(modifier = modifier.navigationBarsPadding()) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .height(280.dp)
+                    .background(MaterialTheme.colorScheme.surfaceContainer),
             )
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .clip(MaterialTheme.shapes.large)
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
-            )
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(top = 10.dp),
-                strokeWidth = 3.dp
-            )
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(44.dp)
+                        .clip(ContinuousRoundedShape(14.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainer),
+                )
+                repeat(3) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(72.dp)
+                            .clip(ContinuousRoundedShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainer)
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            Modifier
+                                .size(50.dp)
+                                .clip(ContinuousRoundedShape(11.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                        )
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(7.dp),
+                        ) {
+                            Box(
+                                Modifier
+                                    .fillMaxWidth(0.72f)
+                                    .height(10.dp)
+                                    .clip(ContinuousRoundedShape(5.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                            )
+                            Box(
+                                Modifier
+                                    .fillMaxWidth(0.46f)
+                                    .height(8.dp)
+                                    .clip(ContinuousRoundedShape(4.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                            )
+                        }
+                    }
+                }
+            }
         }
+        AppLoadingState(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 28.dp),
+            label = "Loading details",
+            message = "Fetching the latest information",
+        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CharacterOverlaySheet(
-    state: CharacterOverlayState,
-    onDismiss: () -> Unit
-) {
+private fun CharacterOverlaySheet(state: CharacterOverlayState, onDismiss: () -> Unit) {
     AppSheet(
         onDismissRequest = onDismiss,
         title = state.detail?.name ?: stringResource(R.string.detail_characters),
@@ -657,20 +689,16 @@ private fun CharacterOverlaySheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 560.dp)
+                .heightIn(max = 500.dp)
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             when {
                 state.isLoading -> Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 60.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+                    Modifier.fillMaxWidth().padding(vertical = 48.dp),
+                    contentAlignment = Alignment.Center,
+                ) { CircularProgressIndicator() }
                 state.errorRes != null -> ErrorBanner(stringResource(state.errorRes))
                 state.detail != null -> {
                     val detail = state.detail
@@ -678,13 +706,13 @@ private fun CharacterOverlaySheet(
                         label = detail.name,
                         supportingText = detail.nativeName?.takeIf { it.isNotBlank() },
                         leadingContent = {
-                        detail.imageUrl?.let { imageUrl ->
-                            MediaThumbnail.Small(
-                                url = imageUrl,
-                                contentDescription = detail.name,
-                                modifier = Modifier.size(56.dp),
-                            )
-                        }
+                            detail.imageUrl?.let { imageUrl ->
+                                MediaThumbnail.Small(
+                                    url = imageUrl,
+                                    contentDescription = detail.name,
+                                    modifier = Modifier.size(52.dp),
+                                )
+                            }
                         },
                     )
                     detail.description
@@ -693,10 +721,10 @@ private fun CharacterOverlaySheet(
                         ?.let {
                             InsetGroup {
                                 Text(
-                                    it,
-                                    modifier = Modifier.padding(16.dp),
+                                    text = it,
+                                    modifier = Modifier.padding(14.dp),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
@@ -715,9 +743,22 @@ private fun relationSortPriority(type: String?): Int = when (type) {
 }
 
 private fun sortRelatedAnime(relations: List<RelatedAnime>): List<RelatedAnime> =
-    relations
-        .filter { it.relationType !in hiddenRelationTypes }
-        .sortedBy { relationSortPriority(it.relationType) }
+    relations.filter { it.relationType !in hiddenRelationTypes }.sortedBy { relationSortPriority(it.relationType) }
+
+private fun formatCommunityScore(score: Int): String {
+    val normalized = if (score > 10) score / 10.0 else score.toDouble()
+    return String.format(Locale.ROOT, "%.1f", normalized)
+}
+
+private fun String.toDisplayFormat(): String = when (this) {
+    "TV_SHORT" -> "TV Short"
+    "MOVIE" -> "Movie"
+    "SPECIAL" -> "Special"
+    "MUSIC" -> "Music"
+    else -> lowercase()
+        .replace('_', ' ')
+        .replaceFirstChar { it.titlecase() }
+}
 
 @Composable
 private fun relationTypeLabel(type: String?): String? = when (type) {
@@ -734,33 +775,36 @@ private fun relationTypeLabel(type: String?): String? = when (type) {
     else -> type.takeIf { it.isNotBlank() }
 }
 
-private const val SYNOPSIS_COLLAPSED_LINES = 5
+private const val SYNOPSIS_COLLAPSED_LINES = 4
 
 @Composable
 private fun ExpandableSynopsis(text: String) {
     var expanded by remember(text) { mutableStateOf(false) }
     var isOverflowing by remember(text) { mutableStateOf(false) }
-    Column {
+    val motion = LocalMotionPolicy.current
+    Column(
+        modifier = Modifier
+            .animateContentSize(animationSpec = motion.iosSpring())
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+    ) {
         Text(
-            text,
-            style = MaterialTheme.typography.bodyLarge,
+            text = text,
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = if (expanded) Int.MAX_VALUE else SYNOPSIS_COLLAPSED_LINES,
             overflow = TextOverflow.Ellipsis,
-            onTextLayout = { result ->
-                if (!expanded) isOverflowing = result.hasVisualOverflow
-            }
+            onTextLayout = { result -> if (!expanded) isOverflowing = result.hasVisualOverflow },
         )
         if (isOverflowing || expanded) {
             Text(
-                stringResource(if (expanded) R.string.cd_collapse else R.string.cd_expand),
+                text = if (expanded) "Show less" else "Read more",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .heightIn(min = 48.dp)
+                    .heightIn(min = 36.dp)
                     .clickable { expanded = !expanded }
-                    .padding(top = 14.dp)
+                    .padding(top = 9.dp),
             )
         }
     }
@@ -768,24 +812,34 @@ private fun ExpandableSynopsis(text: String) {
 
 @Composable
 private fun WatchSourceChip(source: WatchSource, onClick: () -> Unit) {
-    GlassButton(
-        onClick = onClick,
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-    ) { color ->
-        source.faviconUrl?.let {
-            FaviconImage(
-                faviconUrl = it,
-                siteUrl = source.urlTemplate,
-                modifier = Modifier.size(20.dp).clip(CircleShape)
+    Surface(
+        modifier = Modifier.height(38.dp).clickable(onClick = onClick),
+        shape = PillShape,
+        color = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant),
+        tonalElevation = 0.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 13.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            source.faviconUrl?.let {
+                FaviconImage(
+                    faviconUrl = it,
+                    siteUrl = source.urlTemplate,
+                    modifier = Modifier.size(18.dp).clip(CircleShape),
+                )
+            }
+            Text(
+                text = source.name,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
-        Text(
-            source.name,
-            style = MaterialTheme.typography.labelLarge,
-            color = color,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
     }
 }
 
@@ -793,32 +847,33 @@ private fun WatchSourceChip(source: WatchSource, onClick: () -> Unit) {
 private fun CharacterCard(character: Character, onClick: () -> Unit) {
     Column(
         modifier = Modifier
-            .width(96.dp)
+            .width(92.dp)
             .clickable(onClick = onClick)
             .semantics {
                 role = Role.Button
                 contentDescription = character.name
-            }
+            },
     ) {
         MediaThumbnail.Small(
             url = character.imageUrl,
             contentDescription = null,
             modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f),
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(6.dp))
         Text(
-            character.name,
-            style = MaterialTheme.typography.labelLarge,
+            text = character.name,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Medium,
             maxLines = 2,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
         character.role?.takeIf { it.isNotBlank() }?.let {
             Text(
-                it,
+                text = it,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -828,42 +883,44 @@ private fun CharacterCard(character: Character, onClick: () -> Unit) {
 private fun RelatedAnimeCard(related: RelatedAnime, onClick: () -> Unit) {
     Column(
         modifier = Modifier
-            .width(116.dp)
+            .width(112.dp)
             .clickable(onClick = onClick)
             .semantics {
                 role = Role.Button
                 contentDescription = related.title
-            }
+            },
     ) {
         relationTypeLabel(related.relationType)?.let { label ->
-            Box(
-                modifier = Modifier
-                    .clip(PillShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .padding(horizontal = 10.dp, vertical = 5.dp)
+            Surface(
+                shape = PillShape,
+                color = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant),
+                tonalElevation = 0.dp,
             ) {
                 Text(
-                    label,
+                    text = label,
+                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
-            Spacer(Modifier.height(7.dp))
+            Spacer(Modifier.height(6.dp))
         }
         MediaThumbnail.Small(
             url = related.coverImageUrl,
             contentDescription = null,
             modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f),
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(6.dp))
         Text(
-            related.title,
-            style = MaterialTheme.typography.labelLarge,
+            text = related.title,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Medium,
             maxLines = 2,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

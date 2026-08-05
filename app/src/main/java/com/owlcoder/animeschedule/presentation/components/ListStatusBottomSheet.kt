@@ -1,35 +1,43 @@
 package com.owlcoder.animeschedule.presentation.components
 
-import androidx.compose.foundation.background
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -47,189 +56,417 @@ import com.owlcoder.animeschedule.domain.model.MalListUpdate
 import com.owlcoder.animeschedule.domain.model.WatchStatus
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListStatusBottomSheet(
     animeId: Int,
     currentEntry: MalListEntry?,
     onDismiss: () -> Unit,
     onConfirm: (Int, MalListUpdate) -> Unit,
-    /** Shown only for entries already on the list; null hides the remove action. */
-    onRemove: ((Int) -> Unit)? = null
+    onRemove: ((Int) -> Unit)? = null,
 ) {
-    val sheetState = rememberModalBottomSheetState()
     val total = currentEntry?.totalEpisodes?.takeIf { it > 0 }
+    val motion = LocalMotionPolicy.current
 
     fun clampEpisodes(value: Int): Int {
         val floored = value.coerceAtLeast(0)
         return if (total != null) floored.coerceAtMost(total) else floored
     }
 
-    var selectedStatus by remember { mutableStateOf(currentEntry?.status ?: WatchStatus.PLAN_TO_WATCH) }
-    var episodesWatched by remember { mutableIntStateOf(clampEpisodes(currentEntry?.episodesWatched ?: 0)) }
-    var score by remember { mutableFloatStateOf(currentEntry?.score?.toFloat() ?: 0f) }
-
+    var selectedStatus by remember(currentEntry) {
+        mutableStateOf(currentEntry?.status ?: WatchStatus.PLAN_TO_WATCH)
+    }
+    var episodesWatched by remember(currentEntry) {
+        mutableIntStateOf(clampEpisodes(currentEntry?.episodesWatched ?: 0))
+    }
+    var score by remember(currentEntry) { mutableIntStateOf(currentEntry?.score ?: 0) }
     val statuses = WatchStatus.entries.filter { it != WatchStatus.NOT_IN_LIST }
 
-    ModalBottomSheet(
+    fun save() {
+        onConfirm(
+            animeId,
+            MalListUpdate(
+                status = selectedStatus,
+                episodesWatched = clampEpisodes(episodesWatched),
+                score = score,
+            ),
+        )
+        onDismiss()
+    }
+
+    AppSheet(
         onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        shape = MaterialTheme.shapes.extraLarge
-    ) {
-        Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 32.dp)) {
-            Text(
-                stringResource(R.string.list_status_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            // Status chips
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                statuses.forEach { status ->
-                    val selected = selectedStatus == status
-                    Text(
-                        text = status.displayName(),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = if (selected) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier
-                            .clip(PillShape)
-                            .background(
-                                if (selected) MaterialTheme.colorScheme.primaryContainer
-                                else MaterialTheme.colorScheme.surfaceVariant
-                            )
-                            .clickable {
-                                selectedStatus = status
-                                if (status == WatchStatus.COMPLETED && total != null) {
-                                    episodesWatched = total
-                                }
-                            }
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(20.dp))
-
-            // Episode stepper
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        title = stringResource(R.string.list_status_title),
+        trailingContent = {
+            TextButton(onClick = ::save) {
                 Text(
-                    stringResource(R.string.list_status_episodes_label),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.weight(1f)
-                )
-                FilledTonalIconButton(
-                    onClick = { episodesWatched = clampEpisodes(episodesWatched - 1) },
-                    enabled = episodesWatched > 0,
-                    modifier = Modifier.size(40.dp),
-                    shape = CircleShape
-                ) {
-                    Icon(Icons.Default.Remove, contentDescription = stringResource(R.string.list_status_decrease_episode))
-                }
-                Text(
-                    text = if (total != null) "$episodesWatched / $total" else "$episodesWatched",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = stringResource(R.string.common_save),
+                    style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.width(72.dp).padding(horizontal = 8.dp),
-                    textAlign = TextAlign.Center
                 )
-                FilledTonalIconButton(
-                    onClick = { episodesWatched = clampEpisodes(episodesWatched + 1) },
-                    enabled = total == null || episodesWatched < total,
-                    modifier = Modifier.size(40.dp),
-                    shape = CircleShape
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.list_status_increase_episode))
+            }
+        },
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 590.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(15.dp),
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SectionLabel(stringResource(R.string.detail_status))
+                statuses.chunked(2).forEach { rowStatuses ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        rowStatuses.forEach { status ->
+                            StatusChoice(
+                                label = status.displayName(),
+                                selected = selectedStatus == status,
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    selectedStatus = status
+                                    if (status == WatchStatus.COMPLETED && total != null) {
+                                        episodesWatched = total
+                                    }
+                                },
+                            )
+                        }
+                        if (rowStatuses.size == 1) Spacer(Modifier.weight(1f))
+                    }
                 }
             }
 
-            if (total != null) {
-                Spacer(Modifier.height(10.dp))
-                LinearProgressIndicator(
-                    progress = { episodesWatched.toFloat() / total.toFloat() },
-                    modifier = Modifier.fillMaxWidth().clip(PillShape),
-                    color = MaterialTheme.colorScheme.primary,
-                    trackColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+            AppMaterialSurface(
+                modifier = Modifier.fillMaxWidth(),
+                material = AppMaterial.Grouped,
+                shape = MaterialTheme.shapes.large,
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 11.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.list_status_episodes_label),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            if (total != null) {
+                                Text(
+                                    text = "$episodesWatched / $total",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                        StepperButton(
+                            icon = Icons.Default.Remove,
+                            description = stringResource(R.string.list_status_decrease_episode),
+                            enabled = episodesWatched > 0,
+                            onClick = { episodesWatched = clampEpisodes(episodesWatched - 1) },
+                        )
+                        AnimatedContent(
+                            targetState = episodesWatched,
+                            modifier = Modifier.width(44.dp),
+                            transitionSpec = {
+                                fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
+                                    fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
+                            },
+                            label = "episode-stepper-value",
+                        ) { value ->
+                            Text(
+                                text = value.toString(),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                        StepperButton(
+                            icon = Icons.Default.Add,
+                            description = stringResource(R.string.list_status_increase_episode),
+                            enabled = total == null || episodesWatched < total,
+                            onClick = { episodesWatched = clampEpisodes(episodesWatched + 1) },
+                        )
+                    }
+                    if (total != null) {
+                        val progress by animateFloatAsState(
+                            targetValue = episodesWatched.toFloat() / total.toFloat(),
+                            animationSpec = motion.iosSpring(),
+                            label = "episode-progress",
+                        )
+                        LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(3.dp)
+                                .clip(PillShape),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                        )
+                    }
+                }
             }
 
-            Spacer(Modifier.height(20.dp))
-
-            // Score
-            Text(
-                text = stringResource(
-                    R.string.list_status_score_label,
-                    score.toInt().takeIf { it > 0 }?.toString() ?: stringResource(R.string.list_status_score_unrated)
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Medium
-            )
-            Slider(value = score, onValueChange = { score = it }, valueRange = 0f..10f, steps = 9)
-
-            Spacer(Modifier.height(16.dp))
-
-            // Actions — glass buttons matching the app-wide language.
-            Row(Modifier.fillMaxWidth()) {
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    shape = PillShape
-                ) { Text(stringResource(R.string.common_cancel)) }
-                Spacer(Modifier.width(12.dp))
-                GlassButton(
-                    onClick = {
-                        onConfirm(
-                            animeId, MalListUpdate(
-                                status = selectedStatus,
-                                episodesWatched = clampEpisodes(episodesWatched),
-                                // Always send the score — 0 clears the rating on MAL;
-                                // omitting it would make a rating impossible to remove.
-                                score = score.toInt()
-                            )
-                        )
-                        onDismiss()
-                    },
-                    modifier = Modifier.weight(1f).height(48.dp)
-                ) { contentColor ->
-                    Text(
-                        stringResource(R.string.common_save),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = contentColor
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SectionLabel(
+                        text = stringResource(R.string.detail_score),
+                        modifier = Modifier.weight(1f),
                     )
+                    AnimatedContent(
+                        targetState = score,
+                        transitionSpec = {
+                            fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
+                                fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
+                        },
+                        label = "score-label",
+                    ) { value ->
+                        Text(
+                            text = if (value == 0) {
+                                stringResource(R.string.list_status_score_unrated)
+                            } else {
+                                "$value / 10"
+                            },
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (value == 0) {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            },
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+                listOf((0..5).toList(), (6..10).toList()).forEach { values ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(7.dp),
+                    ) {
+                        values.forEach { value ->
+                            ScoreChoice(
+                                value = value,
+                                selected = score == value,
+                                modifier = Modifier.weight(1f),
+                                onClick = { score = value },
+                            )
+                        }
+                        repeat(6 - values.size) { Spacer(Modifier.weight(1f)) }
+                    }
                 }
             }
 
             if (currentEntry != null && onRemove != null) {
-                Spacer(Modifier.height(4.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 TextButton(
                     onClick = {
                         onRemove(animeId)
                         onDismiss()
                     },
-                    modifier = Modifier.fillMaxWidth().height(44.dp),
-                    shape = PillShape
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
                 ) {
                     Text(
-                        stringResource(R.string.list_status_remove),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.error
+                        text = stringResource(R.string.list_status_remove),
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatusChoice(
+    label: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    val motion = LocalMotionPolicy.current
+    val fill by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.13f)
+        } else {
+            appMaterialColor(AppMaterial.Interactive)
+        },
+        animationSpec = motion.iosTween(IosMotion.Standard),
+        label = "status-choice-fill",
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        animationSpec = motion.iosTween(IosMotion.Standard),
+        label = "status-choice-color",
+    )
+    Surface(
+        modifier = modifier
+            .sizeIn(minHeight = 44.dp)
+            .toggleable(
+                value = selected,
+                role = Role.RadioButton,
+                onValueChange = { onClick() },
+            ),
+        shape = PillShape,
+        color = fill,
+        contentColor = contentColor,
+        border = BorderStroke(
+            0.5.dp,
+            if (selected) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
+            } else {
+                MaterialTheme.colorScheme.outlineVariant
+            },
+        ),
+        tonalElevation = 0.dp,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Box(
+                modifier = Modifier.size(width = 20.dp, height = 16.dp),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                if (selected) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(15.dp),
+                    )
+                }
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                maxLines = 1,
+                color = contentColor,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ScoreChoice(
+    value: Int,
+    selected: Boolean,
+    modifier: Modifier,
+    onClick: () -> Unit,
+) {
+    val motion = LocalMotionPolicy.current
+    val fill by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.13f)
+        } else {
+            appMaterialColor(AppMaterial.Interactive)
+        },
+        animationSpec = motion.iosTween(IosMotion.Standard),
+        label = "score-choice-fill",
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+        animationSpec = motion.iosTween(IosMotion.Standard),
+        label = "score-choice-color",
+    )
+    Surface(
+        modifier = modifier
+            .sizeIn(minHeight = 44.dp)
+            .toggleable(
+                value = selected,
+                role = Role.RadioButton,
+                onValueChange = { onClick() },
+            ),
+        shape = PillShape,
+        color = fill,
+        contentColor = contentColor,
+        border = BorderStroke(
+            0.5.dp,
+            if (selected) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
+            } else {
+                MaterialTheme.colorScheme.outlineVariant
+            },
+        ),
+        tonalElevation = 0.dp,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(44.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = if (value == 0) "—" else value.toString(),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                color = contentColor,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        modifier = modifier,
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun StepperButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    description: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .clickable(
+                enabled = enabled,
+                role = Role.Button,
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Surface(
+            modifier = Modifier.size(36.dp),
+            shape = PillShape,
+            color = appMaterialColor(AppMaterial.Interactive),
+            contentColor = if (enabled) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+            },
+            tonalElevation = 0.dp,
+        ) {
+            Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = description,
+                    modifier = Modifier.size(17.dp),
+                )
             }
         }
     }

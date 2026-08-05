@@ -3,55 +3,69 @@ package com.owlcoder.animeschedule
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.owlcoder.animeschedule.core.locale.LocaleHelper
+import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
+import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
+import com.owlcoder.animeschedule.presentation.components.AppSystemBarAppearance
+import com.owlcoder.animeschedule.presentation.components.IosMotion
+import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.ToastController
 import com.owlcoder.animeschedule.presentation.components.ToastHost
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.key
-import com.owlcoder.animeschedule.presentation.navigation.Screen
-import com.owlcoder.animeschedule.presentation.navigation.shouldShowBottomBar
-import androidx.core.content.ContextCompat
-import android.content.res.Configuration
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.navigation.compose.rememberNavController
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import com.owlcoder.animeschedule.core.locale.LocaleHelper
-import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
+import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.navigation.AnimeBottomBar
 import com.owlcoder.animeschedule.presentation.navigation.AnimeNavHost
+import com.owlcoder.animeschedule.presentation.navigation.Screen
+import com.owlcoder.animeschedule.presentation.navigation.shouldShowBottomBar
 import com.owlcoder.animeschedule.presentation.screens.onboarding.OnboardingScreen
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.AnimeScheduleTheme
-import androidx.navigation.compose.currentBackStackEntryAsState
+import dagger.hilt.android.AndroidEntryPoint
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import javax.inject.Inject
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -62,12 +76,12 @@ class MainActivity : AppCompatActivity() {
     lateinit var prefsDataStore: UserPreferencesDataStore
 
     private val notificationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { /* permission result — no action needed, user decided */ }
+        ActivityResultContracts.RequestPermission(),
+    ) { /* The user made an explicit choice. */ }
 
-    private var currentLanguage: com.owlcoder.animeschedule.data.local.datastore.AppLanguage? = null
+    private var currentLanguage: AppLanguage? = null
 
-    fun applyLocale(language: com.owlcoder.animeschedule.data.local.datastore.AppLanguage) {
+    fun applyLocale(language: AppLanguage) {
         if (currentLanguage == language) return
         currentLanguage = language
         val locale = LocaleHelper.resolveLocale(language)
@@ -83,8 +97,6 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
         intent?.let { handleOAuthIntent(it) }
 
-        // Read prefs synchronously on main thread to avoid onboarding flash.
-        // DataStore reads from disk only on first access; subsequent calls are instant from cache.
         val initialPrefs = runBlocking { prefsDataStore.userPreferencesFlow.first() }
 
         setContent {
@@ -104,106 +116,127 @@ class MainActivity : AppCompatActivity() {
             applyLocale(effectiveLanguage)
 
             key(effectiveLanguage) {
-            AnimeScheduleTheme(themeMode = effectiveTheme, accentColor = effectiveAccent) {
-                if (!prefs.onboardingDone) {
-                    OnboardingScreen(
-                        onComplete = {
-                            scope.launch {
-                                prefsDataStore.setThemeMode(pendingTheme)
-                                prefsDataStore.setAccentColor(pendingAccent)
-                                prefsDataStore.setAppLanguage(pendingLanguage)
-                                prefsDataStore.setNotificationsEnabled(pendingNotifEnabled)
-                                prefsDataStore.setNotificationOffset(pendingNotifOffset)
-                                prefsDataStore.setOnboardingDone()
-                                LocaleHelper.applyLanguage(pendingLanguage)
+                AnimeScheduleTheme(themeMode = effectiveTheme, accentColor = effectiveAccent) {
+                    if (!prefs.onboardingDone) {
+                        OnboardingScreen(
+                            onComplete = {
+                                scope.launch {
+                                    prefsDataStore.setThemeMode(pendingTheme)
+                                    prefsDataStore.setAccentColor(pendingAccent)
+                                    prefsDataStore.setAppLanguage(pendingLanguage)
+                                    prefsDataStore.setNotificationsEnabled(pendingNotifEnabled)
+                                    prefsDataStore.setNotificationOffset(pendingNotifOffset)
+                                    prefsDataStore.setOnboardingDone()
+                                    LocaleHelper.applyLanguage(pendingLanguage)
+                                }
+                            },
+                            onLogin = { context -> authViewModel.launchMalLogin(context) },
+                            selectedTheme = pendingTheme,
+                            selectedAccent = pendingAccent,
+                            selectedLanguage = pendingLanguage,
+                            onThemeChange = { pendingTheme = it },
+                            onAccentChange = { pendingAccent = it },
+                            onLanguageChange = { pendingLanguage = it },
+                            onNotifSettingsChange = { enabled, offset ->
+                                pendingNotifEnabled = enabled
+                                pendingNotifOffset = offset
+                                if (enabled) requestNotificationPermissionIfNeeded()
+                            },
+                        )
+                    } else {
+                        val navController = rememberNavController()
+                        val hazeState = rememberHazeState()
+                        val motion = LocalMotionPolicy.current
+                        LaunchedEffect(navController) {
+                            pendingDeepLinkAnimeId?.let { animeId ->
+                                pendingDeepLinkAnimeId = null
+                                navController.navigate(Screen.Detail.createRoute(animeId))
                             }
-                        },
-                        onLogin = { context -> authViewModel.launchMalLogin(context) },
-                        selectedTheme = pendingTheme,
-                        selectedAccent = pendingAccent,
-                        selectedLanguage = pendingLanguage,
-                        onThemeChange = { pendingTheme = it },
-                        onAccentChange = { pendingAccent = it },
-                        onLanguageChange = { lang ->
-                            pendingLanguage = lang
-                        },
-                        onNotifSettingsChange = { enabled, offset ->
-                            pendingNotifEnabled = enabled
-                            pendingNotifOffset = offset
-                            if (enabled) requestNotificationPermissionIfNeeded()
                         }
-                    )
-                } else {
-                    val navController = rememberNavController()
-                    LaunchedEffect(navController) {
-                        pendingDeepLinkAnimeId?.let { animeId ->
-                            pendingDeepLinkAnimeId = null
-                            navController.navigate(Screen.Detail.createRoute(animeId))
+
+                        val toastController = remember { ToastController() }
+                        var searchKeyboardFocused by rememberSaveable { mutableStateOf(false) }
+                        var appLoading by rememberSaveable { mutableStateOf(true) }
+                        val backStackEntry by navController.currentBackStackEntryAsState()
+                        val currentRoute = backStackEntry?.destination?.route
+                        val showBottomBar = shouldShowBottomBar(currentRoute) &&
+                            !(currentRoute == Screen.Search.route && searchKeyboardFocused)
+
+                        AppSystemBarAppearance(
+                            statusBarOnImagery = currentRoute == Screen.Detail.ROUTE,
+                        )
+
+                        LaunchedEffect(currentRoute) {
+                            if (currentRoute != Screen.Search.route) searchKeyboardFocused = false
                         }
-                    }
-                    val toastController = androidx.compose.runtime.remember { ToastController() }
-                    var searchKeyboardFocused by rememberSaveable { mutableStateOf(false) }
-                    // Covers the whole app (incl. nav bar) with the animated splash until the
-                    // Schedule screen reports its first data load has resolved.
-                    var appLoading by rememberSaveable { mutableStateOf(true) }
-                    val backStackEntry by navController.currentBackStackEntryAsState()
-                    val currentRoute = backStackEntry?.destination?.route
-                    val showBottomBar = shouldShowBottomBar(currentRoute) &&
-                        !(currentRoute == Screen.Search.route && searchKeyboardFocused)
-                    LaunchedEffect(currentRoute) {
-                        if (currentRoute != Screen.Search.route) searchKeyboardFocused = false
-                    }
-                    CompositionLocalProvider(
-                        // Screens still consume this local for their bottom spacers. The root
-                        // Scaffold now owns the actual bar/insets, so keeping the compatibility
-                        // local at zero avoids double-padding and preserves existing screens.
-                        LocalNavBarHeight provides 0.dp,
-                        LocalToast provides toastController
-                    ) {
-                    ToastHost(controller = toastController) {
-                        Box(modifier = Modifier.fillMaxSize()) {
-                        Scaffold(
-                            modifier = Modifier.fillMaxSize(),
-                            // Nested screens own their status/navigation-bar insets. The root
-                            // contributes only horizontal safe-drawing insets and the measured
-                            // Material NavigationBar height, avoiding double bottom padding.
-                            contentWindowInsets = WindowInsets.safeDrawing.only(
-                                WindowInsetsSides.Horizontal
-                            ),
-                            bottomBar = {
-                                if (showBottomBar) {
-                                    AnimeBottomBar(
-                                        navController = navController,
-                                    )
+
+                        CompositionLocalProvider(
+                            LocalNavBarHeight provides if (showBottomBar) 78.dp else 0.dp,
+                            LocalToast provides toastController,
+                        ) {
+                            ToastHost(controller = toastController) {
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    Scaffold(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .hazeSource(hazeState),
+                                        contentWindowInsets = WindowInsets.safeDrawing.only(
+                                            WindowInsetsSides.Horizontal,
+                                        ),
+                                    ) { innerPadding ->
+                                        AnimeNavHost(
+                                            navController = navController,
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .padding(innerPadding),
+                                            onRestartForLanguage = { lang ->
+                                                scope.launch {
+                                                    prefsDataStore.setAppLanguage(lang)
+                                                    LocaleHelper.applyLanguage(lang)
+                                                }
+                                            },
+                                            onScheduleInitialLoadChange = { appLoading = it },
+                                            onSearchFocusChanged = { searchKeyboardFocused = it },
+                                        )
+                                    }
+
+                                    AnimatedVisibility(
+                                        visible = showBottomBar,
+                                        modifier = Modifier.align(Alignment.BottomCenter),
+                                        enter = slideInVertically(
+                                            animationSpec = motion.iosTween(IosMotion.Standard),
+                                            initialOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
+                                        ) + fadeIn(
+                                            animationSpec = motion.iosTween(IosMotion.Quick),
+                                        ),
+                                        exit = slideOutVertically(
+                                            animationSpec = motion.iosTween(IosMotion.Standard),
+                                            targetOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
+                                        ) + fadeOut(
+                                            animationSpec = motion.iosTween(IosMotion.Quick),
+                                        ),
+                                    ) {
+                                        AnimeBottomBar(
+                                            navController = navController,
+                                            hazeState = hazeState,
+                                        )
+                                    }
+
+                                    AnimatedVisibility(
+                                        visible = appLoading,
+                                        enter = fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)),
+                                        exit = fadeOut(animationSpec = motion.iosTween(IosMotion.Standard)),
+                                    ) {
+                                        com.owlcoder.animeschedule.presentation.components.AnimatedSplashScreen(
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                    }
                                 }
                             }
-                        ) { innerPadding ->
-                            AnimeNavHost(
-                                navController = navController,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(innerPadding),
-                                onRestartForLanguage = { lang ->
-                                    scope.launch {
-                                        prefsDataStore.setAppLanguage(lang)
-                                        LocaleHelper.applyLanguage(lang)
-                                    }
-                                },
-                                onScheduleInitialLoadChange = { appLoading = it },
-                                onSearchFocusChanged = { searchKeyboardFocused = it },
-                            )
                         }
-                        if (appLoading) {
-                            com.owlcoder.animeschedule.presentation.components.AnimatedSplashScreen(
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-                        }
-                    }
                     }
                 }
             }
-            } // key(effectiveLanguage)
         }
     }
 
@@ -214,8 +247,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // If the user dismissed the Chrome Custom Tab without completing the MAL OAuth
-        // flow (no redirect intent ever arrives), clear the stuck loading state.
         authViewModel.cancelLoginIfPending()
     }
 
@@ -228,12 +259,10 @@ class MainActivity : AppCompatActivity() {
             data.scheme == "com.owlcoder.animeschedule" && data.host == "oauth" -> {
                 val code = data.getQueryParameter("code")
                 val state = data.getQueryParameter("state")
-                if (code == null) {
-                    authViewModel.handleCallbackError()
-                } else {
-                    authViewModel.handleCallback(code, state)
-                }
+                if (code == null) authViewModel.handleCallbackError()
+                else authViewModel.handleCallback(code, state)
             }
+
             data.scheme == "com.owlcoder.animeschedule" && data.host == "detail" -> {
                 val animeId = data.lastPathSegment?.toIntOrNull() ?: return
                 pendingDeepLinkAnimeId = animeId
@@ -243,8 +272,9 @@ class MainActivity : AppCompatActivity() {
 
     fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-                != PackageManager.PERMISSION_GRANTED
+            if (
+                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED
             ) {
                 notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
