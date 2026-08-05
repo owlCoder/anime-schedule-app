@@ -129,14 +129,14 @@ private fun glassPalette(tone: GlassTone): GlassPalette {
         else -> if (dark) {
             Color.White.copy(alpha = if (selected) 0.18f else 0.11f)
         } else {
-            Color.Black.copy(alpha = if (selected) 0.12f else 0.075f)
+            Color.Black.copy(alpha = if (selected) 0.12f else 0.09f)
         }
     }
     val topLight = when (tone) {
         GlassTone.OnImage -> Color.White.copy(alpha = 0.20f)
-        else -> Color.White.copy(alpha = if (dark) 0.11f else 0.58f)
+        else -> Color.White.copy(alpha = if (dark) 0.11f else 0.68f)
     }
-    val sideLight = Color.White.copy(alpha = if (dark) 0.035f else 0.17f)
+    val sideLight = Color.White.copy(alpha = if (dark) 0.035f else 0.21f)
 
     return GlassPalette(
         fill = fill,

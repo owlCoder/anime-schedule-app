@@ -84,10 +84,11 @@ import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
+import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import java.time.ZoneId
 import java.util.Locale
 
-private val SettingsGroupShape = ContinuousRoundedShape(20.dp)
+private val SettingsGroupShape = ContinuousRoundedShape(18.dp)
 
 private enum class SettingsSheet {
     Theme,
@@ -115,6 +116,7 @@ fun SettingsScreen(
     val isClearingCache by settingsViewModel.isClearingCache.collectAsState()
     val cacheActionMessage by settingsViewModel.cacheActionMessage.collectAsState()
     val context = LocalContext.current
+    val navBarHeight = LocalNavBarHeight.current
     var activeSheet by remember { mutableStateOf<SettingsSheet?>(null) }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -147,17 +149,20 @@ fun SettingsScreen(
                 .padding(innerPadding)
                 .statusBarsPadding(),
             contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = 6.dp,
-                bottom = 120.dp,
+                start = 18.dp,
+                end = 18.dp,
+                top = 2.dp,
+                bottom = navBarHeight + 24.dp,
             ),
-            verticalArrangement = Arrangement.spacedBy(15.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item(key = "settings-header") {
-                AppLargeHeader(
-                    title = stringResource(R.string.settings_title),
-                    modifier = Modifier.padding(bottom = 1.dp),
+                Text(
+                    text = stringResource(R.string.settings_title),
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(start = 2.dp, top = 4.dp, bottom = 2.dp),
                 )
             }
 
@@ -365,7 +370,7 @@ private fun SettingsSection(
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 12.dp, bottom = 6.dp),
+            modifier = Modifier.padding(start = 10.dp, bottom = 5.dp),
         )
         content()
     }
@@ -393,8 +398,8 @@ private fun AccountRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(72.dp)
-            .padding(horizontal = 13.dp),
+            .height(66.dp)
+            .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (avatarUrl.isNotBlank()) {
@@ -402,13 +407,13 @@ private fun AccountRow(
                 model = avatarUrl,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(46.dp)
+                    .size(40.dp)
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop,
             )
         } else {
             Surface(
-                modifier = Modifier.size(46.dp),
+                modifier = Modifier.size(40.dp),
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 tonalElevation = 0.dp,
@@ -417,7 +422,7 @@ private fun AccountRow(
                     Icon(
                         Icons.Default.AccountCircle,
                         contentDescription = null,
-                        modifier = Modifier.size(34.dp),
+                        modifier = Modifier.size(29.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -427,7 +432,7 @@ private fun AccountRow(
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(horizontal = 11.dp),
+                .padding(horizontal = 10.dp),
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
@@ -454,7 +459,7 @@ private fun AccountRow(
             )
             !isLoggedIn -> Row(
         modifier = Modifier
-            .height(40.dp)
+            .height(36.dp)
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -475,7 +480,7 @@ private fun AccountRow(
     }
     else -> Row(
                 modifier = Modifier
-                    .height(40.dp)
+                    .height(36.dp)
                     .clickable(onClick = onClick)
                     .padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -517,29 +522,29 @@ private fun SettingsRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 58.dp)
+            .heightIn(min = 54.dp)
             .clickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 11.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
-                .size(34.dp)
-                .clip(ContinuousRoundedShape(10.dp))
+                .size(32.dp)
+                .clip(ContinuousRoundedShape(9.dp))
                 .background(tileColor),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(19.dp),
+                modifier = Modifier.size(18.dp),
                 tint = iconColor,
             )
         }
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(start = 11.dp, end = 7.dp),
+                .padding(start = 10.dp, end = 7.dp),
         ) {
             Text(
                 text = title,
@@ -571,7 +576,7 @@ private fun SettingsRow(
 @Composable
 private fun SettingsDivider() {
     HorizontalDivider(
-        modifier = Modifier.padding(start = 57.dp),
+        modifier = Modifier.padding(start = 54.dp),
         thickness = 0.5.dp,
         color = MaterialTheme.colorScheme.outlineVariant,
     )

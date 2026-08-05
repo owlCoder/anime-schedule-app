@@ -94,7 +94,7 @@ private val items = listOf(
     BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings, Icons.Outlined.Settings),
 )
 
-private val DockShape = ContinuousRoundedShape(22.dp)
+private val DockShape = ContinuousRoundedShape(24.dp)
 private val DockHeight = 48.dp
 
 @Composable
@@ -132,8 +132,8 @@ fun AnimeBottomBar(
                 val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
                 Surface(
                     modifier = Modifier
-                        .offset(x = indicatorX + itemWidth * 0.09f)
-                        .width(itemWidth * 0.82f)
+                        .offset(x = indicatorX + itemWidth * 0.06f)
+                        .width(itemWidth * 0.88f)
                         .fillMaxHeight(),
                     shape = ContinuousRoundedShape(14.dp),
                     color = if (dark) Color.White.copy(alpha = 0.065f) else Color.White.copy(alpha = 0.54f),
@@ -211,7 +211,7 @@ private fun BottomNavItemView(
     ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth(0.82f)
+                .fillMaxWidth(0.88f)
                 .fillMaxHeight(),
             shape = ContinuousRoundedShape(14.dp),
             color = Color.Transparent,

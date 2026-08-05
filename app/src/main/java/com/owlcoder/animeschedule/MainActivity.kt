@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -167,7 +168,7 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         CompositionLocalProvider(
-                            LocalNavBarHeight provides 0.dp,
+                            LocalNavBarHeight provides if (showBottomBar) 78.dp else 0.dp,
                             LocalToast provides toastController,
                         ) {
                             ToastHost(controller = toastController) {
@@ -177,25 +178,6 @@ class MainActivity : AppCompatActivity() {
                                         contentWindowInsets = WindowInsets.safeDrawing.only(
                                             WindowInsetsSides.Horizontal,
                                         ),
-                                        bottomBar = {
-                                            AnimatedVisibility(
-                                                visible = showBottomBar,
-                                                enter = slideInVertically(
-                                                    animationSpec = motion.iosTween(IosMotion.Standard),
-                                                    initialOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
-                                                ) + fadeIn(
-                                                    animationSpec = motion.iosTween(IosMotion.Quick),
-                                                ),
-                                                exit = slideOutVertically(
-                                                    animationSpec = motion.iosTween(IosMotion.Standard),
-                                                    targetOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
-                                                ) + fadeOut(
-                                                    animationSpec = motion.iosTween(IosMotion.Quick),
-                                                ),
-                                            ) {
-                                                AnimeBottomBar(navController = navController)
-                                            }
-                                        },
                                     ) { innerPadding ->
                                         AnimeNavHost(
                                             navController = navController,
@@ -212,6 +194,25 @@ class MainActivity : AppCompatActivity() {
                                             onSearchFocusChanged = { searchKeyboardFocused = it },
                                         )
                                     }
+
+                          AnimatedVisibility(
+                              visible = showBottomBar,
+                              modifier = Modifier.align(Alignment.BottomCenter),
+                              enter = slideInVertically(
+                                  animationSpec = motion.iosTween(IosMotion.Standard),
+                                  initialOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
+                              ) + fadeIn(
+                                  animationSpec = motion.iosTween(IosMotion.Quick),
+                              ),
+                              exit = slideOutVertically(
+                                  animationSpec = motion.iosTween(IosMotion.Standard),
+                                  targetOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
+                              ) + fadeOut(
+                                  animationSpec = motion.iosTween(IosMotion.Quick),
+                              ),
+                          ) {
+                              AnimeBottomBar(navController = navController)
+                          }
 
                                     AnimatedVisibility(
                                         visible = appLoading,
