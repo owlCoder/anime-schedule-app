@@ -11,6 +11,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -50,6 +51,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
@@ -68,12 +71,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.presentation.components.AppNotificationBadge
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
-import com.owlcoder.animeschedule.presentation.components.GlassChrome
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.iosPressScale
 import com.owlcoder.animeschedule.presentation.components.iosSpring
 import com.owlcoder.animeschedule.presentation.components.iosTween
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
 
 private data class BottomNavItem(
     val screen: Screen,
@@ -97,14 +103,17 @@ private val items = listOf(
 private val DockShape = ContinuousRoundedShape(24.dp)
 private val DockHeight = 48.dp
 
+@OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun AnimeBottomBar(
     navController: NavController,
+    hazeState: HazeState,
     notificationCount: Int = 0,
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val motion = LocalMotionPolicy.current
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
 
     Box(
         modifier = Modifier
@@ -112,9 +121,31 @@ fun AnimeBottomBar(
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
             .padding(horizontal = 16.dp, vertical = 6.dp),
     ) {
-        GlassChrome(
-            modifier = Modifier.fillMaxWidth().height(DockHeight),
-            shape = DockShape,
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(DockHeight)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = DockShape,
+                    clip = false,
+                    ambientColor = Color.Black.copy(alpha = if (dark) 0.42f else 0.18f),
+                    spotColor = Color.Black.copy(alpha = if (dark) 0.42f else 0.18f),
+                )
+                .clip(DockShape)
+                .hazeEffect(
+                    state = hazeState,
+                    style = HazeMaterials.thin(),
+                )
+                .border(
+                    width = 0.75.dp,
+                    color = if (dark) {
+                        Color.White.copy(alpha = 0.18f)
+                    } else {
+                        Color.White.copy(alpha = 0.82f)
+                    },
+                    shape = DockShape,
+                ),
         ) {
             BoxWithConstraints(
                 modifier = Modifier
@@ -129,17 +160,16 @@ fun AnimeBottomBar(
                     animationSpec = motion.iosSpring(),
                     label = "bottom-tab-indicator-position",
                 )
-                val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
                 Surface(
                     modifier = Modifier
                         .offset(x = indicatorX + itemWidth * 0.06f)
                         .width(itemWidth * 0.88f)
                         .fillMaxHeight(),
                     shape = ContinuousRoundedShape(14.dp),
-                    color = if (dark) Color.White.copy(alpha = 0.065f) else Color.White.copy(alpha = 0.54f),
+                    color = if (dark) Color.White.copy(alpha = 0.075f) else Color.White.copy(alpha = 0.48f),
                     border = BorderStroke(
                         0.5.dp,
-                        if (dark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.075f),
+                        if (dark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.065f),
                     ),
                     tonalElevation = 0.dp,
                     shadowElevation = 0.dp,
