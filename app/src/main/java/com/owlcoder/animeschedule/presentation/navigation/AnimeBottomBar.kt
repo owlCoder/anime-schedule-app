@@ -102,7 +102,7 @@ private val items = listOf(
 
 private val DockShape = ContinuousRoundedShape(15.dp)
 private val ActiveItemShape = ContinuousRoundedShape(14.dp)
-private val DockHeight = 50.dp
+private val DockHeight = 52.dp
 
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
@@ -120,7 +120,7 @@ fun AnimeBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-            .padding(horizontal = 14.dp, vertical = 6.dp),
+            .padding(horizontal = 13.dp, vertical = 6.dp),
     ) {
         Box(
             modifier = Modifier
@@ -163,8 +163,8 @@ fun AnimeBottomBar(
                 )
                 Surface(
                     modifier = Modifier
-                        .offset(x = indicatorX + itemWidth * 0.05f)
-                        .width(itemWidth * 0.90f)
+                        .offset(x = indicatorX + itemWidth * 0.04f)
+                        .width(itemWidth * 0.92f)
                         .fillMaxHeight(),
                     shape = ActiveItemShape,
                     color = if (dark) Color.White.copy(alpha = 0.075f) else Color.White.copy(alpha = 0.48f),
@@ -242,7 +242,7 @@ private fun BottomNavItemView(
     ) {
         Surface(
             modifier = Modifier
-                .fillMaxWidth(0.90f)
+                .fillMaxWidth(0.92f)
                 .fillMaxHeight(),
             shape = ActiveItemShape,
             color = Color.Transparent,
@@ -312,7 +312,7 @@ private fun TabVisual(
                     imageVector = if (active) item.activeIcon else item.inactiveIcon,
                     contentDescription = null,
                     tint = color,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }
@@ -320,8 +320,8 @@ private fun TabVisual(
             text = label,
             color = color,
             style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 9.5.sp,
-                lineHeight = 10.5.sp,
+                fontSize = 10.2.sp,
+                lineHeight = 11.2.sp,
             ),
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             maxLines = 1,
