@@ -60,6 +60,8 @@ import com.owlcoder.animeschedule.presentation.screens.onboarding.OnboardingScre
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.AnimeScheduleTheme
 import dagger.hilt.android.AndroidEntryPoint
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -143,6 +145,7 @@ class MainActivity : AppCompatActivity() {
                         )
                     } else {
                         val navController = rememberNavController()
+                        val hazeState = rememberHazeState()
                         val motion = LocalMotionPolicy.current
                         LaunchedEffect(navController) {
                             pendingDeepLinkAnimeId?.let { animeId ->
@@ -174,7 +177,9 @@ class MainActivity : AppCompatActivity() {
                             ToastHost(controller = toastController) {
                                 Box(modifier = Modifier.fillMaxSize()) {
                                     Scaffold(
-                                        modifier = Modifier.fillMaxSize(),
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .hazeSource(hazeState),
                                         contentWindowInsets = WindowInsets.safeDrawing.only(
                                             WindowInsetsSides.Horizontal,
                                         ),
@@ -195,24 +200,27 @@ class MainActivity : AppCompatActivity() {
                                         )
                                     }
 
-                          AnimatedVisibility(
-                              visible = showBottomBar,
-                              modifier = Modifier.align(Alignment.BottomCenter),
-                              enter = slideInVertically(
-                                  animationSpec = motion.iosTween(IosMotion.Standard),
-                                  initialOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
-                              ) + fadeIn(
-                                  animationSpec = motion.iosTween(IosMotion.Quick),
-                              ),
-                              exit = slideOutVertically(
-                                  animationSpec = motion.iosTween(IosMotion.Standard),
-                                  targetOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
-                              ) + fadeOut(
-                                  animationSpec = motion.iosTween(IosMotion.Quick),
-                              ),
-                          ) {
-                              AnimeBottomBar(navController = navController)
-                          }
+                                    AnimatedVisibility(
+                                        visible = showBottomBar,
+                                        modifier = Modifier.align(Alignment.BottomCenter),
+                                        enter = slideInVertically(
+                                            animationSpec = motion.iosTween(IosMotion.Standard),
+                                            initialOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
+                                        ) + fadeIn(
+                                            animationSpec = motion.iosTween(IosMotion.Quick),
+                                        ),
+                                        exit = slideOutVertically(
+                                            animationSpec = motion.iosTween(IosMotion.Standard),
+                                            targetOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
+                                        ) + fadeOut(
+                                            animationSpec = motion.iosTween(IosMotion.Quick),
+                                        ),
+                                    ) {
+                                        AnimeBottomBar(
+                                            navController = navController,
+                                            hazeState = hazeState,
+                                        )
+                                    }
 
                                     AnimatedVisibility(
                                         visible = appLoading,
