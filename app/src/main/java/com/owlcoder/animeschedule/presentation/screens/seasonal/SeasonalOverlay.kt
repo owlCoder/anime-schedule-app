@@ -190,7 +190,7 @@ fun SeasonalOverlay(
                             key = { "season:${it.anilistId}" },
                             contentType = { "seasonal_poster" },
                         ) { item ->
-                            SeasonalAnimeCard(
+                            SeasonalAnimeGlassCard(
                                 item = item,
                                 onClick = { onAnimeClick(item.anilistId) },
                                 modifier = Modifier.fillMaxWidth(),
