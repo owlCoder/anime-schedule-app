@@ -17,7 +17,7 @@ val localProperties = Properties().apply {
 
 android {
     namespace = "com.owlcoder.animeschedule"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.owlcoder.animeschedule"
