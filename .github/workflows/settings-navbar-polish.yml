@@ -22,14 +22,14 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
-          def replace_once(text: str, old: str, new: str, label: str) -> str:
-              count = text.count(old)
+          def require_sub(pattern: str, replacement: str, text: str, label: str) -> str:
+              updated, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
               if count != 1:
-                  raise SystemExit(f"{label}: expected 1 occurrence, found {count}")
-              return text.replace(old, new, 1)
+                  raise SystemExit(f"{label}: expected one match, found {count}")
+              return updated
 
-          # Floating bottom dock: overlay it on content instead of reserving an opaque Scaffold strip.
           main_path = Path("app/src/main/java/com/owlcoder/animeschedule/MainActivity.kt")
           main = main_path.read_text()
           if "import androidx.compose.ui.Alignment\n" not in main:
@@ -38,11 +38,12 @@ jobs:
                   "import androidx.compose.ui.Alignment\nimport androidx.compose.ui.Modifier\n",
                   1,
               )
-          main = replace_once(
-              main,
+          if "LocalNavBarHeight provides 0.dp," not in main:
+              raise SystemExit("MainActivity nav bar height anchor missing")
+          main = main.replace(
               "LocalNavBarHeight provides 0.dp,",
               "LocalNavBarHeight provides if (showBottomBar) 78.dp else 0.dp,",
-              "nav bar composition height",
+              1,
           )
 
           bottom_start = main.index("                                        bottomBar = {")
@@ -58,7 +59,7 @@ jobs:
                       brace_end = i + 1
                       break
           if brace_end is None:
-              raise SystemExit("Could not find bottomBar block end")
+              raise SystemExit("Could not locate bottomBar block end")
           remove_end = brace_end
           while remove_end < len(main) and main[remove_end] in " \t":
               remove_end += 1
@@ -82,7 +83,7 @@ jobs:
                       scaffold_end = i + 1
                       break
           if scaffold_end is None:
-              raise SystemExit("Could not find Scaffold content end")
+              raise SystemExit("Could not locate Scaffold content end")
 
           dock_overlay = '''
 
@@ -107,7 +108,6 @@ jobs:
           main = main[:scaffold_end] + dock_overlay + main[scaffold_end:]
           main_path.write_text(main)
 
-          # Slightly wider active lens and a more relaxed floating dock.
           nav_path = Path("app/src/main/java/com/owlcoder/animeschedule/presentation/navigation/AnimeBottomBar.kt")
           nav = nav_path.read_text()
           nav = nav.replace("private val DockShape = ContinuousRoundedShape(22.dp)", "private val DockShape = ContinuousRoundedShape(24.dp)")
@@ -116,7 +116,6 @@ jobs:
           nav = nav.replace(".fillMaxWidth(0.82f)", ".fillMaxWidth(0.88f)")
           nav_path.write_text(nav)
 
-          # More transparent glass with a clearer light-theme specular edge.
           tokens_path = Path("app/src/main/java/com/owlcoder/animeschedule/ui/theme/GlassTokens.kt")
           tokens = tokens_path.read_text()
           tokens = tokens.replace("neutralFillLight = Color.White.copy(alpha = 0.72f)", "neutralFillLight = Color.White.copy(alpha = 0.62f)")
@@ -130,7 +129,6 @@ jobs:
           glass = glass.replace("else 0.17f)", "else 0.21f)")
           glass_path.write_text(glass)
 
-          # Settings density, hierarchy and bottom safe space.
           settings_path = Path("app/src/main/java/com/owlcoder/animeschedule/presentation/screens/settings/SettingsScreen.kt")
           settings = settings_path.read_text()
           if "import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight\n" not in settings:
@@ -139,48 +137,27 @@ jobs:
                   "import com.owlcoder.animeschedule.presentation.components.InsetGroup\nimport com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight\n",
                   1,
               )
-          settings = settings.replace("private val SettingsGroupShape = ContinuousRoundedShape(20.dp)", "private val SettingsGroupShape = ContinuousRoundedShape(18.dp)")
-          settings = replace_once(
-              settings,
-              "    val context = LocalContext.current\n    var activeSheet",
+          settings = settings.replace(
+              "private val SettingsGroupShape = ContinuousRoundedShape(20.dp)",
+              "private val SettingsGroupShape = ContinuousRoundedShape(18.dp)",
+              1,
+          )
+          settings = require_sub(
+              r"    val context = LocalContext\.current\s+var activeSheet",
               "    val context = LocalContext.current\n    val navBarHeight = LocalNavBarHeight.current\n    var activeSheet",
+              settings,
               "settings nav height",
           )
-          settings = replace_once(
+          settings = require_sub(
+              r"contentPadding = PaddingValues\(\s*start = 16\.dp,\s*end = 16\.dp,\s*top = 6\.dp,\s*bottom = 120\.dp,\s*\),\s*verticalArrangement = Arrangement\.spacedBy\(15\.dp\),",
+              "contentPadding = PaddingValues(\n                start = 18.dp,\n                end = 18.dp,\n                top = 2.dp,\n                bottom = navBarHeight + 24.dp,\n            ),\n            verticalArrangement = Arrangement.spacedBy(12.dp),",
               settings,
-              '''            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = 6.dp,
-                bottom = 120.dp,
-            ),
-            verticalArrangement = Arrangement.spacedBy(15.dp),''',
-              '''            contentPadding = PaddingValues(
-                start = 18.dp,
-                end = 18.dp,
-                top = 2.dp,
-                bottom = navBarHeight + 24.dp,
-            ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),''',
-              "settings list density",
+              "settings content padding",
           )
-          settings = replace_once(
+          settings = require_sub(
+              r"item\(key = \"settings-header\"\) \{\s*AppLargeHeader\(\s*title = stringResource\(R\.string\.settings_title\),\s*modifier = Modifier\.padding\(bottom = 1\.dp\),\s*\)\s*\}",
+              "item(key = \"settings-header\") {\n                Text(\n                    text = stringResource(R.string.settings_title),\n                    style = MaterialTheme.typography.headlineLarge,\n                    fontWeight = FontWeight.Bold,\n                    color = MaterialTheme.colorScheme.onBackground,\n                    modifier = Modifier.padding(start = 2.dp, top = 4.dp, bottom = 2.dp),\n                )\n            }",
               settings,
-              '''            item(key = "settings-header") {
-                AppLargeHeader(
-                    title = stringResource(R.string.settings_title),
-                    modifier = Modifier.padding(bottom = 1.dp),
-                )
-            }''',
-              '''            item(key = "settings-header") {
-                Text(
-                    text = stringResource(R.string.settings_title),
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(start = 2.dp, top = 4.dp, bottom = 2.dp),
-                )
-            }''',
               "settings compact header",
           )
           settings = settings.replace("modifier = Modifier.padding(start = 12.dp, bottom = 6.dp)", "modifier = Modifier.padding(start = 10.dp, bottom = 5.dp)")
