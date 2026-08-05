@@ -3,6 +3,7 @@ package com.owlcoder.animeschedule.presentation.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
@@ -11,6 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +30,7 @@ fun AppSwitch(
     enabled: Boolean = true,
 ) {
     val motion = LocalMotionPolicy.current
+    val interactionSource = remember { MutableInteractionSource() }
     val trackColor by animateColorAsState(
         targetValue = when {
             !enabled -> MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.46f)
@@ -53,6 +56,8 @@ fun AppSwitch(
             .size(width = 50.dp, height = 44.dp)
             .toggleable(
                 value = checked,
+                interactionSource = interactionSource,
+                indication = null,
                 enabled = enabled,
                 role = Role.Switch,
                 onValueChange = onCheckedChange,
