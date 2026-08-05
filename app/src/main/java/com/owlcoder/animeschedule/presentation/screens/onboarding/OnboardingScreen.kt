@@ -1,13 +1,14 @@
 package com.owlcoder.animeschedule.presentation.screens.onboarding
 
 import android.content.Context
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -23,20 +24,27 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Login
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsNone
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -64,7 +72,7 @@ import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
-import com.owlcoder.animeschedule.presentation.components.GlassChrome
+import com.owlcoder.animeschedule.presentation.components.iosPressScale
 import com.owlcoder.animeschedule.ui.theme.PillShape
 import kotlinx.coroutines.launch
 
@@ -73,7 +81,6 @@ private const val OnboardingPageCount = 5
 private fun AppLanguage.t(en: String, sr: String): String =
     if (this == AppLanguage.SERBIAN_LATIN) sr else en
 
-@Suppress("UNUSED_PARAMETER")
 @Composable
 fun OnboardingScreen(
     onComplete: () -> Unit,
@@ -93,7 +100,11 @@ fun OnboardingScreen(
     var notificationOffset by remember { mutableIntStateOf(0) }
     val currentPage = pagerState.currentPage
 
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         NeutralOnboardingBackdrop()
         Column(modifier = Modifier.fillMaxSize()) {
             HorizontalPager(
@@ -123,73 +134,109 @@ fun OnboardingScreen(
                     else -> PersonalizePage(
                         language = selectedLanguage,
                         selectedTheme = selectedTheme,
+                        selectedAccent = selectedAccent,
                         selectedLanguage = selectedLanguage,
                         onThemeChange = onThemeChange,
+                        onAccentChange = onAccentChange,
                         onLanguageChange = onLanguageChange,
                     )
                 }
             }
 
-            GlassChrome(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(horizontal = 14.dp, vertical = 9.dp),
-                shape = ContinuousRoundedShape(28.dp),
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(9.dp),
-                ) {
-                    PageIndicator(currentPage, OnboardingPageCount)
-                    AppButton(
-                        label = if (currentPage == OnboardingPageCount - 1) {
-                            selectedLanguage.t("Start using AnimeSchedule", "Počni da koristiš AnimeSchedule")
-                        } else selectedLanguage.t("Continue", "Nastavi"),
-                        onClick = {
-                            if (currentPage == OnboardingPageCount - 1) onComplete()
-                            else scope.launch { pagerState.animateScrollToPage(currentPage + 1) }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        variant = AppButtonVariant.Primary,
-                    )
-                    TextButton(
-                        onClick = {
-                            if (currentPage > 0) scope.launch { pagerState.animateScrollToPage(currentPage - 1) }
-                            else onComplete()
-                        },
-                        modifier = Modifier.height(32.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp),
-                    ) {
-                        Text(
-                            text = if (currentPage > 0) selectedLanguage.t("Back", "Nazad")
-                            else selectedLanguage.t("Set up later", "Podesi kasnije"),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+            OnboardingActions(
+                currentPage = currentPage,
+                pageCount = OnboardingPageCount,
+                language = selectedLanguage,
+                onBackOrLater = {
+                    if (currentPage > 0) {
+                        scope.launch { pagerState.animateScrollToPage(currentPage - 1) }
+                    } else {
+                        onComplete()
                     }
-                }
-            }
+                },
+                onContinue = {
+                    if (currentPage == OnboardingPageCount - 1) {
+                        onComplete()
+                    } else {
+                        scope.launch { pagerState.animateScrollToPage(currentPage + 1) }
+                    }
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun OnboardingActions(
+    currentPage: Int,
+    pageCount: Int,
+    language: AppLanguage,
+    onBackOrLater: () -> Unit,
+    onContinue: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        PageIndicator(currentPage, pageCount)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            AppButton(
+                label = if (currentPage > 0) language.t("Back", "Nazad")
+                else language.t("Later", "Kasnije"),
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                onClick = onBackOrLater,
+                modifier = Modifier.weight(1f),
+                variant = AppButtonVariant.Secondary,
+            )
+            AppButton(
+                label = if (currentPage == pageCount - 1) {
+                    language.t("Get started", "Započni")
+                } else {
+                    language.t("Continue", "Nastavi")
+                },
+                icon = if (currentPage == pageCount - 1) {
+                    Icons.Default.CheckCircle
+                } else {
+                    Icons.AutoMirrored.Filled.ArrowForward
+                },
+                onClick = onContinue,
+                modifier = Modifier.weight(1f),
+                variant = AppButtonVariant.Primary,
+            )
         }
     }
 }
 
 @Composable
 private fun NeutralOnboardingBackdrop() {
-    val light = MaterialTheme.colorScheme.onSurface
+    val tint = MaterialTheme.colorScheme.primary
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.radialGradient(
-                    colors = listOf(light.copy(alpha = 0.065f), light.copy(alpha = 0.018f), Color.Transparent),
-                    radius = 980f,
+                    colors = listOf(
+                        tint.copy(alpha = 0.09f),
+                        tint.copy(alpha = 0.025f),
+                        Color.Transparent,
+                    ),
+                    radius = 920f,
                 ),
             )
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background.copy(alpha = 0.36f), MaterialTheme.colorScheme.background),
+                    colors = listOf(
+                        Color.Transparent,
+                        MaterialTheme.colorScheme.background.copy(alpha = 0.30f),
+                        MaterialTheme.colorScheme.background,
+                    ),
                 ),
             ),
     )
@@ -199,12 +246,24 @@ private fun NeutralOnboardingBackdrop() {
 private fun PageIndicator(currentPage: Int, pageCount: Int) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         repeat(pageCount) { index ->
+            val width by animateDpAsState(
+                targetValue = if (index == currentPage) 22.dp else 7.dp,
+                label = "onboarding-indicator-width",
+            )
+            val color by animateColorAsState(
+                targetValue = if (index == currentPage) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.24f)
+                },
+                label = "onboarding-indicator-color",
+            )
             Box(
                 modifier = Modifier
-                    .width(if (index == currentPage) 18.dp else 6.dp)
-                    .height(6.dp)
+                    .width(width)
+                    .height(7.dp)
                     .clip(PillShape)
-                    .background(if (index == currentPage) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.28f)),
+                    .background(color),
             )
         }
     }
@@ -212,6 +271,13 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
 
 @Composable
 private fun WelcomePage(language: AppLanguage) {
+    var selectedFeature by remember { mutableIntStateOf(0) }
+    val features = listOf(
+        Triple(Icons.Default.CalendarMonth, language.t("Schedule", "Raspored"), language.t("See every broadcast in your local time.", "Vidi svako emitovanje u svom vremenu.")),
+        Triple(Icons.Default.Search, language.t("Discover", "Pronađi"), language.t("Find titles and seasonal releases quickly.", "Brzo pronađi naslove i sezonska izdanja.")),
+        Triple(Icons.Default.Bookmark, language.t("My List", "Moja lista"), language.t("Keep progress and scores in sync.", "Sinhronizuj napredak i ocene.")),
+    )
+
     ProductPage(
         eyebrow = language.t("ANIME, ON TIME", "ANIME, NA VREME"),
         title = language.t("Your week in anime", "Tvoja anime nedelja"),
@@ -220,32 +286,59 @@ private fun WelcomePage(language: AppLanguage) {
             "Miran raspored, nove epizode i tvoja lista u jednoj fokusiranoj aplikaciji.",
         ),
     ) {
-        Surface(
-            modifier = Modifier.size(128.dp),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            tonalElevation = 0.dp,
+        AppMark()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(9.dp),
         ) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.CalendarMonth, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
+            features.forEachIndexed { index, feature ->
+                FeatureTile(
+                    icon = feature.first,
+                    label = feature.second,
+                    selected = selectedFeature == index,
+                    onClick = { selectedFeature = index },
+                    modifier = Modifier.weight(1f),
+                )
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            FeatureOrb(Icons.Default.CalendarMonth, language.t("Schedule", "Raspored"))
-            FeatureOrb(Icons.Default.Search, language.t("Discover", "Pronađi"))
-            FeatureOrb(Icons.Default.Bookmark, language.t("My List", "Moja lista"))
+        AppMaterialSurface(
+            modifier = Modifier.fillMaxWidth(),
+            material = AppMaterial.Interactive,
+            shape = ContinuousRoundedShape(18.dp),
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Icon(
+                    imageVector = features[selectedFeature].first,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = features[selectedFeature].third,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun SchedulePreviewPage(language: AppLanguage) {
+    var selectedDay by remember { mutableIntStateOf(0) }
+    val days = listOf("Mon" to "3", "Tue" to "4", "Wed" to "5", "Thu" to "6", "Fri" to "7")
+    val times = listOf("17:00", "18:30", "19:15", "20:00", "21:00")
+
     ProductPage(
         eyebrow = language.t("SEVEN DAYS AHEAD", "SEDAM DANA UNAPRED"),
         title = language.t("See what airs next", "Vidi šta sledi"),
         subtitle = language.t(
-            "Move through the week and open the complete schedule for any day.",
-            "Prođi kroz nedelju i otvori kompletan raspored za bilo koji dan.",
+            "Tap a day to preview its schedule. Everything follows your selected time zone.",
+            "Dodirni dan da pregledaš raspored. Sve prati izabranu vremensku zonu.",
         ),
     ) {
         AppMaterialSurface(
@@ -253,17 +346,37 @@ private fun SchedulePreviewPage(language: AppLanguage) {
             material = AppMaterial.Elevated,
             shape = ContinuousRoundedShape(22.dp),
         ) {
-            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    listOf("Mon" to "3", "Tue" to "4", "Wed" to "5", "Thu" to "6", "Fri" to "7").forEachIndexed { index, pair ->
-                        DatePreviewCell(pair.first, pair.second, selected = index == 0)
+            Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(9.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    days.forEachIndexed { index, pair ->
+                        DatePreviewCell(
+                            day = pair.first,
+                            date = pair.second,
+                            selected = selectedDay == index,
+                            onClick = { selectedDay = index },
+                        )
                     }
                 }
-                PreviewScheduleRow("17:00", "Grand Blue Season 3", "Ep. 5/12")
-                PreviewScheduleRow("18:30", "Summer Pockets", "Ep. 17")
-                PreviewScheduleRow("21:00", "The Fragrant Flower", "Ep. 6/13")
+                HorizontalDivider(
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
+                )
+                PreviewScheduleRow(times[selectedDay], "Grand Blue Season 3", "Ep. ${selectedDay + 5}/12")
+                PreviewScheduleRow("18:${30 + selectedDay}", "Summer Pockets", "Ep. ${17 + selectedDay}")
+                PreviewScheduleRow("21:00", "The Fragrant Flower", "Ep. ${6 + selectedDay}/13")
             }
         }
+        Text(
+            text = language.t("Try selecting another day", "Probaj da izabereš drugi dan"),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 
@@ -279,39 +392,85 @@ private fun NotificationPreviewPage(
         eyebrow = language.t("GENTLE REMINDERS", "DISKRETNI PODSETNICI"),
         title = language.t("Never miss an episode", "Ne propusti epizodu"),
         subtitle = language.t(
-            "Choose when reminders arrive. You can change this at any time.",
-            "Izaberi kada stižu podsetnici. Ovo možeš promeniti bilo kada.",
+            "Turn reminders on and choose exactly when they arrive.",
+            "Uključi podsetnike i izaberi tačno kada stižu.",
         ),
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            AppMaterialSurface(
-                modifier = Modifier.fillMaxWidth(),
-                material = AppMaterial.Elevated,
-                shape = ContinuousRoundedShape(20.dp),
+        AppMaterialSurface(
+            modifier = Modifier.fillMaxWidth(),
+            material = AppMaterial.Elevated,
+            shape = ContinuousRoundedShape(20.dp),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(modifier = Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.NotificationsNone, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
-                    Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                        Text(language.t("Episode reminders", "Podsetnici za epizode"), style = MaterialTheme.typography.titleMedium)
-                        Text(language.t("Only for titles you follow", "Samo za naslove koje pratiš"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    AppSwitch(checked = enabled, onCheckedChange = onEnabledChange)
-                }
-            }
-            if (enabled) {
-                Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                    listOf(-15, 0, 15).forEach { minutes ->
-                        SelectionRow(
-                            label = when (minutes) {
-                                -15 -> language.t("15 min before", "15 min ranije")
-                                0 -> language.t("At air time", "U vreme emitovanja")
-                                else -> language.t("15 min after", "15 min kasnije")
-                            },
-                            selected = offsetMinutes == minutes,
-                            onClick = { onOffsetChange(minutes) },
+                Surface(
+                    modifier = Modifier.size(42.dp),
+                    shape = ContinuousRoundedShape(13.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                ) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = if (enabled) Icons.Default.NotificationsActive else Icons.Default.NotificationsNone,
+                            contentDescription = null,
+                            modifier = Modifier.size(21.dp),
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
+                Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                    Text(
+                        text = language.t("Episode reminders", "Podsetnici za epizode"),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Text(
+                        text = if (enabled) language.t("Enabled", "Uključeni")
+                        else language.t("Disabled", "Isključeni"),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                AppSwitch(checked = enabled, onCheckedChange = onEnabledChange)
+            }
+        }
+        if (enabled) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                listOf(-15, 0, 15).forEach { minutes ->
+                    SelectionChip(
+                        label = when (minutes) {
+                            -15 -> language.t("15 min before", "15 min ranije")
+                            0 -> language.t("At air time", "Pri emitovanju")
+                            else -> language.t("15 min after", "15 min kasnije")
+                        },
+                        selected = offsetMinutes == minutes,
+                        onClick = { onOffsetChange(minutes) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        } else {
+            AppMaterialSurface(
+                modifier = Modifier.fillMaxWidth(),
+                material = AppMaterial.Interactive,
+                shape = ContinuousRoundedShape(18.dp),
+            ) {
+                Text(
+                    text = language.t(
+                        "You can enable reminders later in Settings.",
+                        "Podsetnike možeš uključiti kasnije u Podešavanjima.",
+                    ),
+                    modifier = Modifier.padding(14.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
             }
         }
     }
@@ -323,8 +482,8 @@ private fun MalPreviewPage(language: AppLanguage, onLogin: () -> Unit) {
         eyebrow = "MYANIMELIST",
         title = language.t("Your progress, kept in sync", "Tvoj napredak, uvek sinhronizovan"),
         subtitle = language.t(
-            "Update episodes and status without leaving your schedule.",
-            "Ažuriraj epizode i status bez napuštanja rasporeda.",
+            "Connect your account to update episodes, status and scores without leaving the app.",
+            "Poveži nalog da ažuriraš epizode, status i ocene bez napuštanja aplikacije.",
         ),
     ) {
         AppMaterialSurface(
@@ -332,27 +491,55 @@ private fun MalPreviewPage(language: AppLanguage, onLogin: () -> Unit) {
             material = AppMaterial.Elevated,
             shape = ContinuousRoundedShape(22.dp),
         ) {
-            Column(modifier = Modifier.fillMaxWidth().padding(15.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(15.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(modifier = Modifier.size(44.dp), shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                    Surface(
+                        modifier = Modifier.size(48.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.11f),
+                    ) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.AccountCircle, null, Modifier.size(27.dp))
+                            Icon(
+                                Icons.Default.AccountCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(30.dp),
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
                         }
                     }
                     Column(Modifier.weight(1f).padding(start = 11.dp)) {
-                        Text("MyAnimeList", style = MaterialTheme.typography.titleMedium)
-                        Text(language.t("Not connected", "Nije povezano"), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("MyAnimeList", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            language.t("Not connected", "Nije povezano"),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
-                PreviewScheduleRow("12/12", language.t("Completed", "Završeno"), "Score 8/10")
+                HorizontalDivider(
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
+                )
+                PreviewScheduleRow("12/12", language.t("Completed", "Završeno"), language.t("Your score 8/10", "Tvoja ocena 8/10"))
                 AppButton(
-                    label = language.t("Connect MyAnimeList", "Poveži MyAnimeList"),
+                    label = language.t("Connect account", "Poveži nalog"),
+                    icon = Icons.Default.Login,
                     onClick = onLogin,
                     modifier = Modifier.fillMaxWidth(),
                     variant = AppButtonVariant.Secondary,
                 )
             }
         }
+        Text(
+            text = language.t("Optional — you can connect later", "Opciono — možeš povezati kasnije"),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -360,45 +547,63 @@ private fun MalPreviewPage(language: AppLanguage, onLogin: () -> Unit) {
 private fun PersonalizePage(
     language: AppLanguage,
     selectedTheme: ThemeMode,
+    selectedAccent: AccentColor,
     selectedLanguage: AppLanguage,
     onThemeChange: (ThemeMode) -> Unit,
+    onAccentChange: (AccentColor) -> Unit,
     onLanguageChange: (AppLanguage) -> Unit,
 ) {
     ProductPage(
         eyebrow = language.t("FINISH SETUP", "ZAVRŠI PODEŠAVANJE"),
-        title = language.t("Make it comfortable", "Podesi kako ti odgovara"),
+        title = language.t("Make it yours", "Podesi po svom ukusu"),
         subtitle = language.t(
-            "Liquid Glass stays neutral. Choose appearance and language.",
-            "Liquid Glass ostaje neutralan. Izaberi izgled i jezik.",
+            "Choose appearance, accent and language. Changes are applied immediately.",
+            "Izaberi izgled, boju i jezik. Promene se primenjuju odmah.",
         ),
     ) {
-        AppMaterialSurface(
-            modifier = Modifier.fillMaxWidth(),
-            material = AppMaterial.Elevated,
-            shape = ContinuousRoundedShape(22.dp),
+        CompactPreferenceGroup(
+            icon = Icons.Default.Palette,
+            title = language.t("Appearance", "Izgled"),
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                SettingsChoiceTitle(language.t("Appearance", "Izgled"))
-                ThemeMode.entries.forEachIndexed { index, mode ->
-                    ChoiceRow(
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                ThemeMode.entries.forEach { mode ->
+                    SelectionChip(
                         label = when (mode) {
-                            ThemeMode.SYSTEM -> language.t("System", "Sistemski")
-                            ThemeMode.LIGHT -> language.t("Light", "Svetli")
-                            ThemeMode.DARK -> language.t("Dark", "Tamni")
+                            ThemeMode.SYSTEM -> language.t("System", "Sistem")
+                            ThemeMode.LIGHT -> language.t("Light", "Svetlo")
+                            ThemeMode.DARK -> language.t("Dark", "Tamno")
                         },
                         selected = selectedTheme == mode,
                         onClick = { onThemeChange(mode) },
+                        modifier = Modifier.weight(1f),
                     )
-                    if (index < ThemeMode.entries.lastIndex) ChoiceDivider()
                 }
-                SettingsChoiceTitle(language.t("Language", "Jezik"))
+            }
+            AccentPicker(selectedAccent, onAccentChange)
+        }
+
+        CompactPreferenceGroup(
+            icon = Icons.Default.Language,
+            title = language.t("Language", "Jezik"),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 listOf(
-                    AppLanguage.SYSTEM to language.t("System", "Sistemski"),
+                    AppLanguage.SYSTEM to language.t("System", "Sistem"),
                     AppLanguage.ENGLISH to "English",
                     AppLanguage.SERBIAN_LATIN to "Srpski",
-                ).forEachIndexed { index, (option, label) ->
-                    ChoiceRow(label, selectedLanguage == option) { onLanguageChange(option) }
-                    if (index < 2) ChoiceDivider()
+                ).forEach { (option, label) ->
+                    SelectionChip(
+                        label = label,
+                        selected = selectedLanguage == option,
+                        onClick = { onLanguageChange(option) },
+                        modifier = Modifier.weight(1f),
+                    )
                 }
             }
         }
@@ -406,100 +611,376 @@ private fun PersonalizePage(
 }
 
 @Composable
-private fun ProductPage(eyebrow: String, title: String, subtitle: String, content: @Composable ColumnScope.() -> Unit) {
+private fun ProductPage(
+    eyebrow: String,
+    title: String,
+    subtitle: String,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 22.dp, vertical = 24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp, vertical = 18.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(Modifier.weight(0.45f))
-        Text(eyebrow, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
-        Text(title, Modifier.padding(top = 7.dp), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-        Text(subtitle, Modifier.padding(top = 8.dp, bottom = 24.dp), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+        Spacer(Modifier.weight(0.28f))
+        Text(
+            text = eyebrow,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            text = title,
+            modifier = Modifier.padding(top = 6.dp),
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = subtitle,
+            modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(11.dp),
             content = content,
         )
-        Spacer(Modifier.weight(0.55f))
+        Spacer(Modifier.weight(0.72f))
     }
 }
 
 @Composable
-private fun FeatureOrb(icon: ImageVector, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Surface(modifier = Modifier.size(44.dp), shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Icon(icon, null, Modifier.size(20.dp))
+private fun AppMark() {
+    Surface(
+        modifier = Modifier.size(120.dp),
+        shape = ContinuousRoundedShape(34.dp),
+        color = MaterialTheme.colorScheme.primary,
+        tonalElevation = 0.dp,
+        shadowElevation = 8.dp,
+    ) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Surface(
+                modifier = Modifier.size(72.dp),
+                shape = ContinuousRoundedShape(22.dp),
+                color = MaterialTheme.colorScheme.onPrimary,
+            ) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarMonth,
+                        contentDescription = null,
+                        modifier = Modifier.size(38.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(8.dp)
+                            .size(22.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
         }
-        Text(label, Modifier.padding(top = 5.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
-private fun DatePreviewCell(day: String, date: String, selected: Boolean) {
+private fun FeatureTile(
+    icon: ImageVector,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val color by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.13f)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        },
+        label = "feature-tile-color",
+    )
     Surface(
-        modifier = Modifier.size(width = 48.dp, height = 52.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent,
+        modifier = modifier
+            .height(72.dp)
+            .iosPressScale()
+            .clickable(onClick = onClick),
+        shape = ContinuousRoundedShape(18.dp),
+        color = color,
+        border = if (selected) {
+            androidx.compose.foundation.BorderStroke(
+                1.dp,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.42f),
+            )
+        } else null,
     ) {
-        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Text(day, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(date, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(21.dp),
+                tint = if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = label,
+                modifier = Modifier.padding(top = 5.dp),
+                style = MaterialTheme.typography.labelMedium,
+                color = if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DatePreviewCell(
+    day: String,
+    date: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val color by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.13f)
+        } else {
+            Color.Transparent
+        },
+        label = "date-preview-color",
+    )
+    Surface(
+        modifier = Modifier
+            .size(width = 48.dp, height = 54.dp)
+            .iosPressScale()
+            .clickable(onClick = onClick),
+        shape = ContinuousRoundedShape(16.dp),
+        color = color,
+        border = if (selected) {
+            androidx.compose.foundation.BorderStroke(
+                0.8.dp,
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.42f),
+            )
+        } else null,
+    ) {
+        Column(
+            Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = day,
+                style = MaterialTheme.typography.labelSmall,
+                color = if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = date,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurface,
+            )
         }
     }
 }
 
 @Composable
 private fun PreviewScheduleRow(time: String, title: String, detail: String) {
-    Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(time, Modifier.width(48.dp), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(detail, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
-
-@Composable
-private fun SelectionRow(label: String, selected: Boolean, onClick: () -> Unit) {
-    Surface(
-        modifier = Modifier.fillMaxWidth().height(44.dp).clickable(onClick = onClick),
-        shape = RoundedCornerShape(13.dp),
-        color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.11f) else MaterialTheme.colorScheme.surfaceContainerHigh,
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(Modifier.fillMaxSize().padding(horizontal = 13.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-            if (selected) Icon(Icons.Default.Check, null, Modifier.size(17.dp), tint = MaterialTheme.colorScheme.primary)
+        Text(
+            text = time,
+            modifier = Modifier.width(48.dp),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = detail,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
 
 @Composable
-private fun SettingsChoiceTitle(text: String) {
-    Text(
-        text.uppercase(),
-        Modifier.fillMaxWidth().padding(start = 13.dp, top = 11.dp, bottom = 4.dp),
-        style = MaterialTheme.typography.labelSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        fontWeight = FontWeight.SemiBold,
+private fun SelectionChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val background by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.13f)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        },
+        label = "selection-chip-background",
     )
-}
-
-@Composable
-private fun ChoiceRow(label: String, selected: Boolean, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().height(44.dp).clickable(onClick = onClick).padding(horizontal = 13.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        if (selected) Icon(Icons.Default.Check, null, Modifier.size(17.dp), tint = MaterialTheme.colorScheme.primary)
+    Surface(
+        modifier = modifier
+            .height(46.dp)
+            .iosPressScale()
+            .clickable(onClick = onClick),
+        shape = ContinuousRoundedShape(16.dp),
+        color = background,
+        border = androidx.compose.foundation.BorderStroke(
+            width = 0.7.dp,
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.48f)
+            } else {
+                MaterialTheme.colorScheme.outlineVariant
+            },
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
+        ) {
+            if (selected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(15.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                color = if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
 @Composable
-private fun ChoiceDivider() {
-    HorizontalDivider(
-        modifier = Modifier.padding(start = 13.dp),
-        thickness = 0.5.dp,
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.36f),
+private fun CompactPreferenceGroup(
+    icon: ImageVector,
+    title: String,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    AppMaterialSurface(
+        modifier = Modifier.fillMaxWidth(),
+        material = AppMaterial.Elevated,
+        shape = ContinuousRoundedShape(22.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(11.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(19.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            content()
+        }
+    }
+}
+
+@Composable
+private fun AccentPicker(
+    selectedAccent: AccentColor,
+    onAccentChange: (AccentColor) -> Unit,
+) {
+    val options = listOf(
+        AccentColor.TELEGRAM_BLUE,
+        AccentColor.PURPLE,
+        AccentColor.GREEN,
+        AccentColor.ORANGE,
+        AccentColor.PINK,
+        AccentColor.RED,
+        AccentColor.CYAN,
     )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        options.forEach { accent ->
+            val selected = selectedAccent == accent
+            Surface(
+                modifier = Modifier
+                    .size(38.dp)
+                    .iosPressScale()
+                    .clickable { onAccentChange(accent) },
+                shape = CircleShape,
+                color = accent.swatch(),
+                border = androidx.compose.foundation.BorderStroke(
+                    width = if (selected) 3.dp else 1.dp,
+                    color = if (selected) MaterialTheme.colorScheme.onSurface
+                    else MaterialTheme.colorScheme.surface,
+                ),
+            ) {
+                if (selected) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(17.dp),
+                            tint = Color.White,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun AccentColor.swatch(): Color = when (this) {
+    AccentColor.TELEGRAM_BLUE -> Color(0xFF0A84FF)
+    AccentColor.PURPLE -> Color(0xFFAF52DE)
+    AccentColor.GREEN -> Color(0xFF34C759)
+    AccentColor.ORANGE -> Color(0xFFFF9F0A)
+    AccentColor.PINK -> Color(0xFFFF2D55)
+    AccentColor.RED -> Color(0xFFFF453A)
+    AccentColor.CYAN -> Color(0xFF32ADE6)
+    AccentColor.INDIGO -> Color(0xFF5856D6)
+    AccentColor.TEAL -> Color(0xFF30B0C7)
+    AccentColor.YELLOW -> Color(0xFFFFD60A)
+    AccentColor.DEEP_PURPLE -> Color(0xFF5E5CE6)
 }
