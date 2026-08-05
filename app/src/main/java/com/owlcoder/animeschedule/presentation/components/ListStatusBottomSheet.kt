@@ -98,6 +98,7 @@ fun ListStatusBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         title = stringResource(R.string.list_status_title),
+        sheetGesturesEnabled = true,
         trailingContent = {
             TextButton(onClick = ::save) {
                 Text(
@@ -111,10 +112,10 @@ fun ListStatusBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(max = 590.dp)
+                .heightIn(max = 520.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(15.dp),
+                .padding(bottom = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 SectionLabel(stringResource(R.string.detail_status))
