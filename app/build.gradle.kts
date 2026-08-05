@@ -22,9 +22,9 @@ android {
     defaultConfig {
         applicationId = "com.owlcoder.animeschedule"
         minSdk = 31
-        targetSdk = 35
-        versionCode = 15
-        versionName = "3.7"
+        targetSdk = 36
+        versionCode = 16
+        versionName = "3.7.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
