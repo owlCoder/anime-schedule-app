@@ -102,7 +102,7 @@ private val items = listOf(
 
 private val DockShape = ContinuousRoundedShape(15.dp)
 private val ActiveItemShape = ContinuousRoundedShape(14.dp)
-private val DockHeight = 52.dp
+private val DockHeight = 56.dp
 
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
@@ -312,7 +312,7 @@ private fun TabVisual(
                     imageVector = if (active) item.activeIcon else item.inactiveIcon,
                     contentDescription = null,
                     tint = color,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(21.dp),
                 )
             }
         }
@@ -320,8 +320,8 @@ private fun TabVisual(
             text = label,
             color = color,
             style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 10.2.sp,
-                lineHeight = 11.2.sp,
+                fontSize = 10.8.sp,
+                lineHeight = 12.sp,
             ),
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             maxLines = 1,
