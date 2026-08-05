@@ -12,7 +12,7 @@
     <string name="settings_cache">Keš</string>
     <string name="settings_cache_value">%1$s · %2$d dana</string>
     <string name="settings_clear_cache">Obriši keš</string>
-    <string name="settings_clear_cache_subtitle">Ukloni privremene slike i zastarele podatke</string>
+    <string name="settings_clear_cache_subtitle">Ukloni privremene podatke</string>
     <string name="settings_cache_retention_title">Čuvanje keša</string>
     <string name="settings_cache_retention_subtitle">Izaberi koliko dugo se čuvaju privremeni lokalni podaci.</string>
     <string name="settings_cache_retention_days">%d dana</string>
