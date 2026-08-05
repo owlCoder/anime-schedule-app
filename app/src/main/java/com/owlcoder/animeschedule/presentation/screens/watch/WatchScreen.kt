@@ -3,6 +3,7 @@ package com.owlcoder.animeschedule.presentation.screens.watch
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Bundle
+import android.os.Message
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
@@ -12,16 +13,16 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -29,7 +30,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -41,25 +41,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.owlcoder.animeschedule.core.adblock.AdBlockFilter
 import com.owlcoder.animeschedule.R
+import com.owlcoder.animeschedule.core.adblock.AdBlockFilter
 import com.owlcoder.animeschedule.presentation.components.AppLoadingState
 import com.owlcoder.animeschedule.presentation.components.GlassChrome
 import java.io.ByteArrayInputStream
 
 /** Fullscreen in-app browser for a watch-source link — no address bar/chrome, mirrors
- *  visiting the site directly. Back navigates the WebView's own history before popping.
- *  Also supports HTML5 `<video>` fullscreen (site's own fullscreen button) via
- *  [WebChromeClient.onShowCustomView], which a plain WebView doesn't handle. */
+ * visiting the site directly. Back navigates the WebView's own history before popping.
+ * Also supports HTML5 `<video>` fullscreen (site's own fullscreen button) via
+ * [WebChromeClient.onShowCustomView], which a plain WebView doesn't handle. */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun WatchScreen(
     url: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     var webView by remember { mutableStateOf<WebView?>(null) }
     var isLoading by remember { mutableStateOf(true) }
@@ -68,10 +69,8 @@ fun WatchScreen(
     val context = LocalContext.current
     val activity = context as? Activity
 
-    // Preserves the WebView's own in-site navigation (e.g. a picked video server/episode)
-    // across a config change (rotation) recreating this Activity — otherwise the factory
-    // below would spin up a brand-new WebView and reload the original watch-source `url`,
-    // dropping the user back on the source's search/landing page mid-playback.
+    // Fallback state preservation for process/config recreation. MainActivity also handles
+    // orientation changes directly, so normal rotation keeps the same live WebView instance.
     var webViewBundle by rememberSaveable { mutableStateOf<Bundle?>(null) }
 
     BackHandler {
@@ -89,7 +88,7 @@ fun WatchScreen(
             Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                .padding(innerPadding)
+                .padding(innerPadding),
         ) {
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
@@ -98,44 +97,60 @@ fun WatchScreen(
                     WebView(viewContext).apply {
                         settings.javaScriptEnabled = true
                         settings.domStorageEnabled = true
+                        settings.javaScriptCanOpenWindowsAutomatically = false
+                        settings.setSupportMultipleWindows(true)
+                        settings.safeBrowsingEnabled = true
+
                         webViewClient = object : WebViewClient() {
+                            override fun onPageCommitVisible(view: WebView?, url: String?) {
+                                super.onPageCommitVisible(view, url)
+                                view?.installPopupGuard()
+                            }
+
                             override fun onPageFinished(view: WebView?, url: String?) {
+                                view?.installPopupGuard()
                                 isLoading = false
                             }
 
-                            // Shady streaming sites redirect to non-http(s) schemes
-                            // (intent://, market://, etc.) as disguised ads/malware links.
-                            // A plain WebView can't open those anyway (ERR_UNKNOWN_URL_SCHEME) —
-                            // swallow the navigation instead of showing an error page.
                             override fun shouldOverrideUrlLoading(
                                 view: WebView?,
-                                request: WebResourceRequest?
+                                request: WebResourceRequest?,
                             ): Boolean {
-                                val scheme = request?.url?.scheme
+                                request ?: return true
+                                val scheme = request.url.scheme
                                 if (scheme != "http" && scheme != "https") return true
-                                return super.shouldOverrideUrlLoading(view, request)
+                                if (adBlockFilter.shouldBlock(request)) return true
+                                if (
+                                    request.isForMainFrame &&
+                                    adBlockFilter.shouldBlockAutomaticNavigation(
+                                        currentUrl = view?.url,
+                                        target = request.url,
+                                        hasUserGesture = request.hasGesture(),
+                                    )
+                                ) {
+                                    return true
+                                }
+                                return false
                             }
 
                             override fun shouldInterceptRequest(
                                 view: WebView?,
-                                request: WebResourceRequest?
+                                request: WebResourceRequest?,
                             ): WebResourceResponse? {
                                 if (request != null && adBlockFilter.shouldBlock(request)) {
-                                    return WebResourceResponse(
-                                        "text/plain",
-                                        "UTF-8",
-                                        ByteArrayInputStream(ByteArray(0))
-                                    )
+                                    return emptyWebResponse()
                                 }
                                 return super.shouldInterceptRequest(view, request)
                             }
                         }
+
                         if (activity != null) {
                             webChromeClient = VideoFullscreenChromeClient(
                                 activity = activity,
-                                onFullscreenChange = { isVideoFullscreen = it }
+                                onFullscreenChange = { isVideoFullscreen = it },
                             ).also { fullscreenChromeClient = it }
                         }
+
                         val savedBundle = webViewBundle
                         if (savedBundle != null) {
                             restoreState(savedBundle)
@@ -144,30 +159,34 @@ fun WatchScreen(
                             loadUrl(url)
                         }
                     }.also { webView = it }
-                }
+                },
             )
+
             if (isLoading) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.82f)),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     AppLoadingState(label = stringResource(R.string.common_loading))
                 }
             }
+
             GlassChrome(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .fillMaxWidth()
                     .statusBarsPadding()
                     .padding(horizontal = 12.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(22.dp)
+                shape = RoundedCornerShape(22.dp),
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp, vertical = 2.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 2.dp, vertical = 2.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     IconButton(
                         onClick = {
@@ -177,19 +196,19 @@ fun WatchScreen(
                                 onBack()
                             }
                         },
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(48.dp),
                     ) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.cd_back),
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(22.dp),
                         )
                     }
                     androidx.compose.material3.Text(
                         text = "Watch",
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1
+                        maxLines = 1,
                     )
                 }
             }
@@ -197,8 +216,6 @@ fun WatchScreen(
     }
 
     DisposableEffect(activity) {
-        // Watch owns only its temporary chrome state. The activity's bars are restored
-        // when leaving the route, including after a WebView/HTML5 fullscreen session.
         activity?.let { setSystemBarsVisible(it, visible = true) }
         onDispose {
             webView?.let { wv -> webViewBundle = Bundle().also { wv.saveState(it) } }
@@ -208,15 +225,31 @@ fun WatchScreen(
     }
 }
 
-/** Hosts a site's HTML5 video fullscreen view as an overlay on the activity's decor view,
- *  since a plain WebView has nowhere to put it. [onFullscreenChange] lets the composable
- *  know so it can route back-press to exiting fullscreen instead of WebView navigation. */
+private fun WebView.installPopupGuard() {
+    evaluateJavascript(POPUP_GUARD_SCRIPT, null)
+}
+
+private fun emptyWebResponse(): WebResourceResponse = WebResourceResponse(
+    "text/plain",
+    "UTF-8",
+    ByteArrayInputStream(ByteArray(0)),
+)
+
+/** Hosts a site's HTML5 video fullscreen view as an overlay on the activity's decor view. */
 private class VideoFullscreenChromeClient(
     private val activity: Activity,
-    private val onFullscreenChange: (Boolean) -> Unit
+    private val onFullscreenChange: (Boolean) -> Unit,
 ) : WebChromeClient() {
     private var customView: View? = null
     private var customViewCallback: CustomViewCallback? = null
+
+    /** Reject every secondary WebView created by window.open/target=_blank popup scripts. */
+    override fun onCreateWindow(
+        view: WebView?,
+        isDialog: Boolean,
+        isUserGesture: Boolean,
+        resultMsg: Message?,
+    ): Boolean = false
 
     override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
         if (customView != null || view == null) {
@@ -230,8 +263,8 @@ private class VideoFullscreenChromeClient(
             view,
             FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
+                FrameLayout.LayoutParams.MATCH_PARENT,
+            ),
         )
         setSystemBarsVisible(activity, visible = false)
         onFullscreenChange(true)
@@ -259,3 +292,50 @@ private fun setSystemBarsVisible(activity: Activity, visible: Boolean) {
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
     }
 }
+
+private const val POPUP_GUARD_SCRIPT = """
+    (function() {
+        if (window.__animeSchedulePopupGuardInstalled) return;
+        window.__animeSchedulePopupGuardInstalled = true;
+
+        try {
+            window.open = function() { return null; };
+        } catch (_) {}
+
+        function sanitize(root) {
+            if (!root || !root.querySelectorAll) return;
+            root.querySelectorAll('a[target], area[target], form[target]').forEach(function(node) {
+                var target = (node.getAttribute('target') || '').toLowerCase();
+                if (target === '_blank' || target === '_new') node.removeAttribute('target');
+                if (node.tagName === 'A' || node.tagName === 'AREA') {
+                    node.setAttribute('rel', 'noopener noreferrer');
+                }
+            });
+        }
+
+        sanitize(document);
+        if (document.documentElement) {
+            new MutationObserver(function(records) {
+                records.forEach(function(record) {
+                    if (record.type === 'attributes') sanitize(record.target.parentNode || document);
+                    record.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) sanitize(node);
+                    });
+                });
+            }).observe(document.documentElement, {
+                subtree: true,
+                childList: true,
+                attributes: true,
+                attributeFilter: ['target']
+            });
+        }
+
+        document.addEventListener('click', function(event) {
+            var node = event.target;
+            while (node && node !== document && node.tagName !== 'A' && node.tagName !== 'AREA') {
+                node = node.parentNode;
+            }
+            if (node && node.removeAttribute) node.removeAttribute('target');
+        }, true);
+    })();
+"""
