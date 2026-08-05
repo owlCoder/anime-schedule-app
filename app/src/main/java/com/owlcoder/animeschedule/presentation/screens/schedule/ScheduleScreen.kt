@@ -891,6 +891,7 @@ private fun ScheduleSeeAllSheet(
     AppSheet(
         onDismissRequest = onDismiss,
         title = title,
+        sheetGesturesEnabled = true,
     ) {
         if (episodes.isEmpty()) {
             EmptyState(
@@ -905,7 +906,7 @@ private fun ScheduleSeeAllSheet(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(max = 650.dp),
+                    .heightIn(max = 570.dp),
                 contentPadding = PaddingValues(bottom = 12.dp),
             ) {
                 item(key = "schedule-overlay-timeline") {
