@@ -16,13 +16,13 @@ enum class GlassBlur(val radius: Dp) {
 object GlassTokens {
     val hairline: Dp = 0.5.dp
 
-    val shadow = Color.Black.copy(alpha = 0.16f)
-    val neutralFillLight = Color.White.copy(alpha = 0.62f)
-    val neutralFillDark = Color(0xFF2C2C2E).copy(alpha = 0.56f)
-    val selectedFillLight = Color.White.copy(alpha = 0.72f)
-    val selectedFillDark = Color(0xFF3A3A3C).copy(alpha = 0.64f)
-    val interactiveFillLight = Color.White.copy(alpha = 0.78f)
-    val interactiveFillDark = Color(0xFF2C2C2E).copy(alpha = 0.68f)
+    val shadow = Color.Black.copy(alpha = 0.18f)
+    val neutralFillLight = Color.White.copy(alpha = 0.80f)
+    val neutralFillDark = Color(0xFF2C2C2E).copy(alpha = 0.70f)
+    val selectedFillLight = Color.White.copy(alpha = 0.90f)
+    val selectedFillDark = Color(0xFF3A3A3C).copy(alpha = 0.78f)
+    val interactiveFillLight = Color.White.copy(alpha = 0.82f)
+    val interactiveFillDark = Color(0xFF2C2C2E).copy(alpha = 0.72f)
 
     val maxBackdropBlurRadius: Dp = 20.dp
 
