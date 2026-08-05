@@ -7,6 +7,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,17 +22,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 
@@ -75,7 +75,7 @@ fun AnimatedSplashScreen(modifier: Modifier = Modifier) {
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
                         MaterialTheme.colorScheme.background,
                     ),
-                )
+                ),
             )
             .semantics {
                 contentDescription = loadingDescription
@@ -88,10 +88,8 @@ fun AnimatedSplashScreen(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(horizontal = 24.dp),
         ) {
-            // A small translucent bloom gives the mark separation without creating a large
-            // card. The content remains readable on both semantic light and dark surfaces.
             Box(
-                modifier = Modifier.size(112.dp),
+                modifier = Modifier.size(120.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 val bloomOuter = MaterialTheme.colorScheme.primary.copy(alpha = 0.07f)
@@ -103,12 +101,12 @@ fun AnimatedSplashScreen(modifier: Modifier = Modifier) {
                     )
                     drawCircle(
                         color = bloomInner,
-                        radius = size.minDimension * 0.31f,
+                        radius = size.minDimension * 0.32f,
                     )
                 }
                 AnimeScheduleMark(
                     modifier = Modifier
-                        .size(68.dp)
+                        .size(78.dp)
                         .graphicsLayer {
                             scaleX = pulse
                             scaleY = pulse
@@ -140,29 +138,20 @@ fun AnimatedSplashScreen(modifier: Modifier = Modifier) {
     }
 }
 
-/** Reusable AS mark for loading and future shared surfaces; text keeps it scalable/accessibile. */
+/** Shared calendar-and-star application mark used by loading and branded surfaces. */
 @Composable
 fun AnimeScheduleMark(
     modifier: Modifier = Modifier,
     scale: Float = 1f,
 ) {
-    val accent = MaterialTheme.colorScheme.primary
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        Text(
-            text = stringResource(R.string.about_logo_monogram),
-            style = MaterialTheme.typography.headlineMedium,
-            color = accent,
-            modifier = Modifier,
-        )
-        Canvas(Modifier.fillMaxSize()) {
-            drawCircle(
-                color = accent.copy(alpha = 0.22f),
-                radius = size.minDimension * 0.44f * scale,
-                center = Offset(size.width / 2f, size.height / 2f),
-                style = Stroke(width = 1.5.dp.toPx()),
-            )
-        }
-    }
+    Image(
+        painter = painterResource(R.drawable.ic_app_icon),
+        contentDescription = null,
+        modifier = modifier.graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        },
+    )
 }
 
 @Composable
