@@ -48,7 +48,7 @@ class MyListViewModel @Inject constructor(
 
     private val _searchQuery = MutableStateFlow("")
     private val _activeFilter = MutableStateFlow(WatchStatus.WATCHING)
-    private val _isLoading = MutableStateFlow(false)
+    private val _isLoading = MutableStateFlow(true)
     private val _pendingIncrementIds = MutableStateFlow<Set<Int>>(emptySet())
 
     sealed interface UpdateEvent {
@@ -79,7 +79,11 @@ class MyListViewModel @Inject constructor(
             statusCounts = allEntries.groupingBy { it.status }.eachCount()
         )
     }.combine(_pendingIncrementIds) { state, pending -> state.copy(pendingIncrementIds = pending) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MyListUiState())
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            MyListUiState(isLoading = true),
+        )
 
     init {
         refreshIfStale()
