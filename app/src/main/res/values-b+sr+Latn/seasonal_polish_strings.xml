@@ -1,0 +1,4 @@
+<resources>
+    <string name="seasonal_results_count">%d anime</string>
+    <string name="seasonal_filtered_results_count">%1$d od %2$d anime</string>
+</resources>
