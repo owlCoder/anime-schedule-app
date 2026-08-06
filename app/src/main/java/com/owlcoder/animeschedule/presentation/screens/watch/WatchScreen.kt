@@ -35,6 +35,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,6 +69,8 @@ fun WatchScreen(
     var fullscreenChromeClient by remember { mutableStateOf<VideoFullscreenChromeClient?>(null) }
     val context = LocalContext.current
     val activity = context as? Activity
+    val currentWebView by rememberUpdatedState(webView)
+    val currentChromeClient by rememberUpdatedState(fullscreenChromeClient)
 
     // Fallback state preservation for process/config recreation. MainActivity also handles
     // orientation changes directly, so normal rotation keeps the same live WebView instance.
@@ -205,7 +208,7 @@ fun WatchScreen(
                         )
                     }
                     androidx.compose.material3.Text(
-                        text = "Watch",
+                        text = stringResource(R.string.watch_title),
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
@@ -218,8 +221,11 @@ fun WatchScreen(
     DisposableEffect(activity) {
         activity?.let { setSystemBarsVisible(it, visible = true) }
         onDispose {
-            webView?.let { wv -> webViewBundle = Bundle().also { wv.saveState(it) } }
-            fullscreenChromeClient?.onHideCustomView()
+            currentChromeClient?.onHideCustomView()
+            currentWebView?.let { activeWebView ->
+                webViewBundle = Bundle().also { activeWebView.saveState(it) }
+                activeWebView.releaseResources()
+            }
             activity?.let { setSystemBarsVisible(it, visible = true) }
         }
     }
@@ -227,6 +233,14 @@ fun WatchScreen(
 
 private fun WebView.installPopupGuard() {
     evaluateJavascript(POPUP_GUARD_SCRIPT, null)
+}
+
+private fun WebView.releaseResources() {
+    stopLoading()
+    webChromeClient = null
+    webViewClient = WebViewClient()
+    removeAllViews()
+    destroy()
 }
 
 private fun emptyWebResponse(): WebResourceResponse = WebResourceResponse(
