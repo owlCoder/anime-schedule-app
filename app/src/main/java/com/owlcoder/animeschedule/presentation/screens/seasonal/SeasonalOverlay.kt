@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -30,7 +29,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,8 +39,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.owlcoder.animeschedule.R
-import com.owlcoder.animeschedule.domain.model.AnimeSeason
 import com.owlcoder.animeschedule.presentation.components.AppErrorState
 import com.owlcoder.animeschedule.presentation.components.AppInlineHeader
 import com.owlcoder.animeschedule.presentation.components.AppLoadingState
@@ -64,7 +62,7 @@ fun SeasonalOverlay(
     onDismiss: () -> Unit,
     viewModel: SeasonalViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val motion = LocalMotionPolicy.current
     var showFilterSheet by remember { mutableStateOf(false) }
 
@@ -87,7 +85,7 @@ fun SeasonalOverlay(
                     GlassToolbarGroup {
                         GlassToolbarButton(
                             icon = Icons.AutoMirrored.Filled.NavigateBefore,
-                            contentDescription = "Previous season",
+                            contentDescription = stringResource(R.string.seasonal_previous),
                             onClick = {
                                 val result = prevSeason(uiState.season, uiState.year)
                                 viewModel.setSeason(result.first, result.second)
@@ -95,7 +93,7 @@ fun SeasonalOverlay(
                         )
                         GlassToolbarButton(
                             icon = Icons.AutoMirrored.Filled.NavigateNext,
-                            contentDescription = "Next season",
+                            contentDescription = stringResource(R.string.seasonal_next),
                             onClick = {
                                 val result = nextSeason(uiState.season, uiState.year)
                                 viewModel.setSeason(result.first, result.second)
@@ -257,7 +255,7 @@ private fun SeasonalLoadingState() {
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 20.dp),
             label = stringResource(R.string.seasonal_title),
-            message = "Fetching the latest anime",
+            message = stringResource(R.string.seasonal_loading_message),
         )
     }
 }
