@@ -1,18 +1,25 @@
 package com.owlcoder.animeschedule.presentation.screens.seasonal
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -22,10 +29,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
-import com.owlcoder.animeschedule.presentation.components.AppMaterial
-import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
+import com.owlcoder.animeschedule.presentation.components.iosPressScale
+import com.owlcoder.animeschedule.ui.theme.PillShape
 import java.util.Locale
 
 @Composable
@@ -34,6 +41,8 @@ internal fun SeasonalAnimeGlassCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val posterShape = ContinuousRoundedShape(18.dp)
     val format = seasonalFormatLabel(item.format)
     val episodeText = item.episodes?.let { "$it ep" }
     val supporting = listOfNotNull(format, episodeText).joinToString(" · ")
@@ -41,60 +50,71 @@ internal fun SeasonalAnimeGlassCard(
         String.format(Locale.ROOT, "%.1f", it / 10.0)
     }
 
-    AppMaterialSurface(
+    Column(
         modifier = modifier
-            .clickable(role = Role.Button, onClick = onClick)
+            .iosPressScale(interactionSource, pressedScale = 0.985f)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                role = Role.Button,
+                onClick = onClick,
+            )
             .semantics(mergeDescendants = true) { role = Role.Button },
-        material = AppMaterial.Interactive,
-        shape = ContinuousRoundedShape(16.dp),
+        verticalArrangement = Arrangement.spacedBy(7.dp),
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(0.68f)
+                .clip(posterShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        ) {
             MediaThumbnail.Large(
                 url = item.coverImageUrl,
                 contentDescription = item.title,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(0.68f),
+                modifier = Modifier.fillMaxSize(),
             )
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 66.dp)
-                    .padding(horizontal = 8.dp, vertical = 7.dp),
-                verticalArrangement = Arrangement.spacedBy(5.dp),
+            score?.let { formattedScore ->
+                Surface(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp),
+                    shape = PillShape,
+                    color = Color.Black.copy(alpha = 0.62f),
+                    contentColor = Color.White,
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
+                ) {
+                    Text(
+                        text = "★ $formattedScore",
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                    )
+                }
+            }
+        }
+
+        Text(
+            text = item.title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (supporting.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 2,
+                    text = supporting,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    if (supporting.isNotEmpty()) {
-                        Text(
-                            text = supporting,
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    score?.let {
-                        Text(
-                            text = "★ $it",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary,
-                            maxLines = 1,
-                        )
-                    }
-                }
             }
         }
     }
