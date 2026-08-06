@@ -76,15 +76,27 @@
     <string name="changelog_about_description">Bezbedniji identitet aplikacije, tačni izvori podataka i urednije sistemske informacije.</string>
     <string name="changelog_footer">Napravljeno pažljivo od strane AnimeSchedule tima</string>
 
-    <!-- Watch sources -->
+    <!-- Izvori za gledanje -->
     <string name="watch_sources_empty_title">Nema izvora za gledanje</string>
     <string name="watch_sources_empty_subtitle">Dodaj pouzdanog provajdera za brzo otvaranje pretrage animea.</string>
     <string name="watch_sources_add_subtitle">Dodaj pouzdanog provajdera pretrage</string>
     <string name="watch_sources_edit">Izmeni izvor</string>
     <string name="watch_sources_mode_external">Instalirana aplikacija</string>
     <string name="watch_sources_mode_internal">Pregledač u aplikaciji</string>
+    <string name="watch_title">Gledanje</string>
 
-    <!-- Schedule dashboard copy -->
+    <!-- Obaveštenja -->
+    <string name="notifications_mark_all">Označi sve</string>
+
+    <!-- Sezonski prikaz -->
+    <string name="seasonal_previous">Prethodna sezona</string>
+    <string name="seasonal_next">Sledeća sezona</string>
+    <string name="seasonal_loading_message">Učitavanje najnovijih animea</string>
+
+    <!-- Moja lista -->
+    <string name="mylist_anime_count">%d animea</string>
+
+    <!-- Tekst početnog rasporeda -->
     <string name="schedule_status_up_next">Sledeće</string>
     <string name="schedule_status_just_aired">Upravo emitovano</string>
     <string name="schedule_status_latest_today">Najnovije danas</string>
