@@ -13,15 +13,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 
-/** Motion values tuned for calm, direct iOS-style movement without visible bounce. */
+/** Calm, responsive motion values shared by navigation, overlays and interactive controls. */
 object IosMotion {
-    const val Quick = 160
-    const val Standard = 260
-    const val Navigation = 320
-    const val Sheet = 360
+    const val PressIn = 90
+    const val Quick = 150
+    const val Standard = 240
+    const val Navigation = 300
+    const val Sheet = 340
 
-    val StandardEasing = CubicBezierEasing(0.20f, 0.00f, 0.00f, 1.00f)
-    val DecelerateEasing = CubicBezierEasing(0.00f, 0.00f, 0.00f, 1.00f)
+    /** Smooth ease-out close to the timing used by modern iOS interface transitions. */
+    val StandardEasing = CubicBezierEasing(0.16f, 1.00f, 0.30f, 1.00f)
+    val DecelerateEasing = CubicBezierEasing(0.05f, 0.70f, 0.10f, 1.00f)
+    val AccelerateEasing = CubicBezierEasing(0.40f, 0.00f, 1.00f, 1.00f)
 }
 
 fun <T> MotionPolicy.iosTween(
@@ -40,16 +43,44 @@ fun <T> MotionPolicy.iosDecelerate(
     easing = IosMotion.DecelerateEasing,
 )
 
-fun <T> MotionPolicy.iosSpring(): FiniteAnimationSpec<T> = if (reduceMotion) {
+fun <T> MotionPolicy.iosAccelerate(
+    durationMillis: Int = IosMotion.Quick,
+): FiniteAnimationSpec<T> = tween(
+    durationMillis = duration(durationMillis),
+    easing = IosMotion.AccelerateEasing,
+)
+
+/**
+ * Critically damped positional spring. It settles quickly without the visible rubber-band bounce
+ * that feels distracting on nav indicators, switches and content-size changes.
+ */
+fun <T> MotionPolicy.iosSpring(
+    dampingRatio: Float = 1.0f,
+    stiffness: Float = Spring.StiffnessMedium,
+): FiniteAnimationSpec<T> = if (reduceMotion) {
     tween(durationMillis = 0)
 } else {
     spring(
-        dampingRatio = 0.90f,
-        stiffness = Spring.StiffnessMediumLow,
+        dampingRatio = dampingRatio,
+        stiffness = stiffness,
     )
 }
 
-/** Subtle tactile compression for icon buttons and tab items. */
+fun MotionPolicy.iosPressIn(): FiniteAnimationSpec<Float> = tween(
+    durationMillis = duration(IosMotion.PressIn),
+    easing = IosMotion.DecelerateEasing,
+)
+
+fun MotionPolicy.iosPressOut(): FiniteAnimationSpec<Float> = if (reduceMotion) {
+    tween(durationMillis = 0)
+} else {
+    spring(
+        dampingRatio = 0.88f,
+        stiffness = 720f,
+    )
+}
+
+/** Fast tactile compression on touch-down, followed by a soft spring release. */
 @Composable
 fun Modifier.iosPressScale(
     interactionSource: MutableInteractionSource,
@@ -59,7 +90,7 @@ fun Modifier.iosPressScale(
     val pressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (pressed && policy.animationsEnabled) pressedScale else 1f,
-        animationSpec = policy.iosSpring(),
+        animationSpec = if (pressed) policy.iosPressIn() else policy.iosPressOut(),
         label = "ios-press-scale",
     )
     return graphicsLayer {
