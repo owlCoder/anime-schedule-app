@@ -22,8 +22,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.NavigateBefore
-import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -83,22 +81,6 @@ fun SeasonalOverlay(
                 backContentDescription = stringResource(R.string.common_cancel),
                 trailingContent = {
                     GlassToolbarGroup {
-                        GlassToolbarButton(
-                            icon = Icons.AutoMirrored.Filled.NavigateBefore,
-                            contentDescription = stringResource(R.string.seasonal_previous),
-                            onClick = {
-                                val result = prevSeason(uiState.season, uiState.year)
-                                viewModel.setSeason(result.first, result.second)
-                            },
-                        )
-                        GlassToolbarButton(
-                            icon = Icons.AutoMirrored.Filled.NavigateNext,
-                            contentDescription = stringResource(R.string.seasonal_next),
-                            onClick = {
-                                val result = nextSeason(uiState.season, uiState.year)
-                                viewModel.setSeason(result.first, result.second)
-                            },
-                        )
                         GlassToolbarButton(
                             icon = Icons.Outlined.Tune,
                             contentDescription = stringResource(R.string.seasonal_filter_title),
@@ -176,11 +158,11 @@ fun SeasonalOverlay(
                         )
                     }
                     SeasonalContentMode.Grid -> LazyVerticalGrid(
-                        columns = GridCells.Fixed(3),
+                        columns = GridCells.Adaptive(minSize = 142.dp),
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = 9.dp, bottom = 28.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(13.dp),
+                        contentPadding = PaddingValues(top = 10.dp, bottom = 30.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp),
                     ) {
                         items(
                             items = uiState.filteredItems,
@@ -217,26 +199,26 @@ fun SeasonalOverlay(
 private fun SeasonalLoadingState() {
     Box(modifier = Modifier.fillMaxSize()) {
         LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
+            columns = GridCells.Adaptive(minSize = 142.dp),
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 9.dp, bottom = 110.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(13.dp),
+            contentPadding = PaddingValues(top = 10.dp, bottom = 110.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
             userScrollEnabled = false,
         ) {
-            itemsIndexed(List(9) { it }) { _, _ ->
-                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            itemsIndexed(List(6) { it }) { _, _ ->
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(0.68f)
-                            .clip(ContinuousRoundedShape(13.dp))
+                            .clip(ContinuousRoundedShape(18.dp))
                             .background(MaterialTheme.colorScheme.surfaceContainer),
                     )
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(0.88f)
-                            .height(10.dp)
+                            .height(11.dp)
                             .clip(ContinuousRoundedShape(5.dp))
                             .background(MaterialTheme.colorScheme.surfaceContainer),
                     )
