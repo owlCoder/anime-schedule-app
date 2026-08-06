@@ -1,5 +1,6 @@
 package com.owlcoder.animeschedule.presentation.components
 
+import android.view.WindowManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,15 +23,18 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogWindowProvider
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
 
 /**
@@ -51,13 +55,13 @@ fun AppSheet(
     trailingContent: @Composable (() -> Unit)? = null,
     showBackButton: Boolean = true,
     showCloseButton: Boolean = false,
-    showDragHandle: Boolean = true,
+    @Suppress("UNUSED_PARAMETER") showDragHandle: Boolean = false,
     sheetGesturesEnabled: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
     val container = if (dark) Color(0xFF1C1C1E) else Color(0xFFFBFBFD)
-    val scrim = Color.Black.copy(alpha = if (dark) 0.44f else 0.28f)
+    val scrim = Color.Black.copy(alpha = if (dark) 0.42f else 0.26f)
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -74,13 +78,14 @@ fun AppSheet(
         contentColor = MaterialTheme.colorScheme.onSurface,
         scrimColor = scrim,
         tonalElevation = 0.dp,
-        dragHandle = if (showDragHandle) ({ AppSheetHandle() }) else null,
+        dragHandle = null,
     ) {
+        AppSheetBlurBehind()
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .imePadding()
-                .padding(start = 18.dp, end = 18.dp, bottom = 18.dp),
+                .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 18.dp),
         ) {
             if (!title.isNullOrBlank()) {
                 Row(
@@ -119,6 +124,24 @@ fun AppSheet(
                 }
             }
             content()
+        }
+    }
+}
+
+@Composable
+private fun AppSheetBlurBehind() {
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val window = (view.parent as? DialogWindowProvider)?.window
+        window?.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+        window?.attributes = window?.attributes?.apply {
+            blurBehindRadius = 32
+        }
+        onDispose {
+            window?.attributes = window?.attributes?.apply {
+                blurBehindRadius = 0
+            }
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
         }
     }
 }
