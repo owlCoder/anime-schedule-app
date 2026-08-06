@@ -3,8 +3,6 @@ package com.owlcoder.animeschedule.core.adblock
 import android.content.Context
 import android.net.Uri
 import android.webkit.WebResourceRequest
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 /**
  * Offline ad/tracker filter for the in-app WebView.
@@ -53,8 +51,20 @@ class AdBlockFilter private constructor(
         return POPUP_NAVIGATION_FRAGMENTS.any(normalizedTarget::contains)
     }
 
-    private fun matchesBlockedHost(host: String): Boolean =
-        host in blockedHosts || blockedHosts.any { host.endsWith(".$it") }
+    /**
+     * Checks the exact host and each parent suffix with O(label count) hash lookups instead of
+     * scanning the complete block list for every WebView resource request.
+     */
+    private fun matchesBlockedHost(host: String): Boolean {
+        var candidate = host.removeSuffix(".")
+        while (candidate.isNotEmpty()) {
+            if (candidate in blockedHosts) return true
+            val nextLabel = candidate.indexOf('.')
+            if (nextLabel < 0) return false
+            candidate = candidate.substring(nextLabel + 1)
+        }
+        return false
+    }
 
     private fun sameSite(first: String, second: String): Boolean =
         first == second || first.endsWith(".$second") || second.endsWith(".$first")
@@ -97,20 +107,22 @@ class AdBlockFilter private constructor(
                 instance?.let { return it }
 
                 val entries = runCatching {
-                    context.assets.open("adblock_hosts.txt").use { stream ->
-                        BufferedReader(InputStreamReader(stream)).readLines()
-                            .map { it.substringBefore('#').trim().lowercase() }
-                            .filter { it.isNotEmpty() }
+                    context.assets.open("adblock_hosts.txt").bufferedReader().useLines { lines ->
+                        lines.map { line -> line.substringBefore('#').trim().lowercase() }
+                            .filter { line -> line.isNotEmpty() }
+                            .toList()
                     }
                 }.getOrDefault(emptyList())
 
-                val hosts = entries
-                    .filterNot { '/' in it || it.endsWith(".js") }
-                    .map { it.removePrefix("www.") }
-                    .toSet()
-                val fragments = entries
-                    .filter { '/' in it || it.endsWith(".js") }
-                    .toSet()
+                val hosts = HashSet<String>(entries.size)
+                val fragments = HashSet<String>()
+                entries.forEach { entry ->
+                    if ('/' in entry || entry.endsWith(".js")) {
+                        fragments += entry
+                    } else {
+                        hosts += entry.removePrefix("www.")
+                    }
+                }
 
                 return AdBlockFilter(
                     blockedHosts = hosts,
