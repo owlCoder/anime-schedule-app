@@ -72,12 +72,11 @@ fun SeasonalOverlay(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         showCloseButton = false,
-        showDragHandle = true,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.94f),
+                .fillMaxHeight(0.86f),
         ) {
             AppInlineHeader(
                 title = "${stringResource(uiState.season.labelRes())} ${uiState.year}",
