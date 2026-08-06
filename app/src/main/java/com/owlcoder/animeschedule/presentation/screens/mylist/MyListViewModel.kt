@@ -2,16 +2,6 @@ package com.owlcoder.animeschedule.presentation.screens.mylist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import com.owlcoder.animeschedule.core.result.AppResult
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
@@ -22,7 +12,19 @@ import com.owlcoder.animeschedule.domain.usecase.IncrementEpisodeUseCase
 import com.owlcoder.animeschedule.domain.usecase.RefreshMalListUseCase
 import com.owlcoder.animeschedule.domain.usecase.RemoveMalListEntryUseCase
 import com.owlcoder.animeschedule.domain.usecase.UpdateMalListEntryUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class MyListUiState(
     val entries: List<MalListEntry> = emptyList(),
@@ -31,9 +33,15 @@ data class MyListUiState(
     val searchQuery: String = "",
     val activeFilter: WatchStatus = WatchStatus.WATCHING,
     val pendingIncrementIds: Set<Int> = emptySet(),
-    /** Count of list entries per status, independent of [searchQuery]/[activeFilter] —
-     *  drives the small count badge on each status tab. */
-    val statusCounts: Map<WatchStatus, Int> = emptyMap()
+    /** Count of list entries per status, independent of [searchQuery]/[activeFilter]. */
+    val statusCounts: Map<WatchStatus, Int> = emptyMap(),
+)
+
+private data class MyListContent(
+    val entries: List<MalListEntry>,
+    val searchQuery: String,
+    val activeFilter: WatchStatus,
+    val statusCounts: Map<WatchStatus, Int>,
 )
 
 @HiltViewModel
@@ -43,7 +51,7 @@ class MyListViewModel @Inject constructor(
     private val removeMalListEntryUseCase: RemoveMalListEntryUseCase,
     private val incrementEpisodeUseCase: IncrementEpisodeUseCase,
     private val refreshMalListUseCase: RefreshMalListUseCase,
-    authRepository: AuthRepository
+    authRepository: AuthRepository,
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -56,43 +64,57 @@ class MyListViewModel @Inject constructor(
         data object Removed : UpdateEvent
         data object Error : UpdateEvent
     }
+
     private val _updateEvent = Channel<UpdateEvent>(Channel.BUFFERED)
     val updateEvent = _updateEvent.receiveAsFlow()
 
-    val uiState: StateFlow<MyListUiState> = combine(
+    private val listContent = combine(
         getMalUserListUseCase(),
         _searchQuery,
         _activeFilter,
-        _isLoading,
-        authRepository.isLoggedIn
-    ) { result, query, filter, loading, loggedIn ->
-        val allEntries = (result as? AppResult.Success)?.data ?: emptyList()
-        val filtered = allEntries
-            .filter { it.status == filter }
-            .filter { query.isEmpty() || it.title.contains(query, ignoreCase = true) }
-        MyListUiState(
-            entries = filtered,
-            isLoading = loading,
-            isLoggedIn = loggedIn,
+    ) { result, query, filter ->
+        val allEntries = (result as? AppResult.Success)?.data.orEmpty()
+        val filteredEntries = allEntries.filter { entry ->
+            entry.status == filter &&
+                (query.isEmpty() || entry.title.contains(query, ignoreCase = true))
+        }
+        MyListContent(
+            entries = filteredEntries,
             searchQuery = query,
             activeFilter = filter,
-            statusCounts = allEntries.groupingBy { it.status }.eachCount()
+            statusCounts = allEntries.groupingBy { it.status }.eachCount(),
         )
-    }.combine(_pendingIncrementIds) { state, pending -> state.copy(pendingIncrementIds = pending) }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            // Auth is restored asynchronously. Assume the existing session is valid until the
-            // first repository emission arrives, so a logged-in user sees loading instead of
-            // a one-frame MAL login prompt.
-            MyListUiState(isLoading = true, isLoggedIn = true),
+    }.flowOn(Dispatchers.Default)
+
+    val uiState: StateFlow<MyListUiState> = combine(
+        listContent,
+        _isLoading,
+        authRepository.isLoggedIn,
+        _pendingIncrementIds,
+    ) { content, loading, loggedIn, pending ->
+        MyListUiState(
+            entries = content.entries,
+            isLoading = loading,
+            isLoggedIn = loggedIn,
+            searchQuery = content.searchQuery,
+            activeFilter = content.activeFilter,
+            pendingIncrementIds = pending,
+            statusCounts = content.statusCounts,
         )
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        // Auth is restored asynchronously. Assume the existing session is valid until the first
+        // repository emission arrives, so a logged-in user sees loading instead of a login flash.
+        MyListUiState(isLoading = true, isLoggedIn = true),
+    )
 
     init {
         refreshIfStale()
     }
 
     fun setSearchQuery(query: String) = _searchQuery.update { query }
+
     fun setFilter(status: WatchStatus) = _activeFilter.update { status }
 
     fun refresh() {
@@ -100,8 +122,6 @@ class MyListViewModel @Inject constructor(
             _isLoading.value = true
             val synced = runCatching { refreshMalListUseCase(force = true) }.getOrDefault(false)
             _isLoading.value = false
-            // The user explicitly asked for a sync — a silent failure here looked like
-            // "pull-to-refresh does nothing", so surface it.
             if (!synced) _updateEvent.send(UpdateEvent.Error)
         }
     }
@@ -118,7 +138,7 @@ class MyListViewModel @Inject constructor(
         viewModelScope.launch {
             val result = updateMalListEntryUseCase(animeId, update)
             _updateEvent.send(
-                if (result is AppResult.Success) UpdateEvent.Success else UpdateEvent.Error
+                if (result is AppResult.Success) UpdateEvent.Success else UpdateEvent.Error,
             )
         }
     }
@@ -127,7 +147,7 @@ class MyListViewModel @Inject constructor(
         viewModelScope.launch {
             val result = removeMalListEntryUseCase(animeId)
             _updateEvent.send(
-                if (result is AppResult.Success) UpdateEvent.Removed else UpdateEvent.Error
+                if (result is AppResult.Success) UpdateEvent.Removed else UpdateEvent.Error,
             )
         }
     }
