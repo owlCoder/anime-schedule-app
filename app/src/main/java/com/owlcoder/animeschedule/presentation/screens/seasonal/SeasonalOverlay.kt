@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -159,7 +160,7 @@ fun SeasonalOverlay(
                     }
                     SeasonalContentMode.List -> LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = 4.dp, bottom = 24.dp),
+                        contentPadding = PaddingValues(top = 3.dp, bottom = 22.dp),
                     ) {
                         itemsIndexed(
                             items = uiState.filteredItems,
@@ -172,8 +173,8 @@ fun SeasonalOverlay(
                             )
                             if (index < uiState.filteredItems.lastIndex) {
                                 HorizontalDivider(
-                                    modifier = Modifier.padding(start = 72.dp),
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.58f),
+                                    modifier = Modifier.padding(start = 73.dp, end = 4.dp),
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
                                 )
                             }
                         }
@@ -202,56 +203,55 @@ private fun SeasonalLoadingState() {
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 4.dp, bottom = 96.dp),
+            contentPadding = PaddingValues(top = 3.dp, bottom = 92.dp),
             userScrollEnabled = false,
         ) {
-            itemsIndexed(List(7) { it }) { index, _ ->
+            itemsIndexed(List(8) { it }) { index, _ ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(96.dp)
-                        .padding(vertical = 6.dp),
+                        .height(88.dp)
+                        .padding(horizontal = 8.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(11.dp),
                 ) {
                     Box(
                         modifier = Modifier
-                            .width(60.dp)
+                            .width(54.dp)
                             .fillMaxHeight()
-                            .clip(ContinuousRoundedShape(12.dp))
+                            .clip(ContinuousRoundedShape(11.dp))
                             .background(MaterialTheme.colorScheme.surfaceContainer),
                     )
                     Column(
                         modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(9.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(0.76f)
+                                .fillMaxWidth(0.72f)
                                 .height(12.dp)
                                 .clip(ContinuousRoundedShape(6.dp))
                                 .background(MaterialTheme.colorScheme.surfaceContainer),
                         )
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth(0.48f)
-                                .height(9.dp)
-                                .clip(ContinuousRoundedShape(5.dp))
+                                .fillMaxWidth(0.46f)
+                                .height(8.dp)
+                                .clip(ContinuousRoundedShape(4.dp))
                                 .background(MaterialTheme.colorScheme.surfaceContainer),
                         )
                     }
                     Box(
                         modifier = Modifier
-                            .width(48.dp)
-                            .height(27.dp)
-                            .clip(ContinuousRoundedShape(14.dp))
+                            .size(18.dp)
+                            .clip(ContinuousRoundedShape(9.dp))
                             .background(MaterialTheme.colorScheme.surfaceContainer),
                     )
                 }
-                if (index < 6) {
+                if (index < 7) {
                     HorizontalDivider(
-                        modifier = Modifier.padding(start = 72.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
+                        modifier = Modifier.padding(start = 73.dp, end = 4.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
                     )
                 }
             }
