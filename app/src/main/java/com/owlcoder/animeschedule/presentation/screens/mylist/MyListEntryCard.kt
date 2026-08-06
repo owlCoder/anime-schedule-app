@@ -1,6 +1,7 @@
 package com.owlcoder.animeschedule.presentation.screens.mylist
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -73,7 +74,11 @@ fun MyListEntryCard(
         ?.let { (entry.episodesWatched.toFloat() / it.toFloat()).coerceIn(0f, 1f) }
     val cardInteraction = remember { MutableInteractionSource() }
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background),
+    ) {
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
