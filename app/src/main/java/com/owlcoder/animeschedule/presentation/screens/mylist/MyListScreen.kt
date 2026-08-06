@@ -226,7 +226,9 @@ private fun LoggedInList(
             ) {
                 AppLargeHeader(
                     title = stringResource(R.string.mylist_title),
-                    subtitle = if (totalCount > 0) "$totalCount anime" else null,
+                    subtitle = totalCount.takeIf { it > 0 }?.let { count ->
+                        stringResource(R.string.mylist_anime_count, count)
+                    },
                     modifier = Modifier.padding(top = 6.dp, bottom = 6.dp),
                 )
                 AppSearchField(
