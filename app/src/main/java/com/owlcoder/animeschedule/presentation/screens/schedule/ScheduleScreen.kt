@@ -848,10 +848,11 @@ private fun UpcomingAiringRow(
                         strokeWidth = 2.dp,
                     )
                 } else {
-                    Icon(
-                        Icons.Default.Add,
-                        stringResource(R.string.schedule_hero_action_watched),
-                        Modifier.size(16.dp),
+                    Text(
+                        text = "+1",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
