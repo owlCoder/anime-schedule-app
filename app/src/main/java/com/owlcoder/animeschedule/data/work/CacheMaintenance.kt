@@ -2,6 +2,7 @@ package com.owlcoder.animeschedule.data.work
 
 import android.content.Context
 import android.util.Log
+import android.webkit.WebView
 import coil3.SingletonImageLoader
 import com.owlcoder.animeschedule.data.local.datastore.CacheRetentionPolicy
 import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
@@ -9,7 +10,9 @@ import com.owlcoder.animeschedule.data.local.db.AiringEpisodeDao
 import com.owlcoder.animeschedule.data.local.db.AnimeDetailDao
 import com.owlcoder.animeschedule.data.local.db.NotificationDao
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -62,7 +65,18 @@ class CacheMaintenance @Inject constructor(
             userPreferencesDataStore.setLastImageCacheClearEpochSeconds(nowEpochSeconds)
         }
 
+        if (clearImageCacheNow) {
+            clearWebViewCache()
+        }
+
         Log.d(TAG, "Cache maintenance completed (retention=${prefs.cacheRetentionDays}d)")
+    }
+
+    private suspend fun clearWebViewCache() = withContext(Dispatchers.Main.immediate) {
+        WebView(context).apply {
+            clearCache(true)
+            destroy()
+        }
     }
 
     private companion object {
