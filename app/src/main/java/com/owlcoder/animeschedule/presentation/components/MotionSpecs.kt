@@ -51,12 +51,12 @@ fun <T> MotionPolicy.iosAccelerate(
 )
 
 /**
- * Critically damped positional spring. It settles quickly without the visible rubber-band bounce
+ * Critically damped positional spring. It settles smoothly without the visible rubber-band bounce
  * that feels distracting on nav indicators, switches and content-size changes.
  */
 fun <T> MotionPolicy.iosSpring(
     dampingRatio: Float = 1.0f,
-    stiffness: Float = Spring.StiffnessMedium,
+    stiffness: Float = Spring.StiffnessMediumLow,
 ): FiniteAnimationSpec<T> = if (reduceMotion) {
     tween(durationMillis = 0)
 } else {
