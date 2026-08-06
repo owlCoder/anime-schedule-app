@@ -42,7 +42,7 @@ internal fun SeasonalAnimeGlassCard(
     modifier: Modifier = Modifier,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val posterShape = ContinuousRoundedShape(18.dp)
+    val posterShape = ContinuousRoundedShape(14.dp)
     val format = seasonalFormatLabel(item.format)
     val episodeText = item.episodes?.let { "$it ep" }
     val supporting = listOfNotNull(format, episodeText).joinToString(" · ")
@@ -60,7 +60,7 @@ internal fun SeasonalAnimeGlassCard(
                 onClick = onClick,
             )
             .semantics(mergeDescendants = true) { role = Role.Button },
-        verticalArrangement = Arrangement.spacedBy(7.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Box(
             modifier = Modifier
@@ -78,16 +78,16 @@ internal fun SeasonalAnimeGlassCard(
                 Surface(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(8.dp),
+                        .padding(5.dp),
                     shape = PillShape,
-                    color = Color.Black.copy(alpha = 0.62f),
+                    color = Color.Black.copy(alpha = 0.64f),
                     contentColor = Color.White,
                     tonalElevation = 0.dp,
                     shadowElevation = 0.dp,
                 ) {
                     Text(
                         text = "★ $formattedScore",
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
@@ -98,7 +98,7 @@ internal fun SeasonalAnimeGlassCard(
 
         Text(
             text = item.title,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
