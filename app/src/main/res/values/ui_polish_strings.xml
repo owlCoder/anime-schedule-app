@@ -83,6 +83,18 @@
     <string name="watch_sources_edit">Edit source</string>
     <string name="watch_sources_mode_external">Installed app</string>
     <string name="watch_sources_mode_internal">In-app browser</string>
+    <string name="watch_title">Watch</string>
+
+    <!-- Notifications -->
+    <string name="notifications_mark_all">Mark all</string>
+
+    <!-- Seasonal overlay -->
+    <string name="seasonal_previous">Previous season</string>
+    <string name="seasonal_next">Next season</string>
+    <string name="seasonal_loading_message">Fetching the latest anime</string>
+
+    <!-- My List -->
+    <string name="mylist_anime_count">%d anime</string>
 
     <!-- Schedule dashboard copy -->
     <string name="schedule_status_up_next">Up next</string>
