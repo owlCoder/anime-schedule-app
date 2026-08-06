@@ -72,7 +72,7 @@ fun SeasonalOverlay(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.86f),
+                .fillMaxHeight(0.82f),
         ) {
             AppInlineHeader(
                 title = "${stringResource(uiState.season.labelRes())} ${uiState.year}",
@@ -158,11 +158,11 @@ fun SeasonalOverlay(
                         )
                     }
                     SeasonalContentMode.Grid -> LazyVerticalGrid(
-                        columns = GridCells.Adaptive(minSize = 142.dp),
+                        columns = GridCells.Adaptive(minSize = 104.dp),
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = 10.dp, bottom = 30.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalArrangement = Arrangement.spacedBy(18.dp),
+                        contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(7.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(
                             items = uiState.filteredItems,
@@ -199,33 +199,33 @@ fun SeasonalOverlay(
 private fun SeasonalLoadingState() {
     Box(modifier = Modifier.fillMaxSize()) {
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 142.dp),
+            columns = GridCells.Adaptive(minSize = 104.dp),
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 10.dp, bottom = 110.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             userScrollEnabled = false,
         ) {
-            itemsIndexed(List(6) { it }) { _, _ ->
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            itemsIndexed(List(9) { it }) { _, _ ->
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(0.68f)
-                            .clip(ContinuousRoundedShape(18.dp))
+                            .clip(ContinuousRoundedShape(14.dp))
                             .background(MaterialTheme.colorScheme.surfaceContainer),
                     )
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(0.88f)
-                            .height(11.dp)
+                            .height(9.dp)
                             .clip(ContinuousRoundedShape(5.dp))
                             .background(MaterialTheme.colorScheme.surfaceContainer),
                     )
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(0.62f)
-                            .height(8.dp)
+                            .fillMaxWidth(0.58f)
+                            .height(7.dp)
                             .clip(ContinuousRoundedShape(4.dp))
                             .background(MaterialTheme.colorScheme.surfaceContainer),
                     )
@@ -235,7 +235,7 @@ private fun SeasonalLoadingState() {
         AppLoadingState(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 20.dp),
+                .padding(bottom = 18.dp),
             label = stringResource(R.string.seasonal_title),
             message = stringResource(R.string.seasonal_loading_message),
         )
