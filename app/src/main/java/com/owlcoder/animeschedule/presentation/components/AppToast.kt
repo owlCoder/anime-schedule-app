@@ -1,7 +1,6 @@
 package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -50,11 +49,7 @@ data class ToastData(val id: Long, val message: String, val tone: ToastTone)
 
 /**
  * App-styled toast controller. Replaces the classic Material `Snackbar`/`android.widget.Toast`
- * with a rounded "glass" card that rises from the bottom (just above the floating nav bar),
- * with a tinted icon chip, and auto-dismisses.
- *
- * Provided once at the app root via [LocalToast]; call it from any screen:
- * `LocalToast.current.success("Epizoda označena")`.
+ * with a rounded glass card that appears below the status bar and auto-dismisses.
  */
 class ToastController {
     var current by mutableStateOf<ToastData?>(null)
@@ -71,23 +66,22 @@ class ToastController {
     fun success(message: String) = show(message, ToastTone.Success)
     fun error(message: String) = show(message, ToastTone.Error)
 
-    fun dismiss() { current = null }
+    fun dismiss() {
+        current = null
+    }
 }
 
 /** No-op fallback so the local always has a value. */
 val LocalToast = compositionLocalOf { ToastController() }
 
-/**
- * Renders the active toast over [content]. Anchored just below the status bar at the
- * TOP of the screen, slides down + fades in, then auto-dismisses after a short delay.
- * [bottomInset] is unused (kept for call-site compatibility).
- */
 @Composable
 fun ToastHost(
     controller: ToastController,
     @Suppress("UNUSED_PARAMETER") bottomInset: Dp = 0.dp,
     content: @Composable () -> Unit,
 ) {
+    val motion = LocalMotionPolicy.current
+
     Box(Modifier.fillMaxSize()) {
         content()
 
@@ -108,8 +102,22 @@ fun ToastHost(
         ) {
             AnimatedVisibility(
                 visible = data != null,
-                enter = slideInVertically(spring()) { -it } + fadeIn(),
-                exit = slideOutVertically { -it } + fadeOut(),
+                enter = slideInVertically(
+                    animationSpec = motion.iosSpring(
+                        dampingRatio = 0.92f,
+                        stiffness = 540f,
+                    ),
+                    initialOffsetY = { if (motion.animationsEnabled) -it / 2 else 0 },
+                ) + fadeIn(
+                    animationSpec = motion.iosDecelerate(IosMotion.Quick),
+                    initialAlpha = if (motion.animationsEnabled) 0.68f else 1f,
+                ),
+                exit = slideOutVertically(
+                    animationSpec = motion.iosAccelerate(IosMotion.Standard),
+                    targetOffsetY = { if (motion.animationsEnabled) -it / 3 else 0 },
+                ) + fadeOut(
+                    animationSpec = motion.iosAccelerate(IosMotion.Quick),
+                ),
             ) {
                 val shown = data ?: controller.current
                 if (shown != null) ToastCard(shown)
@@ -137,7 +145,7 @@ private fun ToastCard(data: ToastData) {
             .widthIn(max = 460.dp)
             .clip(shape)
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), shape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
     ) {
         Row(
             modifier = Modifier
@@ -152,11 +160,16 @@ private fun ToastCard(data: ToastData) {
                     .background(accent.copy(alpha = 0.18f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(19.dp))
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = accent,
+                    modifier = Modifier.size(19.dp),
+                )
             }
             Spacer(Modifier.size(12.dp))
             Text(
-                data.message,
+                text = data.message,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Medium,
