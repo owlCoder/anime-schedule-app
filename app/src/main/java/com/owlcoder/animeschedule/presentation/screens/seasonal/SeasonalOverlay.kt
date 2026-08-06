@@ -208,6 +208,7 @@ fun SeasonalOverlay(
                         ) { item ->
                             SeasonalAnimePosterTile(
                                 item = item,
+                                userListEntry = item.malId?.let(uiState.malEntriesById::get),
                                 onClick = { onAnimeClick(item.anilistId) },
                             )
                         }
