@@ -11,20 +11,18 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -52,7 +50,7 @@ import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.iosTween
 
-private enum class SeasonalContentMode { Loading, Error, Empty, List }
+private enum class SeasonalContentMode { Loading, Error, Empty, Grid }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,7 +101,7 @@ fun SeasonalOverlay(
                 uiState.isLoading -> SeasonalContentMode.Loading
                 uiState.errorRes != null -> SeasonalContentMode.Error
                 uiState.filteredItems.isEmpty() -> SeasonalContentMode.Empty
-                else -> SeasonalContentMode.List
+                else -> SeasonalContentMode.Grid
             }
             val contentKey = Triple(uiState.year, uiState.season, mode)
 
@@ -158,25 +156,22 @@ fun SeasonalOverlay(
                             onAction = viewModel::clearFilter,
                         )
                     }
-                    SeasonalContentMode.List -> LazyColumn(
+                    SeasonalContentMode.Grid -> LazyVerticalGrid(
+                        columns = GridCells.Adaptive(minSize = 104.dp),
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = 3.dp, bottom = 22.dp),
+                        contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        itemsIndexed(
+                        items(
                             items = uiState.filteredItems,
-                            key = { _, item -> "season:${item.anilistId}" },
-                            contentType = { _, _ -> "seasonal_row" },
-                        ) { index, item ->
-                            SeasonalAnimeListRow(
+                            key = { "season:${it.anilistId}" },
+                            contentType = { "seasonal_poster" },
+                        ) { item ->
+                            SeasonalAnimePosterTile(
                                 item = item,
                                 onClick = { onAnimeClick(item.anilistId) },
                             )
-                            if (index < uiState.filteredItems.lastIndex) {
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(start = 73.dp, end = 4.dp),
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
-                                )
-                            }
                         }
                     }
                 }
@@ -201,59 +196,22 @@ fun SeasonalOverlay(
 @Composable
 private fun SeasonalLoadingState() {
     Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 104.dp),
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 3.dp, bottom = 92.dp),
+            contentPadding = PaddingValues(top = 8.dp, bottom = 94.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             userScrollEnabled = false,
         ) {
-            itemsIndexed(List(8) { it }) { index, _ ->
-                Row(
+            itemsIndexed(List(9) { it }) { _, _ ->
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(88.dp)
-                        .padding(horizontal = 8.dp, vertical = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(11.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .width(54.dp)
-                            .fillMaxHeight()
-                            .clip(ContinuousRoundedShape(11.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainer),
-                    )
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.72f)
-                                .height(12.dp)
-                                .clip(ContinuousRoundedShape(6.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainer),
-                        )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(0.46f)
-                                .height(8.dp)
-                                .clip(ContinuousRoundedShape(4.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainer),
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .size(18.dp)
-                            .clip(ContinuousRoundedShape(9.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainer),
-                    )
-                }
-                if (index < 7) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(start = 73.dp, end = 4.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-                    )
-                }
+                        .aspectRatio(0.68f)
+                        .clip(ContinuousRoundedShape(15.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainer),
+                )
             }
         }
         AppLoadingState(
