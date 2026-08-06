@@ -82,7 +82,10 @@ class MyListViewModel @Inject constructor(
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
-            MyListUiState(isLoading = true),
+            // Auth is restored asynchronously. Assume the existing session is valid until the
+            // first repository emission arrives, so a logged-in user sees loading instead of
+            // a one-frame MAL login prompt.
+            MyListUiState(isLoading = true, isLoggedIn = true),
         )
 
     init {
