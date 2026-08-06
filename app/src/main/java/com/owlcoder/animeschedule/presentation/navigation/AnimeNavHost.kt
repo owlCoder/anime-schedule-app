@@ -17,6 +17,7 @@ import androidx.navigation.navArgument
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
+import com.owlcoder.animeschedule.presentation.components.iosAccelerate
 import com.owlcoder.animeschedule.presentation.components.iosDecelerate
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.navigation.Screen.Detail
@@ -38,44 +39,47 @@ fun AnimeNavHost(
 ) {
     val motion = LocalMotionPolicy.current
 
+    // Top-level destinations should feel like switching panes, not pushing a new screen.
     val rootEnter = fadeIn(
         animationSpec = motion.iosDecelerate(IosMotion.Standard),
     ) + scaleIn(
-        initialScale = if (motion.animationsEnabled) 0.985f else 1f,
-        animationSpec = motion.iosTween(IosMotion.Standard),
-    )
-    val rootExit = fadeOut(
-        animationSpec = motion.iosTween(IosMotion.Quick),
-    ) + scaleOut(
-        targetScale = if (motion.animationsEnabled) 0.995f else 1f,
-        animationSpec = motion.iosTween(IosMotion.Quick),
-    )
-
-    val pushEnter = slideInHorizontally(
-        animationSpec = motion.iosDecelerate(IosMotion.Navigation),
-        initialOffsetX = { if (motion.animationsEnabled) it else 0 },
-    ) + fadeIn(
+        initialScale = if (motion.animationsEnabled) 0.992f else 1f,
         animationSpec = motion.iosDecelerate(IosMotion.Standard),
     )
+    val rootExit = fadeOut(
+        animationSpec = motion.iosAccelerate(IosMotion.Quick),
+    ) + scaleOut(
+        targetScale = if (motion.animationsEnabled) 0.996f else 1f,
+        animationSpec = motion.iosAccelerate(IosMotion.Quick),
+    )
+
+    // Detail navigation keeps the familiar iOS push direction with a restrained parallax layer.
+    val pushEnter = slideInHorizontally(
+        animationSpec = motion.iosDecelerate(IosMotion.Navigation),
+        initialOffsetX = { if (motion.animationsEnabled) it * 9 / 10 else 0 },
+    ) + fadeIn(
+        animationSpec = motion.iosDecelerate(IosMotion.Standard),
+        initialAlpha = 0.94f,
+    )
     val pushExit = slideOutHorizontally(
-        animationSpec = motion.iosTween(IosMotion.Navigation),
-        targetOffsetX = { if (motion.animationsEnabled) -it / 4 else 0 },
+        animationSpec = motion.iosAccelerate(IosMotion.Navigation),
+        targetOffsetX = { if (motion.animationsEnabled) -it / 5 else 0 },
     ) + fadeOut(
-        animationSpec = motion.iosTween(IosMotion.Standard),
-        targetAlpha = 0.82f,
+        animationSpec = motion.iosAccelerate(IosMotion.Quick),
+        targetAlpha = 0.88f,
     )
     val popEnter = slideInHorizontally(
         animationSpec = motion.iosDecelerate(IosMotion.Navigation),
-        initialOffsetX = { if (motion.animationsEnabled) -it / 4 else 0 },
+        initialOffsetX = { if (motion.animationsEnabled) -it / 5 else 0 },
     ) + fadeIn(
         animationSpec = motion.iosDecelerate(IosMotion.Standard),
-        initialAlpha = 0.82f,
+        initialAlpha = 0.88f,
     )
     val popExit = slideOutHorizontally(
-        animationSpec = motion.iosTween(IosMotion.Navigation),
-        targetOffsetX = { if (motion.animationsEnabled) it else 0 },
+        animationSpec = motion.iosAccelerate(IosMotion.Navigation),
+        targetOffsetX = { if (motion.animationsEnabled) it * 9 / 10 else 0 },
     ) + fadeOut(
-        animationSpec = motion.iosTween(IosMotion.Standard),
+        animationSpec = motion.iosAccelerate(IosMotion.Quick),
     )
 
     NavHost(
