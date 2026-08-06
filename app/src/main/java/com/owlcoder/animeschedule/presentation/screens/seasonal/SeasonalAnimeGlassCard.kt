@@ -7,10 +7,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -36,84 +41,103 @@ import com.owlcoder.animeschedule.ui.theme.PillShape
 import java.util.Locale
 
 @Composable
-internal fun SeasonalAnimeGlassCard(
+internal fun SeasonalAnimeListRow(
     item: SeasonalAnimeItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val posterShape = ContinuousRoundedShape(14.dp)
     val format = seasonalFormatLabel(item.format)
-    val episodeText = item.episodes?.let { "$it ep" }
-    val supporting = listOfNotNull(format, episodeText).joinToString(" · ")
     val score = (item.averageScore ?: item.meanScore)?.let {
         String.format(Locale.ROOT, "%.1f", it / 10.0)
     }
 
-    Column(
+    Row(
         modifier = modifier
-            .iosPressScale(interactionSource, pressedScale = 0.985f)
+            .fillMaxWidth()
+            .height(96.dp)
+            .iosPressScale(interactionSource, pressedScale = 0.99f)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 role = Role.Button,
                 onClick = onClick,
             )
-            .semantics(mergeDescendants = true) { role = Role.Button },
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+            .semantics(mergeDescendants = true) { role = Role.Button }
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(0.68f)
-                .clip(posterShape)
+                .width(60.dp)
+                .fillMaxHeight()
+                .clip(ContinuousRoundedShape(12.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
             MediaThumbnail.Large(
                 url = item.coverImageUrl,
                 contentDescription = item.title,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.matchParentSize(),
             )
-            score?.let { formattedScore ->
-                Surface(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(5.dp),
-                    shape = PillShape,
-                    color = Color.Black.copy(alpha = 0.64f),
-                    contentColor = Color.White,
-                    tonalElevation = 0.dp,
-                    shadowElevation = 0.dp,
-                ) {
+        }
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
+            ) {
+                if (!format.isNullOrBlank()) {
                     Text(
-                        text = "★ $formattedScore",
-                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
+                        text = format,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                    )
+                }
+                item.episodes?.let { episodes ->
+                    Icon(
+                        imageVector = Icons.Outlined.PlayCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = episodes.toString(),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                     )
                 }
             }
         }
 
-        Text(
-            text = item.title,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-        if (supporting.isNotEmpty()) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
+        score?.let { formattedScore ->
+            Surface(
+                shape = PillShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = MaterialTheme.colorScheme.primary,
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
             ) {
                 Text(
-                    text = supporting,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text = "★ $formattedScore",
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
