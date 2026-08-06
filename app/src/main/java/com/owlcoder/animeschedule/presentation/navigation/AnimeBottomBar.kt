@@ -158,7 +158,10 @@ fun AnimeBottomBar(
                 val itemWidth = maxWidth / items.size.toFloat()
                 val indicatorX by animateDpAsState(
                     targetValue = itemWidth * selectedIndex.toFloat(),
-                    animationSpec = motion.iosSpring(),
+                    animationSpec = motion.iosSpring(
+                        dampingRatio = 0.90f,
+                        stiffness = 520f,
+                    ),
                     label = "bottom-tab-indicator-position",
                 )
                 Surface(
@@ -214,8 +217,11 @@ private fun BottomNavItemView(
     val interactionSource = remember { MutableInteractionSource() }
     val motion = LocalMotionPolicy.current
     val scale by animateFloatAsState(
-        targetValue = if (selected) 1f else 0.985f,
-        animationSpec = motion.iosSpring(),
+        targetValue = if (selected) 1f else 0.992f,
+        animationSpec = motion.iosSpring(
+            dampingRatio = 0.94f,
+            stiffness = 620f,
+        ),
         label = "bottom-tab-scale",
     )
 
@@ -281,7 +287,7 @@ private fun TabVisual(
         label = "bottom-tab-color",
     )
     val inactiveAlpha by animateFloatAsState(
-        targetValue = if (selected) 1f else 0.74f,
+        targetValue = if (selected) 1f else 0.78f,
         animationSpec = motion.iosTween(IosMotion.Standard),
         label = "bottom-tab-alpha",
     )
@@ -305,9 +311,15 @@ private fun TabVisual(
                 targetState = selected,
                 transitionSpec = {
                     (fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                        scaleIn(initialScale = 0.88f, animationSpec = motion.iosTween(IosMotion.Quick))) togetherWith
+                        scaleIn(
+                            initialScale = 0.94f,
+                            animationSpec = motion.iosTween(IosMotion.Quick),
+                        )) togetherWith
                         (fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                            scaleOut(targetScale = 1.06f, animationSpec = motion.iosTween(IosMotion.Quick)))
+                            scaleOut(
+                                targetScale = 1.02f,
+                                animationSpec = motion.iosTween(IosMotion.Quick),
+                            ))
                 },
                 label = "bottom-tab-icon",
             ) { active ->
