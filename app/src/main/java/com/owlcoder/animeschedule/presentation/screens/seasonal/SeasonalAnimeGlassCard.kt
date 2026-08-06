@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.PlayCircle
@@ -33,7 +34,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
+import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
+import com.owlcoder.animeschedule.domain.model.WatchStatus
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
 import com.owlcoder.animeschedule.presentation.components.iosPressScale
@@ -43,12 +46,14 @@ import java.util.Locale
 @Composable
 internal fun SeasonalAnimePosterTile(
     item: SeasonalAnimeItem,
+    userListEntry: MalListEntry?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val posterShape = ContinuousRoundedShape(15.dp)
     val format = seasonalFormatLabel(item.format)
+    val listMeta = userListEntry?.let { localizedListMeta(it, item.episodes) }
     val score = (item.averageScore ?: item.meanScore)?.let {
         String.format(Locale.ROOT, "%.1f", it / 10.0)
     }
@@ -126,7 +131,27 @@ internal fun SeasonalAnimePosterTile(
                 overflow = TextOverflow.Ellipsis,
             )
 
-            if (!format.isNullOrBlank() || item.episodes != null) {
+            if (listMeta != null) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(5.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.88f)),
+                    )
+                    Text(
+                        text = listMeta,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White.copy(alpha = 0.88f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            } else if (!format.isNullOrBlank() || item.episodes != null) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -164,6 +189,29 @@ internal fun SeasonalAnimePosterTile(
             }
         }
     }
+}
+
+@Composable
+private fun localizedListMeta(
+    entry: MalListEntry,
+    fallbackTotalEpisodes: Int?,
+): String? {
+    val statusLabel = when (entry.status) {
+        WatchStatus.WATCHING -> stringResource(R.string.watch_status_watching)
+        WatchStatus.COMPLETED -> stringResource(R.string.watch_status_completed)
+        WatchStatus.ON_HOLD -> stringResource(R.string.watch_status_on_hold)
+        WatchStatus.DROPPED -> stringResource(R.string.watch_status_dropped)
+        WatchStatus.PLAN_TO_WATCH -> stringResource(R.string.watch_status_plan_to_watch)
+        WatchStatus.NOT_IN_LIST -> return null
+    }
+    val totalEpisodes = entry.totalEpisodes ?: fallbackTotalEpisodes
+    val progress = when {
+        entry.status == WatchStatus.PLAN_TO_WATCH && entry.episodesWatched == 0 -> null
+        totalEpisodes != null && totalEpisodes > 0 -> "${entry.episodesWatched}/$totalEpisodes"
+        entry.episodesWatched > 0 -> entry.episodesWatched.toString()
+        else -> null
+    }
+    return listOfNotNull(statusLabel, progress).joinToString(" · ")
 }
 
 @Composable
