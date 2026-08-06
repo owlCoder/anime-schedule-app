@@ -683,6 +683,7 @@ private fun FeaturedAiring(
                     )
                     CountdownText(episode.airingAtEpochSeconds)
                 }
+                MalProgressText(episode = episode, compact = false)
             }
             if (isLoggedIn && episode.malListEntry != null) {
                 GlassButton(
@@ -792,7 +793,7 @@ private fun UpcomingAiringRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 66.dp)
+            .heightIn(min = 70.dp)
             .clickable(onClick = onClick)
             .padding(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -835,6 +836,7 @@ private fun UpcomingAiringRow(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            MalProgressText(episode = episode, compact = true)
         }
         if (isLoggedIn && episode.malListEntry != null) {
             androidx.compose.material3.IconButton(
@@ -874,6 +876,42 @@ private fun UpcomingAiringRow(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+    }
+}
+
+@Composable
+private fun MalProgressText(
+    episode: AiringEpisode,
+    compact: Boolean,
+) {
+    val entry = episode.malListEntry ?: return
+    val total = entry.totalEpisodes ?: episode.totalEpisodes
+    val motion = LocalMotionPolicy.current
+
+    AnimatedContent(
+        targetState = entry.episodesWatched,
+        transitionSpec = {
+            fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
+                fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
+        },
+        label = "schedule-mal-progress-${episode.animeId}",
+    ) { watched ->
+        Text(
+            text = stringResource(
+                R.string.schedule_watched_progress,
+                watched,
+                total?.let { "/$it" } ?: "",
+            ),
+            style = if (compact) {
+                MaterialTheme.typography.labelSmall
+            } else {
+                MaterialTheme.typography.bodySmall
+            },
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
