@@ -155,23 +155,17 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         val toastController = remember { ToastController() }
-                        var searchKeyboardFocused by rememberSaveable { mutableStateOf(false) }
                         var appLoading by rememberSaveable { mutableStateOf(true) }
                         val backStackEntry by navController.currentBackStackEntryAsState()
                         val currentRoute = backStackEntry?.destination?.route
-                        val showBottomBar = shouldShowBottomBar(currentRoute) &&
-                            !(currentRoute == Screen.Search.route && searchKeyboardFocused)
+                        val showBottomBar = shouldShowBottomBar(currentRoute)
 
                         AppSystemBarAppearance(
                             statusBarOnImagery = currentRoute == Screen.Detail.ROUTE,
                         )
 
-                        LaunchedEffect(currentRoute) {
-                            if (currentRoute != Screen.Search.route) searchKeyboardFocused = false
-                        }
-
                         CompositionLocalProvider(
-                            LocalNavBarHeight provides if (showBottomBar) 78.dp else 0.dp,
+                            LocalNavBarHeight provides if (showBottomBar) 82.dp else 0.dp,
                             LocalToast provides toastController,
                         ) {
                             ToastHost(controller = toastController) {
@@ -196,7 +190,7 @@ class MainActivity : AppCompatActivity() {
                                                 }
                                             },
                                             onScheduleInitialLoadChange = { appLoading = it },
-                                            onSearchFocusChanged = { searchKeyboardFocused = it },
+                                            onSearchFocusChanged = {},
                                         )
                                     }
 
