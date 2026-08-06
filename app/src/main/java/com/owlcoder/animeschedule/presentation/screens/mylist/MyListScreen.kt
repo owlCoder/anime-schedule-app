@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -57,7 +58,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -77,6 +77,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.WatchStatus
 import com.owlcoder.animeschedule.presentation.components.AppButton
@@ -90,7 +91,6 @@ import com.owlcoder.animeschedule.presentation.components.AppSearchField
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.EmptyState
 import com.owlcoder.animeschedule.presentation.components.ErrorBanner
-import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
@@ -124,7 +124,7 @@ fun MyListScreen(
     viewModel: MyListViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var editingAnimeId by remember { mutableStateOf<Int?>(null) }
     var showError by remember { mutableStateOf(false) }
     val editingEntry = uiState.entries.find { it.animeId == editingAnimeId }
@@ -249,7 +249,9 @@ private fun LoggedInList(
         PullToRefreshBox(
             isRefreshing = uiState.isLoading,
             onRefresh = onRefresh,
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
         ) {
             val contentMode = when {
                 uiState.isLoading && uiState.entries.isEmpty() -> 0
@@ -286,7 +288,7 @@ private fun LoggedInList(
                     else -> LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(top = 5.dp, bottom = 116.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         if (showError) {
                             item(key = "sync-error", contentType = "error") {
@@ -297,26 +299,37 @@ private fun LoggedInList(
                                 )
                             }
                         }
-                        item(key = "list-group", contentType = "my-list-group") {
-                            InsetGroup(
-                                title = uiState.activeFilter.displayName(),
+                        item(key = "list-section-title", contentType = "section-title") {
+                            Text(
+                                text = uiState.activeFilter.displayName(),
+                                modifier = Modifier.padding(
+                                    start = 27.dp,
+                                    end = 27.dp,
+                                    top = 2.dp,
+                                    bottom = 1.dp,
+                                ),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
+                        }
+                        items(
+                            items = uiState.entries,
+                            key = { entry -> entry.animeId },
+                            contentType = { "my-list-entry" },
+                        ) { entry ->
+                            MyListEntryCard(
+                                entry = entry,
+                                title = entry.title.ifEmpty { entry.animeId.toString() },
+                                coverImageUrl = entry.coverImageUrl,
+                                isIncrementing = entry.animeId in uiState.pendingIncrementIds,
+                                onCardClick = { onAnimeClick(entry.animeId) },
+                                onIncrementEpisode = { onIncrementEpisode(entry.animeId) },
+                                onEditStatus = { onEditStatus(entry.animeId) },
+                                showDivider = false,
                                 modifier = Modifier.padding(horizontal = 16.dp),
-                            ) {
-                                Column {
-                                    uiState.entries.forEachIndexed { index, entry ->
-                                        MyListEntryCard(
-                                            entry = entry,
-                                            title = entry.title.ifEmpty { entry.animeId.toString() },
-                                            coverImageUrl = entry.coverImageUrl,
-                                            isIncrementing = entry.animeId in uiState.pendingIncrementIds,
-                                            onCardClick = { onAnimeClick(entry.animeId) },
-                                            onIncrementEpisode = { onIncrementEpisode(entry.animeId) },
-                                            onEditStatus = { onEditStatus(entry.animeId) },
-                                            showDivider = index < uiState.entries.lastIndex,
-                                        )
-                                    }
-                                }
-                            }
+                            )
                         }
                     }
                 }
