@@ -34,7 +34,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AppNotification
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
@@ -75,11 +75,13 @@ fun NotificationsOverlay(
     onDismiss: () -> Unit,
     viewModel: NotificationsViewModel = hiltViewModel(),
 ) {
-    val notifications by viewModel.notifications.collectAsState()
-    val unread = notifications.filter { !it.isRead }
-    val read = notifications.filter { it.isRead }
+    val notifications by viewModel.notifications.collectAsStateWithLifecycle()
+    val (unread, read) = remember(notifications) {
+        notifications.partition { notification -> !notification.isRead }
+    }
     var selectedTab by remember { mutableIntStateOf(0) }
-    val maxListHeight = LocalConfiguration.current.screenHeightDp.dp * 0.38f
+    val screenHeightDp = LocalConfiguration.current.screenHeightDp
+    val maxListHeight = remember(screenHeightDp) { screenHeightDp.dp * 0.38f }
     val motion = LocalMotionPolicy.current
 
     AppSheet(
@@ -91,9 +93,13 @@ fun NotificationsOverlay(
                     onClick = viewModel::markAllRead,
                     contentPadding = PaddingValues(horizontal = 6.dp),
                 ) {
-                    Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Icon(
+                        Icons.Default.DoneAll,
+                        contentDescription = null,
+                        modifier = Modifier.size(15.dp),
+                    )
                     Text(
-                        "Mark all",
+                        text = stringResource(R.string.notifications_mark_all),
                         modifier = Modifier.padding(start = 4.dp),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
@@ -138,12 +144,13 @@ fun NotificationsOverlay(
                 if (list.isEmpty()) {
                     NotificationEmptyState(tab)
                 } else {
+                    val groupedNotifications = remember(list) { groupedByDay(list) }
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(top = 2.dp, bottom = 14.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        groupedByDay(list).forEach { (dayLabel, items) ->
+                        groupedNotifications.forEach { (dayLabel, items) ->
                             item(key = "notification_day_$dayLabel") {
                                 Text(
                                     text = dayLabel,
@@ -251,7 +258,12 @@ private fun NotificationTabContent(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {
-        Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = color)
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = color,
+        )
         Text(
             text = stringResource(labelRes),
             modifier = Modifier.padding(start = 5.dp),
@@ -296,8 +308,11 @@ private fun NotificationEmptyState(selectedTab: Int) {
             }
         }
         Text(
-            text = if (selectedTab == 0) stringResource(R.string.notif_empty_unread)
-            else stringResource(R.string.notif_empty_read),
+            text = if (selectedTab == 0) {
+                stringResource(R.string.notif_empty_unread)
+            } else {
+                stringResource(R.string.notif_empty_read)
+            },
             modifier = Modifier.padding(top = 16.dp),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold,
@@ -322,7 +337,9 @@ private fun groupedByDay(
     val formatter = DateTimeFormatter.ofPattern("EEEE, d. MMMM", Locale.getDefault())
     return notifications
         .sortedByDescending { it.createdAtEpochSeconds }
-        .groupBy { Instant.ofEpochSecond(it.createdAtEpochSeconds).atZone(zone).toLocalDate() }
+        .groupBy { notification ->
+            Instant.ofEpochSecond(notification.createdAtEpochSeconds).atZone(zone).toLocalDate()
+        }
         .toSortedMap(compareByDescending { it })
         .map { (date, items) -> date.format(formatter) to items }
 }
