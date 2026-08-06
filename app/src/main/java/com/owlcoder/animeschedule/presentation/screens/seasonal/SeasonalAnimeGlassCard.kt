@@ -1,8 +1,10 @@
 package com.owlcoder.animeschedule.presentation.screens.seasonal
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,12 +16,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +41,6 @@ import com.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
 import com.owlcoder.animeschedule.presentation.components.iosPressScale
-import com.owlcoder.animeschedule.ui.theme.PillShape
 import java.util.Locale
 
 @Composable
@@ -47,6 +50,16 @@ internal fun SeasonalAnimeListRow(
     modifier: Modifier = Modifier,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressedColor by animateColorAsState(
+        targetValue = if (isPressed) {
+            MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.72f)
+        } else {
+            Color.Transparent
+        },
+        label = "seasonal-row-press",
+    )
+    val rowShape = ContinuousRoundedShape(15.dp)
     val format = seasonalFormatLabel(item.format)
     val score = (item.averageScore ?: item.meanScore)?.let {
         String.format(Locale.ROOT, "%.1f", it / 10.0)
@@ -55,8 +68,11 @@ internal fun SeasonalAnimeListRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(96.dp)
-            .iosPressScale(interactionSource, pressedScale = 0.99f)
+            .padding(horizontal = 2.dp)
+            .height(88.dp)
+            .clip(rowShape)
+            .background(pressedColor)
+            .iosPressScale(interactionSource, pressedScale = 0.992f)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -64,15 +80,15 @@ internal fun SeasonalAnimeListRow(
                 onClick = onClick,
             )
             .semantics(mergeDescendants = true) { role = Role.Button }
-            .padding(vertical = 6.dp),
+            .padding(horizontal = 6.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(11.dp),
     ) {
         Box(
             modifier = Modifier
-                .width(60.dp)
+                .width(54.dp)
                 .fillMaxHeight()
-                .clip(ContinuousRoundedShape(12.dp))
+                .clip(ContinuousRoundedShape(11.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
             MediaThumbnail.Large(
@@ -84,11 +100,11 @@ internal fun SeasonalAnimeListRow(
 
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(7.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -96,21 +112,29 @@ internal fun SeasonalAnimeListRow(
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(7.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
             ) {
                 if (!format.isNullOrBlank()) {
                     Text(
                         text = format,
                         style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                     )
                 }
                 item.episodes?.let { episodes ->
+                    if (!format.isNullOrBlank()) {
+                        Text(
+                            text = "·",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.outline,
+                        )
+                    }
                     Icon(
                         imageVector = Icons.Outlined.PlayCircle,
                         contentDescription = null,
-                        modifier = Modifier.size(14.dp),
+                        modifier = Modifier.size(13.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
@@ -120,27 +144,35 @@ internal fun SeasonalAnimeListRow(
                         maxLines = 1,
                     )
                 }
+                score?.let { formattedScore ->
+                    Text(
+                        text = "·",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                    Icon(
+                        imageVector = Icons.Filled.Star,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        text = formattedScore,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                    )
+                }
             }
         }
 
-        score?.let { formattedScore ->
-            Surface(
-                shape = PillShape,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                contentColor = MaterialTheme.colorScheme.primary,
-                tonalElevation = 0.dp,
-                shadowElevation = 0.dp,
-            ) {
-                Text(
-                    text = "★ $formattedScore",
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
-                )
-            }
-        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.68f),
+        )
     }
 }
 
