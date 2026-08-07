@@ -120,7 +120,7 @@ fun AnimeBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-            .padding(start = 13.dp, end = 13.dp, top = 6.dp, bottom = 10.dp),
+            .padding(start = 13.dp, end = 13.dp, top = 6.dp, bottom = 14.dp),
     ) {
         Box(
             modifier = Modifier
