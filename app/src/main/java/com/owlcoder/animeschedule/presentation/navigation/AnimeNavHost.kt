@@ -108,6 +108,7 @@ fun AnimeNavHost(
                 },
                 onFocusChanged = onSearchFocusChanged,
                 onCancel = { onSearchFocusChanged(false) },
+                requestFocus = true,
             )
         }
         composable(Screen.MyList.route) {
