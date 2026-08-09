@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Bundle
 import android.os.Message
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
@@ -57,7 +58,7 @@ import java.io.ByteArrayInputStream
  * visiting the site directly. Back navigates the WebView's own history before popping.
  * Also supports HTML5 `<video>` fullscreen (site's own fullscreen button) via
  * [WebChromeClient.onShowCustomView], which a plain WebView doesn't handle. */
-@SuppressLint("SetJavaScriptEnabled")
+@SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility")
 @Composable
 fun WatchScreen(
     url: String,
@@ -101,13 +102,23 @@ fun WatchScreen(
                         settings.javaScriptEnabled = true
                         settings.domStorageEnabled = true
                         settings.javaScriptCanOpenWindowsAutomatically = false
-                        settings.setSupportMultipleWindows(true)
+                        settings.setSupportMultipleWindows(false)
                         settings.safeBrowsingEnabled = true
+
+                        isFocusable = true
+                        isFocusableInTouchMode = true
+                        setOnTouchListener { view, event ->
+                            if (event.actionMasked == MotionEvent.ACTION_DOWN && !view.hasFocus()) {
+                                view.requestFocus(View.FOCUS_DOWN)
+                            }
+                            false
+                        }
 
                         webViewClient = object : WebViewClient() {
                             override fun onPageCommitVisible(view: WebView?, url: String?) {
                                 super.onPageCommitVisible(view, url)
                                 view?.installPopupGuard()
+                                view?.requestFocus()
                             }
 
                             override fun onPageFinished(view: WebView?, url: String?) {
@@ -161,6 +172,7 @@ fun WatchScreen(
                         } else {
                             loadUrl(url)
                         }
+                        requestFocus(View.FOCUS_DOWN)
                     }.also { webView = it }
                 },
             )
@@ -239,6 +251,7 @@ private fun WebView.releaseResources() {
     stopLoading()
     webChromeClient = null
     webViewClient = WebViewClient()
+    setOnTouchListener(null)
     removeAllViews()
     destroy()
 }
@@ -257,7 +270,7 @@ private class VideoFullscreenChromeClient(
     private var customView: View? = null
     private var customViewCallback: CustomViewCallback? = null
 
-    /** Reject every secondary WebView created by window.open/target=_blank popup scripts. */
+    /** Defense-in-depth if a provider requests a secondary WebView despite window support being off. */
     override fun onCreateWindow(
         view: WebView?,
         isDialog: Boolean,
@@ -316,22 +329,32 @@ private const val POPUP_GUARD_SCRIPT = """
             window.open = function() { return null; };
         } catch (_) {}
 
+        function sanitizeTarget(node) {
+            if (!node || !node.getAttribute) return;
+            var tag = (node.tagName || '').toUpperCase();
+            if (tag !== 'A' && tag !== 'AREA' && tag !== 'FORM') return;
+
+            var target = (node.getAttribute('target') || '').toLowerCase();
+            if (target === '_blank' || target === '_new') node.removeAttribute('target');
+            if (tag === 'A' || tag === 'AREA') {
+                node.setAttribute('rel', 'noopener noreferrer');
+            }
+        }
+
         function sanitize(root) {
-            if (!root || !root.querySelectorAll) return;
-            root.querySelectorAll('a[target], area[target], form[target]').forEach(function(node) {
-                var target = (node.getAttribute('target') || '').toLowerCase();
-                if (target === '_blank' || target === '_new') node.removeAttribute('target');
-                if (node.tagName === 'A' || node.tagName === 'AREA') {
-                    node.setAttribute('rel', 'noopener noreferrer');
-                }
-            });
+            if (!root) return;
+            sanitizeTarget(root);
+            if (!root.querySelectorAll) return;
+            root.querySelectorAll('a[target], area[target], form[target]').forEach(sanitizeTarget);
         }
 
         sanitize(document);
         if (document.documentElement) {
             new MutationObserver(function(records) {
                 records.forEach(function(record) {
-                    if (record.type === 'attributes') sanitize(record.target.parentNode || document);
+                    if (record.type === 'attributes') {
+                        sanitizeTarget(record.target);
+                    }
                     record.addedNodes.forEach(function(node) {
                         if (node.nodeType === 1) sanitize(node);
                     });
@@ -344,12 +367,16 @@ private const val POPUP_GUARD_SCRIPT = """
             });
         }
 
-        document.addEventListener('click', function(event) {
+        function neutralizeEventTarget(event) {
             var node = event.target;
-            while (node && node !== document && node.tagName !== 'A' && node.tagName !== 'AREA') {
+            while (node && node !== document && node.tagName !== 'A' && node.tagName !== 'AREA' && node.tagName !== 'FORM') {
                 node = node.parentNode;
             }
-            if (node && node.removeAttribute) node.removeAttribute('target');
-        }, true);
+            sanitizeTarget(node);
+        }
+
+        document.addEventListener('pointerdown', neutralizeEventTarget, true);
+        document.addEventListener('touchstart', neutralizeEventTarget, true);
+        document.addEventListener('click', neutralizeEventTarget, true);
     })();
 """
