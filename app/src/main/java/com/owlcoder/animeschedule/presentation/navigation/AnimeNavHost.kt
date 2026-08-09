@@ -95,7 +95,7 @@ fun AnimeNavHost(
             val scheduleViewModel: ScheduleViewModel = hiltViewModel()
             ScheduleScreen(
                 onAnimeClick = { animeId ->
-                    navController.navigate(Detail.createRoute(animeId))
+                    navController.openDetail(animeId)
                 },
                 onInitialLoadChange = onScheduleInitialLoadChange,
                 viewModel = scheduleViewModel,
@@ -104,7 +104,7 @@ fun AnimeNavHost(
         composable(Screen.Search.route) {
             SearchScreen(
                 onAnimeClick = { animeId ->
-                    navController.navigate(Detail.createRoute(animeId))
+                    navController.openDetail(animeId)
                 },
                 onFocusChanged = onSearchFocusChanged,
                 onCancel = { onSearchFocusChanged(false) },
@@ -113,7 +113,7 @@ fun AnimeNavHost(
         composable(Screen.MyList.route) {
             MyListScreen(
                 onAnimeClick = { animeId ->
-                    navController.navigate(Detail.createRoute(animeId))
+                    navController.openDetail(animeId)
                 },
             )
         }
@@ -129,12 +129,14 @@ fun AnimeNavHost(
             popExitTransition = { popExit },
         ) {
             AnimeDetailScreen(
-                onBack = { navController.popBackStack() },
+                onBack = { navController.popToTopLevelDestination() },
                 onAnimeClick = { animeId ->
-                    navController.navigate(Detail.createRoute(animeId))
+                    navController.openDetail(animeId, replaceTransientStack = true)
                 },
                 onWatchSourceClick = { url ->
-                    navController.navigate(Screen.Watch.createRoute(url))
+                    navController.navigate(Screen.Watch.createRoute(url)) {
+                        launchSingleTop = true
+                    }
                 },
             )
         }
@@ -153,5 +155,23 @@ fun AnimeNavHost(
                 onBack = { navController.popBackStack() },
             )
         }
+    }
+}
+
+private fun NavHostController.openDetail(
+    animeId: Int,
+    replaceTransientStack: Boolean = false,
+) {
+    if (replaceTransientStack) popToTopLevelDestination()
+    navigate(Detail.createRoute(animeId)) {
+        launchSingleTop = true
+    }
+}
+
+private fun NavHostController.popToTopLevelDestination() {
+    var route = currentDestination?.route
+    while (!shouldShowBottomBar(route)) {
+        if (!popBackStack()) return
+        route = currentDestination?.route
     }
 }
