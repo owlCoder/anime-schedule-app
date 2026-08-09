@@ -71,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AiringEpisode
+import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.presentation.components.AppInlineHeader
 import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
@@ -167,6 +168,7 @@ fun ScheduleScreen(
                     scheduleError = scheduleErrorMsg,
                     onRetry = viewModel::refresh,
                     onCardClick = { onAnimeClick(it.animeId) },
+                    onRecentAnimeClick = onAnimeClick,
                     onIncrementEpisode = { episode ->
                         episode.malId?.let { malId ->
                             lastIncrementedEpisode = episode
@@ -250,6 +252,7 @@ private fun TodayHomeContent(
     scheduleError: String?,
     onRetry: () -> Unit,
     onCardClick: (AiringEpisode) -> Unit,
+    onRecentAnimeClick: (Int) -> Unit,
     onIncrementEpisode: (AiringEpisode) -> Unit,
     onEditStatus: (AiringEpisode) -> Unit,
     onSeeAll: () -> Unit,
@@ -460,6 +463,90 @@ private fun TodayHomeContent(
                                 }
                             }
                         }
+                    }
+
+                    if (isToday && uiState.isLoggedIn && uiState.recentlyChangedEntries.isNotEmpty()) {
+                        RecentlyChangedSection(
+                            entries = uiState.recentlyChangedEntries.take(4),
+                            onAnimeClick = onRecentAnimeClick,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecentlyChangedSection(
+    entries: List<MalListEntry>,
+    onAnimeClick: (Int) -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.schedule_section_recently_changed),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
+        )
+        AppMaterialSurface(
+            modifier = Modifier.fillMaxWidth(),
+            material = AppMaterial.Grouped,
+            shape = MaterialTheme.shapes.extraLarge,
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                entries.forEachIndexed { index, entry ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onAnimeClick(entry.animeId) }
+                            .padding(horizontal = 10.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        MediaThumbnail.Small(
+                            url = entry.coverImageUrl,
+                            contentDescription = entry.title,
+                            modifier = Modifier.size(width = 40.dp, height = 54.dp),
+                        )
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            Text(
+                                text = entry.title.ifBlank { entry.animeId.toString() },
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = stringResource(
+                                    R.string.schedule_watched_progress,
+                                    entry.episodesWatched,
+                                    entry.totalEpisodes?.let { "/$it" } ?: "",
+                                ),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                            )
+                        }
+                        Icon(
+                            Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    if (index < entries.lastIndex) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(start = 60.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                        )
                     }
                 }
             }
