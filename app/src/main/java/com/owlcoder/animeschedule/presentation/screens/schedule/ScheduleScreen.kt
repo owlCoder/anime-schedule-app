@@ -89,6 +89,7 @@ import com.owlcoder.animeschedule.presentation.components.LoadingShimmer
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
+import com.owlcoder.animeschedule.presentation.components.displayName
 import com.owlcoder.animeschedule.presentation.components.iosSpring
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.screens.notifications.NotificationsOverlay
@@ -467,7 +468,7 @@ private fun TodayHomeContent(
 
                     if (isToday && uiState.isLoggedIn && uiState.recentlyChangedEntries.isNotEmpty()) {
                         RecentlyChangedSection(
-                            entries = uiState.recentlyChangedEntries.take(4),
+                            entries = uiState.recentlyChangedEntries,
                             onAnimeClick = onRecentAnimeClick,
                         )
                     }
@@ -482,72 +483,181 @@ private fun RecentlyChangedSection(
     entries: List<MalListEntry>,
     onAnimeClick: (Int) -> Unit,
 ) {
+    var showAll by rememberSaveable { mutableStateOf(false) }
+    val previewEntries = entries.take(4)
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(
-            text = stringResource(R.string.schedule_section_recently_changed),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 38.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.schedule_section_recently_changed),
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+            )
+            if (entries.size > previewEntries.size) {
+                TextButton(
+                    onClick = { showAll = true },
+                    modifier = Modifier.height(36.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.schedule_see_all),
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    Spacer(Modifier.width(3.dp))
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                    )
+                }
+            }
+        }
+
         AppMaterialSurface(
             modifier = Modifier.fillMaxWidth(),
             material = AppMaterial.Grouped,
             shape = MaterialTheme.shapes.extraLarge,
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                entries.forEachIndexed { index, entry ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onAnimeClick(entry.animeId) }
-                            .padding(horizontal = 10.dp, vertical = 7.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        MediaThumbnail.Small(
-                            url = entry.coverImageUrl,
-                            contentDescription = entry.title,
-                            modifier = Modifier.size(width = 40.dp, height = 54.dp),
-                        )
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(2.dp),
-                        ) {
-                            Text(
-                                text = entry.title.ifBlank { entry.animeId.toString() },
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Text(
-                                text = stringResource(
-                                    R.string.schedule_watched_progress,
-                                    entry.episodesWatched,
-                                    entry.totalEpisodes?.let { "/$it" } ?: "",
-                                ),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                            )
-                        }
-                        Icon(
-                            Icons.Default.ChevronRight,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                previewEntries.forEachIndexed { index, entry ->
+                    RecentlyChangedEntryRow(
+                        entry = entry,
+                        onClick = { onAnimeClick(entry.animeId) },
+                    )
+                    if (index < previewEntries.lastIndex) {
+                        RecentlyChangedDivider()
                     }
-                    if (index < entries.lastIndex) {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(start = 60.dp),
-                            thickness = 0.5.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant,
-                        )
-                    }
+                }
+            }
+        }
+    }
+
+    if (showAll) {
+        RecentlyChangedSheet(
+            entries = entries.take(15),
+            onAnimeClick = { animeId ->
+                showAll = false
+                onAnimeClick(animeId)
+            },
+            onDismiss = { showAll = false },
+        )
+    }
+}
+
+@Composable
+private fun RecentlyChangedEntryRow(
+    entry: MalListEntry,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        MediaThumbnail.Small(
+            url = entry.coverImageUrl,
+            contentDescription = entry.title,
+            modifier = Modifier.size(width = 40.dp, height = 54.dp),
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = entry.title.ifBlank { entry.animeId.toString() },
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+            ) {
+                Text(
+                    text = entry.status.displayName(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                )
+                Text(
+                    text = "·",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(
+                        R.string.schedule_watched_progress,
+                        entry.episodesWatched,
+                        entry.totalEpisodes?.let { "/$it" } ?: "",
+                    ),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Icon(
+            Icons.Default.ChevronRight,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun RecentlyChangedDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = 60.dp),
+        thickness = 0.5.dp,
+        color = MaterialTheme.colorScheme.outlineVariant,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RecentlyChangedSheet(
+    entries: List<MalListEntry>,
+    onAnimeClick: (Int) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AppSheet(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.schedule_section_recently_changed),
+        sheetGesturesEnabled = true,
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 570.dp),
+            contentPadding = PaddingValues(bottom = 12.dp),
+        ) {
+            items(
+                items = entries,
+                key = { entry -> entry.animeId },
+                contentType = { "recently-changed-entry" },
+            ) { entry ->
+                RecentlyChangedEntryRow(
+                    entry = entry,
+                    onClick = { onAnimeClick(entry.animeId) },
+                )
+                if (entry != entries.last()) {
+                    RecentlyChangedDivider()
                 }
             }
         }
