@@ -23,8 +23,8 @@ android {
         applicationId = "com.owlcoder.animeschedule"
         minSdk = 31
         targetSdk = 36
-        versionCode = 20
-        versionName = "4.0.4"
+        versionCode = 21
+        versionName = "4.0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
