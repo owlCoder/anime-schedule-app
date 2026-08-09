@@ -5,7 +5,7 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -183,9 +183,8 @@ class ScheduleViewModel @Inject constructor(
                 .combine(getMalUserListUseCase()) { state, listResult ->
                     val entries = (listResult as? AppResult.Success)?.data ?: emptyList()
                     val recentlyChanged = entries
-                        .filter { it.status == WatchStatus.WATCHING }
                         .sortedByDescending { it.updatedAt.toInstantOrNull() ?: Instant.EPOCH }
-                        .take(10)
+                        .take(15)
                     state.copy(recentlyChangedEntries = recentlyChanged)
                 }
                 .combine(_hasLoadedOnce) { state, loadedOnce ->
