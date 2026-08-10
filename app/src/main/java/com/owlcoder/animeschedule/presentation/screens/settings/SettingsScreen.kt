@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -73,6 +74,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
+import com.owlcoder.animeschedule.data.local.datastore.AccentColor
 import com.owlcoder.animeschedule.data.local.datastore.CacheRetentionPolicy
 import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
 import com.owlcoder.animeschedule.presentation.components.AppButton
@@ -85,6 +87,7 @@ import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
+import com.owlcoder.animeschedule.ui.theme.accentPrimary
 import java.time.ZoneId
 import java.util.Locale
 
@@ -92,6 +95,7 @@ private val SettingsGroupShape = ContinuousRoundedShape(18.dp)
 
 private enum class SettingsSheet {
     Theme,
+    Accent,
     Notifications,
     Timezone,
     Language,
@@ -202,6 +206,13 @@ fun SettingsScreen(
                         )
                         SettingsDivider()
                         SettingsRow(
+                            icon = Icons.Default.ColorLens,
+                            title = stringResource(R.string.settings_accent),
+                            value = accentLabel(uiState.accentColor),
+                            onClick = { activeSheet = SettingsSheet.Accent },
+                        )
+                        SettingsDivider()
+                        SettingsRow(
                             icon = Icons.Default.Notifications,
                             title = stringResource(R.string.settings_notifications),
                             value = if (uiState.notificationsEnabled) {
@@ -308,6 +319,14 @@ fun SettingsScreen(
             },
             onDismiss = { activeSheet = null },
         )
+        SettingsSheet.Accent -> AccentColorSheet(
+            current = uiState.accentColor,
+            onSelect = {
+                settingsViewModel.setAccentColor(it)
+                activeSheet = null
+            },
+            onDismiss = { activeSheet = null },
+        )
         SettingsSheet.Notifications -> NotificationSettingsSheet(
             enabled = uiState.notificationsEnabled,
             offset = uiState.notificationOffsetMinutes,
@@ -325,7 +344,7 @@ fun SettingsScreen(
         )
         SettingsSheet.Language -> SelectionSheet(
             title = stringResource(R.string.settings_language),
-            options = AppLanguage.entries,
+            options = listOf(AppLanguage.ENGLISH, AppLanguage.SERBIAN_LATIN),
             selected = uiState.appLanguage,
             label = { languageLabel(it) },
             onSelect = { language ->
@@ -595,18 +614,19 @@ private fun <T> SelectionSheet(
     onDismiss: () -> Unit,
 ) {
     AppSheet(onDismissRequest = onDismiss, title = title) {
-        InsetGroup {
-            options.forEachIndexed { index, option ->
-                SelectionRow(
-                    label = label(option),
-                    selected = option == selected,
-                    onClick = { onSelect(option) },
-                )
-                if (index < options.lastIndex) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(start = 14.dp),
-                        thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant,
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            options.forEach { option ->
+                val isSelected = option == selected
+                AppMaterialSurface(
+                    modifier = Modifier.fillMaxWidth(),
+                    material = if (isSelected) AppMaterial.Interactive else AppMaterial.Elevated,
+                    shape = ContinuousRoundedShape(18.dp),
+                ) {
+                    SelectionRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        label = label(option),
+                        selected = isSelected,
+                        onClick = { onSelect(option) },
                     )
                 }
             }
@@ -620,11 +640,12 @@ private fun SelectionRow(
     selected: Boolean,
     onClick: () -> Unit,
     subtitle: String? = null,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 50.dp)
+            .heightIn(min = 56.dp)
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -652,6 +673,93 @@ private fun SelectionRow(
                 modifier = Modifier.size(19.dp),
                 tint = MaterialTheme.colorScheme.primary,
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AccentColorSheet(
+    current: AccentColor,
+    onSelect: (AccentColor) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
+
+    AppSheet(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.settings_accent),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = stringResource(R.string.settings_accent_subtitle),
+                modifier = Modifier.padding(horizontal = 4.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            AppMaterialSurface(
+                modifier = Modifier.fillMaxWidth(),
+                material = AppMaterial.Elevated,
+                shape = ContinuousRoundedShape(20.dp),
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    AccentColor.entries.toList().chunked(4).forEach { row ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            row.forEach { accent ->
+                                AccentSwatch(
+                                    accent = accent,
+                                    selected = accent == current,
+                                    dark = dark,
+                                    onClick = { onSelect(accent) },
+                                )
+                            }
+                            repeat(4 - row.size) { Spacer(modifier = Modifier.size(44.dp)) }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AccentSwatch(
+    accent: AccentColor,
+    selected: Boolean,
+    dark: Boolean,
+    onClick: () -> Unit,
+) {
+    val color = accentPrimary(accent, dark)
+    Surface(
+        modifier = Modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .clickable(onClick = onClick),
+        shape = CircleShape,
+        color = color,
+        border = BorderStroke(
+            width = if (selected) 3.dp else 1.dp,
+            color = if (selected) MaterialTheme.colorScheme.onSurface
+            else MaterialTheme.colorScheme.outlineVariant,
+        ),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+    ) {
+        if (selected) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = if (color.luminance() > 0.58f) Color(0xFF10131A) else Color.White,
+                )
+            }
         }
     }
 }
@@ -911,8 +1019,23 @@ private fun themeModeLabel(mode: ThemeMode): String = when (mode) {
 }
 
 @Composable
+private fun accentLabel(accent: AccentColor): String = when (accent) {
+    AccentColor.TELEGRAM_BLUE -> stringResource(R.string.accent_telegram_blue)
+    AccentColor.PURPLE -> stringResource(R.string.accent_purple)
+    AccentColor.GREEN -> stringResource(R.string.accent_green)
+    AccentColor.ORANGE -> stringResource(R.string.accent_orange)
+    AccentColor.PINK -> stringResource(R.string.accent_pink)
+    AccentColor.RED -> stringResource(R.string.accent_red)
+    AccentColor.CYAN -> stringResource(R.string.accent_cyan)
+    AccentColor.INDIGO -> stringResource(R.string.accent_indigo)
+    AccentColor.TEAL -> stringResource(R.string.accent_teal)
+    AccentColor.YELLOW -> stringResource(R.string.accent_yellow)
+    AccentColor.DEEP_PURPLE -> stringResource(R.string.accent_deep_purple)
+}
+
+@Composable
 private fun languageLabel(language: AppLanguage): String = when (language) {
-    AppLanguage.SYSTEM -> stringResource(R.string.settings_language_system)
+    AppLanguage.SYSTEM -> stringResource(R.string.settings_language_english)
     AppLanguage.ENGLISH -> stringResource(R.string.settings_language_english)
     AppLanguage.SERBIAN_LATIN -> stringResource(R.string.settings_language_serbian)
 }

@@ -7,6 +7,19 @@
     <string name="settings_theme_system">System</string>
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_dark">Dark</string>
+    <string name="settings_accent">Accent color</string>
+    <string name="settings_accent_subtitle">Choose the highlight color used across the app.</string>
+    <string name="accent_telegram_blue">Blue</string>
+    <string name="accent_purple">Purple</string>
+    <string name="accent_green">Green</string>
+    <string name="accent_orange">Orange</string>
+    <string name="accent_pink">Pink</string>
+    <string name="accent_red">Red</string>
+    <string name="accent_cyan">Cyan</string>
+    <string name="accent_indigo">Indigo</string>
+    <string name="accent_teal">Teal</string>
+    <string name="accent_yellow">Yellow</string>
+    <string name="accent_deep_purple">Deep purple</string>
     <string name="settings_timezone_system">System time zone</string>
     <string name="settings_timezone_search">Search time zones</string>
     <string name="settings_cache">Cache</string>
@@ -61,19 +74,19 @@
     <string name="about_privacy">Privacy</string>
 
     <!-- Changelog -->
-    <string name="changelog_release_date">May 20, 2026</string>
+    <string name="changelog_release_date">August 10, 2026</string>
     <string name="changelog_whats_new">What\'s new</string>
-    <string name="changelog_hero_description">A smoother experience, polished in every detail.</string>
-    <string name="changelog_nav_title">Refined bottom navigation</string>
-    <string name="changelog_nav_description">Cleaner selection states and smoother tap feedback.</string>
+    <string name="changelog_hero_description">An AMOLED look, more reliable account state, and a smarter schedule.</string>
+    <string name="changelog_nav_title">Unified iOS navigation</string>
+    <string name="changelog_nav_description">The navbar, toolbar, and controls now share one neutral visual system.</string>
     <string name="changelog_motion_title">Smoother transitions and sheets</string>
-    <string name="changelog_motion_description">Navigation, tabs and modal content now share one motion system.</string>
-    <string name="changelog_filters_title">Redesigned filters</string>
-    <string name="changelog_filters_description">Compact options, clearer selection and one persistent action.</string>
-    <string name="changelog_states_title">Improved loading, error and empty states</string>
-    <string name="changelog_states_description">Centered messaging and useful actions make every state easier to understand.</string>
-    <string name="changelog_about_title">Updated About section</string>
-    <string name="changelog_about_description">Safer app identity, accurate data sources and cleaner system information.</string>
+    <string name="changelog_motion_description">Navigation, date selection, cards, and sheets now move more calmly and naturally.</string>
+    <string name="changelog_filters_title">AMOLED theme and better accent colors</string>
+    <string name="changelog_filters_description">A true-black canvas, clear card hierarchy, and optimized colors for light and dark modes.</string>
+    <string name="changelog_states_title">Better onboarding and MyAnimeList account state</string>
+    <string name="changelog_states_description">Language comes first, while sign-in and linked-account state now refresh reliably.</string>
+    <string name="changelog_about_title">More complete translations and a smarter schedule</string>
+    <string name="changelog_about_description">Dates follow the app language and selected day, while Recently changed appears reliably again.</string>
     <string name="changelog_footer">Made with care by the AnimeSchedule team</string>
 
     <!-- Watch sources -->

@@ -29,7 +29,7 @@ data class UserPreferences(
     val notificationOffsetMinutes: Int = 0,
     val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
     val onboardingDone: Boolean = false,
-    val appLanguage: AppLanguage = AppLanguage.SYSTEM,
+    val appLanguage: AppLanguage = AppLanguage.ENGLISH,
     /** How long temporary Room/image cache data should be retained. */
     val cacheRetentionDays: Int = CacheRetentionPolicy.DEFAULT_RETENTION_DAYS
 )

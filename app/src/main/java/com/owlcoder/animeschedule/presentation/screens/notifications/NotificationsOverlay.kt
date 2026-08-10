@@ -83,6 +83,7 @@ fun NotificationsOverlay(
     val screenHeightDp = LocalConfiguration.current.screenHeightDp
     val maxListHeight = remember(screenHeightDp) { screenHeightDp.dp * 0.38f }
     val motion = LocalMotionPolicy.current
+    val appLocale = LocalConfiguration.current.locales[0]
 
     AppSheet(
         onDismissRequest = onDismiss,
@@ -144,7 +145,7 @@ fun NotificationsOverlay(
                 if (list.isEmpty()) {
                     NotificationEmptyState(tab)
                 } else {
-                    val groupedNotifications = remember(list) { groupedByDay(list) }
+                    val groupedNotifications = remember(list, appLocale) { groupedByDay(list, appLocale) }
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(top = 2.dp, bottom = 14.dp),
@@ -332,9 +333,10 @@ private fun NotificationEmptyState(selectedTab: Int) {
 
 private fun groupedByDay(
     notifications: List<AppNotification>,
+    locale: Locale,
 ): List<Pair<String, List<AppNotification>>> {
     val zone = ZoneId.systemDefault()
-    val formatter = DateTimeFormatter.ofPattern("EEEE, d. MMMM", Locale.getDefault())
+    val formatter = DateTimeFormatter.ofPattern("EEEE, d. MMMM", locale)
     return notifications
         .sortedByDescending { it.createdAtEpochSeconds }
         .groupBy { notification ->

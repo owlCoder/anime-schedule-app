@@ -10,10 +10,10 @@
     <string name="settings_notifications_on">Enabled</string>
     <string name="settings_notifications_off">Disabled</string>
     <string name="settings_notif_timing">Notification timing</string>
-    <string name="settings_language">Language / Jezik</string>
+    <string name="settings_language">Language</string>
     <string name="settings_language_system">System</string>
     <string name="settings_language_english">English</string>
-    <string name="settings_language_serbian">Serbian (Latin)</string>
+    <string name="settings_language_serbian">Srpski</string>
     <string name="settings_timezone">Time zone</string>
     <string name="settings_changelog">Changelog</string>
     <string name="settings_changelog_subtitle">What\'s new in the app</string>
@@ -46,7 +46,7 @@
     <!-- Onboarding -->
     <string name="onboarding_welcome_title">Welcome to\nAnime Schedule</string>
     <string name="onboarding_welcome_body">Track anime airing schedules in real time and manage your MyAnimeList without ads.</string>
-    <string name="onboarding_language_title">Language / Jezik</string>
+    <string name="onboarding_language_title">Language</string>
     <string name="onboarding_language_subtitle">You can always change this in Settings</string>
     <string name="onboarding_theme_title">Choose a theme</string>
     <string name="onboarding_theme_subtitle">You can always change this in Settings</string>
@@ -111,6 +111,7 @@
     <string name="schedule_title">Schedule</string>
     <string name="schedule_tab_today">Today</string>
     <string name="schedule_tab_tomorrow">Tomorrow</string>
+    <string name="schedule_tab_day_after_tomorrow">Day after tomorrow</string>
     <string name="schedule_tab_week">Week</string>
     <string name="schedule_empty_title">No anime today</string>
     <string name="schedule_empty_subtitle">Nothing is airing right now</string>
@@ -176,10 +177,14 @@
     <!-- Notification channel -->
     <string name="notif_channel_name">New episodes</string>
     <string name="notif_content_text">Episode %d is available</string>
+    <string name="notif_time_just_now">Just now</string>
+    <string name="notif_time_minutes">%d min ago</string>
+    <string name="notif_time_hours">%dh ago</string>
 
     <!-- Detail screen -->
     <string name="detail_episodes">Episodes</string>
     <string name="detail_score">Score</string>
+    <string name="detail_your_score">Your score ★ %d/10</string>
     <string name="detail_status">Status</string>
     <string name="detail_format">Format</string>
     <string name="detail_season">Season</string>
@@ -187,6 +192,8 @@
     <string name="detail_related">Related</string>
     <string name="detail_characters">Characters</string>
     <string name="detail_synopsis">Synopsis</string>
+    <string name="detail_show_less">Show less</string>
+    <string name="detail_read_more">Read more</string>
     <string name="detail_next_episode">Next episode</string>
     <string name="detail_watch_trailer">Watch trailer</string>
     <string name="detail_open_mal">Open on MAL</string>
@@ -310,6 +317,10 @@
     <string name="common_retry">Retry</string>
     <string name="common_loading">Loading…</string>
     <string name="common_error_generic">Something went wrong</string>
+    <string name="error_details_message">We ran into a problem while loading this content. Check your connection and try again.</string>
+    <string name="common_back">Go back</string>
+    <string name="common_loading_details">Loading details</string>
+    <string name="common_loading_details_message">Fetching the latest information</string>
     <string name="error_load_details">Couldn\'t load details</string>
     <string name="error_load_schedule">Couldn\'t load the schedule</string>
     <string name="error_search">Search failed</string>

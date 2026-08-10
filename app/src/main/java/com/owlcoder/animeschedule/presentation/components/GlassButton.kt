@@ -222,7 +222,7 @@ fun GlassButton(
     }
 }
 
-/** 36dp visible lens nested inside a 44dp accessibility target. */
+/** 36dp iOS icon control nested inside a 44dp accessibility target. */
 @Composable
 fun GlassIconButton(
     icon: ImageVector,
@@ -247,13 +247,7 @@ fun GlassIconButton(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        GlassSurface(
-            modifier = Modifier.size(36.dp),
-            shape = androidx.compose.foundation.shape.CircleShape,
-            tone = if (onImagery) GlassTone.OnImage else GlassTone.Neutral,
-            blur = GlassBlur.None,
-            contentColor = if (onImagery) Color.White else MaterialTheme.colorScheme.onSurface,
-        ) {
+        val buttonContent: @Composable () -> Unit = {
             Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = icon,
@@ -261,6 +255,24 @@ fun GlassIconButton(
                     modifier = Modifier.size(iconSize),
                 )
             }
+        }
+        if (onImagery) {
+            GlassSurface(
+                modifier = Modifier.size(36.dp),
+                shape = androidx.compose.foundation.shape.CircleShape,
+                tone = GlassTone.OnImage,
+                blur = GlassBlur.None,
+                contentColor = Color.White,
+                content = buttonContent,
+            )
+        } else {
+            AppMaterialSurface(
+                modifier = Modifier.size(36.dp),
+                material = AppMaterial.Interactive,
+                shape = androidx.compose.foundation.shape.CircleShape,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                content = buttonContent,
+            )
         }
     }
 }

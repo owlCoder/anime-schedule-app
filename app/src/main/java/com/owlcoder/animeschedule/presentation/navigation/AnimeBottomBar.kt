@@ -100,9 +100,9 @@ private val items = listOf(
     BottomNavItem(Screen.Settings, R.string.nav_settings, Icons.Filled.Settings, Icons.Outlined.Settings),
 )
 
-private val DockShape = ContinuousRoundedShape(15.dp)
-private val ActiveItemShape = ContinuousRoundedShape(14.dp)
-private val DockHeight = 56.dp
+private val DockShape = ContinuousRoundedShape(30.dp)
+private val ActiveItemShape = ContinuousRoundedShape(27.dp)
+private val DockHeight = 60.dp
 
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
@@ -120,7 +120,7 @@ fun AnimeBottomBar(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-            .padding(start = 13.dp, end = 13.dp, top = 6.dp, bottom = 18.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 15.dp),
     ) {
         Box(
             modifier = Modifier
@@ -159,8 +159,8 @@ fun AnimeBottomBar(
                 val indicatorX by animateDpAsState(
                     targetValue = itemWidth * selectedIndex.toFloat(),
                     animationSpec = motion.iosSpring(
-                        dampingRatio = 0.90f,
-                        stiffness = 520f,
+                        dampingRatio = 0.92f,
+                        stiffness = 360f,
                     ),
                     label = "bottom-tab-indicator-position",
                 )
@@ -170,7 +170,7 @@ fun AnimeBottomBar(
                         .width(itemWidth * 0.92f)
                         .fillMaxHeight(),
                     shape = ActiveItemShape,
-                    color = if (dark) Color.White.copy(alpha = 0.075f) else Color.White.copy(alpha = 0.48f),
+                    color = if (dark) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.62f),
                     border = BorderStroke(
                         0.5.dp,
                         if (dark) Color.White.copy(alpha = 0.12f) else Color.Black.copy(alpha = 0.065f),
@@ -220,7 +220,7 @@ private fun BottomNavItemView(
         targetValue = if (selected) 1f else 0.992f,
         animationSpec = motion.iosSpring(
             dampingRatio = 0.94f,
-            stiffness = 620f,
+            stiffness = 420f,
         ),
         label = "bottom-tab-scale",
     )

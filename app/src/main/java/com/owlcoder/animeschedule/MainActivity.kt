@@ -28,7 +28,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -47,6 +46,7 @@ import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
 import com.owlcoder.animeschedule.presentation.components.AppSystemBarAppearance
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
+import com.owlcoder.animeschedule.presentation.components.LocalChromeHazeState
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.ToastController
@@ -101,6 +101,8 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             val prefs by prefsDataStore.userPreferencesFlow.collectAsState(initial = initialPrefs)
+            val isMalConnected by authViewModel.isLoggedIn.collectAsState(initial = initialPrefs.malLoggedIn)
+            val malUsername by authViewModel.username.collectAsState(initial = initialPrefs.malUsername)
             val scope = rememberCoroutineScope()
 
             var pendingTheme by rememberSaveable { mutableStateOf(prefs.themeMode) }
@@ -115,9 +117,8 @@ class MainActivity : AppCompatActivity() {
 
             applyLocale(effectiveLanguage)
 
-            key(effectiveLanguage) {
-                AnimeScheduleTheme(themeMode = effectiveTheme, accentColor = effectiveAccent) {
-                    if (!prefs.onboardingDone) {
+            AnimeScheduleTheme(themeMode = effectiveTheme, accentColor = effectiveAccent) {
+                if (!prefs.onboardingDone) {
                         OnboardingScreen(
                             onComplete = {
                                 scope.launch {
@@ -131,6 +132,8 @@ class MainActivity : AppCompatActivity() {
                                 }
                             },
                             onLogin = { context -> authViewModel.launchMalLogin(context) },
+                            isMalConnected = isMalConnected,
+                            malUsername = malUsername,
                             selectedTheme = pendingTheme,
                             selectedAccent = pendingAccent,
                             selectedLanguage = pendingLanguage,
@@ -165,7 +168,8 @@ class MainActivity : AppCompatActivity() {
                         )
 
                         CompositionLocalProvider(
-                            LocalNavBarHeight provides if (showBottomBar) 82.dp else 0.dp,
+                            LocalChromeHazeState provides hazeState,
+                            LocalNavBarHeight provides if (showBottomBar) 84.dp else 0.dp,
                             LocalToast provides toastController,
                         ) {
                             ToastHost(controller = toastController) {
@@ -228,9 +232,8 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         }
-                    }
                 }
-            }
+                }
         }
     }
 

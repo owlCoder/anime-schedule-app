@@ -1,5 +1,7 @@
 package com.owlcoder.animeschedule.presentation.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -22,9 +24,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -36,6 +42,12 @@ import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.ui.theme.AppSpacing
 import com.owlcoder.animeschedule.ui.theme.PillShape
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
+
+val LocalChromeHazeState = staticCompositionLocalOf<HazeState?> { null }
 
 @Composable
 fun AppLargeHeader(
@@ -127,14 +139,46 @@ fun AppInlineHeader(
     }
 }
 
+@OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 fun GlassToolbarGroup(
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
 ) {
-    GlassChrome(
-        modifier = modifier.wrapContentWidth(),
-        shape = PillShape,
+    val hazeState = LocalChromeHazeState.current
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
+    Box(
+        modifier = modifier
+            .wrapContentWidth()
+            .height(44.dp)
+            .shadow(
+                elevation = 7.dp,
+                shape = PillShape,
+                clip = false,
+                ambientColor = Color.Black.copy(alpha = if (dark) 0.34f else 0.14f),
+                spotColor = Color.Black.copy(alpha = if (dark) 0.34f else 0.14f),
+            )
+            .clip(PillShape)
+            .then(
+                if (hazeState != null) {
+                    Modifier.hazeEffect(
+                        state = hazeState,
+                        style = HazeMaterials.thin(),
+                    )
+                } else {
+                    Modifier.background(appMaterialColor(AppMaterial.Interactive))
+                },
+            )
+            .background(appMaterialColor(AppMaterial.Grouped))
+            .border(
+                width = 0.5.dp,
+                color = if (dark) {
+                    Color.White.copy(alpha = 0.11f)
+                } else {
+                    Color.White.copy(alpha = 0.55f)
+                },
+                shape = PillShape,
+            ),
     ) {
         Row(
             modifier = Modifier

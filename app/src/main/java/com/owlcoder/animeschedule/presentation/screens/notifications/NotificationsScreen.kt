@@ -7,7 +7,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AppNotification
 import com.owlcoder.animeschedule.presentation.components.InsetListRow
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
@@ -49,14 +51,15 @@ internal fun NotificationCard(
     )
 }
 
+@Composable
 private fun relativeTime(epochSeconds: Long): String {
     val now = Instant.now()
     val time = Instant.ofEpochSecond(epochSeconds)
     val minutesAgo = ChronoUnit.MINUTES.between(time, now)
     return when {
-        minutesAgo < 1 -> "Upravo"
-        minutesAgo < 60 -> "Pre ${minutesAgo}min"
-        minutesAgo < 1440 -> "Pre ${minutesAgo / 60}h"
+        minutesAgo < 1 -> stringResource(R.string.notif_time_just_now)
+        minutesAgo < 60 -> stringResource(R.string.notif_time_minutes, minutesAgo)
+        minutesAgo < 1440 -> stringResource(R.string.notif_time_hours, minutesAgo / 60)
         else -> {
             val formatter = DateTimeFormatter.ofPattern("d.M.yyyy")
             time.atZone(ZoneId.systemDefault()).format(formatter)

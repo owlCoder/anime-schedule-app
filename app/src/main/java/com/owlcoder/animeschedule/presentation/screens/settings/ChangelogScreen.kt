@@ -1,6 +1,5 @@
 package com.owlcoder.animeschedule.presentation.screens.settings
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,15 +24,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -251,25 +247,10 @@ private fun ChangelogGlassTile(
     cornerRadius: Dp,
     content: @Composable () -> Unit,
 ) {
-    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    Surface(
+    AppMaterialSurface(
         modifier = Modifier.size(size),
+        material = AppMaterial.Interactive,
         shape = ContinuousRoundedShape(cornerRadius),
-        color = if (dark) {
-            Color.White.copy(alpha = 0.055f)
-        } else {
-            Color.White.copy(alpha = 0.68f)
-        },
-        border = BorderStroke(
-            width = 0.5.dp,
-            color = if (dark) {
-                Color.White.copy(alpha = 0.10f)
-            } else {
-                Color.White.copy(alpha = 0.86f)
-            },
-        ),
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),

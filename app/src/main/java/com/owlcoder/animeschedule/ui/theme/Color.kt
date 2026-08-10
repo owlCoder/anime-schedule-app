@@ -26,14 +26,15 @@ val Pink40 = Color(0xFF7D5260)
  * and only controls use the secondary gray. Keeping these layers distinct prevents
  * the washed-out appearance visible when every surface shares nearly the same tone.
  */
-val AppLightBackground = Color(0xFFF2F2F7)
+val AppLightBackground = Color(0xFFF4F5FA)
 val AppLightGrouped = Color(0xFFFFFFFF)
-val AppLightElevated = Color(0xFFFAFAFC)
-val AppLightSecondary = Color(0xFFE9E9EE)
-val AppLightTertiary = Color(0xFFD1D1D6)
+val AppLightElevated = Color(0xFFFBFCFF)
+val AppLightSecondary = Color(0xFFE7EAF2)
+val AppLightTertiary = Color(0xFFD3D8E5)
 
+// AMOLED-first iOS hierarchy: true black canvas with barely lifted neutral surfaces.
 val AppDarkBackground = Color(0xFF000000)
-val AppDarkGrouped = Color(0xFF1C1C1E)
-val AppDarkElevated = Color(0xFF242426)
-val AppDarkSecondary = Color(0xFF2C2C2E)
-val AppDarkTertiary = Color(0xFF3A3A3C)
+val AppDarkGrouped = Color(0xFF09090A)
+val AppDarkElevated = Color(0xFF0F0F11)
+val AppDarkSecondary = Color(0xFF171719)
+val AppDarkTertiary = Color(0xFF222225)

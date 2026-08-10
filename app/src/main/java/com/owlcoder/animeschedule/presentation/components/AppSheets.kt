@@ -60,7 +60,7 @@ fun AppSheet(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    val container = if (dark) Color(0xFF1C1C1E) else Color(0xFFFBFBFD)
+    val container = if (dark) Color(0xFF0D0D0F) else Color(0xFFFBFBFD)
     val scrim = Color.Black.copy(alpha = if (dark) 0.42f else 0.26f)
 
     ModalBottomSheet(

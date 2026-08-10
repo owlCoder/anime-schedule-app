@@ -117,7 +117,6 @@ private data class GlassPalette(
 @Composable
 private fun glassPalette(tone: GlassTone): GlassPalette {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    val selected = tone == GlassTone.Accent
 
     val fill = when (tone) {
         GlassTone.Neutral -> if (dark) GlassTokens.neutralFillDark else GlassTokens.neutralFillLight
@@ -127,9 +126,9 @@ private fun glassPalette(tone: GlassTone): GlassPalette {
     val border = when (tone) {
         GlassTone.OnImage -> Color.White.copy(alpha = 0.22f)
         else -> if (dark) {
-            Color.White.copy(alpha = if (selected) 0.18f else 0.11f)
+            Color.White.copy(alpha = if (tone == GlassTone.Accent) 0.18f else 0.11f)
         } else {
-            Color.Black.copy(alpha = if (selected) 0.12f else 0.09f)
+            Color.Black.copy(alpha = if (tone == GlassTone.Accent) 0.12f else 0.09f)
         }
     }
     val topLight = when (tone) {

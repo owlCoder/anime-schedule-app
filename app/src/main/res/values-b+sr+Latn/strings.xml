@@ -10,10 +10,10 @@
     <string name="settings_notifications_on">Uključene</string>
     <string name="settings_notifications_off">Isključene</string>
     <string name="settings_notif_timing">Vreme obaveštenja</string>
-    <string name="settings_language">Jezik / Language</string>
+    <string name="settings_language">Jezik</string>
     <string name="settings_language_system">Sistemski</string>
     <string name="settings_language_english">English</string>
-    <string name="settings_language_serbian">Srpski (latinica)</string>
+    <string name="settings_language_serbian">Srpski</string>
     <string name="settings_timezone">Vremenska zona</string>
     <string name="settings_changelog">Istorija promena</string>
     <string name="settings_changelog_subtitle">Šta je novo u aplikaciji</string>
@@ -46,7 +46,7 @@
     <!-- Onboarding -->
     <string name="onboarding_welcome_title">Dobrodošao u\nAnime Schedule</string>
     <string name="onboarding_welcome_body">Prati raspored emitovanja anime serija u realnom vremenu i upravljaj MyAnimeList listom bez reklama.</string>
-    <string name="onboarding_language_title">Jezik / Language</string>
+    <string name="onboarding_language_title">Jezik</string>
     <string name="onboarding_language_subtitle">Uvek možeš promeniti u podešavanjima</string>
     <string name="onboarding_theme_title">Izaberi temu</string>
     <string name="onboarding_theme_subtitle">Uvek možeš promeniti u podešavanjima</string>
@@ -111,6 +111,7 @@
     <string name="schedule_title">Raspored</string>
     <string name="schedule_tab_today">Danas</string>
     <string name="schedule_tab_tomorrow">Sutra</string>
+    <string name="schedule_tab_day_after_tomorrow">Prekosutra</string>
     <string name="schedule_tab_week">Nedelja</string>
     <string name="schedule_empty_title">Nema anime danas</string>
     <string name="schedule_empty_subtitle">Trenutno se ništa ne emituje</string>
@@ -176,10 +177,14 @@
     <!-- Notification channel -->
     <string name="notif_channel_name">Nove epizode</string>
     <string name="notif_content_text">Epizoda %d je dostupna</string>
+    <string name="notif_time_just_now">Upravo</string>
+    <string name="notif_time_minutes">Pre %d min</string>
+    <string name="notif_time_hours">Pre %d h</string>
 
     <!-- Detail screen -->
     <string name="detail_episodes">Epizode</string>
     <string name="detail_score">Ocena</string>
+    <string name="detail_your_score">Tvoja ocena ★ %d/10</string>
     <string name="detail_status">Status</string>
     <string name="detail_format">Format</string>
     <string name="detail_season">Sezona</string>
@@ -188,6 +193,8 @@
     <string name="detail_characters">Likovi</string>
     <string name="detail_synopsis">Sinopsis</string>
     <string name="detail_next_episode">Sledeća epizoda</string>
+    <string name="detail_show_less">Prikaži manje</string>
+    <string name="detail_read_more">Pročitaj više</string>
     <string name="detail_watch_trailer">Pogledaj trejler</string>
     <string name="detail_open_mal">Otvori na MAL</string>
     <string name="detail_add_to_list">Dodaj na listu</string>
@@ -318,6 +325,11 @@
     <string name="common_offline">Offline — prikazuju se keširani podaci</string>
     <string name="common_cancel">Otkaži</string>
     <string name="common_save">Sačuvaj</string>
+
+    <string name="error_details_message">Došlo je do problema pri učitavanju sadržaja. Proveri vezu i pokušaj ponovo.</string>
+    <string name="common_back">Nazad</string>
+    <string name="common_loading_details">Učitavanje detalja</string>
+    <string name="common_loading_details_message">Preuzimanje najnovijih informacija</string>
 
     <!-- List status bottom sheet -->
     <string name="list_status_title">Uredi status</string>

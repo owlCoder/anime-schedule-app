@@ -13,6 +13,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
@@ -33,41 +34,43 @@ val AnimeScheduleShapes = Shapes().copy(
 val PillShape = RoundedCornerShape(percent = 50)
 
 fun accentPrimary(accent: AccentColor, dark: Boolean = false): Color = when (accent) {
-    AccentColor.TELEGRAM_BLUE -> if (dark) Color(0xFF0A84FF) else Color(0xFF007AFF)
-    AccentColor.PURPLE -> if (dark) Color(0xFFBF5AF2) else Color(0xFFAF52DE)
-    AccentColor.GREEN -> if (dark) Color(0xFF30D158) else Color(0xFF34C759)
-    AccentColor.ORANGE -> if (dark) Color(0xFFFF9F0A) else Color(0xFFFF9500)
-    AccentColor.PINK -> if (dark) Color(0xFFFF375F) else Color(0xFFFF2D55)
-    AccentColor.RED -> if (dark) Color(0xFFFF453A) else Color(0xFFFF3B30)
-    AccentColor.CYAN -> if (dark) Color(0xFF64D2FF) else Color(0xFF32ADE6)
-    AccentColor.INDIGO -> if (dark) Color(0xFF5E5CE6) else Color(0xFF5856D6)
-    AccentColor.TEAL -> if (dark) Color(0xFF40C8E0) else Color(0xFF30B0C7)
-    AccentColor.YELLOW -> if (dark) Color(0xFFFFD60A) else Color(0xFFFFCC00)
-    AccentColor.DEEP_PURPLE -> if (dark) Color(0xFFAC8E68) else Color(0xFF8E6E53)
+    AccentColor.TELEGRAM_BLUE -> if (dark) Color(0xFF3D8FD6) else Color(0xFF007AFF)
+    AccentColor.PURPLE -> if (dark) Color(0xFFA25CC2) else Color(0xFF9B3DC7)
+    AccentColor.GREEN -> if (dark) Color(0xFF3EAA55) else Color(0xFF218C3A)
+    AccentColor.ORANGE -> if (dark) Color(0xFFCE7D28) else Color(0xFFC86B00)
+    AccentColor.PINK -> if (dark) Color(0xFFCB496B) else Color(0xFFD21F4F)
+    AccentColor.RED -> if (dark) Color(0xFFD1534B) else Color(0xFFD52C24)
+    AccentColor.CYAN -> if (dark) Color(0xFF479BBB) else Color(0xFF1686A8)
+    AccentColor.INDIGO -> if (dark) Color(0xFF6E6EC4) else Color(0xFF4B49B6)
+    AccentColor.TEAL -> if (dark) Color(0xFF4297A3) else Color(0xFF087B8C)
+    AccentColor.YELLOW -> if (dark) Color(0xFFC5A238) else Color(0xFFB07800)
+    AccentColor.DEEP_PURPLE -> if (dark) Color(0xFF7775C9) else Color(0xFF4B49B6)
 }
+
+private fun Color.onAccent(): Color = if (luminance() > 0.58f) Color(0xFF10131A) else Color.White
 
 private fun darkColors(primary: Color) = darkColorScheme(
     primary = primary,
-    onPrimary = Color.White,
-    primaryContainer = primary.copy(alpha = 0.20f).compositeOver(AppDarkGrouped),
+    onPrimary = primary.onAccent(),
+    primaryContainer = primary.copy(alpha = 0.18f).compositeOver(AppDarkGrouped),
     onPrimaryContainer = primary,
-    secondary = Color(0xFFEBEBF5).copy(alpha = 0.72f),
+    secondary = Color(0xFFD1D1D6),
     onSecondary = Color.Black,
     secondaryContainer = AppDarkSecondary,
     onSecondaryContainer = Color.White,
     background = AppDarkBackground,
     onBackground = Color.White,
     surface = AppDarkGrouped,
-    onSurface = Color.White,
+    onSurface = Color(0xFFF2F2F4),
     surfaceVariant = AppDarkSecondary,
-    onSurfaceVariant = Color(0xFFEBEBF5).copy(alpha = 0.68f),
+    onSurfaceVariant = Color(0xFFB2B2B8),
     surfaceContainerLowest = AppDarkBackground,
     surfaceContainerLow = AppDarkGrouped,
     surfaceContainer = AppDarkGrouped,
     surfaceContainerHigh = AppDarkElevated,
     surfaceContainerHighest = AppDarkSecondary,
-    outline = Color(0xFF8E8E93),
-    outlineVariant = Color(0xFF545458).copy(alpha = 0.55f),
+    outline = Color(0xFF7C7C82),
+    outlineVariant = Color(0xFF3D3D42),
     error = Color(0xFFFF453A),
     onError = Color.White,
     errorContainer = Color(0xFF4A1512),
@@ -79,26 +82,26 @@ private fun darkColors(primary: Color) = darkColorScheme(
 
 private fun lightColors(primary: Color) = lightColorScheme(
     primary = primary,
-    onPrimary = Color.White,
-    primaryContainer = primary.copy(alpha = 0.12f).compositeOver(AppLightGrouped),
+    onPrimary = primary.onAccent(),
+    primaryContainer = primary.copy(alpha = 0.14f).compositeOver(AppLightGrouped),
     onPrimaryContainer = primary,
     secondary = Color(0xFF3C3C43),
     onSecondary = Color.White,
     secondaryContainer = AppLightSecondary,
     onSecondaryContainer = Color.Black,
     background = AppLightBackground,
-    onBackground = Color.Black,
+    onBackground = Color(0xFF10131A),
     surface = AppLightGrouped,
-    onSurface = Color.Black,
+    onSurface = Color(0xFF141820),
     surfaceVariant = AppLightSecondary,
-    onSurfaceVariant = Color(0xFF3C3C43).copy(alpha = 0.72f),
+    onSurfaceVariant = Color(0xFF5E6675),
     surfaceContainerLowest = Color.White,
     surfaceContainerLow = AppLightGrouped,
     surfaceContainer = AppLightGrouped,
     surfaceContainerHigh = AppLightElevated,
     surfaceContainerHighest = AppLightSecondary,
-    outline = Color(0xFF8E8E93),
-    outlineVariant = Color(0xFF3C3C43).copy(alpha = 0.20f),
+    outline = Color(0xFF8B94A3),
+    outlineVariant = Color(0xFF5E6675).copy(alpha = 0.24f),
     error = Color(0xFFFF3B30),
     onError = Color.White,
     errorContainer = Color(0xFFFFE7E5),

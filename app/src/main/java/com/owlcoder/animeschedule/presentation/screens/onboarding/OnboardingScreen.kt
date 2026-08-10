@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -58,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -75,9 +77,10 @@ import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.iosPressScale
 import com.owlcoder.animeschedule.ui.theme.PillShape
+import com.owlcoder.animeschedule.ui.theme.accentPrimary
 import kotlinx.coroutines.launch
 
-private const val OnboardingPageCount = 5
+private const val OnboardingPageCount = 6
 
 private fun AppLanguage.t(en: String, sr: String): String =
     if (this == AppLanguage.SERBIAN_LATIN) sr else en
@@ -86,6 +89,8 @@ private fun AppLanguage.t(en: String, sr: String): String =
 fun OnboardingScreen(
     onComplete: () -> Unit,
     onLogin: (Context) -> Unit,
+    isMalConnected: Boolean,
+    malUsername: String,
     selectedTheme: ThemeMode,
     selectedAccent: AccentColor,
     selectedLanguage: AppLanguage,
@@ -116,9 +121,13 @@ fun OnboardingScreen(
                     .windowInsetsPadding(WindowInsets.statusBars),
             ) { page ->
                 when (page) {
-                    0 -> WelcomePage(selectedLanguage)
-                    1 -> SchedulePreviewPage(selectedLanguage)
-                    2 -> NotificationPreviewPage(
+                    0 -> LanguageSelectionPage(
+                        selectedLanguage = selectedLanguage,
+                        onLanguageChange = onLanguageChange,
+                    )
+                    1 -> WelcomePage(selectedLanguage)
+                    2 -> SchedulePreviewPage(selectedLanguage)
+                    3 -> NotificationPreviewPage(
                         language = selectedLanguage,
                         enabled = notificationsEnabled,
                         offsetMinutes = notificationOffset,
@@ -131,15 +140,18 @@ fun OnboardingScreen(
                             onNotifSettingsChange(notificationsEnabled, it)
                         },
                     )
-                    3 -> MalPreviewPage(selectedLanguage) { onLogin(context) }
+                    4 -> MalPreviewPage(
+                        language = selectedLanguage,
+                        isConnected = isMalConnected,
+                        username = malUsername,
+                        onLogin = { onLogin(context) },
+                    )
                     else -> PersonalizePage(
                         language = selectedLanguage,
                         selectedTheme = selectedTheme,
                         selectedAccent = selectedAccent,
-                        selectedLanguage = selectedLanguage,
                         onThemeChange = onThemeChange,
                         onAccentChange = onAccentChange,
-                        onLanguageChange = onLanguageChange,
                     )
                 }
             }
@@ -188,14 +200,15 @@ private fun OnboardingActions(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            AppButton(
-                label = if (currentPage > 0) language.t("Back", "Nazad")
-                else language.t("Later", "Kasnije"),
-                icon = Icons.AutoMirrored.Filled.ArrowBack,
-                onClick = onBackOrLater,
-                modifier = Modifier.weight(1f),
-                variant = AppButtonVariant.Secondary,
-            )
+            if (currentPage > 0) {
+                AppButton(
+                    label = language.t("Back", "Nazad"),
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    onClick = onBackOrLater,
+                    modifier = Modifier.weight(0.42f),
+                    variant = AppButtonVariant.Secondary,
+                )
+            }
             AppButton(
                 label = if (currentPage == pageCount - 1) {
                     language.t("Get started", "Započni")
@@ -208,8 +221,129 @@ private fun OnboardingActions(
                     Icons.AutoMirrored.Filled.ArrowForward
                 },
                 onClick = onContinue,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(if (currentPage > 0) 0.58f else 1f),
                 variant = AppButtonVariant.Primary,
+            )
+        }
+    }
+}
+
+@Composable
+private fun LanguageSelectionPage(
+    selectedLanguage: AppLanguage,
+    onLanguageChange: (AppLanguage) -> Unit,
+) {
+    ProductPage(
+        eyebrow = selectedLanguage.t("WELCOME", "DOBRODOŠAO"),
+        title = selectedLanguage.t("Choose your language", "Izaberi jezik"),
+        subtitle = selectedLanguage.t(
+            "You can change the app language later in Settings.",
+            "Jezik aplikacije možeš kasnije promeniti u Podešavanjima.",
+        ),
+    ) {
+        Surface(
+            modifier = Modifier.size(64.dp),
+            shape = ContinuousRoundedShape(20.dp),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+        ) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Default.Language,
+                    contentDescription = null,
+                    modifier = Modifier.size(30.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            LanguageChoiceCard(
+                code = "EN",
+                label = "English",
+                selected = selectedLanguage == AppLanguage.ENGLISH,
+                onClick = { onLanguageChange(AppLanguage.ENGLISH) },
+                modifier = Modifier.weight(1f),
+            )
+            LanguageChoiceCard(
+                code = "SR",
+                label = "Srpski",
+                selected = selectedLanguage == AppLanguage.SERBIAN_LATIN,
+                onClick = { onLanguageChange(AppLanguage.SERBIAN_LATIN) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun LanguageChoiceCard(
+    code: String,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val background by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.13f)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        },
+        label = "language-card-background",
+    )
+    Surface(
+        modifier = modifier
+            .height(112.dp)
+            .iosPressScale()
+            .onboardingClickable(onClick),
+        shape = ContinuousRoundedShape(24.dp),
+        color = background,
+        border = androidx.compose.foundation.BorderStroke(
+            width = if (selected) 1.dp else 0.7.dp,
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.48f)
+            } else {
+                MaterialTheme.colorScheme.outlineVariant
+            },
+        ),
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = code,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (selected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (selected) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurface,
             )
         }
     }
@@ -478,7 +612,12 @@ private fun NotificationPreviewPage(
 }
 
 @Composable
-private fun MalPreviewPage(language: AppLanguage, onLogin: () -> Unit) {
+private fun MalPreviewPage(
+    language: AppLanguage,
+    isConnected: Boolean,
+    username: String,
+    onLogin: () -> Unit,
+) {
     ProductPage(
         eyebrow = "MYANIMELIST",
         title = language.t("Your progress, kept in sync", "Tvoj napredak, uvek sinhronizovan"),
@@ -516,9 +655,17 @@ private fun MalPreviewPage(language: AppLanguage, onLogin: () -> Unit) {
                     Column(Modifier.weight(1f).padding(start = 11.dp)) {
                         Text("MyAnimeList", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         Text(
-                            language.t("Not connected", "Nije povezano"),
+                            when {
+                                isConnected && username.isNotBlank() -> language.t(
+                                    "Connected as @$username",
+                                    "Povezano kao @$username",
+                                )
+                                isConnected -> language.t("Connected", "Povezano")
+                                else -> language.t("Not connected", "Nije povezano")
+                            },
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (isConnected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -528,8 +675,12 @@ private fun MalPreviewPage(language: AppLanguage, onLogin: () -> Unit) {
                 )
                 PreviewScheduleRow("12/12", language.t("Completed", "Završeno"), language.t("Your score 8/10", "Tvoja ocena 8/10"))
                 AppButton(
-                    label = language.t("Connect account", "Poveži nalog"),
-                    icon = Icons.Default.Login,
+                    label = if (isConnected) {
+                        language.t("Reconnect account", "Ponovo poveži nalog")
+                    } else {
+                        language.t("Connect account", "Poveži nalog")
+                    },
+                    icon = if (isConnected) Icons.Default.CheckCircle else Icons.Default.Login,
                     onClick = onLogin,
                     modifier = Modifier.fillMaxWidth(),
                     variant = AppButtonVariant.Secondary,
@@ -549,17 +700,15 @@ private fun PersonalizePage(
     language: AppLanguage,
     selectedTheme: ThemeMode,
     selectedAccent: AccentColor,
-    selectedLanguage: AppLanguage,
     onThemeChange: (ThemeMode) -> Unit,
     onAccentChange: (AccentColor) -> Unit,
-    onLanguageChange: (AppLanguage) -> Unit,
 ) {
     ProductPage(
         eyebrow = language.t("FINISH SETUP", "ZAVRŠI PODEŠAVANJE"),
         title = language.t("Make it yours", "Podesi po svom ukusu"),
         subtitle = language.t(
-            "Choose appearance, accent and language. Changes are applied immediately.",
-            "Izaberi izgled, boju i jezik. Promene se primenjuju odmah.",
+            "Choose appearance and accent. Changes are applied immediately.",
+            "Izaberi izgled i boju. Promene se primenjuju odmah.",
         ),
     ) {
         CompactPreferenceGroup(
@@ -586,28 +735,6 @@ private fun PersonalizePage(
             AccentPicker(selectedAccent, onAccentChange)
         }
 
-        CompactPreferenceGroup(
-            icon = Icons.Default.Language,
-            title = language.t("Language", "Jezik"),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                listOf(
-                    AppLanguage.SYSTEM to language.t("System", "Sistem"),
-                    AppLanguage.ENGLISH to "English",
-                    AppLanguage.SERBIAN_LATIN to "Srpski",
-                ).forEach { (option, label) ->
-                    SelectionChip(
-                        label = label,
-                        selected = selectedLanguage == option,
-                        onClick = { onLanguageChange(option) },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
-        }
     }
 }
 
@@ -624,24 +751,33 @@ private fun ProductPage(
             .padding(horizontal = 20.dp, vertical = 18.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(Modifier.weight(0.28f))
-        Text(
-            text = eyebrow,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold,
-        )
+        Spacer(Modifier.weight(0.16f))
+        Box(
+            modifier = Modifier
+                .clip(PillShape)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f))
+                .padding(horizontal = 11.dp, vertical = 5.dp),
+        ) {
+            Text(
+                text = eyebrow,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+            )
+        }
         Text(
             text = title,
-            modifier = Modifier.padding(top = 6.dp),
+            modifier = Modifier.padding(top = 11.dp),
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
         )
         Text(
             text = subtitle,
-            modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
-            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier
+                .widthIn(max = 560.dp)
+                .padding(top = 8.dp, bottom = 24.dp),
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
@@ -651,7 +787,7 @@ private fun ProductPage(
             verticalArrangement = Arrangement.spacedBy(11.dp),
             content = content,
         )
-        Spacer(Modifier.weight(0.72f))
+        Spacer(Modifier.weight(0.84f))
     }
 }
 
@@ -973,7 +1109,11 @@ private fun AccentPicker(
                             imageVector = Icons.Default.Check,
                             contentDescription = null,
                             modifier = Modifier.size(17.dp),
-                            tint = Color.White,
+                            tint = if (accent.swatch().luminance() > 0.58f) {
+                                Color(0xFF10131A)
+                            } else {
+                                Color.White
+                            },
                         )
                     }
                 }
@@ -982,16 +1122,8 @@ private fun AccentPicker(
     }
 }
 
-private fun AccentColor.swatch(): Color = when (this) {
-    AccentColor.TELEGRAM_BLUE -> Color(0xFF0A84FF)
-    AccentColor.PURPLE -> Color(0xFFAF52DE)
-    AccentColor.GREEN -> Color(0xFF34C759)
-    AccentColor.ORANGE -> Color(0xFFFF9F0A)
-    AccentColor.PINK -> Color(0xFFFF2D55)
-    AccentColor.RED -> Color(0xFFFF453A)
-    AccentColor.CYAN -> Color(0xFF32ADE6)
-    AccentColor.INDIGO -> Color(0xFF5856D6)
-    AccentColor.TEAL -> Color(0xFF30B0C7)
-    AccentColor.YELLOW -> Color(0xFFFFD60A)
-    AccentColor.DEEP_PURPLE -> Color(0xFF5E5CE6)
-}
+@Composable
+private fun AccentColor.swatch(): Color = accentPrimary(
+    accent = this,
+    dark = MaterialTheme.colorScheme.background.luminance() < 0.35f,
+)

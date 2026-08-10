@@ -1,11 +1,14 @@
 package com.owlcoder.animeschedule.presentation.screens.schedule
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -64,6 +67,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -109,6 +113,7 @@ fun ScheduleScreen(
     val uiState by viewModel.uiState.collectAsState()
     val openOverlay by viewModel.openOverlay.collectAsState()
     val toast = LocalToast.current
+    val appLocale = LocalConfiguration.current.locales[0]
     val today = remember { LocalDate.now() }
     var selectedEpochDay by rememberSaveable { mutableStateOf(today.toEpochDay()) }
     val selectedDate = LocalDate.ofEpochDay(selectedEpochDay)
@@ -227,7 +232,7 @@ fun ScheduleScreen(
             onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) },
         )
         is ScheduleOverlay.SeeAll -> ScheduleSeeAllSheet(
-            title = selectedDate.fullDateLabel(),
+            title = selectedDate.fullDateLabel(appLocale),
             episodes = uiState.episodesForDate(selectedDate),
             isLoggedIn = uiState.isLoggedIn,
             pendingIncrementIds = uiState.pendingIncrementIds,
@@ -262,6 +267,7 @@ private fun TodayHomeContent(
     onFilter: () -> Unit,
 ) {
     val today = remember { LocalDate.now() }
+    val appLocale = LocalConfiguration.current.locales[0]
     val motion = LocalMotionPolicy.current
     val selectedEpisodes = uiState.episodesForDate(selectedDate).sortedBy { it.airingAtEpochSeconds }
     val isToday = selectedDate == today
@@ -325,8 +331,8 @@ private fun TodayHomeContent(
     ) {
         item(key = "today-header") {
             AppLargeHeader(
-                title = stringResource(R.string.schedule_tab_today),
-                subtitle = selectedDate.fullDateLabel(),
+                title = selectedDate.scheduleHeaderTitle(today, appLocale),
+                subtitle = selectedDate.fullDateLabel(appLocale),
                 trailingContent = {
                     GlassToolbarGroup {
                         GlassToolbarButton(
@@ -395,7 +401,7 @@ private fun TodayHomeContent(
                             } else {
                                 stringResource(
                                     R.string.schedule_nothing_date,
-                                    selectedDate.shortDateLabel(),
+                                    selectedDate.shortDateLabel(appLocale),
                                 )
                             },
                             modifier = Modifier
@@ -466,7 +472,13 @@ private fun TodayHomeContent(
                         }
                     }
 
-                    if (isToday && uiState.isLoggedIn && uiState.recentlyChangedEntries.isNotEmpty()) {
+                    AnimatedVisibility(
+                        visible = isToday && uiState.recentlyChangedEntries.isNotEmpty(),
+                        enter = fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
+                            expandVertically(animationSpec = motion.iosSpring()),
+                        exit = fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
+                            shrinkVertically(animationSpec = motion.iosTween(IosMotion.Quick)),
+                    ) {
                         RecentlyChangedSection(
                             entries = uiState.recentlyChangedEntries,
                             onAnimeClick = onRecentAnimeClick,
@@ -673,6 +685,7 @@ private fun DashboardSectionHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(top = 4.dp)
             .heightIn(min = 40.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -788,7 +801,7 @@ private fun DateCellContent(date: LocalDate, selected: Boolean) {
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = date.format(DateTimeFormatter.ofPattern("EEE", Locale.getDefault())),
+            text = date.format(DateTimeFormatter.ofPattern("EEE", LocalConfiguration.current.locales[0])),
             style = MaterialTheme.typography.labelSmall,
             color = contentColor,
             maxLines = 1,
@@ -1230,12 +1243,21 @@ private fun featuredStatusLabel(episode: AiringEpisode): String {
     }
 }
 
-private fun LocalDate.fullDateLabel(): String =
-    format(DateTimeFormatter.ofPattern("EEEE, d MMMM", Locale.getDefault()))
-        .replaceFirstChar { it.titlecase(Locale.getDefault()) }
+private fun LocalDate.fullDateLabel(locale: Locale): String =
+    format(DateTimeFormatter.ofPattern("EEEE, d MMMM", locale))
+        .replaceFirstChar { it.titlecase(locale) }
 
-private fun LocalDate.shortDateLabel(): String =
-    format(DateTimeFormatter.ofPattern("EEE, d MMM", Locale.getDefault()))
+@Composable
+private fun LocalDate.scheduleHeaderTitle(today: LocalDate, locale: Locale): String = when (this) {
+    today -> stringResource(R.string.schedule_tab_today)
+    today.plusDays(1) -> stringResource(R.string.schedule_tab_tomorrow)
+    today.plusDays(2) -> stringResource(R.string.schedule_tab_day_after_tomorrow)
+    else -> format(DateTimeFormatter.ofPattern("EEEE", locale))
+        .replaceFirstChar { it.titlecase(locale) }
+}
+
+private fun LocalDate.shortDateLabel(locale: Locale): String =
+    format(DateTimeFormatter.ofPattern("EEE, d MMM", locale))
 
 private fun airingTimeLabel(episode: AiringEpisode): String =
     java.time.Instant.ofEpochSecond(episode.airingAtEpochSeconds)

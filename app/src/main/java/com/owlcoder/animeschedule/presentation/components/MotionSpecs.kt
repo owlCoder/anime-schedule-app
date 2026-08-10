@@ -15,16 +15,16 @@ import androidx.compose.ui.graphics.graphicsLayer
 
 /** Calm, responsive motion values shared by navigation, overlays and interactive controls. */
 object IosMotion {
-    const val PressIn = 90
-    const val Quick = 150
-    const val Standard = 240
-    const val Navigation = 300
-    const val Sheet = 340
+    const val PressIn = 100
+    const val Quick = 180
+    const val Standard = 280
+    const val Navigation = 340
+    const val Sheet = 390
 
     /** Smooth ease-out close to the timing used by modern iOS interface transitions. */
-    val StandardEasing = CubicBezierEasing(0.16f, 1.00f, 0.30f, 1.00f)
-    val DecelerateEasing = CubicBezierEasing(0.05f, 0.70f, 0.10f, 1.00f)
-    val AccelerateEasing = CubicBezierEasing(0.40f, 0.00f, 1.00f, 1.00f)
+    val StandardEasing = CubicBezierEasing(0.22f, 0.61f, 0.36f, 1.00f)
+    val DecelerateEasing = CubicBezierEasing(0.16f, 1.00f, 0.30f, 1.00f)
+    val AccelerateEasing = CubicBezierEasing(0.40f, 0.00f, 0.20f, 1.00f)
 }
 
 fun <T> MotionPolicy.iosTween(
@@ -55,7 +55,7 @@ fun <T> MotionPolicy.iosAccelerate(
  * that feels distracting on nav indicators, switches and content-size changes.
  */
 fun <T> MotionPolicy.iosSpring(
-    dampingRatio: Float = 1.0f,
+    dampingRatio: Float = 0.92f,
     stiffness: Float = Spring.StiffnessMediumLow,
 ): FiniteAnimationSpec<T> = if (reduceMotion) {
     tween(durationMillis = 0)
@@ -75,8 +75,8 @@ fun MotionPolicy.iosPressOut(): FiniteAnimationSpec<Float> = if (reduceMotion) {
     tween(durationMillis = 0)
 } else {
     spring(
-        dampingRatio = 0.88f,
-        stiffness = 720f,
+        dampingRatio = 0.92f,
+        stiffness = 520f,
     )
 }
 
@@ -84,7 +84,7 @@ fun MotionPolicy.iosPressOut(): FiniteAnimationSpec<Float> = if (reduceMotion) {
 @Composable
 fun Modifier.iosPressScale(
     interactionSource: MutableInteractionSource,
-    pressedScale: Float = 0.965f,
+    pressedScale: Float = 0.975f,
 ): Modifier {
     val policy = LocalMotionPolicy.current
     val pressed by interactionSource.collectIsPressedAsState()

@@ -170,10 +170,10 @@ fun AnimeDetailScreen(
                 )
                 AppErrorState(
                     title = stringResource(uiState.errorRes ?: R.string.error_load_details),
-                    message = "We ran into a problem while loading this content. Check your connection and try again.",
+                    message = stringResource(R.string.error_details_message),
                     retryLabel = stringResource(R.string.common_retry),
                     onRetry = viewModel::reload,
-                    secondaryLabel = "Go back",
+                    secondaryLabel = stringResource(R.string.common_back),
                     onSecondary = onBack,
                     modifier = Modifier
                         .fillMaxSize()
@@ -485,7 +485,7 @@ private fun ProgressPanel(detail: AnimeDetail, entry: MalListEntry) {
                 )
                 if (entry.score > 0) {
                     Text(
-                        text = "Your score ★ ${entry.score}/10",
+                        text = stringResource(R.string.detail_your_score, entry.score),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold,
@@ -673,8 +673,8 @@ private fun DetailLoadingState(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 28.dp),
-            label = "Loading details",
-            message = "Fetching the latest information",
+            label = stringResource(R.string.common_loading_details),
+            message = stringResource(R.string.common_loading_details_message),
         )
     }
 }
@@ -797,7 +797,7 @@ private fun ExpandableSynopsis(text: String) {
         )
         if (isOverflowing || expanded) {
             Text(
-                text = if (expanded) "Show less" else "Read more",
+                text = if (expanded) stringResource(R.string.detail_show_less) else stringResource(R.string.detail_read_more),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,

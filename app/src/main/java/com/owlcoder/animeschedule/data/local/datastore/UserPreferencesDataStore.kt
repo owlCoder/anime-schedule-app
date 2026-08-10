@@ -35,6 +35,14 @@ class UserPreferencesDataStore @Inject constructor(
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = dataStore.data.map { prefs ->
+        val storedLanguage = runCatching {
+            AppLanguage.valueOf(prefs[Keys.APP_LANGUAGE] ?: "")
+        }.getOrDefault(AppLanguage.ENGLISH)
+        val appLanguage = if (storedLanguage == AppLanguage.SYSTEM) {
+            AppLanguage.ENGLISH
+        } else {
+            storedLanguage
+        }
         UserPreferences(
             timezoneId = prefs[Keys.TIMEZONE_ID] ?: "",
             malLoggedIn = prefs[Keys.MAL_LOGGED_IN] ?: false,
@@ -46,7 +54,7 @@ class UserPreferencesDataStore @Inject constructor(
             notificationOffsetMinutes = prefs[Keys.NOTIFICATION_OFFSET] ?: 0,
             accentColor = runCatching { AccentColor.valueOf(prefs[Keys.ACCENT_COLOR] ?: "") }.getOrDefault(AccentColor.TELEGRAM_BLUE),
             onboardingDone = prefs[Keys.ONBOARDING_DONE] ?: false,
-            appLanguage = runCatching { AppLanguage.valueOf(prefs[Keys.APP_LANGUAGE] ?: "") }.getOrDefault(AppLanguage.SYSTEM),
+            appLanguage = appLanguage,
             cacheRetentionDays = CacheRetentionPolicy.normalizeRetentionDays(
                 prefs[Keys.CACHE_RETENTION_DAYS] ?: CacheRetentionPolicy.DEFAULT_RETENTION_DAYS
             )
