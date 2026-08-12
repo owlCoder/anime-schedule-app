@@ -162,6 +162,8 @@ class MainActivity : AppCompatActivity() {
                         val backStackEntry by navController.currentBackStackEntryAsState()
                         val currentRoute = backStackEntry?.destination?.route
                         val showBottomBar = shouldShowBottomBar(currentRoute)
+                        val showInitialScheduleLoading = appLoading &&
+                            (currentRoute == null || currentRoute == Screen.Schedule.route)
 
                         AppSystemBarAppearance(
                             statusBarOnImagery = currentRoute == Screen.Detail.ROUTE,
@@ -221,7 +223,7 @@ class MainActivity : AppCompatActivity() {
                                     }
 
                                     AnimatedVisibility(
-                                        visible = appLoading,
+                                        visible = showInitialScheduleLoading,
                                         enter = fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)),
                                         exit = fadeOut(animationSpec = motion.iosTween(IosMotion.Standard)),
                                     ) {
