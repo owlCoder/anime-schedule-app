@@ -159,9 +159,10 @@ class MainActivity : AppCompatActivity() {
 
                         val toastController = remember { ToastController() }
                         var appLoading by rememberSaveable { mutableStateOf(true) }
+                        var isSearchFocused by rememberSaveable { mutableStateOf(false) }
                         val backStackEntry by navController.currentBackStackEntryAsState()
                         val currentRoute = backStackEntry?.destination?.route
-                        val showBottomBar = shouldShowBottomBar(currentRoute)
+                        val showBottomBar = shouldShowBottomBar(currentRoute) && !isSearchFocused
                         val showInitialScheduleLoading = appLoading &&
                             (currentRoute == null || currentRoute == Screen.Schedule.route)
 
@@ -196,7 +197,7 @@ class MainActivity : AppCompatActivity() {
                                                 }
                                             },
                                             onScheduleInitialLoadChange = { appLoading = it },
-                                            onSearchFocusChanged = {},
+                                            onSearchFocusChanged = { isSearchFocused = it },
                                         )
                                     }
 
