@@ -24,8 +24,8 @@ android {
         applicationId = "com.owlcoder.animeschedule"
         minSdk = 31
         targetSdk = 36
-        versionCode = 22
-        versionName = "5.1.23"
+        versionCode = 23
+        versionName = "5.1.24"
 
         buildConfigField(
             "String",
