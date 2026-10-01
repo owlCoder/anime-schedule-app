@@ -3,38 +3,30 @@ package com.owlcoder.animeschedule.data.local.offline
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import com.owlcoder.animeschedule.data.local.db.AiringEpisodeDao
-import com.owlcoder.animeschedule.data.local.db.AiringEpisodeEntity
 import com.owlcoder.animeschedule.data.local.db.AnimeDetailDao
 import com.owlcoder.animeschedule.data.local.db.AnimeDetailEntity
 import com.owlcoder.animeschedule.data.local.db.MalListEntryDao
-import com.owlcoder.animeschedule.data.local.db.MalListEntryEntity
 import com.owlcoder.animeschedule.core.result.AppError
 import com.owlcoder.animeschedule.core.result.AppResult
 import com.owlcoder.animeschedule.domain.model.AnimeSeason
-import java.time.LocalDate
-import java.time.ZoneOffset
 
 class OfflineCatalogDataSourceTest {
     private lateinit var detailDao: AnimeDetailDao
-    private lateinit var airingDao: AiringEpisodeDao
     private lateinit var malListDao: MalListEntryDao
     private lateinit var source: OfflineCatalogDataSource
 
     @Before
     fun setUp() {
         detailDao = mockk()
-        airingDao = mockk()
         malListDao = mockk()
         every { malListDao.getAll() } returns flowOf(emptyList())
-        source = OfflineCatalogDataSource(detailDao, airingDao, malListDao)
+        source = OfflineCatalogDataSource(detailDao, malListDao)
     }
 
     @Test
@@ -78,49 +70,6 @@ class OfflineCatalogDataSourceTest {
         assertTrue(source.getSeason(AnimeSeason.WINTER, 2020) is AppResult.Error)
         assertTrue(source.getSeason(AnimeSeason.WINTER, 2020) is AppResult.Error)
         assertEquals(AppError.NoCache, (source.getSeason(AnimeSeason.WINTER, 2020) as AppResult.Error).error)
-    }
-
-    @Test
-    fun `home exposes cached airing rows and local MAL list state`() = runTest {
-        val nextDay = LocalDate.now(ZoneOffset.UTC).plusDays(1)
-        val airing = AiringEpisodeEntity(
-            airingId = 1,
-            animeId = 123,
-            malId = 456,
-            episode = 4,
-            airingAtEpochSeconds = nextDay.atStartOfDay(ZoneOffset.UTC).toEpochSecond(),
-            title = "Cached Episode",
-            titleRomaji = "Cached Episode",
-            coverImageUrl = null,
-            coverColor = null,
-            genres = emptyList(),
-            averageScore = 80,
-            totalEpisodes = 12,
-            status = "RELEASING",
-            format = "TV",
-            cachedAtEpochSeconds = nextDay.atStartOfDay(ZoneOffset.UTC).toEpochSecond(),
-            source = "offline-test"
-        )
-        val listEntry = MalListEntryEntity(
-            animeId = 123,
-            malId = 456,
-            title = "Cached Episode",
-            coverImageUrl = null,
-            totalEpisodes = 12,
-            status = "watching",
-            numEpisodesWatched = 3,
-            score = 8,
-            updatedAt = null
-        )
-        every { airingDao.getAiringEpisodesInRange(any(), any()) } returns flowOf(listOf(airing))
-        every { malListDao.getAll() } returns flowOf(listOf(listEntry))
-
-        val result = source.observeHome(ZoneOffset.UTC).first()
-
-        assertTrue(result is AppResult.Success)
-        val episode = (result as AppResult.Success).data.single().episodes.single()
-        assertEquals(4, episode.episode)
-        assertEquals(3, episode.malListEntry?.episodesWatched)
     }
 
     private fun detail(animeId: Int, malId: Int, title: String) = AnimeDetailEntity(

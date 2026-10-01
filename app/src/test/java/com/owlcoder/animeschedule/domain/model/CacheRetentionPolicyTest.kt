@@ -1,4 +1,4 @@
-package com.owlcoder.animeschedule.data.local.datastore
+package com.owlcoder.animeschedule.domain.model
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

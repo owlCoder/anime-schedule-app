@@ -1,7 +1,9 @@
 package com.owlcoder.animeschedule.data.provider
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -52,14 +54,14 @@ class ProviderResilienceTest {
         repeat(3) {
             orchestrator.firstSuccessful(
                 ProviderOperation.SEARCH,
-                listOf(ProviderCall<String>("Jikan") { throw IOException("offline") })
+                listOf(ProviderCall<String>("Kitsu") { throw IOException("offline") })
             )
         }
 
-        assertTrue(store.isOpen("Jikan"))
-        assertFalse(store.tryAcquire("Jikan"))
+        assertTrue(store.isOpen("Kitsu"))
+        assertFalse(store.tryAcquire("Kitsu"))
         clock.now += 5 * 60 * 1_000L
-        assertTrue(store.tryAcquire("Jikan"))
+        assertTrue(store.tryAcquire("Kitsu"))
     }
 
     @Test
@@ -99,5 +101,82 @@ class ProviderResilienceTest {
         }
 
         assertTrue(propagated)
+    }
+
+    @Test
+    fun cancelledRecoveryProbeDoesNotLeaveTheProviderBlockedForever() = runTest {
+        val clock = FakeProviderClock()
+        val store = ProviderHealthStore(clock)
+        val orchestrator = ProviderOrchestrator(store, clock)
+        repeat(3) {
+            orchestrator.firstSuccessful(
+                ProviderOperation.SEARCH,
+                listOf(ProviderCall<String>("AniList") { throw IOException("offline") })
+            )
+        }
+        clock.now += 5 * 60 * 1_000L
+
+        // The first call after the cool-down is the recovery probe; the user navigates away
+        // (e.g. a search debounce cancels it) before it completes.
+        try {
+            orchestrator.firstSuccessful(
+                ProviderOperation.SEARCH,
+                listOf(ProviderCall<String>("AniList") { throw CancellationException("cancelled") })
+            )
+        } catch (_: CancellationException) {
+        }
+
+        assertTrue("provider must be probeable again", store.tryAcquire("AniList"))
+    }
+
+    @Test
+    fun probeIsReleasedWhenTheTimeBudgetIsAlreadySpent() = runTest {
+        val clock = FakeProviderClock()
+        val store = ProviderHealthStore(clock)
+        val orchestrator = ProviderOrchestrator(store, clock)
+        repeat(3) {
+            orchestrator.firstSuccessful(
+                ProviderOperation.SEARCH,
+                listOf(ProviderCall<String>("Kitsu") { throw IOException("offline") })
+            )
+        }
+        clock.now += 5 * 60 * 1_000L
+
+        // The first provider burns the whole budget, so the half-open provider is never called.
+        orchestrator.firstSuccessful(
+            ProviderOperation.SEARCH,
+            listOf(
+                ProviderCall<String>("AniList") {
+                    clock.now += ProviderOperation.SEARCH.totalBudgetMs
+                    throw IOException("slow")
+                },
+                ProviderCall<String>("Kitsu") { "unused" }
+            )
+        )
+
+        assertTrue("probe slot must not leak", store.tryAcquire("Kitsu"))
+    }
+
+    @Test
+    fun callersOwnTimeoutIsNotBlamedOnTheProvider() = runTest {
+        val clock = FakeProviderClock()
+        val store = ProviderHealthStore(clock)
+        val orchestrator = ProviderOrchestrator(store, clock)
+
+        repeat(3) {
+            // The caller gives up long before the provider's own 6s timeout would fire.
+            val result = withTimeoutOrNull(100L) {
+                orchestrator.firstSuccessful(
+                    ProviderOperation.SCHEDULE,
+                    listOf(ProviderCall<String>("AniList") {
+                        delay(60_000L)
+                        "too late"
+                    })
+                )
+            }
+            assertEquals(null, result)
+        }
+
+        assertFalse("caller timeouts must not trip the breaker", store.isOpen("AniList"))
     }
 }
