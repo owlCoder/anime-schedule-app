@@ -92,7 +92,6 @@
     <!-- Watch sources -->
     <string name="watch_sources_empty_title">No watch sources</string>
     <string name="watch_sources_empty_subtitle">Add a trusted provider to open anime searches quickly.</string>
-    <string name="watch_sources_add_subtitle">Add a trusted search provider</string>
     <string name="watch_sources_edit">Edit source</string>
     <string name="watch_sources_mode_external">Installed app</string>
     <string name="watch_sources_mode_internal">In-app browser</string>
@@ -102,8 +101,6 @@
     <string name="notifications_mark_all">Mark all</string>
 
     <!-- Seasonal overlay -->
-    <string name="seasonal_previous">Previous season</string>
-    <string name="seasonal_next">Next season</string>
     <string name="seasonal_loading_message">Fetching the latest anime</string>
 
     <!-- My List -->

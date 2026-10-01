@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
 plugins {
@@ -25,8 +26,6 @@ android {
         targetSdk = 36
         versionCode = 22
         versionName = "5.1.23"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField(
             "String",
@@ -73,18 +72,37 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
     }
 
-    lint {
-        disable += "RemoveWorkManagerInitializer"
+    testOptions {
+        // Production classes log through android.util.Log; unit tests should not need Robolectric.
+        unitTests.isReturnDefaultValues = true
     }
+
+    // The in-app language switcher can pick a language the device is not set to. Play's
+    // per-language splits would leave that language's resources out of the install.
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_11
+        // Constructor-injected qualifiers such as @ApplicationContext apply to the parameter and
+        // its property, which is what Hilt expects.
+        freeCompilerArgs.add("-Xannotation-default-target=param-property")
+    }
+}
+
+ksp {
+    // Exported schemas are what future Room migrations are written and tested against.
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 apollo {
@@ -102,7 +120,6 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
-    implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.haze)
@@ -111,7 +128,6 @@ dependencies {
     // AndroidX
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.navigation.compose)
@@ -149,7 +165,6 @@ dependencies {
 
     // Apollo
     implementation(libs.apollo.runtime)
-    implementation(libs.apollo.normalized.cache.sqlite)
 
     // Coil
     implementation(libs.coil.compose)
@@ -163,10 +178,6 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.androidx.junit)
-    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    testImplementation(libs.okhttp.mockwebserver)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

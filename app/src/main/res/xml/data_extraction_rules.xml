@@ -1,19 +1,15 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The OAuth tokens live in EncryptedSharedPreferences, whose AES key sits in the Android
+    Keystore and never leaves the device. Backing the file up would restore ciphertext that can
+    no longer be decrypted on another device, and tokens should not be copied off the device at all.
+    Everything else (database, preferences) is restored normally.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <exclude domain="sharedpref" path="secure_tokens.xml" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="sharedpref" path="secure_tokens.xml" />
     </device-transfer>
-    -->
 </data-extraction-rules>

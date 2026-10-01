@@ -5,13 +5,11 @@
     <string name="settings_title">Settings</string>
     <string name="settings_section_account">Account</string>
     <string name="settings_section_preferences">Preferences</string>
-    <string name="settings_section_info">Info</string>
     <string name="settings_notifications">Notifications</string>
     <string name="settings_notifications_on">Enabled</string>
     <string name="settings_notifications_off">Disabled</string>
     <string name="settings_notif_timing">Notification timing</string>
     <string name="settings_language">Language</string>
-    <string name="settings_language_system">System</string>
     <string name="settings_language_english">English</string>
     <string name="settings_language_serbian">Srpski</string>
     <string name="settings_timezone">Time zone</string>
@@ -27,16 +25,10 @@
     <string name="profile_not_logged_in">Not logged in</string>
     <string name="profile_logout">Log out</string>
     <string name="profile_login">Sign in</string>
-    <string name="profile_stat_entries">Titles</string>
-    <string name="profile_stat_episodes">Episodes</string>
-    <string name="profile_stat_hours">Hours</string>
 
     <!-- Timezone picker -->
-    <string name="timezone_title">Time zone</string>
-    <string name="timezone_confirm">Confirm</string>
 
     <!-- Notification offset -->
-    <string name="notif_offset_title">Notification timing</string>
     <string name="notif_offset_subtitle">When to receive a notification relative to air time</string>
     <string name="notif_offset_immediate">At air time</string>
     <string name="notif_offset_before">%d min before air time</string>
@@ -44,41 +36,15 @@
     <string name="notif_offset_after_hour">%dh after air time</string>
 
     <!-- Onboarding -->
-    <string name="onboarding_welcome_title">Welcome to\nAnime Schedule</string>
-    <string name="onboarding_welcome_body">Track anime airing schedules in real time and manage your MyAnimeList without ads.</string>
-    <string name="onboarding_language_title">Language</string>
-    <string name="onboarding_language_subtitle">You can always change this in Settings</string>
-    <string name="onboarding_theme_title">Choose a theme</string>
-    <string name="onboarding_theme_subtitle">You can always change this in Settings</string>
-    <string name="onboarding_features_title">What you can do</string>
-    <string name="onboarding_notif_title">Notifications</string>
-    <string name="onboarding_notif_subtitle">Notify me when a new episode airs</string>
-    <string name="onboarding_notif_enable">Enable notifications</string>
-    <string name="onboarding_notif_when">WHEN TO NOTIFY</string>
-    <string name="onboarding_mal_title">Sign in to MyAnimeList</string>
-    <string name="onboarding_mal_subtitle">Optional — you can sign in later in Settings</string>
-    <string name="onboarding_mal_button">Sign in to MAL</string>
-    <string name="onboarding_mal_skip">Skip, sign in later</string>
-    <string name="onboarding_next">Next</string>
     <string name="onboarding_back">Back</string>
-    <string name="onboarding_start">Start</string>
 
     <!-- Features page -->
-    <string name="feature_schedule_title">Airing schedule</string>
-    <string name="feature_schedule_body">Today, tomorrow and this week in your time zone</string>
-    <string name="feature_mylist_title">My MAL list</string>
-    <string name="feature_mylist_body">Browse and update your MyAnimeList list</string>
-    <string name="feature_notif_title">Notifications</string>
-    <string name="feature_notif_body">Automatic notifications when a new episode airs</string>
-    <string name="feature_search_title">Search anime</string>
-    <string name="feature_search_body">Search any anime and add it to your list</string>
 
     <!-- Bottom navigation -->
     <string name="nav_schedule">Schedule</string>
     <string name="nav_search">Search</string>
     <string name="nav_seasonal">Season</string>
     <string name="nav_mylist">My List</string>
-    <string name="nav_notifications">Notifications</string>
     <string name="nav_settings">Settings</string>
 
     <!-- Season names -->
@@ -108,25 +74,18 @@
     <string name="seasonal_sort_title">Title</string>
 
     <!-- Schedule screen -->
-    <string name="schedule_title">Schedule</string>
     <string name="schedule_tab_today">Today</string>
     <string name="schedule_tab_tomorrow">Tomorrow</string>
     <string name="schedule_tab_day_after_tomorrow">Day after tomorrow</string>
-    <string name="schedule_tab_week">Week</string>
     <string name="schedule_empty_title">No anime today</string>
     <string name="schedule_empty_subtitle">Nothing is airing right now</string>
     <string name="schedule_watched_progress">Watched: %1$d%2$s</string>
     <string name="schedule_episode_label">Ep. %1$d%2$s</string>
-    <string name="schedule_episode_number_short">#%1$d</string>
     <string name="schedule_aired_label">Aired</string>
     <string name="schedule_edit_status_action">Edit status</string>
-    <string name="schedule_section_today">Today</string>
-    <string name="schedule_section_tomorrow">Tomorrow</string>
     <string name="schedule_section_recently_changed">Recently changed</string>
-    <string name="schedule_section_this_week">This week</string>
     <string name="schedule_see_all">See all</string>
     <string name="schedule_hero_action_watched">Watched +1</string>
-    <string name="schedule_hero_action_details">Details</string>
     <string name="schedule_notifications_action">Notifications</string>
 
     <!-- Toast messages -->
@@ -167,7 +126,6 @@
 
     <!-- Notifications screen -->
     <string name="notif_screen_title">Notifications</string>
-    <string name="notif_screen_empty_title">No notifications</string>
     <string name="notif_screen_empty_subtitle">You\'ll be notified when new episodes air</string>
     <string name="notif_tab_unread">Unread</string>
     <string name="notif_tab_read">Read</string>
@@ -186,17 +144,11 @@
     <string name="detail_score">Score</string>
     <string name="detail_your_score">Your score ★ %d/10</string>
     <string name="detail_status">Status</string>
-    <string name="detail_format">Format</string>
-    <string name="detail_season">Season</string>
-    <string name="detail_studios">Studios</string>
     <string name="detail_related">Related</string>
     <string name="detail_characters">Characters</string>
     <string name="detail_synopsis">Synopsis</string>
     <string name="detail_show_less">Show less</string>
     <string name="detail_read_more">Read more</string>
-    <string name="detail_next_episode">Next episode</string>
-    <string name="detail_watch_trailer">Watch trailer</string>
-    <string name="detail_open_mal">Open on MAL</string>
     <string name="detail_add_to_list">Add to list</string>
     <string name="detail_watch_on">Watch on</string>
     <string name="detail_watch_on_disclaimer">These are external, user-added sites. AnimeSchedule doesn\'t host or endorse their content — manage sources in Settings.</string>
@@ -214,109 +166,22 @@
 
     <!-- Changelog screen -->
     <string name="changelog_title">Changelog</string>
-    <string name="changelog_version_prefix">Version %s</string>
 
     <!-- Changelog entries EN -->
-    <string name="cl_35_1">Marking the last episode with "+1" now prompts you to rate the show and mark it Completed (skipped for shows with an unknown episode count)</string>
-    <string name="cl_35_date">July 2026</string>
-
-    <string name="cl_32_1">Fixed video fullscreen button not working on some watch-source sites</string>
-    <string name="cl_32_date">July 2026</string>
-
-    <string name="cl_31_1">Watch sources — add streaming sites (or apps like Netflix/Crunchyroll) per anime, opened in a fullscreen in-app browser</string>
-    <string name="cl_31_2">"Open in app" option per watch source, hands off to an installed app instead of the in-app browser</string>
-    <string name="cl_31_3">Built-in ad blocker for the in-app browser</string>
-    <string name="cl_31_4">Character list on anime details — tap a character to see their bio</string>
-    <string name="cl_31_5">Collapsible synopsis with "Read more"</string>
-    <string name="cl_31_6">Livelier onboarding — animated logo and page transitions</string>
-    <string name="cl_31_7">Notification permission is now only requested when you enable notifications, not on first launch</string>
-    <string name="cl_31_8">Layout and spacing polish across the detail and settings screens</string>
-    <string name="cl_31_date">July 2026</string>
-
-    <string name="cl_201_1">New app branding — updated icon and "AS" logo mark</string>
-    <string name="cl_201_2">Animated loading splash screen on app start</string>
-    <string name="cl_201_3">Redesigned bottom navigation bar</string>
-    <string name="cl_201_4">Search and notifications now open as quick overlays instead of separate screens</string>
-    <string name="cl_201_5">Reworked "Add to list" screen — more compact, with an episode limit</string>
-    <string name="cl_201_6">New glass-style buttons across the app</string>
-    <string name="cl_201_7">Home screen polish — auto-scrolling highlights, working "See all", refreshed icons</string>
-    <string name="cl_201_8">More compact notification settings</string>
-    <string name="cl_201_date">July 2026</string>
-
-    <string name="cl_152_1">Seasonal anime browser — browse current and past seasons</string>
-    <string name="cl_152_2">Schedule filters — filter by genre, format, or your MAL list</string>
-    <string name="cl_152_3">Tapping a notification now opens the anime detail directly</string>
-    <string name="cl_152_4">Fixed last changelog entry being hidden behind the navbar</string>
-    <string name="cl_152_5">Notifications now refresh immediately after schedule sync</string>
-    <string name="cl_152_date">May 2026</string>
-
-    <string name="cl_154_1">Language switching without app restart</string>
-    <string name="cl_154_2">Language picker moved to first onboarding step</string>
-    <string name="cl_154_3">Fixed onboarding flash on startup</string>
-    <string name="cl_154_4">Smooth theme color transition animation</string>
-    <string name="cl_154_5">All screens now use localized strings</string>
-    <string name="cl_154_date">May 2026</string>
-
-    <string name="cl_11_1">New theme and accent color picker screen</string>
-    <string name="cl_11_2">AMOLED dark theme for better battery saving</string>
-    <string name="cl_11_3">Navbar pill with blur effect and active icon state</string>
-    <string name="cl_11_4">Changelog screen</string>
-    <string name="cl_11_5">Redesigned About screen</string>
-    <string name="cl_11_6">Fixed visual bugs in settings</string>
-    <string name="cl_11_date">May 2026</string>
-
-    <string name="cl_104_1">Fixed avatar not refreshing after re-login</string>
-    <string name="cl_104_2">Removed unused code in presentation layer</string>
-    <string name="cl_104_3">Stabilized OAuth flow for MAL login</string>
-    <string name="cl_104_date">April 2026</string>
-
-    <string name="cl_103_1">Added edge-to-edge content display</string>
-    <string name="cl_103_2">Fixed ID resolution for anime details (AniList ↔ MAL)</string>
-    <string name="cl_103_3">Reactive flow for MAL list — updates visible immediately</string>
-    <string name="cl_103_date">March 2026</string>
-
-    <string name="cl_102_1">Timezone support in settings</string>
-    <string name="cl_102_2">Schedule displayed in user\'s local timezone</string>
-    <string name="cl_102_3">Added empty states for all tabs</string>
-    <string name="cl_102_date">February 2026</string>
-
-    <string name="cl_101_1">Initial MyAnimeList OAuth 2.0 + PKCE support</string>
-    <string name="cl_101_2">Anime search via AniList GraphQL API</string>
-    <string name="cl_101_3">Basic navigation with 5 tabs</string>
-    <string name="cl_101_date">January 2026</string>
-
-    <string name="cl_100_1">First public release</string>
-    <string name="cl_100_2">Anime airing schedule for today, tomorrow and week</string>
-    <string name="cl_100_3">Display in device timezone</string>
-    <string name="cl_100_date">December 2025</string>
 
     <!-- About screen -->
     <string name="cd_back">Back</string>
     <string name="cd_edit_list_status">Edit list status</string>
-    <string name="cd_expand">Expand</string>
-    <string name="cd_collapse">Collapse</string>
     <string name="about_version_label">Version</string>
     <string name="about_build_label">Build</string>
     <string name="about_platform_label">Platform</string>
     <string name="about_package_label">Package</string>
     <string name="about_section_data_sources">Data sources</string>
-    <string name="about_section_tech">Technologies</string>
-    <string name="about_data_schedule">Schedule</string>
-    <string name="about_data_list">Anime list</string>
-    <string name="about_data_fallback">Fallback</string>
-    <string name="about_data_auth">Sign-in</string>
-    <string name="about_tech_language">Language</string>
-    <string name="about_tech_ui">UI</string>
-    <string name="about_tech_arch">Architecture</string>
-    <string name="about_version_prefix">Version %s</string>
-    <string name="about_logo_monogram">AS</string>
     <string name="about_tagline">Track anime airing schedules, all in one place</string>
-    <string name="about_footer_copyright">© %d owlcoder. All rights reserved.</string>
 
     <!-- Common -->
     <string name="common_retry">Retry</string>
     <string name="common_loading">Loading…</string>
-    <string name="common_error_generic">Something went wrong</string>
     <string name="error_details_message">We ran into a problem while loading this content. Check your connection and try again.</string>
     <string name="common_back">Go back</string>
     <string name="common_loading_details">Loading details</string>
@@ -324,9 +189,7 @@
     <string name="error_load_details">Couldn\'t load details</string>
     <string name="error_load_schedule">Couldn\'t load the schedule</string>
     <string name="error_search">Search failed</string>
-    <string name="error_load_list">Couldn\'t load your list</string>
     <string name="error_load_season">Couldn\'t load the season</string>
-    <string name="common_offline">Offline — showing cached data</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_save">Save</string>
 
@@ -335,7 +198,6 @@
     <string name="list_status_episodes_label">Episodes</string>
     <string name="list_status_decrease_episode">Decrease episode</string>
     <string name="list_status_increase_episode">Increase episode</string>
-    <string name="list_status_score_label">Score: %s</string>
     <string name="list_status_score_unrated">—</string>
     <string name="list_status_remove">Remove from list</string>
     <string name="detail_login_cta">Sign in with MAL to track</string>
@@ -356,4 +218,8 @@
     <string name="mylist_benefit_status_subtitle">Track episodes and continue where you left off.</string>
     <string name="mylist_benefit_scores_title">Save scores</string>
     <string name="mylist_benefit_scores_subtitle">Rate anime and keep your scores safe.</string>
+    <string name="login_error_denied">Sign-in cancelled</string>
+    <string name="login_error_invalid_session">Sign-in failed, please try again</string>
+    <string name="login_error_exchange_failed">MyAnimeList sign-in failed. Check your internet connection.</string>
+    <string name="watch_open_failed">Couldn\'t open this link</string>
 </resources>

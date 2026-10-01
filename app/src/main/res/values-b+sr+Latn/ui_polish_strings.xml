@@ -92,7 +92,6 @@
     <!-- Izvori za gledanje -->
     <string name="watch_sources_empty_title">Nema izvora za gledanje</string>
     <string name="watch_sources_empty_subtitle">Dodaj pouzdanog provajdera za brzo otvaranje pretrage animea.</string>
-    <string name="watch_sources_add_subtitle">Dodaj pouzdanog provajdera pretrage</string>
     <string name="watch_sources_edit">Izmeni izvor</string>
     <string name="watch_sources_mode_external">Instalirana aplikacija</string>
     <string name="watch_sources_mode_internal">Pregledač u aplikaciji</string>
@@ -102,8 +101,6 @@
     <string name="notifications_mark_all">Označi sve</string>
 
     <!-- Sezonski prikaz -->
-    <string name="seasonal_previous">Prethodna sezona</string>
-    <string name="seasonal_next">Sledeća sezona</string>
     <string name="seasonal_loading_message">Učitavanje najnovijih animea</string>
 
     <!-- Moja lista -->
