@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Instant
 import java.time.LocalDate
@@ -41,7 +40,6 @@ import kotlinx.coroutines.launch
 import com.owlcoder.animeschedule.domain.model.effectiveZoneId
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOn
 
 data class ScheduleFilter(
     val onlyMyList: Boolean = false,
@@ -158,7 +156,6 @@ class ScheduleViewModel @Inject constructor(
                 .take(RECENTLY_CHANGED_COUNT)
                 .map { (entry, _) -> entry }
         }
-        .flowOn(Dispatchers.Default)
 
     private val auxiliary: Flow<Auxiliary> = combine(
         _pendingIncrementIds,
