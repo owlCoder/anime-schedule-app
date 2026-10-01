@@ -1,23 +1,29 @@
 # Privacy Policy — AnimeSchedule
 
-_Last updated: July 2026_
+_Last updated: October 2026_
 
 AnimeSchedule ("the app") is a non-commercial, ad-free Android app for tracking anime airing
 schedules. This policy explains what data the app accesses and how it's used.
 
 ## Data the app accesses
 
-- **Anime schedule data** (AniList GraphQL API, with a Jikan REST API fallback) — public,
-  non-personal data about airing anime. No account or personal data is involved.
+- **Anime schedule and catalog data** (AniList GraphQL API; Kitsu and AnimeSchedule.net are used
+  as fallbacks for search, seasonal lists and detail pages when AniList is unavailable) — public,
+  non-personal data about airing anime. The text you type into search is sent to these services
+  to produce results. No account or personal data is involved.
 - **MyAnimeList account data** (only if you choose to sign in) — via MyAnimeList's OAuth 2.0
   login, the app requests read/write access to your MyAnimeList anime list (titles, episode
   progress, status, score) so it can display and update your list from within the app.
 
 ## What the app does NOT do
 
-- The app does not collect, store, or transmit your data to any server other than AniList's,
-  Jikan's, and MyAnimeList's own APIs, which you're accessing directly and knowingly by using
-  the app's features.
+- The app does not collect, store, or transmit your data to any server other than the AniList,
+  Kitsu, AnimeSchedule.net and MyAnimeList APIs, the image servers hosting cover art, and the
+  websites you configure as watch sources, all of which you're accessing directly and knowingly
+  by using the app's features.
+- Watch sources are websites you choose. Their icons are fetched through Google's favicon
+  service, which receives the domain of each configured source. Pages you open from a watch
+  source load in the app's built-in browser and are governed by that site's own policies.
 - The app does not run analytics, ads, or third-party trackers.
 - The app does not sell or share your data with anyone.
 

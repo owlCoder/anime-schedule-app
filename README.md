@@ -39,7 +39,6 @@ Native Android app for tracking anime airing schedules and managing your MyAnime
 
 - **AniList GraphQL API** — primary airing schedule source
 - **MyAnimeList API v2** — user list read/write, OAuth login
-- **Jikan REST API** — public fallback (read-only)
 
 ## Requirements
 
