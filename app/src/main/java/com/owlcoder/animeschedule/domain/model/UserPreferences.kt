@@ -1,4 +1,6 @@
-package com.owlcoder.animeschedule.data.local.datastore
+package com.owlcoder.animeschedule.domain.model
+
+import java.time.ZoneId
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
@@ -23,8 +25,7 @@ data class UserPreferences(
     val malLoggedIn: Boolean = false,
     val malUsername: String = "",
     val malAvatarUrl: String = "",
-    val lastScheduleSyncEpoch: Long = 0L,
-    val themeMode: ThemeMode = ThemeMode.DARK,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val notificationsEnabled: Boolean = true,
     val notificationOffsetMinutes: Int = 0,
     val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
@@ -33,3 +34,12 @@ data class UserPreferences(
     /** How long temporary Room/image cache data should be retained. */
     val cacheRetentionDays: Int = CacheRetentionPolicy.DEFAULT_RETENTION_DAYS
 )
+
+/**
+ * The zone all schedule days and times are shown in: the user's override when it is a valid
+ * zone id, otherwise the device zone.
+ */
+val UserPreferences.effectiveZoneId: ZoneId
+    get() = timezoneId.takeIf { it.isNotEmpty() }
+        ?.let { runCatching { ZoneId.of(it) }.getOrNull() }
+        ?: ZoneId.systemDefault()

@@ -1,10 +1,8 @@
 package com.owlcoder.animeschedule.data.api.alternative
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import retrofit2.http.GET
-import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface KitsuApiService {
@@ -24,11 +22,6 @@ interface KitsuApiService {
         @Query("page[offset]") offset: Int = 0
     ): KitsuAnimeResponse
 
-    @GET("anime/{id}")
-    suspend fun getAnime(
-        @Path("id") id: String,
-        @Query("include") include: String = "mappings"
-    ): KitsuSingleAnimeResponse
 }
 
 @Serializable
@@ -36,11 +29,6 @@ data class KitsuAnimeResponse(
     val data: List<KitsuAnimeResource> = emptyList(),
     val included: List<KitsuIncludedResource> = emptyList(),
     val meta: KitsuMeta? = null
-)
-
-@Serializable
-data class KitsuSingleAnimeResponse(
-    val data: KitsuAnimeResource
 )
 
 @Serializable
@@ -65,7 +53,6 @@ data class KitsuAnimeAttributes(
     val canonicalTitle: String? = null,
     val averageRating: String? = null,
     val startDate: String? = null,
-    val endDate: String? = null,
     val nextRelease: String? = null,
     val subtype: String? = null,
     val status: String? = null,

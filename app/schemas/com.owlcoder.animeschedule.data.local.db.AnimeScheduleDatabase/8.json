@@ -1,0 +1,488 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 8,
+    "identityHash": "580ba4a55b7082bae3ad6ded1c0dd7a5",
+    "entities": [
+      {
+        "tableName": "airing_episodes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`airingId` INTEGER NOT NULL, `animeId` INTEGER NOT NULL, `malId` INTEGER, `episode` INTEGER NOT NULL, `airingAtEpochSeconds` INTEGER NOT NULL, `title` TEXT NOT NULL, `titleRomaji` TEXT, `coverImageUrl` TEXT, `coverColor` TEXT, `genres` TEXT NOT NULL, `averageScore` INTEGER, `totalEpisodes` INTEGER, `status` TEXT, `format` TEXT, `cachedAtEpochSeconds` INTEGER NOT NULL, `source` TEXT NOT NULL, PRIMARY KEY(`airingId`))",
+        "fields": [
+          {
+            "fieldPath": "airingId",
+            "columnName": "airingId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "animeId",
+            "columnName": "animeId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "malId",
+            "columnName": "malId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "episode",
+            "columnName": "episode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "airingAtEpochSeconds",
+            "columnName": "airingAtEpochSeconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "titleRomaji",
+            "columnName": "titleRomaji",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "coverImageUrl",
+            "columnName": "coverImageUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "coverColor",
+            "columnName": "coverColor",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "genres",
+            "columnName": "genres",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "averageScore",
+            "columnName": "averageScore",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "totalEpisodes",
+            "columnName": "totalEpisodes",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "format",
+            "columnName": "format",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cachedAtEpochSeconds",
+            "columnName": "cachedAtEpochSeconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "airingId"
+          ]
+        }
+      },
+      {
+        "tableName": "anime_details",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`animeId` INTEGER NOT NULL, `malId` INTEGER, `titleRomaji` TEXT, `titleEnglish` TEXT, `titleNative` TEXT, `coverImageUrl` TEXT, `coverColor` TEXT, `bannerImageUrl` TEXT, `description` TEXT, `genres` TEXT NOT NULL, `averageScore` INTEGER, `meanScore` INTEGER, `episodes` INTEGER, `duration` INTEGER, `status` TEXT, `format` TEXT, `season` TEXT, `seasonYear` INTEGER, `nextAiringEpisode` INTEGER, `nextAiringAt` INTEGER, `studiosJson` TEXT, `charactersJson` TEXT, `relationsJson` TEXT, `trailerSite` TEXT, `trailerId` TEXT, `siteUrl` TEXT, `cachedAtEpochSeconds` INTEGER NOT NULL, PRIMARY KEY(`animeId`))",
+        "fields": [
+          {
+            "fieldPath": "animeId",
+            "columnName": "animeId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "malId",
+            "columnName": "malId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "titleRomaji",
+            "columnName": "titleRomaji",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "titleEnglish",
+            "columnName": "titleEnglish",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "titleNative",
+            "columnName": "titleNative",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "coverImageUrl",
+            "columnName": "coverImageUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "coverColor",
+            "columnName": "coverColor",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "bannerImageUrl",
+            "columnName": "bannerImageUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "genres",
+            "columnName": "genres",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "averageScore",
+            "columnName": "averageScore",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "meanScore",
+            "columnName": "meanScore",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "episodes",
+            "columnName": "episodes",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "duration",
+            "columnName": "duration",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "format",
+            "columnName": "format",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "season",
+            "columnName": "season",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "seasonYear",
+            "columnName": "seasonYear",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "nextAiringEpisode",
+            "columnName": "nextAiringEpisode",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "nextAiringAt",
+            "columnName": "nextAiringAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "studiosJson",
+            "columnName": "studiosJson",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "charactersJson",
+            "columnName": "charactersJson",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "relationsJson",
+            "columnName": "relationsJson",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "trailerSite",
+            "columnName": "trailerSite",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "trailerId",
+            "columnName": "trailerId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "siteUrl",
+            "columnName": "siteUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cachedAtEpochSeconds",
+            "columnName": "cachedAtEpochSeconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "animeId"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_anime_details_malId",
+            "unique": false,
+            "columnNames": [
+              "malId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_anime_details_malId` ON `${TABLE_NAME}` (`malId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "mal_list_entries",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`animeId` INTEGER NOT NULL, `malId` INTEGER NOT NULL, `title` TEXT NOT NULL, `coverImageUrl` TEXT, `totalEpisodes` INTEGER, `status` TEXT NOT NULL, `numEpisodesWatched` INTEGER NOT NULL, `score` INTEGER NOT NULL, `updatedAt` TEXT, PRIMARY KEY(`animeId`))",
+        "fields": [
+          {
+            "fieldPath": "animeId",
+            "columnName": "animeId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "malId",
+            "columnName": "malId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "coverImageUrl",
+            "columnName": "coverImageUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "totalEpisodes",
+            "columnName": "totalEpisodes",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "numEpisodesWatched",
+            "columnName": "numEpisodesWatched",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "animeId"
+          ]
+        }
+      },
+      {
+        "tableName": "notifications",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `animeId` INTEGER NOT NULL, `title` TEXT NOT NULL, `episode` INTEGER NOT NULL, `coverImageUrl` TEXT, `airingAtEpochSeconds` INTEGER NOT NULL, `isRead` INTEGER NOT NULL, `createdAtEpochSeconds` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "animeId",
+            "columnName": "animeId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "episode",
+            "columnName": "episode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "coverImageUrl",
+            "columnName": "coverImageUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "airingAtEpochSeconds",
+            "columnName": "airingAtEpochSeconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isRead",
+            "columnName": "isRead",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAtEpochSeconds",
+            "columnName": "createdAtEpochSeconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "pending_list_updates",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`animeId` INTEGER NOT NULL, `status` TEXT, `numWatchedEpisodes` INTEGER, `score` INTEGER, `isRemoval` INTEGER NOT NULL, `queuedAtEpochMs` INTEGER NOT NULL, PRIMARY KEY(`animeId`))",
+        "fields": [
+          {
+            "fieldPath": "animeId",
+            "columnName": "animeId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "numWatchedEpisodes",
+            "columnName": "numWatchedEpisodes",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "score",
+            "columnName": "score",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "isRemoval",
+            "columnName": "isRemoval",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "queuedAtEpochMs",
+            "columnName": "queuedAtEpochMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "animeId"
+          ]
+        }
+      },
+      {
+        "tableName": "watch_sources",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `urlTemplate` TEXT NOT NULL, `faviconUrl` TEXT, `sortOrder` INTEGER NOT NULL, `openExternally` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "urlTemplate",
+            "columnName": "urlTemplate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "faviconUrl",
+            "columnName": "faviconUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sortOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "openExternally",
+            "columnName": "openExternally",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '580ba4a55b7082bae3ad6ded1c0dd7a5')"
+    ]
+  }
+}

@@ -3,20 +3,28 @@ package com.owlcoder.animeschedule
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.os.Build
+import android.content.Context
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import android.content.Context
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
-import dagger.hilt.android.HiltAndroidApp
 import com.owlcoder.animeschedule.data.work.AiringNotificationWorker
 import com.owlcoder.animeschedule.data.work.AnimeScheduleImageLoader
+import com.owlcoder.animeschedule.data.work.WorkManagerScheduler
+import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 
 @HiltAndroidApp
 class AnimeScheduleApplication : Application(), Configuration.Provider, SingletonImageLoader.Factory {
     @Inject lateinit var workerFactory: HiltWorkerFactory
+    @Inject lateinit var workScheduler: WorkManagerScheduler
+
+    // Lives exactly as long as the process, so it is never cancelled.
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override fun newImageLoader(context: Context): ImageLoader =
         AnimeScheduleImageLoader.create(context)
@@ -29,19 +37,16 @@ class AnimeScheduleApplication : Application(), Configuration.Provider, Singleto
     override fun onCreate() {
         super.onCreate()
         createNotificationChannels()
-        com.owlcoder.animeschedule.data.work.WorkManagerScheduler.schedule(this)
-        AiringNotificationWorker.schedule(this)
+        // Opening WorkManager's own database is real I/O; keep it off the startup path.
+        applicationScope.launch { workScheduler.schedulePeriodicWork() }
     }
 
     private fun createNotificationChannels() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                AiringNotificationWorker.CHANNEL_ID,
-                getString(com.owlcoder.animeschedule.R.string.notif_channel_name),
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(
+            AiringNotificationWorker.CHANNEL_ID,
+            getString(R.string.notif_channel_name),
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
+        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 }

@@ -1,29 +1,20 @@
 package com.owlcoder.animeschedule.data.work
 
-import android.Manifest
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.content.ContextCompat
 import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import coil3.SingletonImageLoader
 import coil3.request.ImageRequest
-import coil3.request.allowHardware
-import coil3.toBitmap
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import com.owlcoder.animeschedule.MainActivity
 import com.owlcoder.animeschedule.R
@@ -32,7 +23,10 @@ import com.owlcoder.animeschedule.data.local.db.MalListEntryDao
 import com.owlcoder.animeschedule.data.local.db.NotificationDao
 import com.owlcoder.animeschedule.data.local.db.NotificationEntity
 import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
-import java.util.concurrent.TimeUnit
+import com.owlcoder.animeschedule.domain.model.WatchStatus
+import coil3.request.allowHardware
+import coil3.toBitmap
+import androidx.core.net.toUri
 
 @HiltWorker
 class AiringNotificationWorker @AssistedInject constructor(
@@ -44,94 +38,91 @@ class AiringNotificationWorker @AssistedInject constructor(
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) : CoroutineWorker(context, workerParams) {
 
-    override suspend fun doWork(): Result {
-        return try {
-            val prefs = userPreferencesDataStore.userPreferencesFlow.first()
-            if (!prefs.notificationsEnabled) {
-                Log.d(TAG, "Notifications disabled, skipping")
-                return Result.success()
+    override suspend fun doWork(): Result = try {
+        postDueNotifications()
+        Result.success()
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (e: Exception) {
+        Log.e(TAG, "Notification check failed", e)
+        if (runAttemptCount < MAX_ATTEMPTS) Result.retry() else Result.failure()
+    }
+
+    private suspend fun postDueNotifications() {
+        val prefs = userPreferencesDataStore.userPreferencesFlow.first()
+        if (!prefs.notificationsEnabled) return
+
+        val now = System.currentTimeMillis() / 1000L
+        val existingIds = notificationDao.getAllIds().toSet()
+        // The first run catches up on the last day. Afterwards the window is deliberately much
+        // wider than the 15 minute period: Doze can postpone periodic work by hours, and an
+        // episode that aired in the gap must still notify. Episodes already notified are
+        // skipped by id, so a generous window costs nothing.
+        val windowStart = now - if (existingIds.isEmpty()) FIRST_RUN_LOOKBACK_SECONDS else LOOKBACK_SECONDS
+        // Positive offset = notify after airing, negative = before. Episodes qualify when
+        // (airingAt + offset) falls inside the window.
+        val offsetSeconds = prefs.notificationOffsetMinutes * 60L
+
+        val watchingMalIds = malListEntryDao.getAll().first()
+            .filter { it.status == WatchStatus.WATCHING.malValue }
+            .mapTo(HashSet()) { it.malId }
+        if (watchingMalIds.isEmpty()) return
+
+        // The query returns episodes in airing order, so notifications are posted chronologically.
+        val dueEpisodes = airingEpisodeDao
+            .getAiringEpisodesInRange(windowStart - offsetSeconds, now - offsetSeconds)
+            .first()
+            .filter { episode ->
+                episode.malId in watchingMalIds && episode.airingId !in existingIds
             }
 
-            val now = System.currentTimeMillis() / 1000L
-            val offsetSeconds = prefs.notificationOffsetMinutes * 60L
-            // On first run (no existing notifications), check last 24h to catch up
-            // On subsequent runs, check last 16 minutes (slight overlap with 15min period)
-            val existingIds = notificationDao.getAllIds().toSet()
-            val windowStart = if (existingIds.isEmpty()) now - 86400L else now - 960L
-            // Apply offset: positive = notify after airing, negative = notify before
-            // We query episodes whose (airingAt + offset) falls within our window
-            val adjustedNow = now - offsetSeconds
-            val adjustedStart = windowStart - offsetSeconds
-
-            val recentEpisodes = airingEpisodeDao
-                .getAiringEpisodesInRange(adjustedStart, adjustedNow)
-                .first()
-
-            val malEntries = malListEntryDao.getAll().first()
-            val malIds = malEntries
-                .filter { it.status == "watching" }
-                .map { it.malId }.toSet()
-
-            Log.d(TAG, "episodes in window=${recentEpisodes.size}, malIds=${malIds.size}, existingNotifs=${existingIds.size}")
-
-            var created = 0
-            for (episode in recentEpisodes) {
-                val episodeMalId = episode.malId ?: continue
-                if (episodeMalId !in malIds) continue
-                if (episode.airingId in existingIds) continue
-
-                notificationDao.upsert(
-                    NotificationEntity(
-                        id = episode.airingId,
-                        animeId = episode.animeId,
-                        title = episode.title,
-                        episode = episode.episode,
-                        coverImageUrl = episode.coverImageUrl,
-                        airingAtEpochSeconds = episode.airingAtEpochSeconds,
-                        isRead = false,
-                        createdAtEpochSeconds = now
-                    )
-                )
-                val cover = episode.coverImageUrl?.let { loadBitmap(it) }
-                sendSystemNotification(
+        for (episode in dueEpisodes) {
+            notificationDao.upsert(
+                NotificationEntity(
                     id = episode.airingId,
                     animeId = episode.animeId,
                     title = episode.title,
                     episode = episode.episode,
-                    cover = cover
+                    coverImageUrl = episode.coverImageUrl,
+                    airingAtEpochSeconds = episode.airingAtEpochSeconds,
+                    isRead = false,
+                    createdAtEpochSeconds = now
                 )
-                created++
-            }
-
-            Log.d(TAG, "Created $created new notifications")
-            Result.success()
-        } catch (e: Exception) {
-            Log.e(TAG, "Worker failed", e)
-            if (runAttemptCount < 3) Result.retry() else Result.failure()
+            )
+            sendSystemNotification(
+                id = episode.airingId,
+                animeId = episode.animeId,
+                title = episode.title,
+                episode = episode.episode,
+                cover = episode.coverImageUrl?.let { loadBitmap(it) }
+            )
         }
     }
 
-    private suspend fun loadBitmap(url: String): Bitmap? = runCatching {
+    /** Coil reports failures through its result, so a missing cover simply yields no bitmap. */
+    private suspend fun loadBitmap(url: String): Bitmap? {
         // Reuse the application loader so notification work does not create another cache.
-        val loader = SingletonImageLoader.get(context)
         val request = ImageRequest.Builder(context)
             .data(url)
             .allowHardware(false)
             .build()
-        loader.execute(request).image?.toBitmap()
-    }.getOrNull()
+        return SingletonImageLoader.get(context).execute(request).image?.toBitmap()
+    }
 
     private fun sendSystemNotification(id: Int, animeId: Int, title: String, episode: Int, cover: Bitmap?) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-            != PackageManager.PERMISSION_GRANTED
-        ) return
+        // Covers the runtime permission on Android 13+ and the app-level toggle on 12/12L, where
+        // POST_NOTIFICATIONS does not exist and checking it directly always reads "denied".
+        val notificationManager = NotificationManagerCompat.from(context)
+        if (!notificationManager.areNotificationsEnabled()) return
 
-        val intent = android.net.Uri.parse("com.owlcoder.animeschedule://detail/$animeId")
-            .let { uri ->
-                Intent(Intent.ACTION_VIEW, uri, context, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                }
-            }
+        val intent = Intent(
+            Intent.ACTION_VIEW,
+            "com.owlcoder.animeschedule://detail/$animeId".toUri(),
+            context,
+            MainActivity::class.java
+        ).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
         val pendingIntent = PendingIntent.getActivity(
             context, id, intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
@@ -155,29 +146,19 @@ class AiringNotificationWorker @AssistedInject constructor(
                 )
         }
 
-        NotificationManagerCompat.from(context).notify(id, builder.build())
+        try {
+            notificationManager.notify(id, builder.build())
+        } catch (e: SecurityException) {
+            // Permission revoked between the check above and posting; the in-app list still has it.
+            Log.w(TAG, "Notification permission was revoked while posting", e)
+        }
     }
 
     companion object {
         const val CHANNEL_ID = "airing_episodes"
-        private const val WORK_NAME = "airing_notification_worker"
         private const val TAG = "AiringNotifWorker"
-
-        fun schedule(context: Context) {
-            val request = PeriodicWorkRequestBuilder<AiringNotificationWorker>(
-                15, TimeUnit.MINUTES
-            ).build()
-
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                WORK_NAME,
-                ExistingPeriodicWorkPolicy.UPDATE,
-                request
-            )
-        }
-
-        fun runNow(context: Context) {
-            val request = OneTimeWorkRequestBuilder<AiringNotificationWorker>().build()
-            WorkManager.getInstance(context).enqueue(request)
-        }
+        private const val MAX_ATTEMPTS = 3
+        private const val LOOKBACK_SECONDS = 2 * 60 * 60L
+        private const val FIRST_RUN_LOOKBACK_SECONDS = 24 * 60 * 60L
     }
 }

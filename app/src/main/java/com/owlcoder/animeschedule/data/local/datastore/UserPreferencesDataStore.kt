@@ -3,15 +3,24 @@ package com.owlcoder.animeschedule.data.local.datastore
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.owlcoder.animeschedule.domain.model.AccentColor
+import com.owlcoder.animeschedule.domain.model.AppLanguage
+import com.owlcoder.animeschedule.domain.model.CacheRetentionPolicy
+import com.owlcoder.animeschedule.domain.model.ThemeMode
+import com.owlcoder.animeschedule.domain.model.UserPreferences
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import androidx.datastore.preferences.core.edit
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Singleton
 class UserPreferencesDataStore @Inject constructor(
@@ -22,7 +31,6 @@ class UserPreferencesDataStore @Inject constructor(
         val MAL_LOGGED_IN = booleanPreferencesKey("mal_logged_in")
         val MAL_USERNAME = stringPreferencesKey("mal_username")
         val MAL_AVATAR_URL = stringPreferencesKey("mal_avatar_url")
-        val LAST_SYNC = longPreferencesKey("last_schedule_sync_epoch")
         val LAST_MAL_LIST_SYNC = longPreferencesKey("last_mal_list_sync_epoch_ms")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
@@ -34,7 +42,18 @@ class UserPreferencesDataStore @Inject constructor(
         val LAST_IMAGE_CACHE_CLEAR = longPreferencesKey("last_image_cache_clear_epoch_seconds")
     }
 
-    val userPreferencesFlow: Flow<UserPreferences> = dataStore.data.map { prefs ->
+    /**
+     * The backing DataStore also holds unrelated keys (recent searches, sync timestamps), so
+     * every write re-emits [Preferences]. Collapsing equal [UserPreferences] keeps downstream
+     * pipelines from restarting when nothing they read has changed.
+     */
+    // A corrupt preferences file must not take the whole app down; fall back to defaults.
+    private val safeData: Flow<Preferences> = dataStore.data.catch { error ->
+        if (error is IOException) emit(emptyPreferences()) else throw error
+    }
+
+    val userPreferencesFlow: Flow<UserPreferences> = safeData
+        .map { prefs ->
         val storedLanguage = runCatching {
             AppLanguage.valueOf(prefs[Keys.APP_LANGUAGE] ?: "")
         }.getOrDefault(AppLanguage.ENGLISH)
@@ -48,7 +67,6 @@ class UserPreferencesDataStore @Inject constructor(
             malLoggedIn = prefs[Keys.MAL_LOGGED_IN] ?: false,
             malUsername = prefs[Keys.MAL_USERNAME] ?: "",
             malAvatarUrl = prefs[Keys.MAL_AVATAR_URL] ?: "",
-            lastScheduleSyncEpoch = prefs[Keys.LAST_SYNC] ?: 0L,
             themeMode = runCatching { ThemeMode.valueOf(prefs[Keys.THEME_MODE] ?: "") }.getOrDefault(ThemeMode.SYSTEM),
             notificationsEnabled = prefs[Keys.NOTIFICATIONS_ENABLED] ?: true,
             notificationOffsetMinutes = prefs[Keys.NOTIFICATION_OFFSET] ?: 0,
@@ -59,7 +77,7 @@ class UserPreferencesDataStore @Inject constructor(
                 prefs[Keys.CACHE_RETENTION_DAYS] ?: CacheRetentionPolicy.DEFAULT_RETENTION_DAYS
             )
         )
-    }
+    }.distinctUntilChanged()
 
     suspend fun setTimezoneId(timezoneId: String) {
         dataStore.edit { it[Keys.TIMEZONE_ID] = timezoneId }
@@ -73,14 +91,10 @@ class UserPreferencesDataStore @Inject constructor(
         }
     }
 
-    suspend fun setLastSyncEpoch(epoch: Long) {
-        dataStore.edit { it[Keys.LAST_SYNC] = epoch }
-    }
-
     // Persisted (not in-memory) so the MAL list cache TTL survives process death — otherwise
     // every cold start re-downloaded the whole list.
     suspend fun getLastMalListSyncEpochMs(): Long =
-        dataStore.data.first()[Keys.LAST_MAL_LIST_SYNC] ?: 0L
+        safeData.first()[Keys.LAST_MAL_LIST_SYNC] ?: 0L
 
     suspend fun setLastMalListSyncEpochMs(epochMs: Long) {
         dataStore.edit { it[Keys.LAST_MAL_LIST_SYNC] = epochMs }
@@ -117,7 +131,7 @@ class UserPreferencesDataStore @Inject constructor(
     }
 
     suspend fun getLastImageCacheClearEpochSeconds(): Long =
-        dataStore.data.first()[Keys.LAST_IMAGE_CACHE_CLEAR] ?: 0L
+        safeData.first()[Keys.LAST_IMAGE_CACHE_CLEAR] ?: 0L
 
     suspend fun setLastImageCacheClearEpochSeconds(epochSeconds: Long) {
         dataStore.edit { it[Keys.LAST_IMAGE_CACHE_CLEAR] = epochSeconds }

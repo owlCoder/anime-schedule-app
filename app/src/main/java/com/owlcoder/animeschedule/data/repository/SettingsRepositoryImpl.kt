@@ -1,13 +1,12 @@
 package com.owlcoder.animeschedule.data.repository
 
 import kotlinx.coroutines.flow.Flow
-import com.owlcoder.animeschedule.data.local.datastore.AccentColor
-import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
-import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
-import com.owlcoder.animeschedule.data.local.datastore.UserPreferences
+import com.owlcoder.animeschedule.domain.model.AccentColor
+import com.owlcoder.animeschedule.domain.model.AppLanguage
+import com.owlcoder.animeschedule.domain.model.ThemeMode
+import com.owlcoder.animeschedule.domain.model.UserPreferences
 import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
 import com.owlcoder.animeschedule.domain.repository.SettingsRepository
-import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -45,11 +44,4 @@ class SettingsRepositoryImpl @Inject constructor(
     override suspend fun setCacheRetentionDays(days: Int) {
         prefsDataStore.setCacheRetentionDays(days)
     }
-
-    override fun getEffectiveZoneId(prefs: UserPreferences): ZoneId =
-        if (prefs.timezoneId.isNotEmpty()) {
-            runCatching { ZoneId.of(prefs.timezoneId) }.getOrElse { ZoneId.systemDefault() }
-        } else {
-            ZoneId.systemDefault()
-        }
 }

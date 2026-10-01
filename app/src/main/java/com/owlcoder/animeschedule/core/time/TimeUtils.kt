@@ -2,31 +2,18 @@ package com.owlcoder.animeschedule.core.time
 
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
-fun epochSecondsToLocalDateTime(
-    epochSeconds: Long,
-    zoneId: ZoneId = ZoneId.systemDefault(),
-): LocalDateTime = Instant.ofEpochSecond(epochSeconds).atZone(zoneId).toLocalDateTime()
-
-fun todayRangeUtc(zoneId: ZoneId = ZoneId.systemDefault()): Pair<Long, Long> {
-    val today = LocalDate.now(zoneId)
-    val start = today.atStartOfDay(zoneId).toEpochSecond()
-    val end = today.plusDays(1).atStartOfDay(zoneId).toEpochSecond() - 1
-    return start to end
-}
-
-fun tomorrowRangeUtc(zoneId: ZoneId = ZoneId.systemDefault()): Pair<Long, Long> {
-    val tomorrow = LocalDate.now(zoneId).plusDays(1)
-    val start = tomorrow.atStartOfDay(zoneId).toEpochSecond()
-    val end = tomorrow.plusDays(1).atStartOfDay(zoneId).toEpochSecond() - 1
-    return start to end
-}
-
-fun weekRangeUtc(zoneId: ZoneId = ZoneId.systemDefault()): Pair<Long, Long> {
-    val today = LocalDate.now(zoneId)
+/**
+ * Epoch-second bounds (inclusive) of the seven local days starting at [today].
+ * Day boundaries come from [ZoneId.rules], so DST transition days are 23/25 hours long
+ * instead of a fixed 24.
+ */
+fun weekRangeUtc(
+    zoneId: ZoneId,
+    today: LocalDate = LocalDate.now(zoneId),
+): Pair<Long, Long> {
     val start = today.atStartOfDay(zoneId).toEpochSecond()
     val end = today.plusDays(7).atStartOfDay(zoneId).toEpochSecond() - 1
     return start to end
@@ -40,15 +27,9 @@ fun weekRangeUtc(zoneId: ZoneId = ZoneId.systemDefault()): Pair<Long, Long> {
  */
 fun formatAiringCountdown(
     airingAtEpochSeconds: Long,
-    zoneId: ZoneId = ZoneId.systemDefault(),
     airedLabel: String = "Aired",
+    now: Instant = Instant.now(),
 ): String {
-    // Keep zoneId in the public contract because callers use a user-selected zone,
-    // while the duration itself is zone-independent.
-    @Suppress("UNUSED_VARIABLE")
-    val requestedZone = zoneId
-
-    val now = Instant.now()
     val airingInstant = Instant.ofEpochSecond(airingAtEpochSeconds)
     if (!airingInstant.isAfter(now)) return airedLabel
 

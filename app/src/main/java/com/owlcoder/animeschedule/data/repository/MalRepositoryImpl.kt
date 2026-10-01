@@ -1,11 +1,18 @@
 package com.owlcoder.animeschedule.data.repository
 
+import android.util.Log
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import retrofit2.HttpException
+import java.io.IOException
+import java.time.Instant
 import com.owlcoder.animeschedule.core.result.AppError
 import com.owlcoder.animeschedule.core.result.AppResult
 import com.owlcoder.animeschedule.data.api.mal.MalApiService
 import com.owlcoder.animeschedule.data.api.mal.auth.MalAuthManager
+import com.owlcoder.animeschedule.data.api.mal.dto.MalAnimeListResponse
 import com.owlcoder.animeschedule.data.api.mal.dto.MalListStatus
 import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
 import com.owlcoder.animeschedule.data.local.db.AnimeDetailDao
@@ -13,14 +20,14 @@ import com.owlcoder.animeschedule.data.local.db.MalListEntryDao
 import com.owlcoder.animeschedule.data.local.db.MalListEntryEntity
 import com.owlcoder.animeschedule.data.local.db.PendingListUpdateDao
 import com.owlcoder.animeschedule.data.local.db.PendingListUpdateEntity
-import com.owlcoder.animeschedule.data.mapper.toDomain
-import com.owlcoder.animeschedule.data.mapper.toEntity
-import com.owlcoder.animeschedule.data.work.PendingUpdateScheduler
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
 import com.owlcoder.animeschedule.domain.repository.MalRepository
+import com.owlcoder.animeschedule.domain.repository.WorkScheduler
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.owlcoder.animeschedule.data.mapper.toDomain
+import com.owlcoder.animeschedule.data.mapper.toEntity
 
 private const val MAL_LIST_CACHE_TTL_MS = 60 * 60 * 1000L // 1h
 
@@ -32,13 +39,11 @@ class MalRepositoryImpl @Inject constructor(
     private val animeDetailDao: AnimeDetailDao,
     private val malAuthManager: MalAuthManager,
     private val prefsDataStore: UserPreferencesDataStore,
-    private val pendingUpdateScheduler: PendingUpdateScheduler
+    private val workScheduler: WorkScheduler
 ) : MalRepository {
 
-    override fun getUserList(): Flow<AppResult<List<MalListEntry>>> =
-        malListEntryDao.getAll().map { entities ->
-            AppResult.Success(entities.map { it.toDomain() })
-        }
+    override fun getUserList(): Flow<List<MalListEntry>> =
+        malListEntryDao.getAll().map { entities -> entities.map { it.toDomain() } }
 
     override suspend fun updateListEntry(animeId: Int, update: MalListUpdate): AppResult<Unit> {
         val result = executeWithRefresh {
@@ -49,7 +54,6 @@ class MalRepositoryImpl @Inject constructor(
                 score = update.score
             )
             applyPatchedLocally(animeId, patched)
-            AppResult.Success(Unit)
         }
         // Couldn't reach MAL (offline / server down): apply the edit locally and queue it for
         // a background flush — the change is not lost, so report success to the UI.
@@ -62,7 +66,9 @@ class MalRepositoryImpl @Inject constructor(
 
     override suspend fun incrementEpisode(animeId: Int): AppResult<Unit> {
         val existing = malListEntryDao.getByAnimeId(animeId) ?: return AppResult.Error(AppError.NoCache)
-        val newEpisodes = existing.numEpisodesWatched + 1
+        // MAL rejects progress beyond the episode count, so stop at the known total.
+        val total = existing.totalEpisodes?.takeIf { it > 0 }
+        val newEpisodes = (existing.numEpisodesWatched + 1).let { next -> total?.let { minOf(next, it) } ?: next }
         return updateListEntry(animeId, MalListUpdate(episodesWatched = newEpisodes))
     }
 
@@ -71,7 +77,6 @@ class MalRepositoryImpl @Inject constructor(
             deleteOnMal(animeId)
             malListEntryDao.deleteByAnimeId(animeId)
             pendingListUpdateDao.deleteByAnimeId(animeId)
-            AppResult.Success(Unit)
         }
         if (result is AppResult.Error && result.error is AppError.Network) {
             queueRemoval(animeId)
@@ -80,13 +85,24 @@ class MalRepositoryImpl @Inject constructor(
         return result
     }
 
-    override suspend fun refreshUserList(force: Boolean): Boolean {
+    override suspend fun refreshUserList(force: Boolean): Boolean = try {
+        syncUserList(force)
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (e: Exception) {
+        // A local database failure must not crash a background sync; the cached list stays.
+        Log.w(TAG, "MAL list sync failed", e)
+        false
+    }
+
+    private suspend fun syncUserList(force: Boolean): Boolean {
+        // Nothing to mirror (and a guaranteed 401) without a signed-in account.
+        if (!prefsDataStore.userPreferencesFlow.first().malLoggedIn) return true
         val now = System.currentTimeMillis()
         val lastSync = prefsDataStore.getLastMalListSyncEpochMs()
         if (!force && (now - lastSync) < MAL_LIST_CACHE_TTL_MS) return true
         // Push local queued edits first so the server state we're about to mirror includes them.
         flushPendingUpdates()
-        malAuthManager.ensureFreshToken()
         var offset = 0
         val allEntities = mutableListOf<MalListEntryEntity>()
         while (true) {
@@ -136,15 +152,15 @@ class MalRepositoryImpl @Inject constructor(
                     )
                     applyPatchedLocally(p.animeId, patched)
                 }
-                AppResult.Success(Unit)
             }
-            if (result is AppResult.Success) {
-                pendingListUpdateDao.deleteByAnimeId(p.animeId)
-            } else {
-                allFlushed = false
-                // Session is dead — no point hammering the remaining rows; keep the queue
-                // so a future re-login can still deliver the edits.
-                if ((result as AppResult.Error).error is AppError.Unauthorized) break
+            when ((result as? AppResult.Error)?.error) {
+                // Delivered, or rejected by the server: a rejected payload can never succeed, so
+                // keeping it would retry it forever and re-apply it over every list sync.
+                null, is AppError.Unknown -> pendingListUpdateDao.deleteByAnimeId(p.animeId)
+                // Session is dead: no point hammering the remaining rows, but keep the queue so
+                // a future re-login can still deliver the edits.
+                AppError.Unauthorized -> return false
+                else -> allFlushed = false
             }
         }
         return allFlushed
@@ -155,7 +171,7 @@ class MalRepositoryImpl @Inject constructor(
     private suspend fun deleteOnMal(animeId: Int) {
         val response = malApiService.deleteListStatus(animeId)
         if (!response.isSuccessful && response.code() != 404) {
-            throw retrofit2.HttpException(response)
+            throw HttpException(response)
         }
     }
 
@@ -165,7 +181,7 @@ class MalRepositoryImpl @Inject constructor(
         // Stamp the local edit time immediately so the "recently changed" home
         // section reflects this update right away, instead of waiting for the
         // next full list sync to pull MAL's own updated_at back down.
-        val editedNow = java.time.Instant.now().toString()
+        val editedNow = Instant.now().toString()
         val existing = malListEntryDao.getByAnimeId(animeId)
         if (existing != null) {
             malListEntryDao.upsert(
@@ -177,7 +193,7 @@ class MalRepositoryImpl @Inject constructor(
                 )
             )
         } else {
-            val node = runCatching { malApiService.getAnimeDetail(animeId) }.getOrNull()
+            val node = fetchAnimeNodeOrNull(animeId)
             malListEntryDao.upsert(
                 MalListEntryEntity(
                     animeId = animeId,
@@ -195,6 +211,15 @@ class MalRepositoryImpl @Inject constructor(
         }
     }
 
+    /** Best-effort metadata for a first-time add; the local row falls back to cached details. */
+    private suspend fun fetchAnimeNodeOrNull(animeId: Int) = try {
+        malApiService.getAnimeDetail(animeId)
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (_: Exception) {
+        null
+    }
+
     /** Applies an offline edit optimistically to the local cache and queues it for flush. */
     private suspend fun queueUpdate(animeId: Int, update: MalListUpdate) {
         val previous = pendingListUpdateDao.getByAnimeId(animeId)
@@ -209,7 +234,7 @@ class MalRepositoryImpl @Inject constructor(
                 queuedAtEpochMs = System.currentTimeMillis()
             )
         )
-        val editedNow = java.time.Instant.now().toString()
+        val editedNow = Instant.now().toString()
         val existing = malListEntryDao.getByAnimeId(animeId)
         if (existing != null) {
             malListEntryDao.upsert(
@@ -236,7 +261,7 @@ class MalRepositoryImpl @Inject constructor(
                 )
             )
         }
-        pendingUpdateScheduler.scheduleFlush()
+        workScheduler.scheduleFlushPendingUpdates()
     }
 
     private suspend fun queueRemoval(animeId: Int) {
@@ -251,7 +276,7 @@ class MalRepositoryImpl @Inject constructor(
             )
         )
         malListEntryDao.deleteByAnimeId(animeId)
-        pendingUpdateScheduler.scheduleFlush()
+        workScheduler.scheduleFlushPendingUpdates()
     }
 
     private suspend fun cachedDetailTitle(malId: Int): String? {
@@ -259,71 +284,60 @@ class MalRepositoryImpl @Inject constructor(
         return detail.titleEnglish ?: detail.titleRomaji ?: detail.titleNative
     }
 
-    private suspend fun fetchAnimeListPage(offset: Int) =
-        try {
-            malApiService.getUserAnimeList(offset = offset)
-        } catch (e: retrofit2.HttpException) {
-            if (e.code() == 401) {
-                when (malAuthManager.refreshAccessToken()) {
-                    MalAuthManager.RefreshResult.REFRESHED ->
-                        runCatching { malApiService.getUserAnimeList(offset = offset) }.getOrNull()
-                    MalAuthManager.RefreshResult.INVALID -> {
-                        prefsDataStore.setMalLoggedIn(false)
-                        null
-                    }
-                    MalAuthManager.RefreshResult.TRANSIENT -> null
-                }
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            null
-        }
+    private suspend fun fetchAnimeListPage(offset: Int): MalAnimeListResponse? =
+        (executeWithRefresh { malApiService.getUserAnimeList(offset = offset) } as? AppResult.Success)?.data
 
-    // Error mapping matters for the offline queue: AppError.Network (connectivity — safe to
-    // queue and retry later) vs AppError.Unknown (HTTP 4xx/5xx — the server rejected the
-    // request; retrying the same payload forever would be wrong).
-    private suspend fun <T> executeWithRefresh(block: suspend () -> AppResult<T>): AppResult<T> {
+    /**
+     * Runs [block] with a fresh access token and retries once after a 401 refresh.
+     *
+     * Failures map onto what the offline queue needs: [AppError.Network] means "worth retrying
+     * later" (connectivity, timeouts, 5xx, rate limiting), [AppError.Unknown] means the server
+     * rejected the request itself (other 4xx) so retrying the same payload would be pointless,
+     * and [AppError.Unauthorized] means the session is really gone.
+     */
+    private suspend fun <T> executeWithRefresh(block: suspend () -> T): AppResult<T> {
         malAuthManager.ensureFreshToken()
-        return try {
-            block()
-        } catch (e: retrofit2.HttpException) {
-            if (e.code() == 401) {
-                when (malAuthManager.refreshAccessToken()) {
-                    MalAuthManager.RefreshResult.REFRESHED -> try {
-                        block()
-                    } catch (e2: retrofit2.HttpException) {
-                        // Only a second 401 means the session is really dead; a transient
-                        // network/server error on the retry must not log the user out.
-                        if (e2.code() == 401) {
-                            prefsDataStore.setMalLoggedIn(false)
-                            AppResult.Error(AppError.Unauthorized)
-                        } else {
-                            AppResult.Error(AppError.Unknown(e2.message()))
-                        }
-                    } catch (e2: java.io.IOException) {
-                        AppResult.Error(AppError.Network(e2.message))
-                    } catch (e2: kotlinx.coroutines.CancellationException) {
-                        throw e2
-                    } catch (e2: Exception) {
-                        AppResult.Error(AppError.Unknown(e2.message))
-                    }
-                    MalAuthManager.RefreshResult.INVALID -> {
-                        prefsDataStore.setMalLoggedIn(false)
-                        AppResult.Error(AppError.Unauthorized)
-                    }
-                    MalAuthManager.RefreshResult.TRANSIENT ->
-                        AppResult.Error(AppError.Network(e.message()))
+        val first = attempt(block)
+        if (first !is AppResult.Error || first.error != AppError.Unauthorized) return first
+
+        return when (malAuthManager.refreshAccessToken()) {
+            MalAuthManager.RefreshResult.REFRESHED -> attempt(block).also { retry ->
+                // Only a second 401 means the session is really dead; a transient failure on the
+                // retry must not log the user out.
+                if (retry is AppResult.Error && retry.error == AppError.Unauthorized) {
+                    prefsDataStore.setMalLoggedIn(false)
                 }
-            } else {
-                AppResult.Error(AppError.Unknown(e.message()))
             }
-        } catch (e: java.io.IOException) {
-            AppResult.Error(AppError.Network(e.message))
-        } catch (e: kotlinx.coroutines.CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            AppResult.Error(AppError.Unknown(e.message))
+            MalAuthManager.RefreshResult.INVALID -> {
+                prefsDataStore.setMalLoggedIn(false)
+                AppResult.Error(AppError.Unauthorized)
+            }
+            MalAuthManager.RefreshResult.TRANSIENT ->
+                AppResult.Error(AppError.Network("token refresh unavailable"))
         }
+    }
+
+    private suspend fun <T> attempt(block: suspend () -> T): AppResult<T> = try {
+        AppResult.Success(block())
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (e: HttpException) {
+        when (e.code()) {
+            HTTP_UNAUTHORIZED -> AppResult.Error(AppError.Unauthorized)
+            HTTP_REQUEST_TIMEOUT, HTTP_TOO_MANY_REQUESTS, in 500..599 ->
+                AppResult.Error(AppError.Network(e.message(), e.code()))
+            else -> AppResult.Error(AppError.Unknown(e.message()))
+        }
+    } catch (e: IOException) {
+        AppResult.Error(AppError.Network(e.message))
+    } catch (e: Exception) {
+        AppResult.Error(AppError.Unknown(e.message))
+    }
+
+    private companion object {
+        const val TAG = "MalRepository"
+        const val HTTP_UNAUTHORIZED = 401
+        const val HTTP_REQUEST_TIMEOUT = 408
+        const val HTTP_TOO_MANY_REQUESTS = 429
     }
 }

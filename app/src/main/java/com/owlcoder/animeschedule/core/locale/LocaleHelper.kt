@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
-import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
+import com.owlcoder.animeschedule.domain.model.AppLanguage
 import java.util.Locale
 
 object LocaleHelper {

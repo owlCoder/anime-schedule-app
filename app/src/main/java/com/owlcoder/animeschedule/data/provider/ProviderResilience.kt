@@ -2,6 +2,7 @@ package com.owlcoder.animeschedule.data.provider
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withTimeout
 import com.owlcoder.animeschedule.core.result.AppError
 import com.owlcoder.animeschedule.core.result.AppResult
@@ -9,6 +10,7 @@ import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.isActive
 
 enum class ProviderOperation(
     val providerTimeoutMs: Long,
@@ -55,6 +57,7 @@ fun <T> AppResult<T>.requireProviderData(provider: String): T = when (this) {
 
 private fun AppError.providerStatusCode(): Int? = when (this) {
     AppError.Unauthorized -> 401
+    is AppError.Network -> statusCode
     is AppError.RateLimit -> 429
     is AppError.GraphQL -> {
         val normalized = message.lowercase()
@@ -104,6 +107,15 @@ class ProviderHealthStore @Inject constructor(
         if (state.halfOpenProbeInFlight) return false
         state.halfOpenProbeInFlight = true
         return true
+    }
+
+    /**
+     * Frees a half-open probe slot taken by [tryAcquire] when the call ended without a verdict
+     * (cancelled, or never started). Without this the provider would stay blocked forever.
+     */
+    @Synchronized
+    fun releaseProbe(provider: String) {
+        states[provider]?.halfOpenProbeInFlight = false
     }
 
     @Synchronized
@@ -177,6 +189,10 @@ class ProviderOrchestrator @Inject constructor(
         val deadline = clock.nowMillis() + operation.totalBudgetMs
 
         for (call in calls) {
+            // Checked before acquiring so a spent budget can never strand a half-open probe slot.
+            val remainingMs = deadline - clock.nowMillis()
+            if (remainingMs <= 0L) break
+
             if (!healthStore.tryAcquire(call.provider)) {
                 failures += ProviderFailure(
                     provider = call.provider,
@@ -185,9 +201,6 @@ class ProviderOrchestrator @Inject constructor(
                 )
                 continue
             }
-
-            val remainingMs = deadline - clock.nowMillis()
-            if (remainingMs <= 0L) break
 
             try {
                 val value = withTimeout(minOf(operation.providerTimeoutMs, remainingMs)) {
@@ -198,6 +211,12 @@ class ProviderOrchestrator @Inject constructor(
                     return ProviderResult.Success(call.provider, value)
                 }
             } catch (e: TimeoutCancellationException) {
+                // Only this call's own timeout is a provider failure. When the caller's scope is
+                // already cancelled (e.g. its own withTimeout fired) the cancellation propagates.
+                if (!currentCoroutineContext().isActive) {
+                    healthStore.releaseProbe(call.provider)
+                    throw e
+                }
                 val failure = ProviderFailure(
                     provider = call.provider,
                     kind = ProviderFailureKind.TRANSIENT,
@@ -206,7 +225,9 @@ class ProviderOrchestrator @Inject constructor(
                 healthStore.recordFailure(failure)
                 failures += failure
             } catch (e: CancellationException) {
-                // A user/screen cancellation must always propagate to the caller.
+                // A user/screen cancellation must always propagate to the caller, but it says
+                // nothing about the provider's health.
+                healthStore.releaseProbe(call.provider)
                 throw e
             } catch (e: Exception) {
                 val failure = classify(call.provider, e)

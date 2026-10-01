@@ -43,7 +43,6 @@ data class AnimeScheduleAnime(
     val title: String? = null,
     val route: String? = null,
     val description: String? = null,
-    val premier: String? = null,
     val season: AnimeScheduleSeason? = null,
     val episodes: Int? = null,
     val lengthMin: Int? = null,
@@ -78,8 +77,7 @@ data class AnimeScheduleStats(
 data class AnimeScheduleNames(
     val romaji: String? = null,
     val english: String? = null,
-    val native: String? = null,
-    val synonyms: List<String> = emptyList()
+    val native: String? = null
 )
 
 @Serializable

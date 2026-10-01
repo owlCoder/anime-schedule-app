@@ -1,13 +1,10 @@
 package com.owlcoder.animeschedule.data.api.alternative
 
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromJsonElement
-import com.owlcoder.animeschedule.data.local.db.AnimeDetailEntity
-import android.util.Log
-import kotlinx.coroutines.CancellationException
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlin.math.roundToInt
 
 @Singleton
@@ -17,28 +14,7 @@ class AlternativeAnimeDataSource @Inject constructor(
 ) {
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
-    suspend fun searchAnime(query: String, page: Int): CatalogPage {
-        tryOrNull("Kitsu search") { searchKitsuAnime(query, page) }
-            ?.takeIf { it.items.isNotEmpty() || page > 1 }
-            ?.let { return it }
-        return searchAnimeScheduleAnime(query, page)
-    }
-
-    suspend fun getSeasonalAnime(season: String, year: Int): List<CatalogAnime> {
-        tryOrNull("Kitsu season") { getKitsuSeasonalAnime(season, year) }
-            ?.takeIf { it.isNotEmpty() }
-            ?.let { return it }
-        return tryOrNull("AnimeSchedule season") { getAnimeScheduleSeasonalAnime(season, year) }
-            ?: emptyList()
-    }
-
-    suspend fun getByAniListId(id: Int): CatalogAnime? = getByAnimeScheduleAniListId(id)
-
-    suspend fun getByMalId(id: Int): CatalogAnime? = getByAnimeScheduleMalId(id)
-
-    suspend fun searchKitsuAnime(query: String, page: Int): CatalogPage = searchKitsu(query, page)
-
-    suspend fun searchAnimeScheduleAnime(query: String, page: Int): CatalogPage {
+    suspend fun searchAnimeSchedule(query: String, page: Int): CatalogPage {
         val response = animeScheduleApi.searchAnime(query = query, page = page)
         return CatalogPage(
             items = response.anime.map { it.toCatalogAnime() },
@@ -46,38 +22,30 @@ class AlternativeAnimeDataSource @Inject constructor(
         )
     }
 
-    suspend fun getKitsuSeasonalAnime(season: String, year: Int): List<CatalogAnime> =
-        getKitsuSeason(season, year)
-
-    suspend fun getAnimeScheduleSeasonalAnime(season: String, year: Int): List<CatalogAnime> =
+    suspend fun getAnimeScheduleSeason(season: String, year: Int): List<CatalogAnime> =
         animeScheduleApi.getSeasonalAnime(year = year, season = season.lowercase())
             .anime.map { it.toCatalogAnime() }
 
-    suspend fun getByAnimeScheduleAniListId(id: Int): CatalogAnime? =
+    suspend fun getByAniListId(id: Int): CatalogAnime? =
         animeScheduleApi.getByAniListId(id).anime.firstOrNull()?.toCatalogAnime()
 
-    suspend fun getByAnimeScheduleMalId(id: Int): CatalogAnime? =
+    suspend fun getByMalId(id: Int): CatalogAnime? =
         animeScheduleApi.getByMalId(id).anime.firstOrNull()?.toCatalogAnime()
 
-    suspend fun getKitsuById(id: String): CatalogAnime? = tryOrNull("Kitsu detail") {
-        val response = kitsuApi.getAnime(id)
-        response.data.toCatalogAnime(emptyList(), json)
-    }
-
-    private suspend fun searchKitsu(query: String, page: Int): CatalogPage {
+    suspend fun searchKitsu(query: String, page: Int): CatalogPage {
         val response = kitsuApi.searchAnime(
             query = query,
             limit = KITSU_PAGE_SIZE,
             offset = (page - 1) * KITSU_PAGE_SIZE
         )
         val items = response.data.map { resource ->
-            resource.toCatalogAnime(response.included, json)
+            resource.toCatalogAnime(response.included)
         }
         val total = response.meta?.count ?: ((page - 1) * KITSU_PAGE_SIZE + items.size)
         return CatalogPage(items, hasNextPage = page * KITSU_PAGE_SIZE < total)
     }
 
-    private suspend fun getKitsuSeason(season: String, year: Int): List<CatalogAnime> {
+    suspend fun getKitsuSeason(season: String, year: Int): List<CatalogAnime> {
         val all = mutableListOf<CatalogAnime>()
         var offset = 0
         while (offset < KITSU_MAX_SEASON_RESULTS) {
@@ -87,7 +55,7 @@ class AlternativeAnimeDataSource @Inject constructor(
                 limit = KITSU_PAGE_SIZE,
                 offset = offset
             )
-            val page = response.data.map { it.toCatalogAnime(response.included, json) }
+            val page = response.data.map { it.toCatalogAnime(response.included) }
             all += page
             offset += KITSU_PAGE_SIZE
             if (page.size < KITSU_PAGE_SIZE || offset >= (response.meta?.count ?: offset)) break
@@ -96,8 +64,7 @@ class AlternativeAnimeDataSource @Inject constructor(
     }
 
     private fun KitsuAnimeResource.toCatalogAnime(
-        included: List<KitsuIncludedResource> = emptyList(),
-        json: Json
+        included: List<KitsuIncludedResource>
     ): CatalogAnime {
         val attributes = attributes ?: KitsuAnimeAttributes()
         val mappingIds = relationships?.mappings?.data.orEmpty().map { it.id }.toSet()
@@ -165,37 +132,6 @@ class AlternativeAnimeDataSource @Inject constructor(
         )
     }
 
-    fun CatalogAnime.toDetailEntity(internalId: Int, nowEpoch: Long): AnimeDetailEntity =
-        AnimeDetailEntity(
-            animeId = internalId,
-            malId = malId,
-            titleRomaji = titleRomaji,
-            titleEnglish = titleEnglish,
-            titleNative = null,
-            coverImageUrl = coverImageUrl,
-            coverColor = null,
-            bannerImageUrl = bannerImageUrl,
-            description = description,
-            genres = genres,
-            averageScore = averageScore,
-            meanScore = averageScore,
-            episodes = episodes,
-            duration = duration,
-            status = status,
-            format = format,
-            season = season,
-            seasonYear = seasonYear,
-            nextAiringEpisode = null,
-            nextAiringAt = nextAiringAt,
-            studiosJson = null,
-            charactersJson = null,
-            relationsJson = null,
-            trailerSite = null,
-            trailerId = null,
-            siteUrl = siteUrl,
-            cachedAtEpochSeconds = nowEpoch
-        )
-
     private fun List<KitsuMappingAttributes>.firstExternalId(site: String): Int? =
         firstOrNull { it.externalSite == site }?.externalId?.toIntOrNull()
 
@@ -209,17 +145,7 @@ class AlternativeAnimeDataSource @Inject constructor(
         if (this.isNullOrBlank()) null else Instant.parse(this).epochSecond
     }.getOrNull()
 
-    private suspend fun <T> tryOrNull(label: String, block: suspend () -> T): T? = try {
-        block()
-    } catch (e: CancellationException) {
-        throw e
-    } catch (e: Exception) {
-        Log.w(TAG, "$label failed", e)
-        null
-    }
-
     private companion object {
-        const val TAG = "AlternativeAnime"
         const val KITSU_PAGE_SIZE = 20
         const val KITSU_MAX_SEASON_RESULTS = 100
         const val ANIME_SCHEDULE_PAGE_SIZE = 18

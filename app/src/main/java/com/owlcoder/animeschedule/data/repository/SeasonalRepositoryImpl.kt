@@ -4,7 +4,6 @@ import com.owlcoder.animeschedule.core.result.AppError
 import com.owlcoder.animeschedule.core.result.AppResult
 import com.owlcoder.animeschedule.data.api.alternative.AlternativeAnimeDataSource
 import com.owlcoder.animeschedule.data.api.alternative.CatalogAnime
-import com.owlcoder.animeschedule.data.api.alternative.toInternalId
 import com.owlcoder.animeschedule.data.api.anilist.AniListRemoteDataSource
 import com.owlcoder.animeschedule.data.api.anilist.generated.type.MediaSeason
 import com.owlcoder.animeschedule.data.local.db.AnimeDetailDao
@@ -13,13 +12,16 @@ import com.owlcoder.animeschedule.data.provider.ProviderCall
 import com.owlcoder.animeschedule.data.provider.ProviderOperation
 import com.owlcoder.animeschedule.data.provider.ProviderOrchestrator
 import com.owlcoder.animeschedule.data.provider.ProviderResult
-import com.owlcoder.animeschedule.data.provider.requireProviderData
 import com.owlcoder.animeschedule.domain.model.AnimeSeason
 import com.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
 import com.owlcoder.animeschedule.domain.repository.SeasonalRepository
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.owlcoder.animeschedule.data.api.alternative.toInternalId
+import com.owlcoder.animeschedule.data.provider.requireProviderData
+import com.owlcoder.animeschedule.data.mapper.toDetailEntity
+import com.owlcoder.animeschedule.data.mapper.toSeasonalItem
 
 @Singleton
 class SeasonalRepositoryImpl @Inject constructor(
@@ -34,19 +36,14 @@ class SeasonalRepositoryImpl @Inject constructor(
         season: AnimeSeason,
         year: Int
     ): AppResult<List<SeasonalAnimeItem>> {
-        val mediaSeason = when (season) {
-            AnimeSeason.WINTER -> MediaSeason.WINTER
-            AnimeSeason.SPRING -> MediaSeason.SPRING
-            AnimeSeason.SUMMER -> MediaSeason.SUMMER
-            AnimeSeason.FALL -> MediaSeason.FALL
-        }
-
         val result = providerOrchestrator.firstSuccessful(
             operation = ProviderOperation.SEASON,
             calls = listOf(
                 ProviderCall("AniList", isUsable = { it.isNotEmpty() }) {
-                    remoteDataSource.getSeasonalAnime(mediaSeason, year)
+                    remoteDataSource.getSeasonalAnime(season.toMediaSeason(), year)
                         .requireProviderData("AniList")
+                        // Popularity-sorted pages can repeat a title; ids are used as list keys.
+                        .distinctBy { it.id }
                         .map { media ->
                             SeasonalAnimeItem(
                                 anilistId = media.id,
@@ -66,53 +63,36 @@ class SeasonalRepositoryImpl @Inject constructor(
                         }
                 },
                 ProviderCall("Kitsu", isUsable = { it.isNotEmpty() }) {
-                    alternativeDataSource.getKitsuSeasonalAnime(season.name, year)
-                        .toSeasonalItemsAndCache()
+                    alternativeDataSource.getKitsuSeason(season.name, year).toSeasonalItemsAndCache()
                 },
                 ProviderCall("AnimeSchedule", isUsable = { it.isNotEmpty() }) {
-                    alternativeDataSource.getAnimeScheduleSeasonalAnime(season.name, year)
-                        .toSeasonalItemsAndCache()
+                    alternativeDataSource.getAnimeScheduleSeason(season.name, year).toSeasonalItemsAndCache()
                 }
             )
         )
 
         return when (result) {
             is ProviderResult.Success -> AppResult.Success(result.value)
-            is ProviderResult.Exhausted -> when (
-                val offline = offlineCatalogDataSource.getSeason(season, year)
-            ) {
+            is ProviderResult.Exhausted -> when (val offline = offlineCatalogDataSource.getSeason(season, year)) {
                 is AppResult.Success -> AppResult.Success(offline.data)
                 is AppResult.Error -> AppResult.Error(
-                    result.failures.lastOrNull()?.message?.let { AppError.Network(it) }
-                        ?: offline.error
+                    result.failures.lastOrNull()?.message?.let(AppError::Network) ?: offline.error
                 )
             }
         }
     }
 
+    private fun AnimeSeason.toMediaSeason() = when (this) {
+        AnimeSeason.WINTER -> MediaSeason.WINTER
+        AnimeSeason.SPRING -> MediaSeason.SPRING
+        AnimeSeason.SUMMER -> MediaSeason.SUMMER
+        AnimeSeason.FALL -> MediaSeason.FALL
+    }
+
     private suspend fun List<CatalogAnime>.toSeasonalItemsAndCache(): List<SeasonalAnimeItem> {
         val now = Instant.now().epochSecond
-        forEach { item ->
-            animeDetailDao.upsert(
-                alternativeDataSource.run { item.toDetailEntity(item.toInternalId(), now) }
-            )
-        }
-        return map { item ->
-            SeasonalAnimeItem(
-                anilistId = item.toInternalId(),
-                malId = item.malId,
-                title = item.title,
-                coverImageUrl = item.coverImageUrl,
-                coverColor = null,
-                genres = item.genres,
-                format = item.format,
-                status = item.status,
-                episodes = item.episodes,
-                season = item.season,
-                seasonYear = item.seasonYear,
-                averageScore = item.averageScore,
-                meanScore = item.averageScore
-            )
-        }
+        val unique = distinctBy { it.toInternalId() }
+        animeDetailDao.insertIfAbsent(unique.map { it.toDetailEntity(it.toInternalId(), now) })
+        return unique.map { it.toSeasonalItem() }
     }
 }

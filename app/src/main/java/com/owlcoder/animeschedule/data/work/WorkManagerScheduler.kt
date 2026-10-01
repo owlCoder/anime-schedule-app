@@ -9,57 +9,75 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.owlcoder.animeschedule.domain.repository.WorkScheduler
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object WorkManagerScheduler {
-    private const val SYNC_WORK_NAME = "schedule_sync"
-    private const val PENDING_UPDATES_WORK_NAME = "pending_mal_updates"
-    private const val CACHE_CLEANUP_WORK_NAME = "cache_cleanup"
+/**
+ * Every request here uses a unique work name, so enqueueing is idempotent: calling it on each
+ * app start, refresh or edit can never pile up duplicate jobs.
+ */
+@Singleton
+class WorkManagerScheduler @Inject constructor(
+    @ApplicationContext private val context: Context
+) : WorkScheduler {
 
-    fun schedule(context: Context) {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
+    private val workManager get() = WorkManager.getInstance(context)
 
-        val request = PeriodicWorkRequestBuilder<ScheduleSyncWorker>(6, TimeUnit.HOURS)
-            .setConstraints(constraints)
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
-            .build()
+    /** Registers the recurring jobs. Safe to call on every launch; existing schedules are kept. */
+    fun schedulePeriodicWork() {
+        val connected = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        workManager.enqueueUniquePeriodicWork(
             SYNC_WORK_NAME,
             ExistingPeriodicWorkPolicy.KEEP,
-            request
+            PeriodicWorkRequestBuilder<ScheduleSyncWorker>(6, TimeUnit.HOURS)
+                .setConstraints(connected)
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
+                .build()
         )
 
-        // Cache cleanup is deliberately unconstrained: it only touches local Room/Coil data.
-        val cacheCleanupRequest = PeriodicWorkRequestBuilder<CacheCleanupWorker>(
-            1, TimeUnit.DAYS
-        ).build()
-
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        // Cache cleanup only touches local Room/Coil data, so it needs no constraints.
+        workManager.enqueueUniquePeriodicWork(
             CACHE_CLEANUP_WORK_NAME,
             ExistingPeriodicWorkPolicy.KEEP,
-            cacheCleanupRequest
+            PeriodicWorkRequestBuilder<CacheCleanupWorker>(1, TimeUnit.DAYS).build()
+        )
+
+        // Reads only the local database; the network is touched solely for the cover image.
+        workManager.enqueueUniquePeriodicWork(
+            NOTIFICATION_CHECK_WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            PeriodicWorkRequestBuilder<AiringNotificationWorker>(15, TimeUnit.MINUTES).build()
         )
     }
 
-    fun scheduleFlushPendingUpdates(context: Context) {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
+    override fun scheduleFlushPendingUpdates() {
         val request = OneTimeWorkRequestBuilder<PendingUpdatesWorker>()
-            .setConstraints(constraints)
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .build()
 
-        WorkManager.getInstance(context).enqueueUniqueWork(
-            PENDING_UPDATES_WORK_NAME,
-            // KEEP: if a flush is already waiting for connectivity it will pick up the newly
-            // queued rows too — no need to reset its backoff.
+        // KEEP: a flush already waiting for connectivity will also pick up newly queued rows,
+        // so there is no need to reset its backoff.
+        workManager.enqueueUniqueWork(PENDING_UPDATES_WORK_NAME, ExistingWorkPolicy.KEEP, request)
+    }
+
+    override fun checkAiringNotifications() {
+        workManager.enqueueUniqueWork(
+            NOTIFICATION_NOW_WORK_NAME,
             ExistingWorkPolicy.KEEP,
-            request
+            OneTimeWorkRequestBuilder<AiringNotificationWorker>().build()
         )
+    }
+
+    private companion object {
+        const val SYNC_WORK_NAME = "schedule_sync"
+        const val PENDING_UPDATES_WORK_NAME = "pending_mal_updates"
+        const val CACHE_CLEANUP_WORK_NAME = "cache_cleanup"
+        const val NOTIFICATION_CHECK_WORK_NAME = "airing_notification_worker"
+        const val NOTIFICATION_NOW_WORK_NAME = "airing_notification_now"
     }
 }

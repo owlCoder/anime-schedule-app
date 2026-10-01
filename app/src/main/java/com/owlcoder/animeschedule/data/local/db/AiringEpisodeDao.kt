@@ -17,6 +17,4 @@ interface AiringEpisodeDao {
     @Query("DELETE FROM airing_episodes WHERE airingAtEpochSeconds < :olderThanEpoch")
     suspend fun deleteAiredBefore(olderThanEpoch: Long)
 
-    @Query("SELECT MAX(cachedAtEpochSeconds) FROM airing_episodes WHERE airingAtEpochSeconds >= :from AND airingAtEpochSeconds <= :to")
-    suspend fun getLastCacheTime(from: Long, to: Long): Long?
 }

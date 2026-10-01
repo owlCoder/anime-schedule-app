@@ -1,28 +1,21 @@
 package com.owlcoder.animeschedule.data.local.offline
 
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import com.owlcoder.animeschedule.core.result.AppError
 import com.owlcoder.animeschedule.core.result.AppResult
-import com.owlcoder.animeschedule.core.time.epochSecondsToLocalDate
-import com.owlcoder.animeschedule.core.time.weekRangeUtc
-import com.owlcoder.animeschedule.data.local.db.AiringEpisodeDao
 import com.owlcoder.animeschedule.data.local.db.AnimeDetailDao
 import com.owlcoder.animeschedule.data.local.db.AnimeDetailEntity
 import com.owlcoder.animeschedule.data.local.db.MalListEntryDao
-import com.owlcoder.animeschedule.data.mapper.toDomain
 import com.owlcoder.animeschedule.domain.model.AnimeDetail
 import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
 import com.owlcoder.animeschedule.domain.model.AnimeSeason
-import com.owlcoder.animeschedule.domain.model.ScheduleDay
 import com.owlcoder.animeschedule.domain.model.SearchPage
 import com.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
-import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import com.owlcoder.animeschedule.data.mapper.toDomain
 
 /**
  * Read-only, cache-backed catalog used when all remote providers are unavailable.
@@ -34,7 +27,6 @@ import javax.inject.Singleton
 @Singleton
 class OfflineCatalogDataSource @Inject constructor(
     private val animeDetailDao: AnimeDetailDao,
-    private val airingEpisodeDao: AiringEpisodeDao,
     private val malListEntryDao: MalListEntryDao
 ) {
 
@@ -91,27 +83,6 @@ class OfflineCatalogDataSource @Inject constructor(
             AppResult.Error(AppError.NoCache)
         } else {
             AppResult.Success(rows.map { it.toSeasonalItem() })
-        }
-    }
-
-    /**
-     * Last known airing schedule for the next seven local days. This is a cold Room-backed flow,
-     * so the home screen continues to update if another local process refreshes the database.
-     */
-    fun observeHome(zoneId: ZoneId): Flow<AppResult<List<ScheduleDay>>> {
-        val (from, to) = weekRangeUtc(zoneId)
-        return combine(
-            airingEpisodeDao.getAiringEpisodesInRange(from, to),
-            malListEntryDao.getAll()
-        ) { episodes, malEntries ->
-            val malByMalId = malEntries.associateBy { it.malId }
-            val grouped = episodes
-                .map { episode -> episode.toDomain(episode.malId?.let { malByMalId[it]?.toDomain() }) }
-                .groupBy { episode -> epochSecondsToLocalDate(episode.airingAtEpochSeconds, zoneId) }
-                .entries
-                .sortedBy { it.key }
-                .map { (date, dayEpisodes) -> ScheduleDay(date, dayEpisodes) }
-            AppResult.Success(grouped) as AppResult<List<ScheduleDay>>
         }
     }
 

@@ -4,17 +4,17 @@ import android.content.Context
 import android.util.Log
 import android.webkit.WebView
 import coil3.SingletonImageLoader
-import com.owlcoder.animeschedule.data.local.datastore.CacheRetentionPolicy
+import com.owlcoder.animeschedule.domain.model.CacheRetentionPolicy
 import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
 import com.owlcoder.animeschedule.data.local.db.AiringEpisodeDao
 import com.owlcoder.animeschedule.data.local.db.AnimeDetailDao
 import com.owlcoder.animeschedule.data.local.db.NotificationDao
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.first
 
 @Singleton
 class CacheMaintenance @Inject constructor(
@@ -70,6 +70,11 @@ class CacheMaintenance @Inject constructor(
         }
 
         Log.d(TAG, "Cache maintenance completed (retention=${prefs.cacheRetentionDays}d)")
+    }
+
+    /** Total size of the app's cache directory (image cache, WebView cache, ...). */
+    suspend fun cacheSizeBytes(): Long = withContext(Dispatchers.IO) {
+        context.cacheDir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
     }
 
     private suspend fun clearWebViewCache() = withContext(Dispatchers.Main.immediate) {

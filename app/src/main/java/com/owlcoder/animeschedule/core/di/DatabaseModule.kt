@@ -22,7 +22,10 @@ object DatabaseModule {
     @Provides @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AnimeScheduleDatabase =
         Room.databaseBuilder(context, AnimeScheduleDatabase::class.java, "anime_schedule.db")
-            .fallbackToDestructiveMigration()
+            // Schemas 1-7 shipped without exported migrations, so those installs can only be reset.
+            // From version 8 on a missing migration fails loudly instead of silently wiping the
+            // offline MAL edit queue, notifications and watch sources.
+            .fallbackToDestructiveMigrationFrom(true, 1, 2, 3, 4, 5, 6, 7)
             .build()
 
     @Provides fun provideAiringEpisodeDao(db: AnimeScheduleDatabase): AiringEpisodeDao = db.airingEpisodeDao()

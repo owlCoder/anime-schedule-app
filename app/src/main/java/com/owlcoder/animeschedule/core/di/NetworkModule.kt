@@ -1,11 +1,9 @@
 package com.owlcoder.animeschedule.core.di
 
-import android.content.Context
+import android.util.Log
 import com.apollographql.apollo.ApolloClient
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.owlcoder.animeschedule.BuildConfig
 import com.owlcoder.animeschedule.core.network.AuthInterceptor
-import com.owlcoder.animeschedule.core.network.RateLimitInterceptor
 import com.owlcoder.animeschedule.data.api.alternative.AnimeScheduleApiService
 import com.owlcoder.animeschedule.data.api.alternative.KitsuApiService
 import com.owlcoder.animeschedule.data.api.anilist.buildAniListApolloClient
@@ -17,15 +15,18 @@ import com.owlcoder.animeschedule.data.provider.SystemProviderClock
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
+import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import okhttp3.MediaType.Companion.toMediaType
+
+private const val CALL_TIMEOUT_SECONDS = 30L
 
 private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
@@ -39,21 +40,23 @@ object NetworkModule {
     @Provides @Singleton
     fun provideOkHttpClient(secureTokenStore: SecureTokenStore): OkHttpClient =
         OkHttpClient.Builder()
+            // Bounds the whole exchange (DNS, connect, TLS, body) so a stalled provider can
+            // never hold a request open indefinitely.
+            .callTimeout(CALL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .addInterceptor(AuthInterceptor { secureTokenStore.getMalAccessToken() })
-            .addInterceptor(RateLimitInterceptor())
-            .addInterceptor(HttpLoggingInterceptor { msg ->
-                android.util.Log.d("OkHttp", msg)
-            }.apply {
-                level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
-                else HttpLoggingInterceptor.Level.NONE
-            })
+            .addInterceptor(
+                HttpLoggingInterceptor { msg -> Log.d("OkHttp", msg) }.apply {
+                    // Never log bodies: the OAuth token endpoint returns access/refresh tokens.
+                    level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BASIC
+                    else HttpLoggingInterceptor.Level.NONE
+                    redactHeader("Authorization")
+                }
+            )
             .build()
 
     @Provides @Singleton
-    fun provideApolloClient(
-        @ApplicationContext context: Context,
-        okHttpClient: OkHttpClient
-    ): ApolloClient = buildAniListApolloClient(context, okHttpClient)
+    fun provideApolloClient(okHttpClient: OkHttpClient): ApolloClient =
+        buildAniListApolloClient(okHttpClient)
 
     @Provides @Singleton @Named("mal")
     fun provideMalRetrofit(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()

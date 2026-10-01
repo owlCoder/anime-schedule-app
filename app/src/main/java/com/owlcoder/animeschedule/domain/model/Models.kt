@@ -157,3 +157,21 @@ data class AppNotification(
     val isRead: Boolean,
     val createdAtEpochSeconds: Long
 )
+
+/** State of the MyAnimeList browser sign-in flow. */
+sealed interface LoginState {
+    data object Idle : LoginState
+    data object InProgress : LoginState
+    data class Failed(val reason: LoginFailure) : LoginState
+}
+
+enum class LoginFailure {
+    /** The user declined access on the MyAnimeList consent page. */
+    DENIED,
+
+    /** The redirect did not match the sign-in attempt that was started on this device. */
+    INVALID_SESSION,
+
+    /** MyAnimeList rejected the authorization code or could not be reached. */
+    EXCHANGE_FAILED
+}

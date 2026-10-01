@@ -7,8 +7,7 @@ import kotlinx.serialization.Serializable
 data class MalTokenResponse(
     @SerialName("access_token") val accessToken: String,
     @SerialName("refresh_token") val refreshToken: String,
-    @SerialName("expires_in") val expiresIn: Int,
-    @SerialName("token_type") val tokenType: String
+    @SerialName("expires_in") val expiresIn: Int
 )
 
 @Serializable
@@ -27,7 +26,6 @@ data class MalAnimeNode(
     val id: Int,
     val title: String,
     @SerialName("main_picture") val mainPicture: MalPicture? = null,
-    @SerialName("alternative_titles") val alternativeTitles: MalAlternativeTitles? = null,
     @SerialName("start_date") val startDate: String? = null,
     @SerialName("media_type") val mediaType: String? = null,
     val mean: Double? = null,
@@ -40,12 +38,6 @@ data class MalAnimeNode(
 data class MalPicture(
     val medium: String? = null,
     val large: String? = null
-)
-
-@Serializable
-data class MalAlternativeTitles(
-    val en: String? = null,
-    val ja: String? = null
 )
 
 @Serializable

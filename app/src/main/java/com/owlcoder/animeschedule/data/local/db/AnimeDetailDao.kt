@@ -1,6 +1,8 @@
 package com.owlcoder.animeschedule.data.local.db
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
@@ -13,8 +15,12 @@ interface AnimeDetailDao {
     @Upsert
     suspend fun upsert(entity: AnimeDetailEntity)
 
-    @Query("SELECT cachedAtEpochSeconds FROM anime_details WHERE animeId = :id")
-    suspend fun getCacheTime(id: Int): Long?
+    /**
+     * Caches thin catalog rows from fallback providers without clobbering an existing row,
+     * which may carry studios, characters and relations that these records lack.
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertIfAbsent(entities: List<AnimeDetailEntity>)
 
     @Query("SELECT * FROM anime_details WHERE animeId = :id")
     suspend fun getByIdOnce(id: Int): AnimeDetailEntity?
@@ -63,6 +69,4 @@ interface AnimeDetailDao {
         offset: Int = 0
     ): List<AnimeDetailEntity>
 
-    @Query("SELECT cachedAtEpochSeconds FROM anime_details WHERE malId = :malId LIMIT 1")
-    suspend fun getCacheTimeByMalId(malId: Int): Long?
 }

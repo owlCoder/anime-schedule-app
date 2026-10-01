@@ -6,7 +6,7 @@ sealed class AppResult<out T> {
 }
 
 sealed class AppError {
-    data class Network(val message: String? = null) : AppError()
+    data class Network(val message: String? = null, val statusCode: Int? = null) : AppError()
     data class RateLimit(val retryAfterSeconds: Long = 60) : AppError()
     data class GraphQL(val message: String) : AppError()
     data object Unauthorized : AppError()

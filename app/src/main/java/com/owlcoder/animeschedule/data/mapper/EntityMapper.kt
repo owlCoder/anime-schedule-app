@@ -86,7 +86,7 @@ fun AnimeDetailEntity.toDomain(malListEntry: MalListEntry? = null): AnimeDetail 
                     imageUrl = m["imageUrl"]?.takeIf { u -> u.isNotEmpty() },
                     role = m["role"]?.takeIf { r -> r.isNotEmpty() }
                 )
-            }
+            }.distinctBy { it.id } // ids double as LazyRow keys, so they must be unique
         }.getOrDefault(emptyList())
     } ?: emptyList()
 
@@ -102,7 +102,7 @@ fun AnimeDetailEntity.toDomain(malListEntry: MalListEntry? = null): AnimeDetail 
                     relationType = m["relation"]?.takeIf { r -> r.isNotEmpty() },
                     mediaType = m["type"]?.takeIf { t -> t.isNotEmpty() }
                 )
-            }
+            }.distinctBy { it.animeId } // ids double as LazyRow keys, so they must be unique
         }.getOrDefault(emptyList())
     } ?: emptyList()
 

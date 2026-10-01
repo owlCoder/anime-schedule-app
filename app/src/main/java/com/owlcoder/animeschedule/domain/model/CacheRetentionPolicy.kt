@@ -1,4 +1,4 @@
-package com.owlcoder.animeschedule.data.local.datastore
+package com.owlcoder.animeschedule.domain.model
 
 /** Shared retention rules for temporary local cache data. */
 object CacheRetentionPolicy {
