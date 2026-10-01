@@ -1,26 +1,23 @@
 package com.owlcoder.animeschedule.presentation.components
 
-import android.app.ActivityManager
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.GlassBlur
 import com.owlcoder.animeschedule.ui.theme.GlassTone
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.unit.dp
 
 /**
  * Achromatic Liquid Glass for floating navigation and interactive controls only.
@@ -164,12 +161,4 @@ private fun glassPalette(tone: GlassTone): GlassPalette {
             colors = listOf(Color.White.copy(alpha = 0.025f), Color.Transparent),
         ),
     )
-}
-
-@Composable
-fun rememberGlassCapability(): Boolean {
-    val context = LocalContext.current
-    return remember(context) {
-        context.getSystemService(ActivityManager::class.java)?.isLowRamDevice != true
-    }
 }

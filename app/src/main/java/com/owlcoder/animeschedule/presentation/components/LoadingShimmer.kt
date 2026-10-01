@@ -1,16 +1,25 @@
 package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.SolidColor
+import com.owlcoder.animeschedule.ui.theme.PillShape
+import com.owlcoder.animeschedule.ui.theme.AppDensity
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,20 +28,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
-import com.owlcoder.animeschedule.ui.theme.PillShape
-import com.owlcoder.animeschedule.ui.theme.AppDensity
 
 @Composable
-fun ShimmerBrush(): Brush {
+fun rememberShimmerBrush(): Brush {
     val reduceMotion = rememberReduceMotion()
     val color = MaterialTheme.colorScheme.surfaceVariant
     val highlight = MaterialTheme.colorScheme.surface
@@ -56,7 +56,7 @@ fun ShimmerBrush(): Brush {
 /** Compact loading skeleton that mirrors the shared grouped-material language. */
 @Composable
 fun LoadingShimmer(modifier: Modifier = Modifier) {
-    val brush = ShimmerBrush()
+    val brush = rememberShimmerBrush()
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -133,23 +133,6 @@ fun LoadingShimmer(modifier: Modifier = Modifier) {
                     Box(Modifier.size(32.dp).clip(PillShape).background(brush))
                 }
             }
-        }
-    }
-}
-
-/** A single compact loading row for lists that do not need a full-screen skeleton. */
-@Composable
-fun SkeletonRow(modifier: Modifier = Modifier) {
-    val brush = ShimmerBrush()
-    Row(
-        modifier = modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-    ) {
-        Box(Modifier.size(52.dp).clip(MaterialTheme.shapes.small).background(brush))
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier.fillMaxWidth(0.78f).height(14.dp).clip(MaterialTheme.shapes.extraSmall).background(brush))
-            Box(Modifier.fillMaxWidth(0.42f).height(11.dp).clip(MaterialTheme.shapes.extraSmall).background(brush))
         }
     }
 }

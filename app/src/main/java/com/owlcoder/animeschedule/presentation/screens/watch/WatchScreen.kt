@@ -14,19 +14,12 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,16 +36,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.core.adblock.AdBlockFilter
+import com.owlcoder.animeschedule.domain.model.isWebUrl
 import com.owlcoder.animeschedule.presentation.components.AppLoadingState
 import com.owlcoder.animeschedule.presentation.components.GlassChrome
 import java.io.ByteArrayInputStream
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.ui.unit.dp
 
 /** Fullscreen in-app browser for a watch-source link — no address bar/chrome, mirrors
  * visiting the site directly. Back navigates the WebView's own history before popping.
@@ -101,6 +102,10 @@ fun WatchScreen(
                     WebView(viewContext).apply {
                         settings.javaScriptEnabled = true
                         settings.domStorageEnabled = true
+                        // The pages are third-party sites: they have no business reading local
+                        // files or app content providers.
+                        settings.allowFileAccess = false
+                        settings.allowContentAccess = false
                         settings.javaScriptCanOpenWindowsAutomatically = false
                         settings.setSupportMultipleWindows(false)
                         settings.safeBrowsingEnabled = true
@@ -169,8 +174,10 @@ fun WatchScreen(
                         if (savedBundle != null) {
                             restoreState(savedBundle)
                             isLoading = false
-                        } else {
+                        } else if (isWebUrl(url)) {
                             loadUrl(url)
+                        } else {
+                            isLoading = false
                         }
                         requestFocus(View.FOCUS_DOWN)
                     }.also { webView = it }

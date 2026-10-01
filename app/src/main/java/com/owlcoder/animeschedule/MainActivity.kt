@@ -19,15 +19,13 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -35,13 +33,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.owlcoder.animeschedule.core.locale.LocaleHelper
-import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
+import com.owlcoder.animeschedule.domain.model.AppLanguage
 import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
 import com.owlcoder.animeschedule.presentation.components.AppSystemBarAppearance
 import com.owlcoder.animeschedule.presentation.components.IosMotion
@@ -51,7 +47,6 @@ import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.ToastController
 import com.owlcoder.animeschedule.presentation.components.ToastHost
-import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.navigation.AnimeBottomBar
 import com.owlcoder.animeschedule.presentation.navigation.AnimeNavHost
 import com.owlcoder.animeschedule.presentation.navigation.Screen
@@ -60,12 +55,18 @@ import com.owlcoder.animeschedule.presentation.screens.onboarding.OnboardingScre
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.AnimeScheduleTheme
 import dagger.hilt.android.AndroidEntryPoint
-import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 import javax.inject.Inject
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.owlcoder.animeschedule.presentation.components.iosTween
+import dev.chrisbanes.haze.hazeSource
+import kotlinx.coroutines.flow.first
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -91,25 +92,34 @@ class MainActivity : AppCompatActivity() {
         resources.updateConfiguration(config, resources.displayMetrics)
     }
 
+    // Flipped once the first real frame has been composed, which releases the splash screen.
+    @Volatile
+    private var contentReady = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        intent?.let { handleOAuthIntent(it) }
-
-        val initialPrefs = runBlocking { prefsDataStore.userPreferencesFlow.first() }
+        // The preferences decide theme and language, so nothing real can be drawn before they
+        // load. Holding the splash avoids blocking the main thread on DataStore.
+        splashScreen.setKeepOnScreenCondition { !contentReady }
+        // A recreated Activity gets the same launch intent back; it was already handled once.
+        if (savedInstanceState == null) intent?.let { handleIncomingIntent(it) }
 
         setContent {
-            val prefs by prefsDataStore.userPreferencesFlow.collectAsState(initial = initialPrefs)
-            val isMalConnected by authViewModel.isLoggedIn.collectAsState(initial = initialPrefs.malLoggedIn)
-            val malUsername by authViewModel.username.collectAsState(initial = initialPrefs.malUsername)
+            val loadedPrefs by prefsDataStore.userPreferencesFlow.collectAsStateWithLifecycle(initialValue = null)
+            val prefs = loadedPrefs ?: return@setContent
+            SideEffect { contentReady = true }
+
+            val isMalConnected by authViewModel.isLoggedIn.collectAsStateWithLifecycle(initialValue = prefs.malLoggedIn)
+            val malUsername by authViewModel.username.collectAsStateWithLifecycle(initialValue = prefs.malUsername)
             val scope = rememberCoroutineScope()
 
             var pendingTheme by rememberSaveable { mutableStateOf(prefs.themeMode) }
             var pendingAccent by rememberSaveable { mutableStateOf(prefs.accentColor) }
             var pendingLanguage by rememberSaveable { mutableStateOf(prefs.appLanguage) }
             var pendingNotifEnabled by rememberSaveable { mutableStateOf(true) }
-            var pendingNotifOffset by rememberSaveable { mutableStateOf(0) }
+            var pendingNotifOffset by rememberSaveable { mutableIntStateOf(0) }
 
             val effectiveTheme = if (prefs.onboardingDone) prefs.themeMode else pendingTheme
             val effectiveAccent = if (prefs.onboardingDone) prefs.accentColor else pendingAccent
@@ -150,10 +160,12 @@ class MainActivity : AppCompatActivity() {
                         val navController = rememberNavController()
                         val hazeState = rememberHazeState()
                         val motion = LocalMotionPolicy.current
-                        LaunchedEffect(navController) {
+                        LaunchedEffect(navController, pendingDeepLinkAnimeId) {
                             pendingDeepLinkAnimeId?.let { animeId ->
                                 pendingDeepLinkAnimeId = null
-                                navController.navigate(Screen.Detail.createRoute(animeId))
+                                navController.navigate(Screen.Detail.createRoute(animeId)) {
+                                    launchSingleTop = true
+                                }
                             }
                         }
 
@@ -242,42 +254,42 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        handleOAuthIntent(intent)
+        handleIncomingIntent(intent)
     }
 
     override fun onResume() {
         super.onResume()
-        authViewModel.cancelLoginIfPending()
+        authViewModel.onReturnedFromBrowser()
     }
 
-    var pendingDeepLinkAnimeId: Int? = null
-        private set
+    // Observable so a link delivered to an already-running app (onNewIntent) still navigates.
+    private var pendingDeepLinkAnimeId by mutableStateOf<Int?>(null)
 
-    private fun handleOAuthIntent(intent: Intent) {
+    /** Routes the app's own `com.owlcoder.animeschedule://` links: OAuth redirect and detail. */
+    private fun handleIncomingIntent(intent: Intent) {
         val data = intent.data ?: return
-        when {
-            data.scheme == "com.owlcoder.animeschedule" && data.host == "oauth" -> {
-                val code = data.getQueryParameter("code")
-                val state = data.getQueryParameter("state")
-                if (code == null) authViewModel.handleCallbackError()
-                else authViewModel.handleCallback(code, state)
-            }
-
-            data.scheme == "com.owlcoder.animeschedule" && data.host == "detail" -> {
-                val animeId = data.lastPathSegment?.toIntOrNull() ?: return
-                pendingDeepLinkAnimeId = animeId
-            }
+        if (data.scheme != APP_SCHEME) return
+        when (data.host) {
+            "oauth" -> authViewModel.onOAuthRedirect(
+                code = data.getQueryParameter("code"),
+                state = data.getQueryParameter("state"),
+            )
+            "detail" -> pendingDeepLinkAnimeId = data.lastPathSegment?.toIntOrNull()?.takeIf { it > 0 }
         }
     }
 
+    /** POST_NOTIFICATIONS is a runtime permission only from Android 13; earlier it is implicit. */
     fun requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (
-                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
-                PackageManager.PERMISSION_GRANTED
-            ) {
-                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
+        if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+    }
+
+    private companion object {
+        const val APP_SCHEME = "com.owlcoder.animeschedule"
     }
 }

@@ -1,29 +1,27 @@
 package com.owlcoder.animeschedule.presentation.screens.settings
 
-import android.content.Context
+import android.util.Log
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import com.owlcoder.animeschedule.R
-import com.owlcoder.animeschedule.core.result.AppResult
-import com.owlcoder.animeschedule.data.local.datastore.AccentColor
-import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
-import com.owlcoder.animeschedule.data.local.datastore.CacheRetentionPolicy
-import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
+import com.owlcoder.animeschedule.domain.model.AccentColor
+import com.owlcoder.animeschedule.domain.model.AppLanguage
+import com.owlcoder.animeschedule.domain.model.CacheRetentionPolicy
+import com.owlcoder.animeschedule.domain.model.ThemeMode
 import com.owlcoder.animeschedule.data.work.CacheMaintenance
 import com.owlcoder.animeschedule.domain.repository.AuthRepository
 import com.owlcoder.animeschedule.domain.repository.SettingsRepository
-import com.owlcoder.animeschedule.domain.usecase.GetMalUserListUseCase
+import com.owlcoder.animeschedule.domain.repository.MalRepository
 import javax.inject.Inject
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 private const val AVG_EPISODE_MINUTES = 24
 
@@ -51,9 +49,8 @@ data class SettingsUiState(
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     authRepository: AuthRepository,
-    getMalUserListUseCase: GetMalUserListUseCase,
+    malRepository: MalRepository,
     private val cacheMaintenance: CacheMaintenance,
-    @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
     private val _cacheSizeBytes = MutableStateFlow(0L)
@@ -62,17 +59,19 @@ class SettingsViewModel @Inject constructor(
     private val _isClearingCache = MutableStateFlow(false)
     val isClearingCache: StateFlow<Boolean> = _isClearingCache
 
-    private val _cacheActionMessage = MutableStateFlow<String?>(null)
-    val cacheActionMessage: StateFlow<String?> = _cacheActionMessage
+    private val _cacheActionMessageRes = MutableStateFlow<Int?>(null)
+
+    /** String resource describing the outcome of the last "clear cache" action, if any. */
+    @get:StringRes
+    val cacheActionMessageRes: StateFlow<Int?> = _cacheActionMessageRes
 
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsRepository.userPreferencesFlow,
         authRepository.isLoggedIn,
         authRepository.username,
         authRepository.avatarUrl,
-        getMalUserListUseCase(),
-    ) { preferences, loggedIn, username, avatarUrl, listResult ->
-        val entries = (listResult as? AppResult.Success)?.data ?: emptyList()
+        malRepository.getUserList(),
+    ) { preferences, loggedIn, username, avatarUrl, entries ->
         val episodesWatched = entries.sumOf { it.episodesWatched }
         SettingsUiState(
             timezoneId = preferences.timezoneId,
@@ -129,35 +128,27 @@ class SettingsViewModel @Inject constructor(
         if (_isClearingCache.value) return
         viewModelScope.launch {
             _isClearingCache.value = true
-            _cacheActionMessage.value = null
-            runCatching {
+            _cacheActionMessageRes.value = null
+            _cacheActionMessageRes.value = try {
                 cacheMaintenance.run(clearImageCacheNow = true)
-                refreshCacheSizeAndWait()
-            }.onSuccess {
-                _cacheActionMessage.value = context.getString(R.string.settings_cache_cleared)
-            }.onFailure {
-                _cacheActionMessage.value = context.getString(R.string.settings_cache_clear_failed)
+                _cacheSizeBytes.value = cacheMaintenance.cacheSizeBytes()
+                R.string.settings_cache_cleared
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (e: Exception) {
+                Log.w(TAG, "Clearing the cache failed", e)
+                R.string.settings_cache_clear_failed
+            } finally {
+                _isClearingCache.value = false
             }
-            _isClearingCache.value = false
         }
-    }
-
-    fun clearCacheActionMessage() {
-        _cacheActionMessage.value = null
     }
 
     private fun refreshCacheSize() {
-        viewModelScope.launch {
-            _cacheSizeBytes.value = withContext(Dispatchers.IO) { calculateCacheSize() }
-        }
+        viewModelScope.launch { _cacheSizeBytes.value = cacheMaintenance.cacheSizeBytes() }
     }
 
-    private suspend fun refreshCacheSizeAndWait() {
-        _cacheSizeBytes.value = withContext(Dispatchers.IO) { calculateCacheSize() }
+    private companion object {
+        const val TAG = "SettingsViewModel"
     }
-
-    private fun calculateCacheSize(): Long = context.cacheDir
-        .walkTopDown()
-        .filter { it.isFile }
-        .sumOf { it.length() }
 }

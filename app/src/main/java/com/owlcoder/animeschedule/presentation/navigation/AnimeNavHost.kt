@@ -14,12 +14,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
+import com.owlcoder.animeschedule.domain.model.AppLanguage
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
-import com.owlcoder.animeschedule.presentation.components.iosAccelerate
-import com.owlcoder.animeschedule.presentation.components.iosDecelerate
-import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.navigation.Screen.Detail
 import com.owlcoder.animeschedule.presentation.screens.detail.AnimeDetailScreen
 import com.owlcoder.animeschedule.presentation.screens.mylist.MyListScreen
@@ -28,6 +25,8 @@ import com.owlcoder.animeschedule.presentation.screens.schedule.ScheduleViewMode
 import com.owlcoder.animeschedule.presentation.screens.search.SearchScreen
 import com.owlcoder.animeschedule.presentation.screens.settings.SettingsScreen
 import com.owlcoder.animeschedule.presentation.screens.watch.WatchScreen
+import com.owlcoder.animeschedule.presentation.components.iosAccelerate
+import com.owlcoder.animeschedule.presentation.components.iosDecelerate
 
 @Composable
 fun AnimeNavHost(

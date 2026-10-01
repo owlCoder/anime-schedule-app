@@ -1,58 +1,47 @@
 package com.owlcoder.animeschedule.presentation.screens.schedule
 
-import android.content.Context
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import com.owlcoder.animeschedule.R
-import com.owlcoder.animeschedule.core.result.AppError
 import com.owlcoder.animeschedule.core.result.AppResult
-import com.owlcoder.animeschedule.data.work.AiringNotificationWorker
+import com.owlcoder.animeschedule.core.time.currentDateFlow
 import com.owlcoder.animeschedule.domain.model.AiringEpisode
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
 import com.owlcoder.animeschedule.domain.model.ScheduleDay
 import com.owlcoder.animeschedule.domain.model.WatchStatus
+import com.owlcoder.animeschedule.domain.repository.MalRepository
+import com.owlcoder.animeschedule.domain.repository.NotificationRepository
+import com.owlcoder.animeschedule.domain.repository.ScheduleRepository
 import com.owlcoder.animeschedule.domain.repository.SettingsRepository
-import com.owlcoder.animeschedule.domain.usecase.GetMalUserListUseCase
-import com.owlcoder.animeschedule.domain.usecase.GetTodayScheduleUseCase
-import com.owlcoder.animeschedule.domain.usecase.GetTomorrowScheduleUseCase
-import com.owlcoder.animeschedule.domain.usecase.GetUnreadCountUseCase
-import com.owlcoder.animeschedule.domain.usecase.GetWeekScheduleUseCase
-import com.owlcoder.animeschedule.domain.usecase.IncrementEpisodeUseCase
-import com.owlcoder.animeschedule.domain.usecase.RefreshScheduleUseCase
-import com.owlcoder.animeschedule.domain.usecase.RemoveMalListEntryUseCase
-import com.owlcoder.animeschedule.domain.usecase.UpdateMalListEntryUseCase
+import com.owlcoder.animeschedule.domain.repository.WorkScheduler
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withTimeoutOrNull
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeParseException
 import javax.inject.Inject
-
-private fun String?.toInstantOrNull(): Instant? {
-    if (this.isNullOrBlank()) return null
-    return try {
-        Instant.parse(this)
-    } catch (_: DateTimeParseException) {
-        try {
-            java.time.OffsetDateTime.parse(this).toInstant()
-        } catch (_: DateTimeParseException) {
-            null
-        }
-    }
-}
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import com.owlcoder.animeschedule.domain.model.effectiveZoneId
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 
 data class ScheduleFilter(
     val onlyMyList: Boolean = false,
@@ -73,6 +62,10 @@ sealed interface ScheduleOverlay {
 }
 
 data class ScheduleUiState(
+    /** The zone every date and time on the schedule is shown in. */
+    val zoneId: ZoneId = ZoneId.systemDefault(),
+    /** Today in [zoneId]; rolls over at local midnight while the screen stays open. */
+    val today: LocalDate = LocalDate.now(),
     val todayEpisodes: List<AiringEpisode> = emptyList(),
     val tomorrowEpisodes: List<AiringEpisode> = emptyList(),
     val weekDays: List<ScheduleDay> = emptyList(),
@@ -86,45 +79,49 @@ data class ScheduleUiState(
     val pendingIncrementIds: Set<Int> = emptySet(),
     val unreadNotificationCount: Int = 0,
     val recentlyChangedEntries: List<MalListEntry> = emptyList(),
-)
-
-private fun List<AiringEpisode>.excludeDropped(): List<AiringEpisode> =
-    filter { it.malListEntry?.status != WatchStatus.DROPPED }
-
-private fun List<ScheduleDay>.excludeDroppedFromWeek(): List<ScheduleDay> =
-    map { day -> day.copy(episodes = day.episodes.excludeDropped()) }
-
-private fun List<AiringEpisode>.applyFilter(filter: ScheduleFilter): List<AiringEpisode> {
-    if (!filter.isActive) return this
-    return filter { episode ->
-        (!filter.onlyMyList || episode.malListEntry != null) &&
-            (filter.genres.isEmpty() || episode.genres.any { it in filter.genres }) &&
-            (filter.formats.isEmpty() || episode.format in filter.formats)
+) {
+    /** Episodes airing on [date], in the order the filter left them. */
+    fun episodesForDate(date: LocalDate): List<AiringEpisode> = when (date) {
+        today -> todayEpisodes
+        today.plusDays(1) -> tomorrowEpisodes
+        else -> weekDays.firstOrNull { it.date == date }?.episodes.orEmpty()
     }
 }
 
-private fun List<ScheduleDay>.applyFilterToWeek(filter: ScheduleFilter): List<ScheduleDay> {
-    if (!filter.isActive) return this
-    return map { day -> day.copy(episodes = day.episodes.applyFilter(filter)) }
-}
+/** Everything that depends only on the cached schedule and the user's preferences. */
+private data class ScheduleSnapshot(
+    val zoneId: ZoneId,
+    val today: LocalDate,
+    val days: List<ScheduleDay>,
+    val availableGenres: List<String>,
+    val availableFormats: List<String>,
+    val isLoggedIn: Boolean,
+)
 
+private data class RefreshStatus(
+    val isRefreshing: Boolean = true,
+    val hasLoadedOnce: Boolean = false,
+    val failed: Boolean = false,
+)
+
+private data class Auxiliary(
+    val pendingIncrementIds: Set<Int>,
+    val unreadNotificationCount: Int,
+    val recentlyChanged: List<MalListEntry>,
+    val refresh: RefreshStatus,
+)
+
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ScheduleViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val getTodayScheduleUseCase: GetTodayScheduleUseCase,
-    private val getTomorrowScheduleUseCase: GetTomorrowScheduleUseCase,
-    private val getWeekScheduleUseCase: GetWeekScheduleUseCase,
-    private val refreshScheduleUseCase: RefreshScheduleUseCase,
-    private val incrementEpisodeUseCase: IncrementEpisodeUseCase,
-    private val updateMalListEntryUseCase: UpdateMalListEntryUseCase,
-    private val removeMalListEntryUseCase: RemoveMalListEntryUseCase,
-    private val getUnreadCountUseCase: GetUnreadCountUseCase,
-    private val getMalUserListUseCase: GetMalUserListUseCase,
+    private val scheduleRepository: ScheduleRepository,
     private val settingsRepository: SettingsRepository,
+    private val malRepository: MalRepository,
+    notificationRepository: NotificationRepository,
+    private val workScheduler: WorkScheduler,
 ) : ViewModel() {
 
-    private val _isLoading = MutableStateFlow(true)
-    private val _hasLoadedOnce = MutableStateFlow(false)
+    private val _refreshStatus = MutableStateFlow(RefreshStatus())
     private val _filter = MutableStateFlow(ScheduleFilter())
     private val _pendingIncrementIds = MutableStateFlow<Set<Int>>(emptySet())
     private val _openOverlay = MutableStateFlow<ScheduleOverlay>(ScheduleOverlay.None)
@@ -140,58 +137,59 @@ class ScheduleViewModel @Inject constructor(
     private val _incrementEvent = Channel<IncrementEvent>(Channel.BUFFERED)
     val incrementEvent = _incrementEvent.receiveAsFlow()
 
-    val uiState: StateFlow<ScheduleUiState> = settingsRepository.userPreferencesFlow
-        .flatMapLatest { preferences ->
-            val zoneId = settingsRepository.getEffectiveZoneId(preferences)
-            combine(
-                getTodayScheduleUseCase(zoneId),
-                getTomorrowScheduleUseCase(zoneId),
-                getWeekScheduleUseCase(zoneId),
-                _isLoading,
-            ) { today, tomorrow, week, loading ->
-                val todayList = ((today as? AppResult.Success)?.data ?: emptyList()).excludeDropped()
-                val tomorrowList = ((tomorrow as? AppResult.Success)?.data ?: emptyList()).excludeDropped()
-                val weekList = ((week as? AppResult.Success)?.data ?: emptyList()).excludeDroppedFromWeek()
-                val allEpisodes = todayList + tomorrowList + weekList.flatMap { it.episodes }
-                val genres = allEpisodes.flatMap { it.genres }.distinct().sorted()
-                val formats = allEpisodes.mapNotNull { it.format }.distinct().sorted()
-                ScheduleUiState(
-                    todayEpisodes = todayList,
-                    tomorrowEpisodes = tomorrowList,
-                    weekDays = weekList,
-                    isLoading = loading,
-                    errorRes = if (today is AppResult.Error) R.string.error_load_schedule else null,
-                    isLoggedIn = preferences.malLoggedIn,
-                    availableGenres = genres,
-                    availableFormats = formats,
-                )
+    private var refreshJob: Job? = null
+
+    private val snapshot: Flow<ScheduleSnapshot> = settingsRepository.userPreferencesFlow
+        .map { it.effectiveZoneId to it.malLoggedIn }
+        .distinctUntilChanged()
+        .flatMapLatest { (zoneId, isLoggedIn) ->
+            currentDateFlow(zoneId).flatMapLatest { today ->
+                scheduleRepository.getWeekSchedule(zoneId, today).map { days ->
+                    buildSnapshot(zoneId, today, days, isLoggedIn)
+                }
             }
-                .combine(_filter) { state, filter ->
-                    state.copy(
-                        filter = filter,
-                        todayEpisodes = state.todayEpisodes.applyFilter(filter),
-                        tomorrowEpisodes = state.tomorrowEpisodes.applyFilter(filter),
-                        weekDays = state.weekDays.applyFilterToWeek(filter),
-                    )
-                }
-                .combine(_pendingIncrementIds) { state, pending ->
-                    state.copy(pendingIncrementIds = pending)
-                }
-                .combine(getUnreadCountUseCase()) { state, unread ->
-                    state.copy(unreadNotificationCount = unread)
-                }
-                .combine(getMalUserListUseCase()) { state, listResult ->
-                    val entries = (listResult as? AppResult.Success)?.data ?: emptyList()
-                    val recentlyChanged = entries
-                        .sortedByDescending { it.updatedAt.toInstantOrNull() ?: Instant.EPOCH }
-                        .take(15)
-                    state.copy(recentlyChangedEntries = recentlyChanged)
-                }
-                .combine(_hasLoadedOnce) { state, loadedOnce ->
-                    state.copy(isInitialLoad = state.isLoading && !loadedOnce)
-                }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ScheduleUiState())
+
+    private val recentlyChanged: Flow<List<MalListEntry>> = malRepository.getUserList()
+        .map { entries ->
+            // Parse each timestamp once; sorting by a computed key would re-parse per comparison.
+            entries.map { it to (it.updatedAt.toInstantOrNull() ?: Instant.EPOCH) }
+                .sortedByDescending { (_, updatedAt) -> updatedAt }
+                .take(RECENTLY_CHANGED_COUNT)
+                .map { (entry, _) -> entry }
+        }
+        .flowOn(Dispatchers.Default)
+
+    private val auxiliary: Flow<Auxiliary> = combine(
+        _pendingIncrementIds,
+        notificationRepository.getUnreadCount(),
+        recentlyChanged,
+        _refreshStatus,
+    ) { pending, unread, recent, refresh -> Auxiliary(pending, unread, recent, refresh) }
+
+    val uiState: StateFlow<ScheduleUiState> = combine(snapshot, _filter, auxiliary) { snapshot, filter, aux ->
+        val byDate = snapshot.days.associateBy { it.date }
+        ScheduleUiState(
+            zoneId = snapshot.zoneId,
+            today = snapshot.today,
+            todayEpisodes = byDate[snapshot.today]?.episodes.orEmpty().applyFilter(filter),
+            tomorrowEpisodes = byDate[snapshot.today.plusDays(1)]?.episodes.orEmpty().applyFilter(filter),
+            weekDays = snapshot.days.map { day -> day.copy(episodes = day.episodes.applyFilter(filter)) },
+            isLoading = aux.refresh.isRefreshing,
+            isInitialLoad = aux.refresh.isRefreshing && !aux.refresh.hasLoadedOnce,
+            // A failed refresh only matters when there is nothing cached to show instead.
+            errorRes = R.string.error_load_schedule.takeIf {
+                aux.refresh.failed && snapshot.days.isEmpty()
+            },
+            isLoggedIn = snapshot.isLoggedIn,
+            filter = filter,
+            availableGenres = snapshot.availableGenres,
+            availableFormats = snapshot.availableFormats,
+            pendingIncrementIds = aux.pendingIncrementIds,
+            unreadNotificationCount = aux.unreadNotificationCount,
+            recentlyChangedEntries = aux.recentlyChanged,
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ScheduleUiState())
 
     init {
         refresh()
@@ -200,13 +198,11 @@ class ScheduleViewModel @Inject constructor(
     fun setOnlyMyList(enabled: Boolean) = _filter.update { it.copy(onlyMyList = enabled) }
 
     fun toggleGenre(genre: String) = _filter.update { filter ->
-        val genres = if (genre in filter.genres) filter.genres - genre else filter.genres + genre
-        filter.copy(genres = genres)
+        filter.copy(genres = filter.genres.toggled(genre))
     }
 
     fun toggleFormat(format: String) = _filter.update { filter ->
-        val formats = if (format in filter.formats) filter.formats - format else filter.formats + format
-        filter.copy(formats = formats)
+        filter.copy(formats = filter.formats.toggled(format))
     }
 
     fun clearFilter() = _filter.update { ScheduleFilter() }
@@ -215,24 +211,21 @@ class ScheduleViewModel @Inject constructor(
         _openOverlay.value = overlay
     }
 
+    /** Pulls a fresh schedule. A refresh already in flight is reused instead of duplicated. */
     fun refresh() {
-        viewModelScope.launch {
-            _isLoading.value = true
+        if (refreshJob?.isActive == true) return
+        refreshJob = viewModelScope.launch {
+            _refreshStatus.update { it.copy(isRefreshing = true) }
+            var failed = true
             try {
-                val preferences = settingsRepository.userPreferencesFlow.stateIn(viewModelScope).value
-                val zoneId = settingsRepository.getEffectiveZoneId(preferences)
-                withTimeoutOrNull(SCHEDULE_REFRESH_TIMEOUT_MS) {
-                    refreshScheduleUseCase(zoneId)
+                val zoneId = settingsRepository.userPreferencesFlow.first().effectiveZoneId
+                val result = withTimeoutOrNull(SCHEDULE_REFRESH_TIMEOUT_MS) {
+                    scheduleRepository.refreshSchedule(zoneId)
                 }
-                combine(
-                    getTodayScheduleUseCase(zoneId),
-                    getTomorrowScheduleUseCase(zoneId),
-                    getWeekScheduleUseCase(zoneId),
-                ) { today, tomorrow, week -> Triple(today, tomorrow, week) }.first()
+                failed = result !is AppResult.Success
+                if (!failed) workScheduler.checkAiringNotifications()
             } finally {
-                _isLoading.value = false
-                _hasLoadedOnce.value = true
-                runCatching { AiringNotificationWorker.runNow(context) }
+                _refreshStatus.value = RefreshStatus(isRefreshing = false, hasLoadedOnce = true, failed = failed)
             }
         }
     }
@@ -242,7 +235,7 @@ class ScheduleViewModel @Inject constructor(
         _pendingIncrementIds.update { it + malId }
         viewModelScope.launch {
             try {
-                val result = incrementEpisodeUseCase(malId)
+                val result = malRepository.incrementEpisode(malId)
                 _incrementEvent.send(
                     if (result is AppResult.Success) IncrementEvent.Success else IncrementEvent.Error,
                 )
@@ -254,7 +247,7 @@ class ScheduleViewModel @Inject constructor(
 
     fun updateEntry(animeId: Int, update: MalListUpdate) {
         viewModelScope.launch {
-            val result = updateMalListEntryUseCase(animeId, update)
+            val result = malRepository.updateListEntry(animeId, update)
             _incrementEvent.send(
                 if (result is AppResult.Success) IncrementEvent.Updated else IncrementEvent.Error,
             )
@@ -263,7 +256,7 @@ class ScheduleViewModel @Inject constructor(
 
     fun removeEntry(animeId: Int) {
         viewModelScope.launch {
-            val result = removeMalListEntryUseCase(animeId)
+            val result = malRepository.removeListEntry(animeId)
             _incrementEvent.send(
                 if (result is AppResult.Success) IncrementEvent.Removed else IncrementEvent.Error,
             )
@@ -272,5 +265,50 @@ class ScheduleViewModel @Inject constructor(
 
     private companion object {
         const val SCHEDULE_REFRESH_TIMEOUT_MS = 12_000L
+        const val RECENTLY_CHANGED_COUNT = 15
+    }
+}
+
+private fun buildSnapshot(
+    zoneId: ZoneId,
+    today: LocalDate,
+    days: List<ScheduleDay>,
+    isLoggedIn: Boolean,
+): ScheduleSnapshot {
+    val visibleDays = days
+        .map { day -> day.copy(episodes = day.episodes.filter { it.malListEntry?.status != WatchStatus.DROPPED }) }
+        .filter { it.episodes.isNotEmpty() }
+    val episodes = visibleDays.flatMap { it.episodes }
+    return ScheduleSnapshot(
+        zoneId = zoneId,
+        today = today,
+        days = visibleDays,
+        availableGenres = episodes.flatMap { it.genres }.distinct().sorted(),
+        availableFormats = episodes.mapNotNull { it.format }.distinct().sorted(),
+        isLoggedIn = isLoggedIn,
+    )
+}
+
+private fun List<AiringEpisode>.applyFilter(filter: ScheduleFilter): List<AiringEpisode> {
+    if (!filter.isActive) return this
+    return filter { episode ->
+        (!filter.onlyMyList || episode.malListEntry != null) &&
+            (filter.genres.isEmpty() || episode.genres.any { it in filter.genres }) &&
+            (filter.formats.isEmpty() || episode.format in filter.formats)
+    }
+}
+
+private fun <T> Set<T>.toggled(item: T): Set<T> = if (item in this) this - item else this + item
+
+private fun String?.toInstantOrNull(): Instant? {
+    if (isNullOrBlank()) return null
+    return try {
+        Instant.parse(this)
+    } catch (_: DateTimeParseException) {
+        try {
+            java.time.OffsetDateTime.parse(this).toInstant()
+        } catch (_: DateTimeParseException) {
+            null
+        }
     }
 }

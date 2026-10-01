@@ -3,27 +3,13 @@ package com.owlcoder.animeschedule.presentation.screens.seasonal
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AcUnit
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Eco
-import androidx.compose.material.icons.filled.LocalFlorist
-import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,13 +27,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeSeason
-import com.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
 import com.owlcoder.animeschedule.presentation.components.AppButton
 import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
@@ -56,9 +39,22 @@ import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
-import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
-import com.owlcoder.animeschedule.presentation.components.iosTween
 import java.util.Locale
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.AcUnit
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Eco
+import androidx.compose.material.icons.filled.LocalFlorist
+import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import com.owlcoder.animeschedule.presentation.components.iosTween
 
 private val FORMAT_LABEL_RES = mapOf(
     "TV" to R.string.format_tv,
@@ -173,50 +169,6 @@ private fun SeasonLabel(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-    }
-}
-
-@Composable
-internal fun SeasonalAnimeCard(
-    item: SeasonalAnimeItem,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val meta = listOfNotNull(
-        localizedFormatLabel(item.format),
-        item.episodes?.let { "$it ep" },
-        (item.averageScore ?: item.meanScore)?.let { "★ ${formatCommunityScore(it)}" },
-    ).joinToString(" · ")
-
-    Column(
-        modifier = modifier
-            .clickable(role = Role.Button, onClick = onClick)
-            .semantics(mergeDescendants = true) { role = Role.Button },
-        verticalArrangement = Arrangement.spacedBy(3.dp),
-    ) {
-        MediaThumbnail.Large(
-            url = item.coverImageUrl,
-            contentDescription = item.title,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(0.68f),
-        )
-        Text(
-            text = item.title,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-        if (meta.isNotEmpty()) {
-            Text(
-                text = meta,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
     }
 }
 
@@ -514,16 +466,4 @@ private fun localizedGenreLabel(genre: String): String = when (genre.lowercase()
     "supernatural" -> stringResource(R.string.genre_supernatural)
     "thriller" -> stringResource(R.string.genre_thriller)
     else -> genre
-}
-
-internal fun prevSeason(season: AnimeSeason, year: Int): Pair<AnimeSeason, Int> {
-    val seasons = AnimeSeason.entries
-    val idx = seasons.indexOf(season)
-    return if (idx == 0) Pair(seasons.last(), year - 1) else Pair(seasons[idx - 1], year)
-}
-
-internal fun nextSeason(season: AnimeSeason, year: Int): Pair<AnimeSeason, Int> {
-    val seasons = AnimeSeason.entries
-    val idx = seasons.indexOf(season)
-    return if (idx == seasons.lastIndex) Pair(seasons.first(), year + 1) else Pair(seasons[idx + 1], year)
 }

@@ -10,26 +10,24 @@ import com.owlcoder.animeschedule.domain.model.AnimeDetail
 import com.owlcoder.animeschedule.domain.model.CharacterDetail
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
 import com.owlcoder.animeschedule.domain.model.WatchSource
+import com.owlcoder.animeschedule.domain.repository.AnimeDetailRepository
 import com.owlcoder.animeschedule.domain.repository.AuthRepository
-import com.owlcoder.animeschedule.domain.usecase.GetAnimeDetailUseCase
-import com.owlcoder.animeschedule.domain.usecase.GetCharacterDetailUseCase
-import com.owlcoder.animeschedule.domain.usecase.GetWatchSourcesUseCase
-import com.owlcoder.animeschedule.domain.usecase.IncrementEpisodeUseCase
-import com.owlcoder.animeschedule.domain.usecase.RemoveMalListEntryUseCase
-import com.owlcoder.animeschedule.domain.usecase.UpdateMalListEntryUseCase
+import com.owlcoder.animeschedule.domain.repository.MalRepository
+import com.owlcoder.animeschedule.domain.repository.WatchSourceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class DetailUiState(
     val detail: AnimeDetail? = null,
@@ -47,16 +45,14 @@ data class CharacterOverlayState(
     val errorRes: Int? = null
 )
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class DetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val getAnimeDetailUseCase: GetAnimeDetailUseCase,
-    getWatchSourcesUseCase: GetWatchSourcesUseCase,
+    private val animeDetailRepository: AnimeDetailRepository,
+    watchSourceRepository: WatchSourceRepository,
     authRepository: AuthRepository,
-    private val getCharacterDetailUseCase: GetCharacterDetailUseCase,
-    private val updateMalListEntryUseCase: UpdateMalListEntryUseCase,
-    private val removeMalListEntryUseCase: RemoveMalListEntryUseCase,
-    private val incrementEpisodeUseCase: IncrementEpisodeUseCase
+    private val malRepository: MalRepository
 ) : ViewModel() {
 
     private val animeId: Int = checkNotNull(savedStateHandle["animeId"])
@@ -76,7 +72,7 @@ class DetailViewModel @Inject constructor(
     private val reloadSignal = MutableStateFlow(0)
 
     val uiState: StateFlow<DetailUiState> = reloadSignal
-        .flatMapLatest { getAnimeDetailUseCase(animeId) }
+        .flatMapLatest { animeDetailRepository.getAnimeDetail(animeId) }
         .map { result ->
             when (result) {
                 is AppResult.Success -> DetailUiState(detail = result.data, isLoading = false)
@@ -84,7 +80,7 @@ class DetailViewModel @Inject constructor(
             }
         }
         .combine(authRepository.isLoggedIn) { state, loggedIn -> state.copy(isLoggedIn = loggedIn) }
-        .combine(getWatchSourcesUseCase()) { state, sources -> state.copy(watchSources = sources) }
+        .combine(watchSourceRepository.getAll()) { state, sources -> state.copy(watchSources = sources) }
         .combine(_isIncrementing) { state, incrementing -> state.copy(isIncrementing = incrementing) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DetailUiState())
 
@@ -95,12 +91,12 @@ class DetailViewModel @Inject constructor(
     /** Mirrors [ScheduleViewModel.incrementEpisode] — "+1" only ever applies to a WATCHING
      *  entry (gated in the UI), so no DROPPED-specific guard is needed here either. */
     fun incrementEpisode() {
-        val malId = uiState.value.detail?.malId ?: uiState.value.detail?.malListEntry?.animeId
+        val malId = currentMalId()
         if (malId == null || _isIncrementing.value) return
         _isIncrementing.value = true
         viewModelScope.launch {
             try {
-                val result = incrementEpisodeUseCase(malId)
+                val result = malRepository.incrementEpisode(malId)
                 _updateEvent.send(
                     if (result is AppResult.Success) UpdateEvent.Incremented else UpdateEvent.Error
                 )
@@ -111,13 +107,13 @@ class DetailViewModel @Inject constructor(
     }
 
     fun updateListEntry(update: MalListUpdate) {
-        val malId = uiState.value.detail?.malId ?: uiState.value.detail?.malListEntry?.animeId
+        val malId = currentMalId()
         viewModelScope.launch {
             if (malId == null) {
                 _updateEvent.send(UpdateEvent.Error)
                 return@launch
             }
-            val result = updateMalListEntryUseCase(malId, update)
+            val result = malRepository.updateListEntry(malId, update)
             _updateEvent.send(
                 if (result is AppResult.Success) UpdateEvent.Success else UpdateEvent.Error
             )
@@ -125,17 +121,23 @@ class DetailViewModel @Inject constructor(
     }
 
     fun removeListEntry() {
-        val malId = uiState.value.detail?.malId ?: uiState.value.detail?.malListEntry?.animeId
+        val malId = currentMalId()
         viewModelScope.launch {
             if (malId == null) {
                 _updateEvent.send(UpdateEvent.Error)
                 return@launch
             }
-            val result = removeMalListEntryUseCase(malId)
+            val result = malRepository.removeListEntry(malId)
             _updateEvent.send(
                 if (result is AppResult.Success) UpdateEvent.Removed else UpdateEvent.Error
             )
         }
+    }
+
+    /** MAL list entries are keyed by MAL id, taken from the detail or the user's own list entry. */
+    private fun currentMalId(): Int? {
+        val detail = uiState.value.detail
+        return detail?.malId ?: detail?.malListEntry?.animeId
     }
 
     private val _characterOverlay = MutableStateFlow(CharacterOverlayState())
@@ -144,7 +146,7 @@ class DetailViewModel @Inject constructor(
     fun openCharacter(characterId: Int) {
         _characterOverlay.value = CharacterOverlayState(isVisible = true, isLoading = true)
         viewModelScope.launch {
-            when (val result = getCharacterDetailUseCase(characterId)) {
+            when (val result = animeDetailRepository.getCharacterDetail(characterId)) {
                 is AppResult.Success -> _characterOverlay.value =
                     CharacterOverlayState(isVisible = true, detail = result.data)
                 is AppResult.Error -> _characterOverlay.value =

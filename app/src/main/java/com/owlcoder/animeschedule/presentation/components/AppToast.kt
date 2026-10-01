@@ -37,7 +37,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
@@ -62,7 +61,6 @@ class ToastController {
         current = ToastData(id = ++counter, message = message.trim(), tone = tone)
     }
 
-    fun info(message: String) = show(message, ToastTone.Info)
     fun success(message: String) = show(message, ToastTone.Success)
     fun error(message: String) = show(message, ToastTone.Error)
 
@@ -77,7 +75,6 @@ val LocalToast = compositionLocalOf { ToastController() }
 @Composable
 fun ToastHost(
     controller: ToastController,
-    @Suppress("UNUSED_PARAMETER") bottomInset: Dp = 0.dp,
     content: @Composable () -> Unit,
 ) {
     val motion = LocalMotionPolicy.current

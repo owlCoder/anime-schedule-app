@@ -2,32 +2,28 @@ package com.owlcoder.animeschedule.presentation.screens.notifications
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.owlcoder.animeschedule.domain.model.AppNotification
+import com.owlcoder.animeschedule.domain.repository.NotificationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import javax.inject.Inject
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import com.owlcoder.animeschedule.domain.model.AppNotification
-import com.owlcoder.animeschedule.domain.usecase.GetNotificationsUseCase
-import com.owlcoder.animeschedule.domain.usecase.MarkAllNotificationsReadUseCase
-import com.owlcoder.animeschedule.domain.usecase.MarkNotificationReadUseCase
-import javax.inject.Inject
 
 @HiltViewModel
 class NotificationsViewModel @Inject constructor(
-    getNotificationsUseCase: GetNotificationsUseCase,
-    private val markReadUseCase: MarkNotificationReadUseCase,
-    private val markAllReadUseCase: MarkAllNotificationsReadUseCase
+    private val notificationRepository: NotificationRepository
 ) : ViewModel() {
 
-    val notifications: StateFlow<List<AppNotification>> = getNotificationsUseCase()
+    val notifications: StateFlow<List<AppNotification>> = notificationRepository.getAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun markRead(id: Int) {
-        viewModelScope.launch { markReadUseCase(id) }
+        viewModelScope.launch { notificationRepository.markRead(id) }
     }
 
     fun markAllRead() {
-        viewModelScope.launch { markAllReadUseCase() }
+        viewModelScope.launch { notificationRepository.markAllRead() }
     }
 }

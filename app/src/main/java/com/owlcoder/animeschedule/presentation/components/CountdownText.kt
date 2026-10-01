@@ -16,7 +16,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.core.time.formatAiringCountdown
 import java.time.Instant
-import java.time.ZoneId
 import kotlinx.coroutines.delay
 
 @Composable
@@ -24,17 +23,16 @@ fun CountdownText(
     airingAtEpochSeconds: Long,
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-    zoneId: ZoneId = ZoneId.systemDefault(),
 ) {
     val airedLabel = stringResource(R.string.schedule_aired_label)
-    var text by remember(airingAtEpochSeconds, zoneId, airedLabel) {
-        mutableStateOf(formatAiringCountdown(airingAtEpochSeconds, zoneId, airedLabel))
+    var text by remember(airingAtEpochSeconds, airedLabel) {
+        mutableStateOf(formatAiringCountdown(airingAtEpochSeconds, airedLabel))
     }
 
-    LaunchedEffect(airingAtEpochSeconds, zoneId, airedLabel) {
+    LaunchedEffect(airingAtEpochSeconds, airedLabel) {
         while (true) {
             val remainingSeconds = airingAtEpochSeconds - Instant.now().epochSecond
-            text = formatAiringCountdown(airingAtEpochSeconds, zoneId, airedLabel)
+            text = formatAiringCountdown(airingAtEpochSeconds, airedLabel)
             if (remainingSeconds <= 0L) break
             delay(countdownRefreshDelayMillis(remainingSeconds))
         }

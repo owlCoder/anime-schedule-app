@@ -3,7 +3,6 @@ package com.owlcoder.animeschedule.presentation.screens.schedule
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -13,7 +12,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,28 +19,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -54,29 +38,26 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AiringEpisode
 import com.owlcoder.animeschedule.domain.model.MalListEntry
-import com.owlcoder.animeschedule.presentation.components.AppInlineHeader
 import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
@@ -93,30 +74,70 @@ import com.owlcoder.animeschedule.presentation.components.LoadingShimmer
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
-import com.owlcoder.animeschedule.presentation.components.displayName
-import com.owlcoder.animeschedule.presentation.components.iosSpring
-import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.screens.notifications.NotificationsOverlay
 import com.owlcoder.animeschedule.presentation.screens.seasonal.SeasonalOverlay
 import java.time.Clock
 import java.time.LocalDate
+import java.time.Instant
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.dp
+import com.owlcoder.animeschedule.presentation.components.displayName
+import com.owlcoder.animeschedule.presentation.components.iosSpring
+import com.owlcoder.animeschedule.presentation.components.iosTween
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleScreen(
     onAnimeClick: (Int) -> Unit,
     onInitialLoadChange: (Boolean) -> Unit = {},
     viewModel: ScheduleViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val openOverlay by viewModel.openOverlay.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    CompositionLocalProvider(LocalScheduleZone provides uiState.zoneId) {
+        ScheduleScreenContent(
+            uiState = uiState,
+            viewModel = viewModel,
+            onAnimeClick = onAnimeClick,
+            onInitialLoadChange = onInitialLoadChange,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ScheduleScreenContent(
+    uiState: ScheduleUiState,
+    viewModel: ScheduleViewModel,
+    onAnimeClick: (Int) -> Unit,
+    onInitialLoadChange: (Boolean) -> Unit,
+) {
+    val openOverlay by viewModel.openOverlay.collectAsStateWithLifecycle()
     val toast = LocalToast.current
     val appLocale = LocalConfiguration.current.locales[0]
-    val today = remember { LocalDate.now() }
-    var selectedEpochDay by rememberSaveable { mutableStateOf(today.toEpochDay()) }
-    val selectedDate = LocalDate.ofEpochDay(selectedEpochDay)
+    val today = uiState.today
+    // null follows "today", so the selection rolls over with midnight instead of sticking to a
+    // date that has become yesterday.
+    var pickedEpochDay by rememberSaveable { mutableStateOf<Long?>(null) }
+    val selectedDate = pickedEpochDay?.let(LocalDate::ofEpochDay)?.takeIf { it >= today } ?: today
     var editingEpisode by remember { mutableStateOf<AiringEpisode?>(null) }
     var lastIncrementedEpisode by remember { mutableStateOf<AiringEpisode?>(null) }
 
@@ -170,7 +191,7 @@ fun ScheduleScreen(
                 else -> TodayHomeContent(
                     uiState = uiState,
                     selectedDate = selectedDate,
-                    onDateSelected = { selectedEpochDay = it.toEpochDay() },
+                    onDateSelected = { pickedEpochDay = it.takeIf { date -> date != today }?.toEpochDay() },
                     scheduleError = scheduleErrorMsg,
                     onRetry = viewModel::refresh,
                     onCardClick = { onAnimeClick(it.animeId) },
@@ -266,55 +287,13 @@ private fun TodayHomeContent(
     onNotifications: () -> Unit,
     onFilter: () -> Unit,
 ) {
-    val today = remember { LocalDate.now() }
+    val today = uiState.today
     val appLocale = LocalConfiguration.current.locales[0]
     val motion = LocalMotionPolicy.current
-    val selectedEpisodes = uiState.episodesForDate(selectedDate).sortedBy { it.airingAtEpochSeconds }
-    val isToday = selectedDate == today
-    val todaySelection = if (isToday) {
-        DashboardScheduleSelector.select(selectedEpisodes, Clock.systemDefaultZone())
-    } else null
-    val featured = todaySelection?.featured ?: selectedEpisodes.firstOrNull()
-    val listEpisodes = todaySelection?.upcoming ?: selectedEpisodes.drop(1).take(5)
-    val hasSchedule = selectedEpisodes.isNotEmpty()
     val notificationDescription = if (uiState.unreadNotificationCount > 0) {
         "${uiState.unreadNotificationCount} ${stringResource(R.string.schedule_notifications_action)}"
     } else {
         stringResource(R.string.schedule_notifications_action)
-    }
-
-    val sectionTitle = if (!isToday) {
-        stringResource(R.string.schedule_section_schedule)
-    } else {
-        when (todaySelection?.mode) {
-            DashboardScheduleMode.UPCOMING -> stringResource(R.string.schedule_section_next_90)
-            DashboardScheduleMode.LATER_TODAY -> stringResource(R.string.schedule_section_later_today)
-            DashboardScheduleMode.EARLIER_TODAY,
-            null -> stringResource(R.string.schedule_section_earlier_today)
-        }
-    }
-    val sectionSubtitle = if (!isToday) {
-        when (selectedEpisodes.size) {
-            0 -> stringResource(R.string.schedule_no_broadcasts)
-            1 -> stringResource(R.string.schedule_one_broadcast)
-            else -> stringResource(R.string.schedule_broadcasts_count, selectedEpisodes.size)
-        }
-    } else {
-        when (todaySelection?.mode) {
-            DashboardScheduleMode.UPCOMING -> {
-                if (listEpisodes.isEmpty()) {
-                    stringResource(R.string.schedule_no_more_soon)
-                } else {
-                    stringResource(R.string.schedule_upcoming_count, listEpisodes.size)
-                }
-            }
-            DashboardScheduleMode.LATER_TODAY -> stringResource(
-                R.string.schedule_remaining_count,
-                listEpisodes.size + if (featured != null) 1 else 0,
-            )
-            DashboardScheduleMode.EARLIER_TODAY,
-            null -> stringResource(R.string.schedule_latest_broadcasts_today)
-        }
     }
 
     LazyColumn(
@@ -373,7 +352,7 @@ private fun TodayHomeContent(
 
         item(key = "dashboard-content") {
             AnimatedContent(
-                targetState = selectedDate.toEpochDay(),
+                targetState = selectedDate,
                 transitionSpec = {
                     val direction = if (targetState >= initialState) 1 else -1
                     val enter = slideInHorizontally(
@@ -387,107 +366,177 @@ private fun TodayHomeContent(
                     enter togetherWith exit
                 },
                 label = "schedule-date-content",
-            ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    if (!hasSchedule) {
-                        EmptyState(
-                            icon = Icons.Default.CalendarMonth,
-                            title = stringResource(R.string.schedule_empty_title),
-                            subtitle = if (isToday) {
-                                stringResource(R.string.schedule_empty_subtitle)
-                            } else {
-                                stringResource(
-                                    R.string.schedule_nothing_date,
-                                    selectedDate.shortDateLabel(appLocale),
-                                )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(150.dp),
-                            actionLabel = stringResource(R.string.schedule_see_all),
-                            onAction = onSeeAll,
-                        )
-                    } else {
-                        featured?.let { episode ->
-                            FeaturedAiring(
-                                episode = episode,
-                                status = if (isToday) {
-                                    featuredStatusLabel(episode)
-                                } else {
-                                    stringResource(R.string.schedule_status_first_broadcast)
-                                },
-                                isLoggedIn = uiState.isLoggedIn,
-                                isIncrementing = episode.malId in uiState.pendingIncrementIds,
-                                onClick = { onCardClick(episode) },
-                                onIncrement = { onIncrementEpisode(episode) },
-                            )
-                        }
-
-                        DashboardSectionHeader(
-                            title = sectionTitle,
-                            subtitle = sectionSubtitle,
-                            onSeeAll = onSeeAll,
-                        )
-
-                        if (listEpisodes.isNotEmpty()) {
-                            UpcomingAiringList(
-                                episodes = listEpisodes,
-                                isLoggedIn = uiState.isLoggedIn,
-                                pendingIncrementIds = uiState.pendingIncrementIds,
-                                onCardClick = onCardClick,
-                                onIncrementEpisode = onIncrementEpisode,
-                                onEditStatus = onEditStatus,
-                            )
-                        } else {
-                            AppMaterialSurface(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable(onClick = onSeeAll),
-                                material = AppMaterial.Grouped,
-                                shape = MaterialTheme.shapes.large,
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 14.dp, vertical = 11.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.schedule_nothing_else),
-                                        modifier = Modifier.weight(1f),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                    Icon(
-                                        Icons.Default.ChevronRight,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(17.dp),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    AnimatedVisibility(
-                        visible = isToday && uiState.recentlyChangedEntries.isNotEmpty(),
-                        enter = fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
-                            expandVertically(animationSpec = motion.iosSpring()),
-                        exit = fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                            shrinkVertically(animationSpec = motion.iosTween(IosMotion.Quick)),
-                    ) {
-                        RecentlyChangedSection(
-                            entries = uiState.recentlyChangedEntries,
-                            onAnimeClick = onRecentAnimeClick,
-                        )
-                    }
-                }
+            ) { date ->
+                ScheduleDayContent(
+                    selectedDate = date,
+                    uiState = uiState,
+                    onCardClick = onCardClick,
+                    onRecentAnimeClick = onRecentAnimeClick,
+                    onIncrementEpisode = onIncrementEpisode,
+                    onEditStatus = onEditStatus,
+                    onSeeAll = onSeeAll,
+                )
             }
         }
     }
+}
+
+/**
+ * One day's schedule pane. Everything shown is derived from [selectedDate], so while the date
+ * changes the outgoing and incoming panes each render their own day.
+ */
+@Composable
+private fun ScheduleDayContent(
+    selectedDate: LocalDate,
+    uiState: ScheduleUiState,
+    onCardClick: (AiringEpisode) -> Unit,
+    onRecentAnimeClick: (Int) -> Unit,
+    onIncrementEpisode: (AiringEpisode) -> Unit,
+    onEditStatus: (AiringEpisode) -> Unit,
+    onSeeAll: () -> Unit,
+) {
+    val today = uiState.today
+    val appLocale = LocalConfiguration.current.locales[0]
+    val motion = LocalMotionPolicy.current
+    val selectedEpisodes = uiState.episodesForDate(selectedDate).sortedBy { it.airingAtEpochSeconds }
+    val isToday = selectedDate == today
+    val todaySelection = if (isToday) {
+        DashboardScheduleSelector.select(selectedEpisodes, Clock.systemUTC())
+    } else null
+    val featured = todaySelection?.featured ?: selectedEpisodes.firstOrNull()
+    val listEpisodes = todaySelection?.upcoming ?: selectedEpisodes.drop(1).take(5)
+    val hasSchedule = selectedEpisodes.isNotEmpty()
+    val sectionTitle = if (!isToday) {
+        stringResource(R.string.schedule_section_schedule)
+    } else {
+        when (todaySelection?.mode) {
+            DashboardScheduleMode.UPCOMING -> stringResource(R.string.schedule_section_next_90)
+            DashboardScheduleMode.LATER_TODAY -> stringResource(R.string.schedule_section_later_today)
+            DashboardScheduleMode.EARLIER_TODAY,
+            null -> stringResource(R.string.schedule_section_earlier_today)
+        }
+    }
+    val sectionSubtitle = if (!isToday) {
+        when (selectedEpisodes.size) {
+            0 -> stringResource(R.string.schedule_no_broadcasts)
+            1 -> stringResource(R.string.schedule_one_broadcast)
+            else -> stringResource(R.string.schedule_broadcasts_count, selectedEpisodes.size)
+        }
+    } else {
+        when (todaySelection?.mode) {
+            DashboardScheduleMode.UPCOMING -> {
+                if (listEpisodes.isEmpty()) {
+                    stringResource(R.string.schedule_no_more_soon)
+                } else {
+                    stringResource(R.string.schedule_upcoming_count, listEpisodes.size)
+                }
+            }
+            DashboardScheduleMode.LATER_TODAY -> stringResource(
+                R.string.schedule_remaining_count,
+                listEpisodes.size + if (featured != null) 1 else 0,
+            )
+            DashboardScheduleMode.EARLIER_TODAY,
+            null -> stringResource(R.string.schedule_latest_broadcasts_today)
+        }
+    }
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            if (!hasSchedule) {
+                EmptyState(
+                    icon = Icons.Default.CalendarMonth,
+                    title = stringResource(R.string.schedule_empty_title),
+                    subtitle = if (isToday) {
+                        stringResource(R.string.schedule_empty_subtitle)
+                    } else {
+                        stringResource(
+                            R.string.schedule_nothing_date,
+                            selectedDate.shortDateLabel(appLocale),
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp),
+                    actionLabel = stringResource(R.string.schedule_see_all),
+                    onAction = onSeeAll,
+                )
+            } else {
+                featured?.let { episode ->
+                    FeaturedAiring(
+                        episode = episode,
+                        status = if (isToday) {
+                            featuredStatusLabel(episode)
+                        } else {
+                            stringResource(R.string.schedule_status_first_broadcast)
+                        },
+                        isLoggedIn = uiState.isLoggedIn,
+                        isIncrementing = episode.malId in uiState.pendingIncrementIds,
+                        onClick = { onCardClick(episode) },
+                        onIncrement = { onIncrementEpisode(episode) },
+                    )
+                }
+
+                DashboardSectionHeader(
+                    title = sectionTitle,
+                    subtitle = sectionSubtitle,
+                    onSeeAll = onSeeAll,
+                )
+
+                if (listEpisodes.isNotEmpty()) {
+                    UpcomingAiringList(
+                        episodes = listEpisodes,
+                        isLoggedIn = uiState.isLoggedIn,
+                        pendingIncrementIds = uiState.pendingIncrementIds,
+                        onCardClick = onCardClick,
+                        onIncrementEpisode = onIncrementEpisode,
+                        onEditStatus = onEditStatus,
+                    )
+                } else {
+                    AppMaterialSurface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onSeeAll),
+                        material = AppMaterial.Grouped,
+                        shape = MaterialTheme.shapes.large,
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 11.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.schedule_nothing_else),
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                modifier = Modifier.size(17.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+
+            AnimatedVisibility(
+                visible = isToday && uiState.recentlyChangedEntries.isNotEmpty(),
+                enter = fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
+                    expandVertically(animationSpec = motion.iosSpring()),
+                exit = fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
+                    shrinkVertically(animationSpec = motion.iosTween(IosMotion.Quick)),
+            ) {
+                RecentlyChangedSection(
+                    entries = uiState.recentlyChangedEntries,
+                    onAnimeClick = onRecentAnimeClick,
+                )
+            }
+        }
 }
 
 @Composable
@@ -1174,64 +1223,6 @@ private fun ScheduleSeeAllSheet(
 }
 
 @Composable
-fun AllTodayScreen(
-    episodes: List<AiringEpisode>,
-    isLoggedIn: Boolean,
-    pendingIncrementIds: Set<Int> = emptySet(),
-    onAnimeClick: (AiringEpisode) -> Unit,
-    onIncrementEpisode: (AiringEpisode) -> Unit = {},
-    onEditStatus: (AiringEpisode) -> Unit = {},
-    onBack: (() -> Unit)? = null,
-) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding(),
-        contentPadding = PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            top = 6.dp,
-            bottom = 28.dp,
-        ),
-    ) {
-        item {
-            if (onBack != null) {
-                AppInlineHeader(
-                    title = stringResource(R.string.schedule_section_today),
-                    onBack = onBack,
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
-            } else {
-                AppLargeHeader(
-                    title = stringResource(R.string.schedule_section_today),
-                    modifier = Modifier.padding(bottom = 8.dp),
-                )
-            }
-        }
-        item(key = "all-today-timeline") {
-            UpcomingAiringList(
-                episodes = episodes.sortedBy { it.airingAtEpochSeconds },
-                isLoggedIn = isLoggedIn,
-                pendingIncrementIds = pendingIncrementIds,
-                onCardClick = onAnimeClick,
-                onIncrementEpisode = onIncrementEpisode,
-                onEditStatus = onEditStatus,
-            )
-        }
-    }
-}
-
-private fun ScheduleUiState.episodesForDate(date: LocalDate): List<AiringEpisode> {
-    val today = LocalDate.now()
-    return when (date) {
-        today -> todayEpisodes
-        today.plusDays(1) -> tomorrowEpisodes
-        else -> weekDays.firstOrNull { it.date == date }?.episodes.orEmpty()
-    }
-}
-
-@Composable
 private fun featuredStatusLabel(episode: AiringEpisode): String {
     val now = System.currentTimeMillis() / 1_000L
     return when {
@@ -1259,9 +1250,17 @@ private fun LocalDate.scheduleHeaderTitle(today: LocalDate, locale: Locale): Str
 private fun LocalDate.shortDateLabel(locale: Locale): String =
     format(DateTimeFormatter.ofPattern("EEE, d MMM", locale))
 
-private fun airingTimeLabel(episode: AiringEpisode): String =
-    java.time.Instant.ofEpochSecond(episode.airingAtEpochSeconds)
-        .atZone(java.time.ZoneId.systemDefault())
-        .toLocalTime()
-        .toString()
-        .take(5)
+/** The zone broadcast times are shown in: the user's override or the device zone. */
+val LocalScheduleZone = staticCompositionLocalOf<ZoneId> { ZoneId.systemDefault() }
+
+@Composable
+private fun airingTimeLabel(episode: AiringEpisode): String {
+    val zoneId = LocalScheduleZone.current
+    return remember(episode.airingAtEpochSeconds, zoneId) {
+        Instant.ofEpochSecond(episode.airingAtEpochSeconds)
+            .atZone(zoneId)
+            .toLocalTime()
+            .toString()
+            .take(5)
+    }
+}

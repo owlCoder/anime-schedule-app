@@ -4,9 +4,9 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.annotation.StringRes
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,33 +14,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ColorLens
-import androidx.compose.material.icons.filled.DeleteSweep
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Translate
-import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -50,16 +29,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -68,18 +44,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.owlcoder.animeschedule.R
-import com.owlcoder.animeschedule.data.local.datastore.AppLanguage
-import com.owlcoder.animeschedule.data.local.datastore.AccentColor
-import com.owlcoder.animeschedule.data.local.datastore.CacheRetentionPolicy
-import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
+import com.owlcoder.animeschedule.domain.model.AppLanguage
+import com.owlcoder.animeschedule.domain.model.AccentColor
+import com.owlcoder.animeschedule.domain.model.CacheRetentionPolicy
+import com.owlcoder.animeschedule.domain.model.LoginFailure
+import com.owlcoder.animeschedule.domain.model.LoginState
+import com.owlcoder.animeschedule.domain.model.ThemeMode
 import com.owlcoder.animeschedule.presentation.components.AppButton
 import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
-import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
@@ -90,6 +66,32 @@ import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import com.owlcoder.animeschedule.ui.theme.accentPrimary
 import java.time.ZoneId
 import java.util.Locale
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ColorLens
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.Update
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 private val SettingsGroupShape = ContinuousRoundedShape(18.dp)
 
@@ -113,12 +115,11 @@ fun SettingsScreen(
     authViewModel: AuthViewModel = hiltViewModel(),
     onRestartForLanguage: (AppLanguage) -> Unit = {},
 ) {
-    val uiState by settingsViewModel.uiState.collectAsState()
-    val isLoggingIn by authViewModel.isLoggingIn.collectAsState()
-    val loginError by authViewModel.loginError.collectAsState()
-    val cacheSizeBytes by settingsViewModel.cacheSizeBytes.collectAsState()
-    val isClearingCache by settingsViewModel.isClearingCache.collectAsState()
-    val cacheActionMessage by settingsViewModel.cacheActionMessage.collectAsState()
+    val uiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+    val loginState by authViewModel.loginState.collectAsStateWithLifecycle()
+    val cacheSizeBytes by settingsViewModel.cacheSizeBytes.collectAsStateWithLifecycle()
+    val isClearingCache by settingsViewModel.isClearingCache.collectAsStateWithLifecycle()
+    val cacheActionMessageRes by settingsViewModel.cacheActionMessageRes.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val navBarHeight = LocalNavBarHeight.current
     var activeSheet by remember { mutableStateOf<SettingsSheet?>(null) }
@@ -177,16 +178,16 @@ fun SettingsScreen(
                             isLoggedIn = uiState.isLoggedIn,
                             username = uiState.username,
                             avatarUrl = uiState.avatarUrl,
-                            isLoggingIn = isLoggingIn,
+                            isLoggingIn = loginState is LoginState.InProgress,
                             onClick = {
                                 if (uiState.isLoggedIn) authViewModel.logout()
                                 else authViewModel.launchMalLogin(context)
                             },
                         )
                     }
-                    if (!loginError.isNullOrBlank()) {
+                    (loginState as? LoginState.Failed)?.let { failed ->
                         Text(
-                            text = loginError.orEmpty(),
+                            text = stringResource(failed.reason.messageRes()),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error,
                             modifier = Modifier.padding(start = 12.dp, top = 6.dp),
@@ -266,8 +267,9 @@ fun SettingsScreen(
                         SettingsRow(
                             icon = Icons.Default.DeleteSweep,
                             title = stringResource(R.string.settings_clear_cache),
-                            value = cacheActionMessage
-                                ?: stringResource(R.string.settings_clear_cache_subtitle),
+                            value = stringResource(
+                                cacheActionMessageRes ?: R.string.settings_clear_cache_subtitle,
+                            ),
                             onClick = { activeSheet = SettingsSheet.ClearCache },
                             iconColor = MaterialTheme.colorScheme.error,
                             titleColor = MaterialTheme.colorScheme.error,
@@ -1053,4 +1055,11 @@ private fun formatBytes(bytes: Long): String {
     val kilobytes = bytes / 1_024.0
     if (kilobytes < 1_024.0) return String.format(Locale.ROOT, "%.1f KB", kilobytes)
     return String.format(Locale.ROOT, "%.1f MB", kilobytes / 1_024.0)
+}
+
+@StringRes
+private fun LoginFailure.messageRes(): Int = when (this) {
+    LoginFailure.DENIED -> R.string.login_error_denied
+    LoginFailure.INVALID_SESSION -> R.string.login_error_invalid_session
+    LoginFailure.EXCHANGE_FAILED -> R.string.login_error_exchange_failed
 }

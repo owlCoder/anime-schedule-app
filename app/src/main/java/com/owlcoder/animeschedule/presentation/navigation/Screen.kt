@@ -5,7 +5,6 @@ sealed class Screen(val route: String) {
     data object Search : Screen("search")
     data object MyList : Screen("mylist")
     data object Settings : Screen("settings")
-    data object WatchSources : Screen("watch_sources")
     data class Detail(val animeId: Int = 0) : Screen("detail/{animeId}") {
         companion object {
             const val ROUTE = "detail/{animeId}"
@@ -24,7 +23,5 @@ sealed class Screen(val route: String) {
 /** True for top-level destinations; full-screen tasks own the whole app shell. */
 fun shouldShowBottomBar(route: String?): Boolean {
     val destination = route?.substringBefore('?') ?: return true
-    return destination != Screen.WatchSources.route &&
-        !destination.startsWith("detail/") &&
-        !destination.startsWith("watch/")
+    return !destination.startsWith("detail/") && !destination.startsWith("watch/")
 }

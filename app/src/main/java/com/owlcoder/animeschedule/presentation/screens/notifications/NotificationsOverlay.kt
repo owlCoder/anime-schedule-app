@@ -2,31 +2,19 @@ package com.owlcoder.animeschedule.presentation.screens.notifications
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DoneAll
-import androidx.compose.material.icons.filled.MarkEmailRead
-import androidx.compose.material.icons.filled.MarkEmailUnread
-import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -42,17 +30,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.owlcoder.animeschedule.R
+import com.owlcoder.animeschedule.presentation.screens.schedule.LocalScheduleZone
 import com.owlcoder.animeschedule.domain.model.AppNotification
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
@@ -61,12 +49,27 @@ import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
-import com.owlcoder.animeschedule.presentation.components.iosSpring
-import com.owlcoder.animeschedule.presentation.components.iosTween
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.MarkEmailRead
+import androidx.compose.material.icons.filled.MarkEmailUnread
+import androidx.compose.material.icons.outlined.NotificationsNone
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.owlcoder.animeschedule.presentation.components.iosSpring
+import com.owlcoder.animeschedule.presentation.components.iosTween
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,10 +83,12 @@ fun NotificationsOverlay(
         notifications.partition { notification -> !notification.isRead }
     }
     var selectedTab by remember { mutableIntStateOf(0) }
-    val screenHeightDp = LocalConfiguration.current.screenHeightDp
-    val maxListHeight = remember(screenHeightDp) { screenHeightDp.dp * 0.38f }
+    val windowHeightPx = LocalWindowInfo.current.containerSize.height
+    val density = LocalDensity.current
+    val maxListHeight = remember(windowHeightPx, density) { with(density) { (windowHeightPx * 0.38f).toDp() } }
     val motion = LocalMotionPolicy.current
     val appLocale = LocalConfiguration.current.locales[0]
+    val zoneId = LocalScheduleZone.current
 
     AppSheet(
         onDismissRequest = onDismiss,
@@ -145,7 +150,7 @@ fun NotificationsOverlay(
                 if (list.isEmpty()) {
                     NotificationEmptyState(tab)
                 } else {
-                    val groupedNotifications = remember(list, appLocale) { groupedByDay(list, appLocale) }
+                    val groupedNotifications = remember(list, appLocale, zoneId) { groupedByDay(list, appLocale, zoneId) }
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(top = 2.dp, bottom = 14.dp),
@@ -334,8 +339,8 @@ private fun NotificationEmptyState(selectedTab: Int) {
 private fun groupedByDay(
     notifications: List<AppNotification>,
     locale: Locale,
+    zone: ZoneId,
 ): List<Pair<String, List<AppNotification>>> {
-    val zone = ZoneId.systemDefault()
     val formatter = DateTimeFormatter.ofPattern("EEEE, d. MMMM", locale)
     return notifications
         .sortedByDescending { it.createdAtEpochSeconds }

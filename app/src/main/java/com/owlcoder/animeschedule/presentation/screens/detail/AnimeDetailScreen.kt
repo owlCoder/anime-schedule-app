@@ -1,13 +1,10 @@
 package com.owlcoder.animeschedule.presentation.screens.detail
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,32 +14,17 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -50,14 +32,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -66,14 +46,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeDetail
+import com.owlcoder.animeschedule.domain.model.isWebUrl
 import com.owlcoder.animeschedule.domain.model.Character
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.RelatedAnime
@@ -97,12 +76,34 @@ import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
-import com.owlcoder.animeschedule.presentation.components.displayName
-import com.owlcoder.animeschedule.presentation.components.iosSpring
-import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.PillShape
 import java.util.Locale
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
+import com.owlcoder.animeschedule.presentation.components.displayName
+import com.owlcoder.animeschedule.presentation.components.iosSpring
+import com.owlcoder.animeschedule.presentation.components.iosTween
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -113,8 +114,8 @@ fun AnimeDetailScreen(
     viewModel: DetailViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val characterOverlay by viewModel.characterOverlay.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val characterOverlay by viewModel.characterOverlay.collectAsStateWithLifecycle()
     var showStatusSheet by remember { mutableStateOf(false) }
     var finaleOverrideEntry by remember { mutableStateOf<MalListEntry?>(null) }
     val context = LocalContext.current
@@ -269,7 +270,7 @@ fun AnimeDetailScreen(
                                             onAnimeClick(related.animeId)
                                         } else {
                                             val path = related.mediaType.lowercase()
-                                            val uri = android.net.Uri.parse("https://anilist.co/$path/${related.animeId}")
+                                            val uri = "https://anilist.co/$path/${related.animeId}".toUri()
                                             androidx.browser.customtabs.CustomTabsIntent.Builder()
                                                 .build()
                                                 .launchUrl(context, uri)
@@ -284,10 +285,10 @@ fun AnimeDetailScreen(
         }
     }
 
-    if (showStatusSheet && uiState.detail != null) {
+    uiState.detail?.takeIf { showStatusSheet }?.let { detail ->
         ListStatusBottomSheet(
-            animeId = uiState.detail!!.animeId,
-            currentEntry = finaleOverrideEntry ?: uiState.detail!!.malListEntry,
+            animeId = detail.animeId,
+            currentEntry = finaleOverrideEntry ?: detail.malListEntry,
             onDismiss = {
                 showStatusSheet = false
                 finaleOverrideEntry = null
@@ -531,6 +532,8 @@ private fun WatchSourcesSection(
     context: android.content.Context,
     onWatchSourceClick: (String) -> Unit,
 ) {
+    val toast = LocalToast.current
+    val openFailedMessage = stringResource(R.string.watch_open_failed)
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -543,14 +546,21 @@ private fun WatchSourcesSection(
             sources.forEach { source ->
                 WatchSourceChip(source) {
                     val url = source.buildUrl(animeTitle)
-                    if (source.openExternally) {
-                        context.startActivity(
-                            android.content.Intent(
-                                android.content.Intent.ACTION_VIEW,
-                                android.net.Uri.parse(url),
-                            ),
-                        )
-                    } else onWatchSourceClick(url)
+                    when {
+                        // Sources saved before templates were validated may hold any scheme.
+                        !isWebUrl(url) -> toast.error(openFailedMessage)
+                        source.openExternally -> try {
+                            context.startActivity(
+                                android.content.Intent(
+                                    android.content.Intent.ACTION_VIEW,
+                                    url.toUri(),
+                                ),
+                            )
+                        } catch (_: android.content.ActivityNotFoundException) {
+                            toast.error(openFailedMessage)
+                        }
+                        else -> onWatchSourceClick(url)
+                    }
                 }
             }
         }

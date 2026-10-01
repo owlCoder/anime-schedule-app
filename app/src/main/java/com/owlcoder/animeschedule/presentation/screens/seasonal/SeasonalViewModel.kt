@@ -6,16 +6,16 @@ import com.owlcoder.animeschedule.core.result.AppResult
 import com.owlcoder.animeschedule.domain.model.AnimeSeason
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.SeasonalAnimeItem
-import com.owlcoder.animeschedule.domain.usecase.GetMalUserListUseCase
-import com.owlcoder.animeschedule.domain.usecase.GetSeasonalAnimeUseCase
+import com.owlcoder.animeschedule.domain.repository.MalRepository
+import com.owlcoder.animeschedule.domain.repository.SeasonalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
 import java.time.Month
 import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -68,18 +68,20 @@ private fun List<SeasonalAnimeItem>.applyFilter(filter: SeasonalFilter): List<Se
         SeasonalSortOrder.SCORE -> result.sortedByDescending {
             it.averageScore ?: it.meanScore ?: 0
         }
-        SeasonalSortOrder.TITLE -> result.sortedBy { it.title }
+        SeasonalSortOrder.TITLE -> result.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
     }
 }
 
 @HiltViewModel
 class SeasonalViewModel @Inject constructor(
-    private val getSeasonalAnimeUseCase: GetSeasonalAnimeUseCase,
-    private val getMalUserListUseCase: GetMalUserListUseCase,
+    private val seasonalRepository: SeasonalRepository,
+    private val malRepository: MalRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SeasonalUiState())
     val uiState: StateFlow<SeasonalUiState> = _uiState.asStateFlow()
+
+    private var loadJob: Job? = null
 
     init {
         observeMalList()
@@ -97,8 +99,10 @@ class SeasonalViewModel @Inject constructor(
                 errorRes = null,
             )
         }
-        viewModelScope.launch {
-            when (val result = getSeasonalAnimeUseCase(targetSeason, targetYear)) {
+        // Switching seasons quickly must not let a slow earlier response overwrite a later one.
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            when (val result = seasonalRepository.getSeasonalAnime(targetSeason, targetYear)) {
                 is AppResult.Success -> {
                     val items = result.data
                     val genres = items.flatMap { it.genres }.distinct().sorted()
@@ -152,11 +156,9 @@ class SeasonalViewModel @Inject constructor(
 
     private fun observeMalList() {
         viewModelScope.launch {
-            getMalUserListUseCase().collectLatest { result ->
-                if (result is AppResult.Success) {
-                    val entriesById = result.data.associateBy { it.animeId }
-                    _uiState.update { it.copy(malEntriesById = entriesById) }
-                }
+            malRepository.getUserList().collect { entries ->
+                val entriesById = entries.associateBy { it.animeId }
+                _uiState.update { it.copy(malEntriesById = entriesById) }
             }
         }
     }

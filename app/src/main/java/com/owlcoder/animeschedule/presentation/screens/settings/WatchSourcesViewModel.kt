@@ -5,29 +5,23 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import com.owlcoder.animeschedule.domain.model.WatchSource
+import com.owlcoder.animeschedule.domain.repository.WatchSourceRepository
+import javax.inject.Inject
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import com.owlcoder.animeschedule.domain.model.WatchSource
-import com.owlcoder.animeschedule.domain.usecase.AddWatchSourceUseCase
-import com.owlcoder.animeschedule.domain.usecase.DeleteWatchSourceUseCase
-import com.owlcoder.animeschedule.domain.usecase.GetWatchSourcesUseCase
-import com.owlcoder.animeschedule.domain.usecase.UpdateWatchSourceUseCase
-import javax.inject.Inject
 
 @HiltViewModel
 class WatchSourcesViewModel @Inject constructor(
-    getWatchSourcesUseCase: GetWatchSourcesUseCase,
-    private val addWatchSourceUseCase: AddWatchSourceUseCase,
-    private val deleteWatchSourceUseCase: DeleteWatchSourceUseCase,
-    private val updateWatchSourceUseCase: UpdateWatchSourceUseCase,
+    private val repository: WatchSourceRepository,
 ) : ViewModel() {
 
-    val sources: StateFlow<List<WatchSource>> = getWatchSourcesUseCase()
+    val sources: StateFlow<List<WatchSource>> = repository.getAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun addSource(name: String, urlTemplate: String, openExternally: Boolean) {
         viewModelScope.launch {
-            addWatchSourceUseCase(
+            repository.add(
                 name,
                 urlTemplate,
                 faviconUrl(urlTemplate),
@@ -43,7 +37,7 @@ class WatchSourcesViewModel @Inject constructor(
         openExternally: Boolean,
     ) {
         viewModelScope.launch {
-            updateWatchSourceUseCase(
+            repository.update(
                 source.copy(
                     name = name,
                     urlTemplate = urlTemplate,
@@ -56,12 +50,12 @@ class WatchSourcesViewModel @Inject constructor(
 
     fun setOpenExternally(source: WatchSource, openExternally: Boolean) {
         viewModelScope.launch {
-            updateWatchSourceUseCase(source.copy(openExternally = openExternally))
+            repository.update(source.copy(openExternally = openExternally))
         }
     }
 
     fun deleteSource(source: WatchSource) {
-        viewModelScope.launch { deleteWatchSourceUseCase(source) }
+        viewModelScope.launch { repository.delete(source) }
     }
 
     private fun faviconUrl(urlTemplate: String): String? {

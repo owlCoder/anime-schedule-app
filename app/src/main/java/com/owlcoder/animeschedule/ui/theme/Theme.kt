@@ -3,7 +3,6 @@ package com.owlcoder.animeschedule.ui.theme
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
-import android.os.Build
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -14,13 +13,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
-import com.owlcoder.animeschedule.data.local.datastore.AccentColor
-import com.owlcoder.animeschedule.data.local.datastore.ThemeMode
+import com.owlcoder.animeschedule.domain.model.AccentColor
+import com.owlcoder.animeschedule.domain.model.ThemeMode
 import com.owlcoder.animeschedule.presentation.components.ProvideMotionPolicy
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.dp
 
 /** Compact content shapes; large curvature is reserved for sheets and floating chrome. */
 val AnimeScheduleShapes = Shapes().copy(
@@ -146,15 +145,16 @@ fun AnimeScheduleTheme(
     SideEffect {
         val activity = view.context.findActivity() ?: return@SideEffect
         val window = activity.window
+        // Only API 31-34 still honor these (35+ enforces edge-to-edge), so they remain necessary.
+        @Suppress("DEPRECATION")
         window.statusBarColor = Color.Transparent.toArgb()
+        @Suppress("DEPRECATION")
         window.navigationBarColor = Color.Transparent.toArgb()
         WindowCompat.getInsetsController(window, view).apply {
             isAppearanceLightStatusBars = !darkTheme
             isAppearanceLightNavigationBars = !darkTheme
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            window.isNavigationBarContrastEnforced = false
-        }
+        window.isNavigationBarContrastEnforced = false
     }
 
     MaterialTheme(

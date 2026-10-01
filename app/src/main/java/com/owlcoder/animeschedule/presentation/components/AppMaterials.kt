@@ -1,25 +1,22 @@
 package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.ui.theme.AppDarkElevated
 import com.owlcoder.animeschedule.ui.theme.AppDarkGrouped
 import com.owlcoder.animeschedule.ui.theme.AppDarkSecondary
 import com.owlcoder.animeschedule.ui.theme.AppLightElevated
 import com.owlcoder.animeschedule.ui.theme.AppLightGrouped
 import com.owlcoder.animeschedule.ui.theme.AppLightSecondary
-import com.owlcoder.animeschedule.ui.theme.GlassBlur
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.unit.dp
 
 enum class AppMaterial { Background, Grouped, Elevated, Interactive }
 
@@ -68,30 +65,5 @@ fun AppMaterialSurface(
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
         content = content,
-    )
-}
-
-/**
- * Compatibility host for call sites that conceptually sit over a material backdrop.
- *
- * No real-time blur is applied. [blur] is intentionally retained as a source-compatible depth
- * hint while the app uses stable tonal surfaces instead of an expensive simulated backdrop blur.
- */
-@Suppress("UNUSED_PARAMETER")
-@Composable
-fun MaterialBackdropHost(
-    modifier: Modifier = Modifier,
-    blur: GlassBlur = GlassBlur.None,
-    content: @Composable () -> Unit,
-) {
-    Box(modifier = modifier) { content() }
-}
-
-@Composable
-fun AppScrim(modifier: Modifier = Modifier, alpha: Float = 0.24f) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = alpha)),
     )
 }

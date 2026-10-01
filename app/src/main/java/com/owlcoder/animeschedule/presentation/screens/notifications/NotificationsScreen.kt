@@ -1,22 +1,22 @@
 package com.owlcoder.animeschedule.presentation.screens.notifications
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
+import com.owlcoder.animeschedule.presentation.screens.schedule.LocalScheduleZone
 import com.owlcoder.animeschedule.domain.model.AppNotification
 import com.owlcoder.animeschedule.presentation.components.InsetListRow
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
 import java.time.Instant
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 
 /** Compact grouped-list row; the parent owns the inset surface and date grouping. */
 @Composable
@@ -62,7 +62,7 @@ private fun relativeTime(epochSeconds: Long): String {
         minutesAgo < 1440 -> stringResource(R.string.notif_time_hours, minutesAgo / 60)
         else -> {
             val formatter = DateTimeFormatter.ofPattern("d.M.yyyy")
-            time.atZone(ZoneId.systemDefault()).format(formatter)
+            time.atZone(LocalScheduleZone.current).format(formatter)
         }
     }
 }

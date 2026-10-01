@@ -21,15 +21,10 @@ object GlassTokens {
     val neutralFillDark = Color(0xFF2C2C2E).copy(alpha = 0.70f)
     val selectedFillLight = Color.White.copy(alpha = 0.90f)
     val selectedFillDark = Color(0xFF3A3A3C).copy(alpha = 0.78f)
-    val interactiveFillLight = Color.White.copy(alpha = 0.82f)
-    val interactiveFillDark = Color(0xFF2C2C2E).copy(alpha = 0.72f)
-
-    val maxBackdropBlurRadius: Dp = 20.dp
 
     val chromeRadius: Dp = 24.dp
     val sheetRadius: Dp = 24.dp
     val contentRadius: Dp = 16.dp
     val groupRadius: Dp = 14.dp
     val controlRadius: Dp = 12.dp
-    val posterRadius: Dp = 10.dp
 }

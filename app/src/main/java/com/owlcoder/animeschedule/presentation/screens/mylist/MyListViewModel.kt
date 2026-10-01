@@ -7,23 +7,20 @@ import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
 import com.owlcoder.animeschedule.domain.model.WatchStatus
 import com.owlcoder.animeschedule.domain.repository.AuthRepository
-import com.owlcoder.animeschedule.domain.usecase.GetMalUserListUseCase
-import com.owlcoder.animeschedule.domain.usecase.IncrementEpisodeUseCase
-import com.owlcoder.animeschedule.domain.usecase.RefreshMalListUseCase
-import com.owlcoder.animeschedule.domain.usecase.RemoveMalListEntryUseCase
-import com.owlcoder.animeschedule.domain.usecase.UpdateMalListEntryUseCase
+import com.owlcoder.animeschedule.domain.repository.MalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class MyListUiState(
@@ -46,11 +43,7 @@ private data class MyListContent(
 
 @HiltViewModel
 class MyListViewModel @Inject constructor(
-    getMalUserListUseCase: GetMalUserListUseCase,
-    private val updateMalListEntryUseCase: UpdateMalListEntryUseCase,
-    private val removeMalListEntryUseCase: RemoveMalListEntryUseCase,
-    private val incrementEpisodeUseCase: IncrementEpisodeUseCase,
-    private val refreshMalListUseCase: RefreshMalListUseCase,
+    private val malRepository: MalRepository,
     authRepository: AuthRepository,
 ) : ViewModel() {
 
@@ -58,6 +51,7 @@ class MyListViewModel @Inject constructor(
     private val _activeFilter = MutableStateFlow(WatchStatus.WATCHING)
     private val _isLoading = MutableStateFlow(true)
     private val _pendingIncrementIds = MutableStateFlow<Set<Int>>(emptySet())
+    private var syncJob: Job? = null
 
     sealed interface UpdateEvent {
         data object Success : UpdateEvent
@@ -69,11 +63,10 @@ class MyListViewModel @Inject constructor(
     val updateEvent = _updateEvent.receiveAsFlow()
 
     private val listContent = combine(
-        getMalUserListUseCase(),
+        malRepository.getUserList(),
         _searchQuery,
         _activeFilter,
-    ) { result, query, filter ->
-        val allEntries = (result as? AppResult.Success)?.data.orEmpty()
+    ) { allEntries, query, filter ->
         val filteredEntries = allEntries.filter { entry ->
             entry.status == filter &&
                 (query.isEmpty() || entry.title.contains(query, ignoreCase = true))
@@ -117,26 +110,27 @@ class MyListViewModel @Inject constructor(
 
     fun setFilter(status: WatchStatus) = _activeFilter.update { status }
 
-    fun refresh() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            val synced = runCatching { refreshMalListUseCase(force = true) }.getOrDefault(false)
-            _isLoading.value = false
-            if (!synced) _updateEvent.send(UpdateEvent.Error)
-        }
-    }
+    /** Forced refresh (pull-to-refresh). Joins a sync that is already running. */
+    fun refresh() = sync(force = true)
 
-    private fun refreshIfStale() {
-        viewModelScope.launch {
+    private fun refreshIfStale() = sync(force = false)
+
+    private fun sync(force: Boolean) {
+        if (syncJob?.isActive == true) return
+        syncJob = viewModelScope.launch {
             _isLoading.value = true
-            runCatching { refreshMalListUseCase(force = false) }
-            _isLoading.value = false
+            try {
+                val synced = malRepository.refreshUserList(force)
+                if (force && !synced) _updateEvent.send(UpdateEvent.Error)
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 
     fun updateEntry(animeId: Int, update: MalListUpdate) {
         viewModelScope.launch {
-            val result = updateMalListEntryUseCase(animeId, update)
+            val result = malRepository.updateListEntry(animeId, update)
             _updateEvent.send(
                 if (result is AppResult.Success) UpdateEvent.Success else UpdateEvent.Error,
             )
@@ -145,7 +139,7 @@ class MyListViewModel @Inject constructor(
 
     fun removeEntry(animeId: Int) {
         viewModelScope.launch {
-            val result = removeMalListEntryUseCase(animeId)
+            val result = malRepository.removeListEntry(animeId)
             _updateEvent.send(
                 if (result is AppResult.Success) UpdateEvent.Removed else UpdateEvent.Error,
             )
@@ -157,7 +151,7 @@ class MyListViewModel @Inject constructor(
         _pendingIncrementIds.update { it + animeId }
         viewModelScope.launch {
             try {
-                val result = incrementEpisodeUseCase(animeId)
+                val result = malRepository.incrementEpisode(animeId)
                 if (result is AppResult.Error) {
                     _updateEvent.send(UpdateEvent.Error)
                 }

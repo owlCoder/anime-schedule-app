@@ -10,25 +10,20 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import com.owlcoder.animeschedule.R
+import com.owlcoder.animeschedule.core.result.AppResult
+import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
+import com.owlcoder.animeschedule.domain.model.MalListUpdate
+import com.owlcoder.animeschedule.domain.repository.MalRepository
+import com.owlcoder.animeschedule.domain.repository.SearchRepository
+import javax.inject.Inject
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.owlcoder.animeschedule.R
-import com.owlcoder.animeschedule.core.result.AppResult
-import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
-import com.owlcoder.animeschedule.domain.model.MalListUpdate
-import com.owlcoder.animeschedule.domain.usecase.ClearRecentSearchesUseCase
-import com.owlcoder.animeschedule.domain.usecase.GetMalUserListUseCase
-import com.owlcoder.animeschedule.domain.usecase.GetRecentSearchesUseCase
-import com.owlcoder.animeschedule.domain.usecase.RemoveMalListEntryUseCase
-import com.owlcoder.animeschedule.domain.usecase.SaveRecentSearchUseCase
-import com.owlcoder.animeschedule.domain.usecase.SearchAnimeUseCase
-import com.owlcoder.animeschedule.domain.usecase.UpdateMalListEntryUseCase
-import javax.inject.Inject
 
 data class SearchUiState(
     val query: String = "",
@@ -43,18 +38,14 @@ data class SearchUiState(
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val searchAnimeUseCase: SearchAnimeUseCase,
-    private val updateMalListEntryUseCase: UpdateMalListEntryUseCase,
-    private val removeMalListEntryUseCase: RemoveMalListEntryUseCase,
-    getMalUserListUseCase: GetMalUserListUseCase,
-    getRecentSearchesUseCase: GetRecentSearchesUseCase,
-    private val saveRecentSearchUseCase: SaveRecentSearchUseCase,
-    private val clearRecentSearchesUseCase: ClearRecentSearchesUseCase
+    private val searchRepository: SearchRepository,
+    private val malRepository: MalRepository
 ) : ViewModel() {
 
     private val _query = MutableStateFlow("")
     private val _search = MutableStateFlow(SearchUiState())
     private var searchJob: Job? = null
+    private var loadMoreJob: Job? = null
     private var currentPage = 0
 
     sealed interface UpdateEvent {
@@ -65,14 +56,13 @@ class SearchViewModel @Inject constructor(
     private val _updateEvent = Channel<UpdateEvent>(Channel.BUFFERED)
     val updateEvent = _updateEvent.receiveAsFlow()
 
-    val recentSearches: StateFlow<List<String>> = getRecentSearchesUseCase()
+    val recentSearches: StateFlow<List<String>> = searchRepository.recentSearches
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Results are a snapshot from search time — re-derive each result's list entry from
     // the live local list so "on list" badges update right after a status edit.
     val uiState: StateFlow<SearchUiState> = _search
-        .combine(getMalUserListUseCase()) { state, listResult ->
-            val entries = (listResult as? AppResult.Success)?.data ?: return@combine state
+        .combine(malRepository.getUserList()) { state, entries ->
             val byMalId = entries.associateBy { it.animeId }
             state.copy(results = state.results.map { r ->
                 val fresh = r.malId?.let { byMalId[it] }
@@ -90,25 +80,27 @@ class SearchViewModel @Inject constructor(
     fun setQuery(query: String) = _query.update { query }
 
     fun onSearchSubmit(query: String) {
-        viewModelScope.launch { if (query.length >= 2) saveRecentSearchUseCase(query) }
+        viewModelScope.launch { searchRepository.saveRecentSearch(query) }
     }
 
     fun clearRecentSearches() {
-        viewModelScope.launch { clearRecentSearchesUseCase() }
+        viewModelScope.launch { searchRepository.clearRecentSearches() }
     }
 
     fun retrySearch() = startSearch(_query.value)
 
-    private fun startSearch(query: String) {
+    private fun startSearch(rawQuery: String) {
+        val query = rawQuery.trim()
         searchJob?.cancel()
+        loadMoreJob?.cancel()
         currentPage = 0
-        if (query.length < 2) {
+        if (query.length < MIN_QUERY_LENGTH) {
             _search.value = SearchUiState(query = query)
             return
         }
         _search.value = SearchUiState(query = query, isLoading = true)
         searchJob = viewModelScope.launch {
-            when (val result = searchAnimeUseCase(query, page = 0)) {
+            when (val result = searchRepository.searchAnime(query, page = 0)) {
                 is AppResult.Success -> _search.update {
                     it.copy(
                         results = result.data.results,
@@ -128,8 +120,8 @@ class SearchViewModel @Inject constructor(
         val state = _search.value
         if (state.isLoading || state.isLoadingMore || !state.hasNextPage) return
         _search.update { it.copy(isLoadingMore = true) }
-        searchJob = viewModelScope.launch {
-            when (val result = searchAnimeUseCase(state.query, page = currentPage + 1)) {
+        loadMoreJob = viewModelScope.launch {
+            when (val result = searchRepository.searchAnime(state.query, page = currentPage + 1)) {
                 is AppResult.Success -> {
                     currentPage++
                     _search.update {
@@ -149,9 +141,13 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    private companion object {
+        const val MIN_QUERY_LENGTH = 2
+    }
+
     fun updateListEntry(animeId: Int, update: MalListUpdate) {
         viewModelScope.launch {
-            val result = updateMalListEntryUseCase(animeId, update)
+            val result = malRepository.updateListEntry(animeId, update)
             _updateEvent.send(
                 if (result is AppResult.Success) UpdateEvent.Success else UpdateEvent.Error
             )
@@ -160,7 +156,7 @@ class SearchViewModel @Inject constructor(
 
     fun removeListEntry(animeId: Int) {
         viewModelScope.launch {
-            val result = removeMalListEntryUseCase(animeId)
+            val result = malRepository.removeListEntry(animeId)
             _updateEvent.send(
                 if (result is AppResult.Success) UpdateEvent.Removed else UpdateEvent.Error
             )

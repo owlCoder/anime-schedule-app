@@ -2,7 +2,6 @@ package com.owlcoder.animeschedule.presentation.screens.search
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -10,8 +9,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,14 +16,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,11 +23,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -49,7 +33,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,12 +50,10 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
@@ -88,8 +69,27 @@ import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.LocalToast
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.presentation.components.iosSpring
 import com.owlcoder.animeschedule.presentation.components.iosTween
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 private enum class SearchContentMode { Recents, Empty, Loading, Error, NoResults, Results }
 
@@ -102,8 +102,8 @@ fun SearchScreen(
     onCancel: () -> Unit = {},
     requestFocus: Boolean = false,
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val recentSearches by viewModel.recentSearches.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val recentSearches by viewModel.recentSearches.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     var isFocused by remember { mutableStateOf(false) }
     var editingResult by remember { mutableStateOf<AnimeSearchResult?>(null) }
@@ -119,6 +119,11 @@ fun SearchScreen(
 
     DisposableEffect(Unit) {
         onDispose { currentFocusCallback(false) }
+    }
+    // After process death the field text is restored but the ViewModel starts empty, so push the
+    // restored text back; for a surviving ViewModel this is a no-op (same value).
+    LaunchedEffect(Unit) {
+        if (query.isNotBlank()) viewModel.setQuery(query)
     }
     LaunchedEffect(requestFocus) {
         if (requestFocus) {
@@ -266,28 +271,6 @@ fun SearchScreen(
                 onRemove = { animeId -> viewModel.removeListEntry(animeId) },
             )
         }
-    }
-}
-
-@Deprecated("Use SearchScreen as a navigation destination")
-@Composable
-fun SearchOverlay(
-    visible: Boolean,
-    onDismiss: () -> Unit,
-    onAnimeClick: (Int) -> Unit,
-    viewModel: SearchViewModel = hiltViewModel(),
-    onFocusChanged: (Boolean) -> Unit = {},
-) {
-    if (visible) {
-        SearchScreen(
-            onAnimeClick = onAnimeClick,
-            viewModel = viewModel,
-            onFocusChanged = onFocusChanged,
-            onCancel = onDismiss,
-            requestFocus = true,
-        )
-    } else {
-        LaunchedEffect(Unit) { onFocusChanged(false) }
     }
 }
 
