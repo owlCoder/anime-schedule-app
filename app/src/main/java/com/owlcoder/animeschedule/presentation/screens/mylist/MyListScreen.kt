@@ -43,12 +43,17 @@ import androidx.compose.material.icons.filled.PauseCircle
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Bookmark
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.PauseCircle
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.RemoveCircle
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -79,7 +84,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.owlcoder.animeschedule.R
+import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.WatchStatus
+import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.GlassToolbarGroup
+import com.owlcoder.animeschedule.presentation.components.GlassToolbarButton
 import com.owlcoder.animeschedule.presentation.components.AppButton
 import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
 import com.owlcoder.animeschedule.presentation.components.AppErrorState
@@ -100,6 +109,8 @@ import com.owlcoder.animeschedule.presentation.components.iosSpring
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.PillShape
+
+private enum class ListOverlay { SORT, INSIGHTS }
 
 private val statusTabs = listOf(
     WatchStatus.WATCHING,
@@ -125,9 +136,9 @@ fun MyListScreen(
     authViewModel: AuthViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var editingAnimeId by remember { mutableStateOf<Int?>(null) }
+    var editingEntry by remember { mutableStateOf<MalListEntry?>(null) }
+    var overlay by remember { mutableStateOf<ListOverlay?>(null) }
     var showError by remember { mutableStateOf(false) }
-    val editingEntry = uiState.entries.find { it.animeId == editingAnimeId }
     val context = LocalContext.current
     val toast = LocalToast.current
     val motion = LocalMotionPolicy.current
@@ -182,18 +193,28 @@ fun MyListScreen(
                 onFilterSelected = viewModel::setFilter,
                 onAnimeClick = onAnimeClick,
                 onIncrementEpisode = viewModel::incrementEpisode,
-                onEditStatus = { editingAnimeId = it },
+                onEditStatus = { id -> editingEntry = uiState.entries.find { it.animeId == id } },
+                onShowSort = { overlay = ListOverlay.SORT },
+                onShowInsights = { overlay = ListOverlay.INSIGHTS },
             )
         }
     }
 
-    editingAnimeId?.let { animeId ->
+    editingEntry?.let { entry ->
         ListStatusBottomSheet(
-            animeId = animeId,
-            currentEntry = editingEntry,
-            onDismiss = { editingAnimeId = null },
+            animeId = entry.animeId,
+            currentEntry = entry,
+            onDismiss = { editingEntry = null },
             onConfirm = { id, update -> viewModel.updateEntry(id, update) },
             onRemove = { id -> viewModel.removeEntry(id) },
+        )
+    }
+    overlay?.let { selected ->
+        MyListOptionsSheet(
+            overlay = selected,
+            uiState = uiState,
+            onSortSelected = { viewModel.setSortOrder(it); overlay = null },
+            onDismiss = { overlay = null },
         )
     }
 }
@@ -210,6 +231,8 @@ private fun LoggedInList(
     onAnimeClick: (Int) -> Unit,
     onIncrementEpisode: (Int) -> Unit,
     onEditStatus: (Int) -> Unit,
+    onShowSort: () -> Unit,
+    onShowInsights: () -> Unit,
 ) {
     val motion = LocalMotionPolicy.current
     Scaffold(
@@ -230,7 +253,14 @@ private fun LoggedInList(
                         stringResource(R.string.mylist_anime_count, count)
                     },
                     modifier = Modifier.padding(top = 6.dp, bottom = 6.dp),
+                    trailingContent = {
+                        GlassToolbarGroup {
+                            GlassToolbarButton(Icons.Default.BarChart, stringResource(R.string.mylist_statistics), onShowInsights)
+                            GlassToolbarButton(Icons.AutoMirrored.Filled.Sort, stringResource(R.string.mylist_sort), onShowSort)
+                        }
+                    },
                 )
+                InsightsStrip(uiState.insights, onShowInsights)
                 AppSearchField(
                     value = uiState.searchQuery,
                     onValueChange = onSearchQueryChange,
@@ -303,7 +333,7 @@ private fun LoggedInList(
                         }
                         item(key = "list-section-title", contentType = "section-title") {
                             Text(
-                                text = uiState.activeFilter.displayName(),
+                                text = "${uiState.activeFilter.displayName()} · ${stringResource(uiState.sortOrder.labelRes)}",
                                 modifier = Modifier.padding(
                                     start = 27.dp,
                                     end = 27.dp,
@@ -580,6 +610,68 @@ private fun BenefitRow(icon: ImageVector, title: String, subtitle: String) {
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+    }
+}
+
+
+@Composable
+private fun InsightsStrip(insights: MyListInsights, onClick: (() -> Unit)? = null) {
+    AppMaterialSurface(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 9.dp)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+        material = AppMaterial.Interactive,
+        shape = ContinuousRoundedShape(16.dp),
+    ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 11.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+            InsightMetric(insights.completedAnime.toString(), stringResource(R.string.mylist_metric_completed))
+            InsightMetric(insights.watchedEpisodes.toString(), stringResource(R.string.mylist_metric_episodes))
+            InsightMetric(insights.averageScore?.let { String.format(java.util.Locale.getDefault(), "%.1f", it) } ?: "—", stringResource(R.string.mylist_metric_score))
+        }
+    }
+}
+
+@Composable
+private fun InsightMetric(value: String, label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MyListOptionsSheet(
+    overlay: ListOverlay,
+    uiState: MyListUiState,
+    onSortSelected: (MyListSortOrder) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AppSheet(onDismissRequest = onDismiss, title = stringResource(if (overlay == ListOverlay.SORT) R.string.mylist_sort else R.string.mylist_statistics)) {
+        if (overlay == ListOverlay.SORT) {
+            MyListSortOrder.entries.forEach { order ->
+                TextButton(onClick = { onSortSelected(order) }, modifier = Modifier.fillMaxWidth().height(48.dp)) {
+                    Text(stringResource(order.labelRes), modifier = Modifier.weight(1f), textAlign = TextAlign.Start)
+                    if (order == uiState.sortOrder) Icon(Icons.Default.Check, contentDescription = null)
+                }
+            }
+        } else {
+            InsightsStrip(uiState.insights)
+            Text(
+                text = stringResource(R.string.mylist_backlog, uiState.insights.remainingEpisodes),
+                modifier = Modifier.padding(vertical = 10.dp),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(stringResource(R.string.mylist_backlog_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            statusTabs.forEach { status ->
+                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(status.tabIcon(false), contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                    Text(status.displayName(), modifier = Modifier.weight(1f).padding(start = 12.dp))
+                    Text((uiState.statusCounts[status] ?: 0).toString(), fontWeight = FontWeight.SemiBold)
+                }
+            }
+            Text(stringResource(R.string.mylist_rated_count, uiState.insights.ratedAnime), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

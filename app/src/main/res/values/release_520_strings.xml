@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="schedule_search_hint">Search this week’s schedule</string>
+    <string name="schedule_upcoming_only">Upcoming only</string>
+    <string name="schedule_upcoming_hint">Hide episodes that have already aired.</string>
+    <string name="schedule_match_count">%d broadcasts</string>
+    <string name="editor_episode_short">Episode</string>
+    <string name="editor_finish_all">Finish all</string>
+    <string name="mylist_statistics">Watch statistics</string>
+    <string name="mylist_sort">Sort your list</string>
+    <string name="mylist_sort_recent">Recently updated</string>
+    <string name="mylist_sort_title">Title A–Z</string>
+    <string name="mylist_sort_score">Highest score</string>
+    <string name="mylist_sort_progress">Most progress</string>
+    <string name="mylist_sort_remaining">Fewest episodes left</string>
+    <string name="mylist_metric_completed">Completed</string>
+    <string name="mylist_metric_episodes">Watched episodes</string>
+    <string name="mylist_metric_score">Average score</string>
+    <string name="mylist_backlog">%d episodes left on Watching</string>
+    <string name="mylist_backlog_hint">Only anime with a known episode count are included.</string>
+    <string name="mylist_rated_count">Average based on %d rated anime.</string>
+    <string name="detail_share">Share anime</string>
+    <string name="schedule_no_matches">No matching broadcasts</string>
+    <string name="schedule_no_matches_hint">Try another day or reset the filters.</string>
+</resources>

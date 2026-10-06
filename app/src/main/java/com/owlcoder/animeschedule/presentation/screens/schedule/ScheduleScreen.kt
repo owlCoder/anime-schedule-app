@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,6 +32,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -38,6 +43,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -58,6 +65,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AiringEpisode
 import com.owlcoder.animeschedule.domain.model.MalListEntry
+import com.owlcoder.animeschedule.presentation.components.AppSearchField
+import com.owlcoder.animeschedule.presentation.components.ListStatusEditor
 import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
@@ -95,6 +104,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.ui.draw.drawBehind
@@ -203,6 +213,10 @@ private fun ScheduleScreenContent(
                         }
                     },
                     onEditStatus = { editingEpisode = it },
+                    onQueryChange = viewModel::setScheduleQuery,
+                    onUpcomingChange = viewModel::setUpcomingOnly,
+                    onOnlyMyListChange = viewModel::setOnlyMyList,
+                    onClearFilter = viewModel::clearFilter,
                     onSeeAll = {
                         viewModel.setOpenOverlay(
                             ScheduleOverlay.SeeAll(
@@ -222,10 +236,12 @@ private fun ScheduleScreenContent(
         }
     }
 
-    editingEpisode?.malId?.let { malId ->
+    editingEpisode?.takeIf { openOverlay !is ScheduleOverlay.SeeAll }?.malId?.let { malId ->
         ListStatusBottomSheet(
             animeId = malId,
             currentEntry = editingEpisode?.malListEntry,
+            animeTitle = editingEpisode?.title.orEmpty(),
+            totalEpisodes = editingEpisode?.totalEpisodes ?: editingEpisode?.malListEntry?.totalEpisodes,
             onDismiss = { editingEpisode = null },
             onConfirm = { id, update -> viewModel.updateEntry(id, update) },
             onRemove = { id -> viewModel.removeEntry(id) },
@@ -239,17 +255,18 @@ private fun ScheduleScreenContent(
             availableFormats = uiState.availableFormats,
             isLoggedIn = uiState.isLoggedIn,
             onOnlyMyListChange = viewModel::setOnlyMyList,
+            onUpcomingChange = viewModel::setUpcomingOnly,
             onGenreToggle = viewModel::toggleGenre,
             onFormatToggle = viewModel::toggleFormat,
             onClear = viewModel::clearFilter,
             onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) },
         )
         is ScheduleOverlay.Notifications -> NotificationsOverlay(
-            onAnimeClick = onAnimeClick,
+            onAnimeClick = { id -> viewModel.setOpenOverlay(ScheduleOverlay.None); onAnimeClick(id) },
             onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) },
         )
         is ScheduleOverlay.Seasonal -> SeasonalOverlay(
-            onAnimeClick = onAnimeClick,
+            onAnimeClick = { id -> viewModel.setOpenOverlay(ScheduleOverlay.None); onAnimeClick(id) },
             onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) },
         )
         is ScheduleOverlay.SeeAll -> ScheduleSeeAllSheet(
@@ -257,7 +274,11 @@ private fun ScheduleScreenContent(
             episodes = uiState.episodesForDate(selectedDate),
             isLoggedIn = uiState.isLoggedIn,
             pendingIncrementIds = uiState.pendingIncrementIds,
-            onAnimeClick = { episode -> onAnimeClick(episode.animeId) },
+            onAnimeClick = { episode -> viewModel.setOpenOverlay(ScheduleOverlay.None); onAnimeClick(episode.animeId) },
+            editingEpisode = editingEpisode,
+            onDismissEditor = { editingEpisode = null },
+            onSaveEntry = viewModel::updateEntry,
+            onRemoveEntry = viewModel::removeEntry,
             onIncrementEpisode = { episode ->
                 episode.malId?.let { malId ->
                     lastIncrementedEpisode = episode
@@ -282,6 +303,10 @@ private fun TodayHomeContent(
     onRecentAnimeClick: (Int) -> Unit,
     onIncrementEpisode: (AiringEpisode) -> Unit,
     onEditStatus: (AiringEpisode) -> Unit,
+    onQueryChange: (String) -> Unit,
+    onUpcomingChange: (Boolean) -> Unit,
+    onOnlyMyListChange: (Boolean) -> Unit,
+    onClearFilter: () -> Unit,
     onSeeAll: () -> Unit,
     onSeasonal: () -> Unit,
     onNotifications: () -> Unit,
@@ -344,6 +369,47 @@ private fun TodayHomeContent(
             )
         }
 
+        item(key = "schedule-quick-filters") {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                AppSearchField(
+                    value = uiState.filter.query,
+                    onValueChange = onQueryChange,
+                    placeholder = stringResource(R.string.schedule_search_hint),
+                    leadingIcon = Icons.Default.Search,
+                    onClear = { onQueryChange("") },
+                    modifier = Modifier.testTag("schedule-search"),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilterChip(
+                        selected = uiState.filter.upcomingOnly,
+                        onClick = { onUpcomingChange(!uiState.filter.upcomingOnly) },
+                        label = { Text(stringResource(R.string.schedule_upcoming_only)) },
+                    )
+                    if (uiState.isLoggedIn) {
+                        FilterChip(
+                            selected = uiState.filter.onlyMyList,
+                            onClick = { onOnlyMyListChange(!uiState.filter.onlyMyList) },
+                            label = { Text(stringResource(R.string.mylist_title)) },
+                        )
+                    }
+                    Spacer(Modifier.weight(1f))
+                    if (uiState.filter.isActive) {
+                        TextButton(onClick = onClearFilter) { Text(stringResource(R.string.filter_reset)) }
+                    } else {
+                        Text(
+                            text = stringResource(R.string.schedule_match_count, uiState.episodesForDate(selectedDate).size),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
+
         scheduleError?.let { error ->
             item(key = "schedule-error") {
                 ErrorBanner(error, onRetry)
@@ -374,6 +440,7 @@ private fun TodayHomeContent(
                     onRecentAnimeClick = onRecentAnimeClick,
                     onIncrementEpisode = onIncrementEpisode,
                     onEditStatus = onEditStatus,
+                    onClearFilter = onClearFilter,
                     onSeeAll = onSeeAll,
                 )
             }
@@ -394,6 +461,7 @@ private fun ScheduleDayContent(
     onIncrementEpisode: (AiringEpisode) -> Unit,
     onEditStatus: (AiringEpisode) -> Unit,
     onSeeAll: () -> Unit,
+    onClearFilter: () -> Unit,
 ) {
     val today = uiState.today
     val appLocale = LocalConfiguration.current.locales[0]
@@ -447,8 +515,10 @@ private fun ScheduleDayContent(
             if (!hasSchedule) {
                 EmptyState(
                     icon = Icons.Default.CalendarMonth,
-                    title = stringResource(R.string.schedule_empty_title),
-                    subtitle = if (isToday) {
+                    title = stringResource(if (uiState.filter.isActive) R.string.schedule_no_matches else R.string.schedule_empty_title),
+                    subtitle = if (uiState.filter.isActive) {
+                        stringResource(R.string.schedule_no_matches_hint)
+                    } else if (isToday) {
                         stringResource(R.string.schedule_empty_subtitle)
                     } else {
                         stringResource(
@@ -458,9 +528,9 @@ private fun ScheduleDayContent(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(150.dp),
-                    actionLabel = stringResource(R.string.schedule_see_all),
-                    onAction = onSeeAll,
+                        .heightIn(min = 240.dp),
+                    actionLabel = stringResource(if (uiState.filter.isActive) R.string.filter_reset else R.string.schedule_see_all),
+                    onAction = if (uiState.filter.isActive) onClearFilter else onSeeAll,
                 )
             } else {
                 featured?.let { episode ->
@@ -1119,7 +1189,7 @@ private fun UpcomingAiringRow(
             }
             androidx.compose.material3.IconButton(
                 onClick = onEditStatus,
-                modifier = Modifier.size(44.dp),
+                modifier = Modifier.size(44.dp).testTag("schedule-edit-${episode.airingId}"),
             ) {
                 Icon(
                     Icons.Default.ChevronRight,
@@ -1184,38 +1254,77 @@ private fun ScheduleSeeAllSheet(
     onAnimeClick: (AiringEpisode) -> Unit,
     onIncrementEpisode: (AiringEpisode) -> Unit,
     onEditStatus: (AiringEpisode) -> Unit,
+    editingEpisode: AiringEpisode?,
+    onDismissEditor: () -> Unit,
+    onSaveEntry: (Int, com.owlcoder.animeschedule.domain.model.MalListUpdate) -> Unit,
+    onRemoveEntry: (Int) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val listState = rememberLazyListState()
+    val sortedEpisodes = remember(episodes) { episodes.sortedBy { it.airingAtEpochSeconds } }
+    val isEditing by rememberUpdatedState(editingEpisode != null)
+    val dismissEditor by rememberUpdatedState(onDismissEditor)
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        confirmValueChange = { target ->
+            // Back, scrim taps and dismissal gestures return from the editor to the list
+            // without hiding the modal that still owns that list.
+            if (target == SheetValue.Hidden && isEditing) { dismissEditor(); false } else true
+        },
+    )
     AppSheet(
-        onDismissRequest = onDismiss,
-        title = title,
-        sheetGesturesEnabled = true,
+        onDismissRequest = if (editingEpisode != null) onDismissEditor else onDismiss,
+        title = title.takeIf { editingEpisode == null },
+        sheetState = sheetState,
+        sheetGesturesEnabled = editingEpisode == null,
     ) {
-        if (episodes.isEmpty()) {
+        val editingId = editingEpisode?.malId
+        if (editingEpisode != null && editingId != null) {
+            key(editingId) {
+                ListStatusEditor(
+                    animeId = editingId,
+                    currentEntry = editingEpisode.malListEntry,
+                    animeTitle = editingEpisode.title,
+                    totalEpisodes = editingEpisode.totalEpisodes ?: editingEpisode.malListEntry?.totalEpisodes,
+                    onDismiss = onDismissEditor,
+                    onConfirm = onSaveEntry,
+                    onRemove = onRemoveEntry,
+                )
+            }
+        } else if (episodes.isEmpty()) {
             EmptyState(
                 icon = Icons.Default.CalendarMonth,
                 title = stringResource(R.string.schedule_empty_title),
                 subtitle = stringResource(R.string.schedule_empty_subtitle),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(190.dp),
+                modifier = Modifier.fillMaxWidth().height(190.dp),
             )
         } else {
+            Text(
+                text = stringResource(R.string.schedule_match_count, episodes.size),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 10.dp),
+            )
+            // One lazy item per episode; a full day no longer composes every row at once.
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 570.dp),
+                state = listState,
+                modifier = Modifier.fillMaxWidth().heightIn(max = 570.dp).testTag("schedule-day-list"),
                 contentPadding = PaddingValues(bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                item(key = "schedule-overlay-timeline") {
-                    UpcomingAiringList(
-                        episodes = episodes.sortedBy { it.airingAtEpochSeconds },
-                        isLoggedIn = isLoggedIn,
-                        pendingIncrementIds = pendingIncrementIds,
-                        onCardClick = onAnimeClick,
-                        onIncrementEpisode = onIncrementEpisode,
-                        onEditStatus = onEditStatus,
-                    )
+                items(sortedEpisodes, key = { it.airingId }, contentType = { "airing-episode" }) { episode ->
+                    AppMaterialSurface(
+                        modifier = Modifier.fillMaxWidth(),
+                        material = AppMaterial.Grouped,
+                        shape = MaterialTheme.shapes.extraLarge,
+                    ) {
+                        UpcomingAiringRow(
+                            episode, isLoggedIn, episode.malId in pendingIncrementIds,
+                            onClick = { onAnimeClick(episode) },
+                            onIncrement = { onIncrementEpisode(episode) },
+                            onEditStatus = { onEditStatus(episode) },
+                        )
+                    }
                 }
             }
         }

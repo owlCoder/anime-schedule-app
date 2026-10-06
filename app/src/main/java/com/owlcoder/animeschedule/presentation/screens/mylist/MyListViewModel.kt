@@ -32,6 +32,8 @@ data class MyListUiState(
     val pendingIncrementIds: Set<Int> = emptySet(),
     /** Count of list entries per status, independent of [searchQuery]/[activeFilter]. */
     val statusCounts: Map<WatchStatus, Int> = emptyMap(),
+    val sortOrder: MyListSortOrder = MyListSortOrder.RECENT,
+    val insights: MyListInsights = MyListInsights(),
 )
 
 private data class MyListContent(
@@ -39,6 +41,8 @@ private data class MyListContent(
     val searchQuery: String,
     val activeFilter: WatchStatus,
     val statusCounts: Map<WatchStatus, Int>,
+    val sortOrder: MyListSortOrder,
+    val insights: MyListInsights,
 )
 
 @HiltViewModel
@@ -48,6 +52,7 @@ class MyListViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
+    private val _sortOrder = MutableStateFlow(MyListSortOrder.RECENT)
     private val _activeFilter = MutableStateFlow(WatchStatus.WATCHING)
     private val _isLoading = MutableStateFlow(true)
     private val _pendingIncrementIds = MutableStateFlow<Set<Int>>(emptySet())
@@ -66,16 +71,19 @@ class MyListViewModel @Inject constructor(
         malRepository.getUserList(),
         _searchQuery,
         _activeFilter,
-    ) { allEntries, query, filter ->
+        _sortOrder,
+    ) { allEntries, query, filter, sortOrder ->
         val filteredEntries = allEntries.filter { entry ->
             entry.status == filter &&
-                (query.isEmpty() || entry.title.contains(query, ignoreCase = true))
+                (query.isBlank() || entry.title.contains(query.trim(), ignoreCase = true))
         }
         MyListContent(
-            entries = filteredEntries,
+            entries = filteredEntries.sortedFor(sortOrder),
             searchQuery = query,
             activeFilter = filter,
             statusCounts = allEntries.groupingBy { it.status }.eachCount(),
+            sortOrder = sortOrder,
+            insights = allEntries.insights(),
         )
     }.flowOn(Dispatchers.Default)
 
@@ -93,6 +101,8 @@ class MyListViewModel @Inject constructor(
             activeFilter = content.activeFilter,
             pendingIncrementIds = pending,
             statusCounts = content.statusCounts,
+            sortOrder = content.sortOrder,
+            insights = content.insights,
         )
     }.stateIn(
         viewModelScope,
@@ -107,6 +117,8 @@ class MyListViewModel @Inject constructor(
     }
 
     fun setSearchQuery(query: String) = _searchQuery.update { query }
+
+    fun setSortOrder(order: MyListSortOrder) = _sortOrder.update { order }
 
     fun setFilter(status: WatchStatus) = _activeFilter.update { status }
 

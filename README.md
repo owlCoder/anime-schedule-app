@@ -4,9 +4,12 @@ Native Android app for tracking anime airing schedules and managing your MyAnime
 
 ## Features
 
-- **Today / Tomorrow / next 7 days** airing schedule, shown in your device time zone or a time zone you pick
+- **Today / Tomorrow / next 7 days** airing schedule, with title search, upcoming-only and own-list filters, shown in your device time zone or a time zone you pick
 - **Anime details** — cover, banner, synopsis, studios, characters, relations, countdown to the next episode, and links to the watch sources you configure
 - **Seasonal browser** — every anime of a season with genre/format filters and sorting
+- **List insights** — sort by recent edits, title, score, progress, or remaining episodes; see completed titles, watched episodes, average score, and your Watching backlog
+- **Episode editor** — type progress directly, jump ±10 episodes, or mark a known series complete; consecutive edits reuse the schedule overlay
+- **Share anime** — send the title and AniList link with the native Android share sheet
 - **MyAnimeList integration** — OAuth 2.0 login, list read/update, a "+1 episode" quick action, and offline edits that are queued and delivered when you are back online
 - **Search** — find anime by title (infinite scroll, recent searches, list status editing)
 - **Notifications** — optional local notifications when an anime on your *Watching* list airs, plus an in-app history with an unread badge
@@ -82,6 +85,7 @@ All jobs use unique work names, so scheduling is idempotent.
 ./gradlew assembleDebug        # debug build
 ./gradlew testDebugUnitTest    # unit tests
 ./gradlew lintDebug            # Android lint
+./gradlew connectedDebugAndroidTest # Compose overlay regression tests on a connected emulator
 ./gradlew assembleRelease      # minified (R8) + signed release build
 ```
 
@@ -102,6 +106,8 @@ Without signing properties you can still validate the release configuration with
 `./gradlew minifyReleaseWithR8`.
 
 ## Version
+
+Current release: **5.2.0** (version code **24**, October 6, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.

@@ -96,6 +96,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -124,6 +125,7 @@ fun AnimeDetailScreen(
     val markedMsg = stringResource(R.string.toast_episode_marked)
     val removedMsg = stringResource(R.string.toast_removed_from_list)
     val errorMsg = stringResource(R.string.toast_update_error)
+    val shareLabel = stringResource(R.string.detail_share)
 
     LaunchedEffect(Unit) {
         viewModel.updateEvent.collect { event ->
@@ -190,7 +192,18 @@ fun AnimeDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     item(key = "hero", contentType = "hero") {
-                        DetailHero(detail = detail, onBack = onBack)
+                        DetailHero(detail = detail, onBack = onBack, onShare = {
+                            val title = detail.titleRomaji ?: detail.titleEnglish.orEmpty()
+                            val link = detail.siteUrl?.takeIf { it.startsWith("https://") || it.startsWith("http://") }
+                                ?: detail.malId?.let { "https://myanimelist.net/anime/$it" }
+                                ?: detail.animeId.takeIf { it > 0 }?.let { "https://anilist.co/anime/$it" }
+                            val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(android.content.Intent.EXTRA_SUBJECT, title)
+                                putExtra(android.content.Intent.EXTRA_TEXT, listOfNotNull(title, link).joinToString("\n"))
+                            }
+                            context.startActivity(android.content.Intent.createChooser(send, shareLabel))
+                        })
                     }
 
                     item(key = "actions", contentType = "actions") {
@@ -287,7 +300,9 @@ fun AnimeDetailScreen(
 
     uiState.detail?.takeIf { showStatusSheet }?.let { detail ->
         ListStatusBottomSheet(
-            animeId = detail.animeId,
+            animeId = detail.malId ?: detail.malListEntry?.animeId ?: detail.animeId,
+            animeTitle = detail.titleRomaji ?: detail.titleEnglish.orEmpty(),
+            totalEpisodes = detail.episodes,
             currentEntry = finaleOverrideEntry ?: detail.malListEntry,
             onDismiss = {
                 showStatusSheet = false
@@ -304,7 +319,7 @@ fun AnimeDetailScreen(
 }
 
 @Composable
-private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
+private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit, onShare: () -> Unit) {
     val title = detail.titleRomaji ?: detail.titleEnglish.orEmpty()
     val motion = LocalMotionPolicy.current
     var revealed by remember(detail.animeId) { mutableStateOf(false) }
@@ -347,6 +362,13 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit) {
                 icon = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = stringResource(R.string.cd_back),
                 onClick = onBack,
+                onImagery = true,
+            )
+            Spacer(Modifier.weight(1f))
+            GlassIconButton(
+                icon = Icons.Default.Share,
+                contentDescription = stringResource(R.string.detail_share),
+                onClick = onShare,
                 onImagery = true,
             )
         }

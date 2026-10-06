@@ -74,19 +74,19 @@
     <string name="about_privacy">Privacy</string>
 
     <!-- Changelog -->
-    <string name="changelog_release_date">August 10, 2026</string>
+    <string name="changelog_release_date">October 6, 2026</string>
     <string name="changelog_whats_new">What\'s new</string>
-    <string name="changelog_hero_description">An AMOLED look, more reliable account state, and a smarter schedule.</string>
-    <string name="changelog_nav_title">Unified iOS navigation</string>
-    <string name="changelog_nav_description">The navbar, toolbar, and controls now share one neutral visual system.</string>
-    <string name="changelog_motion_title">Smoother transitions and sheets</string>
-    <string name="changelog_motion_description">Navigation, date selection, cards, and sheets now move more calmly and naturally.</string>
-    <string name="changelog_filters_title">AMOLED theme and better accent colors</string>
-    <string name="changelog_filters_description">A true-black canvas, clear card hierarchy, and optimized colors for light and dark modes.</string>
-    <string name="changelog_states_title">Better onboarding and MyAnimeList account state</string>
-    <string name="changelog_states_description">Language comes first, while sign-in and linked-account state now refresh reliably.</string>
-    <string name="changelog_about_title">More complete translations and a smarter schedule</string>
-    <string name="changelog_about_description">Dates follow the app language and selected day, while Recently changed appears reliably again.</string>
+    <string name="changelog_hero_description">Faster overlays, easier tracking, and five new ways to manage your anime.</string>
+    <string name="changelog_nav_title">Reliable editing from overlays</string>
+    <string name="changelog_nav_description">Edit consecutive anime without stacked dialogs or stuck blur. The full day schedule scrolls more efficiently.</string>
+    <string name="changelog_motion_title">Search and quick schedule filters</string>
+    <string name="changelog_motion_description">Find titles across the week and show only upcoming broadcasts or your own list.</string>
+    <string name="changelog_filters_title">List sorting and watch statistics</string>
+    <string name="changelog_filters_description">Sort by title, score, progress, remaining episodes, or recent edits. Check totals, average score, and your backlog.</string>
+    <string name="changelog_states_title">Precise episode controls</string>
+    <string name="changelog_states_description">Enter episode progress directly, jump by ten, or finish a known series with one tap.</string>
+    <string name="changelog_about_title">Share your next anime</string>
+    <string name="changelog_about_description">Send a title and its AniList link through the Android share sheet. New controls are available in English and Serbian.</string>
     <string name="changelog_footer">Made with care by the AnimeSchedule team</string>
 
     <!-- Watch sources -->

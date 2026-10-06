@@ -69,12 +69,14 @@ fun ScheduleFilterSheet(
     availableFormats: List<String>,
     isLoggedIn: Boolean,
     onOnlyMyListChange: (Boolean) -> Unit,
+    onUpcomingChange: (Boolean) -> Unit,
     onGenreToggle: (String) -> Unit,
     onFormatToggle: (String) -> Unit,
     onClear: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val selectionCount = filter.genres.size + filter.formats.size + if (filter.onlyMyList) 1 else 0
+    val selectionCount = filter.genres.size + filter.formats.size +
+        (if (filter.onlyMyList) 1 else 0) + (if (filter.upcomingOnly) 1 else 0) + (if (filter.query.isNotBlank()) 1 else 0)
 
     AppSheet(
         onDismissRequest = onDismiss,
@@ -123,6 +125,13 @@ fun ScheduleFilterSheet(
                     .padding(bottom = 2.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
+                InsetGroup {
+                    InsetListRow(
+                        label = stringResource(R.string.schedule_upcoming_only),
+                        supportingText = stringResource(R.string.schedule_upcoming_hint),
+                        trailingContent = { AppSwitch(checked = filter.upcomingOnly, onCheckedChange = onUpcomingChange) },
+                    )
+                }
                 if (isLoggedIn) {
                     InsetGroup {
                         InsetListRow(

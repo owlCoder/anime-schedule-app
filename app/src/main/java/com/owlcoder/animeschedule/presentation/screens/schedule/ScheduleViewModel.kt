@@ -38,15 +38,20 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import com.owlcoder.animeschedule.domain.model.effectiveZoneId
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 data class ScheduleFilter(
     val onlyMyList: Boolean = false,
+    val query: String = "",
+    val upcomingOnly: Boolean = false,
     val genres: Set<String> = emptySet(),
     val formats: Set<String> = emptySet(),
 ) {
-    val isActive: Boolean get() = onlyMyList || genres.isNotEmpty() || formats.isNotEmpty()
+    val isActive: Boolean get() = onlyMyList || query.isNotBlank() || upcomingOnly || genres.isNotEmpty() || formats.isNotEmpty()
 }
 
 enum class ScheduleSection { TODAY, TOMORROW, WEEK }
@@ -164,14 +169,24 @@ class ScheduleViewModel @Inject constructor(
         _refreshStatus,
     ) { pending, unread, recent, refresh -> Auxiliary(pending, unread, recent, refresh) }
 
-    val uiState: StateFlow<ScheduleUiState> = combine(snapshot, _filter, auxiliary) { snapshot, filter, aux ->
+    // Run the time filter only while it is enabled and the screen is subscribed.
+    private val filterClock = _filter.map { it.upcomingOnly }.distinctUntilChanged().flatMapLatest { enabled ->
+        if (!enabled) flowOf(0L) else flow {
+            while (true) {
+                emit(Instant.now().epochSecond)
+                delay(60_000L)
+            }
+        }
+    }
+
+    val uiState: StateFlow<ScheduleUiState> = combine(snapshot, _filter, auxiliary, filterClock) { snapshot, filter, aux, now ->
         val byDate = snapshot.days.associateBy { it.date }
         ScheduleUiState(
             zoneId = snapshot.zoneId,
             today = snapshot.today,
-            todayEpisodes = byDate[snapshot.today]?.episodes.orEmpty().applyFilter(filter),
-            tomorrowEpisodes = byDate[snapshot.today.plusDays(1)]?.episodes.orEmpty().applyFilter(filter),
-            weekDays = snapshot.days.map { day -> day.copy(episodes = day.episodes.applyFilter(filter)) },
+            todayEpisodes = byDate[snapshot.today]?.episodes.orEmpty().applyFilter(filter, now),
+            tomorrowEpisodes = byDate[snapshot.today.plusDays(1)]?.episodes.orEmpty().applyFilter(filter, now),
+            weekDays = snapshot.days.map { day -> day.copy(episodes = day.episodes.applyFilter(filter, now)) },
             isLoading = aux.refresh.isRefreshing,
             isInitialLoad = aux.refresh.isRefreshing && !aux.refresh.hasLoadedOnce,
             // A failed refresh only matters when there is nothing cached to show instead.
@@ -191,6 +206,10 @@ class ScheduleViewModel @Inject constructor(
     init {
         refresh()
     }
+
+    fun setScheduleQuery(query: String) = _filter.update { it.copy(query = query) }
+
+    fun setUpcomingOnly(enabled: Boolean) = _filter.update { it.copy(upcomingOnly = enabled) }
 
     fun setOnlyMyList(enabled: Boolean) = _filter.update { it.copy(onlyMyList = enabled) }
 
@@ -286,10 +305,13 @@ private fun buildSnapshot(
     )
 }
 
-private fun List<AiringEpisode>.applyFilter(filter: ScheduleFilter): List<AiringEpisode> {
+internal fun List<AiringEpisode>.applyFilter(filter: ScheduleFilter, nowEpochSeconds: Long): List<AiringEpisode> {
     if (!filter.isActive) return this
+    val query = filter.query.trim()
     return filter { episode ->
-        (!filter.onlyMyList || episode.malListEntry != null) &&
+        (query.isEmpty() || episode.title.contains(query, ignoreCase = true) || episode.titleRomaji?.contains(query, ignoreCase = true) == true) &&
+            (!filter.upcomingOnly || episode.airingAtEpochSeconds > nowEpochSeconds) &&
+            (!filter.onlyMyList || episode.malListEntry != null) &&
             (filter.genres.isEmpty() || episode.genres.any { it in filter.genres }) &&
             (filter.formats.isEmpty() || episode.format in filter.formats)
     }

@@ -1,6 +1,5 @@
 package com.owlcoder.animeschedule.presentation.components
 
-import android.view.WindowManager
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -13,15 +12,12 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.window.DialogWindowProvider
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,7 +30,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 
 /**
- * Stable modal content surface.
+ * Stable modal content surface. Scrim-based depth avoids native window blur and its
+ * compositor cost and lifecycle problems when a sheet changes content.
  *
  * Sheet drag gestures are disabled by default because nested scrollable content otherwise hands
  * its remaining drag to ModalBottomSheet at the top/bottom boundary. That makes a fully expanded
@@ -75,7 +72,6 @@ fun AppSheet(
         tonalElevation = 0.dp,
         dragHandle = null,
     ) {
-        AppSheetBlurBehind()
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -119,24 +115,6 @@ fun AppSheet(
                 }
             }
             content()
-        }
-    }
-}
-
-@Composable
-private fun AppSheetBlurBehind() {
-    val view = LocalView.current
-    DisposableEffect(view) {
-        val window = (view.parent as? DialogWindowProvider)?.window
-        window?.addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
-        window?.attributes = window?.attributes?.apply {
-            blurBehindRadius = 32
-        }
-        onDispose {
-            window?.attributes = window?.attributes?.apply {
-                blurBehindRadius = 0
-            }
-            window?.clearFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
         }
     }
 }

@@ -266,6 +266,8 @@ fun SearchScreen(
             ListStatusBottomSheet(
                 animeId = malId,
                 currentEntry = liveEntry,
+                animeTitle = result.title,
+                totalEpisodes = result.totalEpisodes ?: liveEntry?.totalEpisodes,
                 onDismiss = { editingResult = null },
                 onConfirm = { animeId, update: MalListUpdate -> viewModel.updateListEntry(animeId, update) },
                 onRemove = { animeId -> viewModel.removeListEntry(animeId) },

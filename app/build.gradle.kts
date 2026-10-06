@@ -24,8 +24,9 @@ android {
         applicationId = "com.owlcoder.animeschedule"
         minSdk = 31
         targetSdk = 36
-        versionCode = 23
-        versionName = "5.1.24"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        versionCode = 24
+        versionName = "5.2.0"
 
         buildConfigField(
             "String",
@@ -127,6 +128,8 @@ dependencies {
 
     // AndroidX
     implementation(libs.androidx.core.ktx)
+    // Keep the app and instrumentation classpaths aligned for Android 16 test support.
+    debugImplementation("androidx.concurrent:concurrent-futures-ktx:1.2.0")
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
@@ -179,5 +182,11 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.okhttp.mockwebserver)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

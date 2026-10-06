@@ -15,6 +15,7 @@ import com.owlcoder.animeschedule.domain.repository.AuthRepository
 import com.owlcoder.animeschedule.domain.repository.MalRepository
 import com.owlcoder.animeschedule.domain.repository.WatchSourceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -140,12 +141,14 @@ class DetailViewModel @Inject constructor(
         return detail?.malId ?: detail?.malListEntry?.animeId
     }
 
+    private var characterLoadJob: Job? = null
     private val _characterOverlay = MutableStateFlow(CharacterOverlayState())
     val characterOverlay: StateFlow<CharacterOverlayState> = _characterOverlay.asStateFlow()
 
     fun openCharacter(characterId: Int) {
+        characterLoadJob?.cancel()
         _characterOverlay.value = CharacterOverlayState(isVisible = true, isLoading = true)
-        viewModelScope.launch {
+        characterLoadJob = viewModelScope.launch {
             when (val result = animeDetailRepository.getCharacterDetail(characterId)) {
                 is AppResult.Success -> _characterOverlay.value =
                     CharacterOverlayState(isVisible = true, detail = result.data)
@@ -156,6 +159,7 @@ class DetailViewModel @Inject constructor(
     }
 
     fun dismissCharacterOverlay() {
+        characterLoadJob?.cancel()
         _characterOverlay.value = CharacterOverlayState()
     }
 }

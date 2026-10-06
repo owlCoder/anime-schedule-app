@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="schedule_search_hint">Pretraži raspored ove nedelje</string>
+    <string name="schedule_upcoming_only">Samo predstojeće</string>
+    <string name="schedule_upcoming_hint">Sakrij epizode koje su već emitovane.</string>
+    <string name="schedule_match_count">%d emitovanja</string>
+    <string name="editor_episode_short">Epizoda</string>
+    <string name="editor_finish_all">Završi sve</string>
+    <string name="mylist_statistics">Statistika gledanja</string>
+    <string name="mylist_sort">Sortiraj listu</string>
+    <string name="mylist_sort_recent">Nedavno menjano</string>
+    <string name="mylist_sort_title">Naslov A–Z</string>
+    <string name="mylist_sort_score">Najviša ocena</string>
+    <string name="mylist_sort_progress">Najveći napredak</string>
+    <string name="mylist_sort_remaining">Najmanje preostalih epizoda</string>
+    <string name="mylist_metric_completed">Završeno</string>
+    <string name="mylist_metric_episodes">Odgledane epizode</string>
+    <string name="mylist_metric_score">Prosečna ocena</string>
+    <string name="mylist_backlog">Još %d epizoda na listi Gledam</string>
+    <string name="mylist_backlog_hint">Računaju se samo animei sa poznatim brojem epizoda.</string>
+    <string name="mylist_rated_count">Prosek na osnovu %d ocenjenih animea.</string>
+    <string name="detail_share">Podeli anime</string>
+    <string name="schedule_no_matches">Nema emitovanja za ovaj filter</string>
+    <string name="schedule_no_matches_hint">Izaberi drugi dan ili resetuj filtere.</string>
+</resources>

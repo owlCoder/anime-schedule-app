@@ -34,9 +34,17 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.platform.testTag
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -64,23 +72,58 @@ fun ListStatusBottomSheet(
     onDismiss: () -> Unit,
     onConfirm: (Int, MalListUpdate) -> Unit,
     onRemove: ((Int) -> Unit)? = null,
+    animeTitle: String = currentEntry?.title.orEmpty(),
+    totalEpisodes: Int? = currentEntry?.totalEpisodes,
 ) {
-    val total = currentEntry?.totalEpisodes?.takeIf { it > 0 }
+    AppSheet(onDismissRequest = onDismiss) {
+        key(animeId) {
+            ListStatusEditor(animeId, currentEntry, onDismiss, onConfirm, onRemove, animeTitle, totalEpisodes)
+        }
+    }
+}
+
+/** Reusable editor content so an existing overlay can edit without opening a second window. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ListStatusEditor(
+    animeId: Int,
+    currentEntry: MalListEntry?,
+    onDismiss: () -> Unit,
+    onConfirm: (Int, MalListUpdate) -> Unit,
+    onRemove: ((Int) -> Unit)? = null,
+    animeTitle: String = currentEntry?.title.orEmpty(),
+    totalEpisodes: Int? = currentEntry?.totalEpisodes,
+) {
+    val initialEntry = remember(animeId) { currentEntry }
+    val total = totalEpisodes?.takeIf { it > 0 }
     val motion = LocalMotionPolicy.current
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    DisposableEffect(animeId) { onDispose { keyboard?.hide() } }
+    fun close() {
+        focusManager.clearFocus(force = true)
+        keyboard?.hide()
+        onDismiss()
+    }
 
     fun clampEpisodes(value: Int): Int {
         val floored = value.coerceAtLeast(0)
         return if (total != null) floored.coerceAtMost(total) else floored
     }
 
-    var selectedStatus by remember(currentEntry) {
-        mutableStateOf(currentEntry?.status ?: WatchStatus.PLAN_TO_WATCH)
+    var selectedStatus by remember(animeId) {
+        mutableStateOf(initialEntry?.status ?: WatchStatus.PLAN_TO_WATCH)
     }
-    var episodesWatched by remember(currentEntry) {
-        mutableIntStateOf(clampEpisodes(currentEntry?.episodesWatched ?: 0))
+    var episodesWatched by remember(animeId) {
+        mutableIntStateOf(clampEpisodes(initialEntry?.episodesWatched ?: 0))
     }
-    var score by remember(currentEntry) { mutableIntStateOf(currentEntry?.score ?: 0) }
-    val statuses = WatchStatus.entries.filter { it != WatchStatus.NOT_IN_LIST }
+    var score by remember(animeId) { mutableIntStateOf(initialEntry?.score ?: 0) }
+    var episodeInput by remember(animeId) { mutableStateOf(episodesWatched.toString()) }
+    fun setEpisodes(value: Int) {
+        episodesWatched = clampEpisodes(value)
+        episodeInput = episodesWatched.toString()
+    }
+    val statuses = remember { WatchStatus.entries.filter { it != WatchStatus.NOT_IN_LIST } }
 
     fun save() {
         onConfirm(
@@ -91,23 +134,20 @@ fun ListStatusBottomSheet(
                 score = score,
             ),
         )
-        onDismiss()
+        close()
     }
 
-    AppSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        title = stringResource(R.string.list_status_title),
-        trailingContent = {
-            TextButton(onClick = ::save) {
-                Text(
-                    text = stringResource(R.string.common_save),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-        },
-    ) {
+    Column {
+        AppInlineHeader(
+            title = stringResource(R.string.list_status_title),
+            onBack = ::close,
+            backContentDescription = stringResource(R.string.common_back),
+            trailingContent = {
+                TextButton(onClick = ::save, modifier = Modifier.testTag("list-editor-save")) {
+                    Text(stringResource(R.string.common_save), fontWeight = FontWeight.SemiBold)
+                }
+            },
+        )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -116,6 +156,15 @@ fun ListStatusBottomSheet(
                 .padding(bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(15.dp),
         ) {
+            if (animeTitle.isNotBlank()) {
+                Text(
+                    text = animeTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 SectionLabel(stringResource(R.string.detail_status))
                 statuses.chunked(2).forEach { rowStatuses ->
@@ -131,7 +180,7 @@ fun ListStatusBottomSheet(
                                 onClick = {
                                     selectedStatus = status
                                     if (status == WatchStatus.COMPLETED && total != null) {
-                                        episodesWatched = total
+                                        setEpisodes(total)
                                     }
                                 },
                             )
@@ -171,30 +220,28 @@ fun ListStatusBottomSheet(
                             icon = Icons.Default.Remove,
                             description = stringResource(R.string.list_status_decrease_episode),
                             enabled = episodesWatched > 0,
-                            onClick = { episodesWatched = clampEpisodes(episodesWatched - 1) },
+                            onClick = { setEpisodes(episodesWatched - 1) },
                         )
-                        AnimatedContent(
-                            targetState = episodesWatched,
-                            modifier = Modifier.width(44.dp),
-                            transitionSpec = {
-                                fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
-                                    fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
+                        OutlinedTextField(
+                            value = episodeInput,
+                            onValueChange = { input ->
+                                if (input.length <= 5 && input.all(Char::isDigit)) {
+                                    episodeInput = input
+                                    episodesWatched = clampEpisodes(input.toIntOrNull() ?: 0)
+                                    if (input.isNotEmpty()) episodeInput = episodesWatched.toString()
+                                }
                             },
-                            label = "episode-stepper-value",
-                        ) { value ->
-                            Text(
-                                text = value.toString(),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
+                            modifier = Modifier.width(80.dp).testTag("list-editor-episodes"),
+                            singleLine = true,
+                            textStyle = MaterialTheme.typography.titleMedium.copy(textAlign = TextAlign.Center),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                            label = { Text(stringResource(R.string.editor_episode_short)) },
+                        )
                         StepperButton(
                             icon = Icons.Default.Add,
                             description = stringResource(R.string.list_status_increase_episode),
                             enabled = total == null || episodesWatched < total,
-                            onClick = { episodesWatched = clampEpisodes(episodesWatched + 1) },
+                            onClick = { setEpisodes(episodesWatched + 1) },
                         )
                     }
                     if (total != null) {
@@ -214,6 +261,20 @@ fun ListStatusBottomSheet(
                         )
                     }
                 }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TextButton(onClick = { setEpisodes(episodesWatched - 10) }, enabled = episodesWatched > 0) { Text("−10") }
+                if (total != null) {
+                    TextButton(onClick = { setEpisodes(total); selectedStatus = WatchStatus.COMPLETED }) {
+                        Text(stringResource(R.string.editor_finish_all))
+                    }
+                }
+                TextButton(onClick = { setEpisodes(episodesWatched + 10) }, enabled = total == null || episodesWatched < total) { Text("+10") }
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -264,12 +325,12 @@ fun ListStatusBottomSheet(
                 }
             }
 
-            if (currentEntry != null && onRemove != null) {
+            if (initialEntry != null && onRemove != null) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 TextButton(
                     onClick = {
                         onRemove(animeId)
-                        onDismiss()
+                        close()
                     },
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                 ) {
