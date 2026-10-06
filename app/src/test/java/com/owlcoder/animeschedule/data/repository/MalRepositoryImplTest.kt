@@ -500,4 +500,28 @@ class MalRepositoryImplTest {
 
         assertTrue(propagated)
     }
+    @Test fun `online progress is logged after local mirror and rejected edits are not logged`() = runTest {
+        val tools = mockk<com.owlcoder.animeschedule.data.local.datastore.WatchToolsStore>(relaxed = true)
+        val tracked = MalRepositoryImpl(api, listDao, pendingDao, detailDao, authManager, prefs, scheduler, tools)
+        listDao.rows[10] = entity(10, episodes = 3)
+        api.onUpdateListStatus = { MalListStatus(status = "watching", numEpisodesWatched = 8, score = 7) }
+        tracked.updateListEntry(10, MalListUpdate(episodesWatched = 8))
+        coVerify(exactly = 1) { tools.recordProgress(10, "Anime 10", 3, 8) }
+        api.onUpdateListStatus = { throw httpException(400) }
+        tracked.updateListEntry(10, MalListUpdate(episodesWatched = 9))
+        coVerify(exactly = 1) { tools.recordProgress(any(), any(), any(), any()) }
+    }
+
+    @Test fun `offline progress is logged once and a later queue flush does not duplicate activity`() = runTest {
+        val tools = mockk<com.owlcoder.animeschedule.data.local.datastore.WatchToolsStore>(relaxed = true)
+        val tracked = MalRepositoryImpl(api, listDao, pendingDao, detailDao, authManager, prefs, scheduler, tools)
+        listDao.rows[10] = entity(10, episodes = 3)
+        api.onUpdateListStatus = { throw IOException("offline") }
+        tracked.updateListEntry(10, MalListUpdate(episodesWatched = 4))
+        coVerify(exactly = 1) { tools.recordProgress(10, "Anime 10", 3, 4) }
+        api.onUpdateListStatus = { MalListStatus(status = "watching", numEpisodesWatched = 4, score = 7) }
+        tracked.flushPendingUpdates()
+        coVerify(exactly = 1) { tools.recordProgress(any(), any(), any(), any()) }
+    }
+
 }

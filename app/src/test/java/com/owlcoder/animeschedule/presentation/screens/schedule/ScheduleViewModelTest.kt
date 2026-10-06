@@ -64,6 +64,7 @@ class ScheduleViewModelTest {
         val prefs = MutableStateFlow(UserPreferences(timezoneId = zone))
         override val userPreferencesFlow: Flow<UserPreferences> = prefs
         override suspend fun setTimezoneId(timezoneId: String) = Unit
+        override suspend fun setThemeOptions(options: com.owlcoder.animeschedule.domain.model.ThemeOptions) = Unit
         override suspend fun setThemeMode(mode: ThemeMode) = Unit
         override suspend fun setNotificationsEnabled(enabled: Boolean) = Unit
         override suspend fun setNotificationOffset(minutes: Int) = Unit

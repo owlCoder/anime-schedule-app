@@ -42,6 +42,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.presentation.screens.schedule.LocalScheduleZone
 import com.owlcoder.animeschedule.domain.model.AppNotification
+import com.owlcoder.animeschedule.presentation.components.AppSegmentedControl
+import com.owlcoder.animeschedule.presentation.components.SegmentOption
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
@@ -195,98 +197,12 @@ private fun NotificationTabs(
     readCount: Int,
     onTabSelected: (Int) -> Unit,
 ) {
-    val tabs = listOf(
-        Triple(R.string.notif_tab_unread, Icons.Default.MarkEmailUnread, unreadCount),
-        Triple(R.string.notif_tab_read, Icons.Default.MarkEmailRead, readCount),
+    AppSegmentedControl(
+        options = listOf(
+            SegmentOption(stringResource(R.string.notif_tab_unread), Icons.Default.MarkEmailUnread, unreadCount),
+            SegmentOption(stringResource(R.string.notif_tab_read), Icons.Default.MarkEmailRead, readCount),
+        ), selectedIndex = selectedTab, onSelect = onTabSelected,
     )
-    val motion = LocalMotionPolicy.current
-    AppMaterialSurface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(44.dp),
-        material = AppMaterial.Interactive,
-        shape = ContinuousRoundedShape(15.dp),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(44.dp)
-                .padding(3.dp),
-            horizontalArrangement = Arrangement.spacedBy(3.dp),
-        ) {
-            tabs.forEachIndexed { index, (labelRes, icon, count) ->
-                val isSelected = selectedTab == index
-                val fill by animateColorAsState(
-                    targetValue = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
-                    animationSpec = motion.iosTween(IosMotion.Standard),
-                    label = "notification-tab-fill",
-                )
-                val contentColor by animateColorAsState(
-                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    animationSpec = motion.iosTween(IosMotion.Standard),
-                    label = "notification-tab-color",
-                )
-                Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(38.dp)
-                        .clickable(role = Role.Tab) { onTabSelected(index) }
-                        .semantics {
-                            role = Role.Tab
-                            selected = isSelected
-                        },
-                    shape = ContinuousRoundedShape(12.dp),
-                    color = fill,
-                    contentColor = contentColor,
-                    tonalElevation = 0.dp,
-                    shadowElevation = 0.dp,
-                ) {
-                    NotificationTabContent(labelRes, icon, count, isSelected, contentColor)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun NotificationTabContent(
-    labelRes: Int,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    count: Int,
-    selected: Boolean,
-    color: Color,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(38.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = color,
-        )
-        Text(
-            text = stringResource(labelRes),
-            modifier = Modifier.padding(start = 5.dp),
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            color = color,
-        )
-        if (count > 0) {
-            Text(
-                text = count.toString(),
-                modifier = Modifier.padding(start = 5.dp),
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = color,
-            )
-        }
-    }
 }
 
 @Composable

@@ -78,6 +78,7 @@ interface AuthRepository {
 interface SettingsRepository {
     val userPreferencesFlow: Flow<UserPreferences>
     suspend fun setTimezoneId(timezoneId: String)
+    suspend fun setThemeOptions(options: com.owlcoder.animeschedule.domain.model.ThemeOptions)
     suspend fun setThemeMode(mode: ThemeMode)
     suspend fun setNotificationsEnabled(enabled: Boolean)
     suspend fun setNotificationOffset(minutes: Int)

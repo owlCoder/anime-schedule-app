@@ -72,6 +72,7 @@ class OverlayEditingTest {
     private object Settings : SettingsRepository {
         override val userPreferencesFlow = flowOf(UserPreferences(timezoneId = "Europe/Belgrade", malLoggedIn = true))
         override suspend fun setTimezoneId(timezoneId: String) = Unit
+        override suspend fun setThemeOptions(options: com.owlcoder.animeschedule.domain.model.ThemeOptions) = Unit
         override suspend fun setThemeMode(mode: ThemeMode) = Unit
         override suspend fun setNotificationsEnabled(enabled: Boolean) = Unit
         override suspend fun setNotificationOffset(minutes: Int) = Unit
@@ -129,7 +130,9 @@ class OverlayEditingTest {
         compose.onAllNodes(isDialog()).assertCountEquals(1)
         compose.onNodeWithTag("list-editor-episodes").performTextReplacement("999")
         compose.onNodeWithTag("list-editor-episodes").assertTextContains("12")
+        compose.onNodeWithTag("list-editor-episodes").performImeAction()
         screenshot("editor-dark")
+        compose.onNodeWithTag("editor-status-picker").performScrollTo().performClick()
         compose.onNodeWithText(text(R.string.watch_status_completed)).performClick()
         compose.onNodeWithTag("list-editor-save").performClick()
         compose.onNodeWithTag("schedule-day-list").assertIsDisplayed()
@@ -160,6 +163,7 @@ class OverlayEditingTest {
         compose.onNodeWithTag("schedule-day-list").assertIsDisplayed()
         edit(101).performClick()
         compose.onNodeWithText(text(R.string.list_status_remove)).performScrollTo().performClick()
+        compose.onNodeWithTag("editor-remove-confirm").performScrollTo().performClick()
         edit(102).assertIsDisplayed().performClick()
         compose.onNodeWithTag("list-editor-episodes").assertTextContains("2")
         compose.onAllNodes(isDialog()).assertCountEquals(1)
@@ -199,7 +203,7 @@ class OverlayEditingTest {
         compose.waitForIdle()
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val bitmap = instrumentation.uiAutomation.takeScreenshot()
-        val file = File(instrumentation.targetContext.getExternalFilesDir(null), "qa-520-$name.png")
+        val file = File(instrumentation.targetContext.getExternalFilesDir(null), "qa-530-$name.png")
         file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         bitmap.recycle()
     }

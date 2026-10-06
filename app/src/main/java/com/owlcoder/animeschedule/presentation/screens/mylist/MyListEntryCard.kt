@@ -3,6 +3,8 @@ package com.owlcoder.animeschedule.presentation.screens.mylist
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +19,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -55,12 +59,15 @@ private fun statusColor(status: WatchStatus): Color = when (status) {
     WatchStatus.PLAN_TO_WATCH, WatchStatus.NOT_IN_LIST -> MaterialTheme.colorScheme.onSurfaceVariant
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MyListEntryCard(
     entry: MalListEntry,
     title: String,
     coverImageUrl: String?,
     isIncrementing: Boolean = false,
+    isFavorite: Boolean = false,
+    hasNote: Boolean = false,
     onCardClick: () -> Unit,
     onIncrementEpisode: () -> Unit,
     onEditStatus: () -> Unit,
@@ -115,16 +122,34 @@ fun MyListEntryCard(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                        )
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            if (isFavorite) Icon(
+                                Icons.Default.Star,
+                                stringResource(R.string.favorites),
+                                Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            if (hasNote) Icon(
+                                Icons.Default.EditNote,
+                                stringResource(R.string.personal_note),
+                                Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = title,
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        FlowRow(
                             horizontalArrangement = Arrangement.spacedBy(7.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             Text(
                                 text = episodeLabel(entry),
@@ -165,6 +190,8 @@ fun MyListEntryCard(
                                     .clip(CircleShape),
                                 color = statusTint,
                                 trackColor = statusTint.copy(alpha = 0.12f),
+                                gapSize = 0.dp,
+                                drawStopIndicator = {},
                                 strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
                             )
                         }

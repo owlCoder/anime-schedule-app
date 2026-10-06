@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="common_reset">Resetuj</string>
+    <string name="editor_local_hint">Tvoj napredak i lična ocena</string>
+    <string name="editor_choose_status">Izaberi status gledanja</string>
+    <string name="editor_unknown_total">Ukupan broj nije poznat</string>
+    <string name="editor_clear_rating">Ukloni ocenu</string>
+    <string name="editor_remove_confirm">Ukloniti ovaj anime sa MAL liste?</string>
+    <string name="personal_note">Lična beleška</string>
+    <string name="note_placeholder">Gde si stao, utisci ili podsetnik…</string>
+    <string name="note_local">Čuva se na ovom uređaju kada sačuvaš izmene.</string>
+    <string name="favorites">Favoriti</string>
+    <string name="add_favorite">Dodaj u favorite</string>
+    <string name="remove_favorite">Ukloni iz favorita</string>
+    <string name="list_tools">Alati za listu</string>
+    <string name="list_all_statuses">Sve</string>
+    <string name="list_unrated">Bez ocene</string>
+    <string name="list_pick">Izaberi anime za gledanje</string>
+    <string name="list_pick_hint">Nasumičan izbor iz trenutnih rezultata, osim završenih i napuštenih animea.</string>
+    <string name="pick_again">Izaberi drugi</string>
+    <string name="pick_open">Otvori anime</string>
+    <string name="pick_empty">Nema animea za izbor u ovim rezultatima.</string>
+    <string name="list_export">Izvezi listu u CSV</string>
+    <string name="list_export_hint">Cela sačuvana lista, uključujući favorite i lične beleške.</string>
+    <string name="list_exported">Lista je izvezena</string>
+    <string name="list_export_error">Izvoz nije sačuvan</string>
+    <string name="watch_history">Istorija i cilj gledanja</string>
+    <string name="watch_history_hint">Promene napretka iz ove aplikacije, uključujući izmene bez interneta. Poslednjih 300 promena čuva se lokalno.</string>
+    <string name="weekly_goal">Nedeljni cilj epizoda</string>
+    <string name="weekly_goal_value">Cilj: %1$d</string>
+    <string name="weekly_goal_hint">Od ponedeljka do nedelje u vremenskoj zoni rasporeda. Postavi 0 da isključiš cilj. Ispravke menjaju zbir.</string>
+    <string name="goal_decrease">Smanji nedeljni cilj</string>
+    <string name="goal_increase">Povećaj nedeljni cilj</string>
+    <string name="history_empty">Nove promene napretka biće prikazane ovde.</string>
+    <string name="history_episode">Epizoda %1$d</string>
+    <string name="history_clear">Obriši istoriju</string>
+    <string name="history_clear_confirm">Obrisati lokalnu istoriju i napredak ove nedelje? MAL lista ostaje nepromenjena.</string>
+    <string name="seasonal_search">Pretraži ovu sezonu</string>
+    <string name="seasonal_hide_tracked">Sakrij anime koji je već na mojoj listi</string>
+    <string name="list_filtered_empty">Nema odgovarajućih animea</string>
+    <string name="list_filtered_empty_hint">Probaj drugi status, pretragu ili brzi filter.</string>
+    <string name="list_clear_filters">Ukloni brze filtere</string>
+    <string name="palette_classic">Klasična</string>
+    <string name="palette_midnight">Ponoć</string>
+    <string name="palette_sakura">Sakura</string>
+    <string name="palette_forest">Šuma</string>
+    <string name="palette_sand">Pesak</string>
+    <string name="theme_palette">Paleta boja</string>
+    <string name="theme_preview">Pregled uživo</string>
+    <string name="theme_preview_subtitle">Tvoja sledeća epizoda je spremna</string>
+    <string name="theme_dynamic">Boje Android pozadine</string>
+    <string name="theme_dynamic_hint">Koristi sistemsku paletu umesto teme ili akcenta.</string>
+    <string name="theme_amoled">AMOLED crna</string>
+    <string name="theme_amoled_hint">Potpuno crna pozadina u tamnom režimu.</string>
+    <string name="theme_contrast">Veći kontrast</string>
+    <string name="theme_contrast_hint">Jasniji sekundarni tekst i ivice kontrola.</string>
+    <string name="theme_motion">Smanji animacije</string>
+    <string name="theme_motion_hint">Jednostavniji prelazi. Poštuju se i sistemska podešavanja pristupačnosti.</string>
+    <plurals name="editor_remaining_count">
+        <item quantity="one">Preostalo: %1$d</item>
+        <item quantity="few">Preostalo: %1$d</item>
+        <item quantity="other">Preostalo: %1$d</item>
+    </plurals>
+    <plurals name="weekly_goal_off_count">
+        <item quantity="one">%1$d ove nedelje · cilj isključen</item>
+        <item quantity="few">%1$d ove nedelje · cilj isključen</item>
+        <item quantity="other">%1$d ove nedelje · cilj isključen</item>
+    </plurals>
+    <plurals name="weekly_goal_progress_count">
+        <item quantity="one">%1$d / %2$d ove nedelje</item>
+        <item quantity="few">%1$d / %2$d ove nedelje</item>
+        <item quantity="other">%1$d / %2$d ove nedelje</item>
+    </plurals>
+    <string name="toast_dismiss">Zatvori obaveštenje</string>
+    <string name="accent_classic_only">Koristi klasična tema</string>
+</resources>

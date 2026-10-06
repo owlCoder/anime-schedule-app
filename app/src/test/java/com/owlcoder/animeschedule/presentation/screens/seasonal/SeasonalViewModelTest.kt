@@ -89,4 +89,11 @@ class SeasonalViewModelTest {
 
         assertEquals(listOf("Alpha", "beta", "gamma"), viewModel.uiState.value.filteredItems.map { it.title })
     }
+    @Test fun `season search trims text and hiding tracked anime uses MAL identity`() {
+        val items = listOf(item(1, "Alpha").copy(malId = 101), item(2, "Beta").copy(malId = 102), item(3, "ALPHA OVA"))
+        assertEquals(listOf(1, 3), items.applyFilter(SeasonalFilter(query = "  alpha  ")).map { it.anilistId })
+        assertEquals(listOf(3), items.applyFilter(SeasonalFilter(query = "alpha", hideTracked = true), setOf(101)).map { it.anilistId })
+        assertEquals(listOf(1, 3), items.applyFilter(SeasonalFilter(query = "alpha", hideTracked = true), setOf(1)).map { it.anilistId })
+    }
+
 }

@@ -2,6 +2,20 @@ package com.owlcoder.animeschedule.domain.model
 
 import java.time.ZoneId
 
+import kotlinx.serialization.Serializable
+
+@Serializable
+enum class ThemePalette { CLASSIC, MIDNIGHT, SAKURA, FOREST, SAND }
+
+@Serializable
+data class ThemeOptions(
+    val palette: ThemePalette = ThemePalette.CLASSIC,
+    val dynamicColors: Boolean = false,
+    val amoled: Boolean = true,
+    val highContrast: Boolean = false,
+    val reduceMotion: Boolean = false,
+)
+
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 enum class AccentColor {
@@ -26,6 +40,7 @@ data class UserPreferences(
     val malUsername: String = "",
     val malAvatarUrl: String = "",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val themeOptions: ThemeOptions = ThemeOptions(),
     val notificationsEnabled: Boolean = true,
     val notificationOffsetMinutes: Int = 0,
     val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,

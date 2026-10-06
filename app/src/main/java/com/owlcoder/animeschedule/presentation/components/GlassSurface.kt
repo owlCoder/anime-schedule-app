@@ -116,17 +116,13 @@ private fun glassPalette(tone: GlassTone): GlassPalette {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
 
     val fill = when (tone) {
-        GlassTone.Neutral -> if (dark) GlassTokens.neutralFillDark else GlassTokens.neutralFillLight
-        GlassTone.Accent -> if (dark) GlassTokens.selectedFillDark else GlassTokens.selectedFillLight
+        GlassTone.Neutral -> MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = if (dark) 0.86f else 0.88f)
+        GlassTone.Accent -> MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.94f)
         GlassTone.OnImage -> Color.Black.copy(alpha = 0.22f)
     }
     val border = when (tone) {
         GlassTone.OnImage -> Color.White.copy(alpha = 0.22f)
-        else -> if (dark) {
-            Color.White.copy(alpha = if (tone == GlassTone.Accent) 0.18f else 0.11f)
-        } else {
-            Color.Black.copy(alpha = if (tone == GlassTone.Accent) 0.12f else 0.09f)
-        }
+        else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (tone == GlassTone.Accent) 0.9f else 0.65f)
     }
     val topLight = when (tone) {
         GlassTone.OnImage -> Color.White.copy(alpha = 0.20f)

@@ -37,6 +37,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.owlcoder.animeschedule.core.locale.LocaleHelper
+import com.owlcoder.animeschedule.domain.model.effectiveZoneId
 import com.owlcoder.animeschedule.domain.model.AppLanguage
 import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
 import com.owlcoder.animeschedule.presentation.components.AppSystemBarAppearance
@@ -76,6 +77,9 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var prefsDataStore: UserPreferencesDataStore
 
+    @Inject
+    lateinit var watchToolsStore: com.owlcoder.animeschedule.data.local.datastore.WatchToolsStore
+
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { /* The user made an explicit choice. */ }
@@ -107,13 +111,22 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) intent?.let { handleIncomingIntent(it) }
 
         setContent {
-            val loadedPrefs by prefsDataStore.userPreferencesFlow.collectAsStateWithLifecycle(initialValue = null)
+            val loadedPrefs by prefsDataStore.userPreferencesFlow.collectAsStateWithLifecycle(
+                initialValue = null
+            )
             val prefs = loadedPrefs ?: return@setContent
             SideEffect { contentReady = true }
 
             val isMalConnected by authViewModel.isLoggedIn.collectAsStateWithLifecycle(initialValue = prefs.malLoggedIn)
             val malUsername by authViewModel.username.collectAsStateWithLifecycle(initialValue = prefs.malUsername)
             val scope = rememberCoroutineScope()
+            val watchTools by watchToolsStore.data.collectAsStateWithLifecycle(initialValue = com.owlcoder.animeschedule.domain.model.WatchTools())
+            val toolsActions = com.owlcoder.animeschedule.presentation.components.WatchToolsActions(
+                data = watchTools,
+                today = java.time.LocalDate.now(prefs.effectiveZoneId),
+                toggleFavorite = { id -> scope.launch { watchToolsStore.toggleFavorite(id) } },
+                setNote = { id, note -> scope.launch { watchToolsStore.setNote(id, note) } },
+            )
 
             var pendingTheme by rememberSaveable { mutableStateOf(prefs.themeMode) }
             var pendingAccent by rememberSaveable { mutableStateOf(prefs.accentColor) }
@@ -127,8 +140,13 @@ class MainActivity : AppCompatActivity() {
 
             applyLocale(effectiveLanguage)
 
-            AnimeScheduleTheme(themeMode = effectiveTheme, accentColor = effectiveAccent) {
-                if (!prefs.onboardingDone) {
+            AnimeScheduleTheme(
+                themeMode = effectiveTheme,
+                accentColor = effectiveAccent,
+                options = prefs.themeOptions
+            ) {
+                CompositionLocalProvider(com.owlcoder.animeschedule.presentation.components.LocalWatchTools provides toolsActions) {
+                    if (!prefs.onboardingDone) {
                         OnboardingScreen(
                             onComplete = {
                                 scope.launch {
@@ -176,7 +194,7 @@ class MainActivity : AppCompatActivity() {
                         val currentRoute = backStackEntry?.destination?.route
                         val showBottomBar = shouldShowBottomBar(currentRoute) && !isSearchFocused
                         val showInitialScheduleLoading = appLoading &&
-                            (currentRoute == null || currentRoute == Screen.Schedule.route)
+                                (currentRoute == null || currentRoute == Screen.Schedule.route)
 
                         AppSystemBarAppearance(
                             statusBarOnImagery = currentRoute == Screen.Detail.ROUTE,
@@ -247,8 +265,9 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         }
+                    }
                 }
-                }
+            }
         }
     }
 
@@ -274,7 +293,9 @@ class MainActivity : AppCompatActivity() {
                 code = data.getQueryParameter("code"),
                 state = data.getQueryParameter("state"),
             )
-            "detail" -> pendingDeepLinkAnimeId = data.lastPathSegment?.toIntOrNull()?.takeIf { it > 0 }
+
+            "detail" -> pendingDeepLinkAnimeId =
+                data.lastPathSegment?.toIntOrNull()?.takeIf { it > 0 }
         }
     }
 

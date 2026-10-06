@@ -1,68 +1,39 @@
 package com.owlcoder.animeschedule.presentation.components
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.platform.testTag
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.StarBorder
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
 import com.owlcoder.animeschedule.domain.model.WatchStatus
-import com.owlcoder.animeschedule.ui.theme.PillShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,13 +48,20 @@ fun ListStatusBottomSheet(
 ) {
     AppSheet(onDismissRequest = onDismiss) {
         key(animeId) {
-            ListStatusEditor(animeId, currentEntry, onDismiss, onConfirm, onRemove, animeTitle, totalEpisodes)
+            ListStatusEditor(
+                animeId,
+                currentEntry,
+                onDismiss,
+                onConfirm,
+                onRemove,
+                animeTitle,
+                totalEpisodes
+            )
         }
     }
 }
 
-/** Reusable editor content so an existing overlay can edit without opening a second window. */
-@OptIn(ExperimentalMaterial3Api::class)
+/** The day overlay reuses this content, keeping one modal and its original list position. */
 @Composable
 fun ListStatusEditor(
     animeId: Int,
@@ -96,439 +74,422 @@ fun ListStatusEditor(
 ) {
     val initialEntry = remember(animeId) { currentEntry }
     val total = totalEpisodes?.takeIf { it > 0 }
-    val motion = LocalMotionPolicy.current
-    val focusManager = LocalFocusManager.current
+    val tools = LocalWatchTools.current
+    val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
+    val motion = LocalMotionPolicy.current
     DisposableEffect(animeId) { onDispose { keyboard?.hide() } }
     fun close() {
-        focusManager.clearFocus(force = true)
-        keyboard?.hide()
-        onDismiss()
+        focus.clearFocus(force = true); keyboard?.hide(); onDismiss()
     }
 
-    fun clampEpisodes(value: Int): Int {
-        val floored = value.coerceAtLeast(0)
-        return if (total != null) floored.coerceAtMost(total) else floored
+    fun clamp(value: Int) = value.coerceIn(0, total ?: 99999)
+    var status by remember(animeId) {
+        mutableStateOf(
+            initialEntry?.status ?: WatchStatus.PLAN_TO_WATCH
+        )
     }
-
-    var selectedStatus by remember(animeId) {
-        mutableStateOf(initialEntry?.status ?: WatchStatus.PLAN_TO_WATCH)
+    var episodes by remember(animeId) {
+        mutableIntStateOf(
+            clamp(
+                initialEntry?.episodesWatched ?: 0
+            )
+        )
     }
-    var episodesWatched by remember(animeId) {
-        mutableIntStateOf(clampEpisodes(initialEntry?.episodesWatched ?: 0))
-    }
-    var score by remember(animeId) { mutableIntStateOf(initialEntry?.score ?: 0) }
-    var episodeInput by remember(animeId) { mutableStateOf(episodesWatched.toString()) }
+    var input by remember(animeId) { mutableStateOf(episodes.toString()) }
+    var score by remember(animeId) { mutableIntStateOf((initialEntry?.score ?: 0).coerceIn(0, 10)) }
+    var statusExpanded by remember(animeId) { mutableStateOf(false) }
+    var noteExpanded by remember(animeId) { mutableStateOf(false) }
+    var confirmRemoval by remember(animeId) { mutableStateOf(false) }
+    var note by remember(animeId) { mutableStateOf(tools.data.notes[animeId].orEmpty()) }
     fun setEpisodes(value: Int) {
-        episodesWatched = clampEpisodes(value)
-        episodeInput = episodesWatched.toString()
+        episodes = clamp(value)
+        input = episodes.toString()
+        if (status == WatchStatus.COMPLETED && total != null && episodes < total) status =
+            WatchStatus.WATCHING
     }
-    val statuses = remember { WatchStatus.entries.filter { it != WatchStatus.NOT_IN_LIST } }
 
     fun save() {
+        tools.setNote(animeId, note)
         onConfirm(
             animeId,
-            MalListUpdate(
-                status = selectedStatus,
-                episodesWatched = clampEpisodes(episodesWatched),
-                score = score,
-            ),
+            MalListUpdate(status = status, episodesWatched = clamp(episodes), score = score)
         )
         close()
     }
 
     Column {
         AppInlineHeader(
-            title = stringResource(R.string.list_status_title),
-            onBack = ::close,
+            title = stringResource(R.string.list_status_title), onBack = ::close,
             backContentDescription = stringResource(R.string.common_back),
             trailingContent = {
-                TextButton(onClick = ::save, modifier = Modifier.testTag("list-editor-save")) {
+                Button(
+                    onClick = ::save,
+                    modifier = Modifier.testTag("list-editor-save"),
+                    contentPadding = PaddingValues(horizontal = 18.dp)
+                ) {
                     Text(stringResource(R.string.common_save), fontWeight = FontWeight.SemiBold)
                 }
             },
         )
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 590.dp)
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(15.dp),
+            Modifier.fillMaxWidth().heightIn(max = 620.dp).verticalScroll(rememberScrollState())
+                .padding(top = 6.dp, bottom = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            if (animeTitle.isNotBlank()) {
-                Text(
-                    text = animeTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        animeTitle.ifBlank { "#$animeId" },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        stringResource(R.string.editor_local_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                IconButton(
+                    onClick = { tools.toggleFavorite(animeId) },
+                    modifier = Modifier.testTag("editor-favorite")
+                ) {
+                    Icon(
+                        if (animeId in tools.data.favorites) Icons.Default.Star else Icons.Outlined.StarBorder,
+                        stringResource(if (animeId in tools.data.favorites) R.string.remove_favorite else R.string.add_favorite),
+                        tint = if (animeId in tools.data.favorites) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SectionLabel(stringResource(R.string.detail_status))
-                statuses.chunked(2).forEach { rowStatuses ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            EditorGroup {
+                Row(
+                    Modifier.fillMaxWidth().clickable { statusExpanded = !statusExpanded }
+                        .testTag("editor-status-picker").padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        status.editorIcon(),
+                        null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                        Text(
+                            stringResource(R.string.detail_status),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            status.displayName(),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Icon(
+                        if (statusExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        stringResource(R.string.editor_choose_status)
+                    )
+                }
+                AnimatedVisibility(
+                    statusExpanded,
+                    enter = fadeIn(motion.iosTween(IosMotion.Quick)),
+                    exit = fadeOut(motion.iosTween(IosMotion.Quick))
+                ) {
+                    Column(
+                        Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        rowStatuses.forEach { status ->
-                            StatusChoice(
-                                label = status.displayName(),
-                                selected = selectedStatus == status,
-                                modifier = Modifier.weight(1f),
-                                onClick = {
-                                    selectedStatus = status
-                                    if (status == WatchStatus.COMPLETED && total != null) {
-                                        setEpisodes(total)
+                        WatchStatus.entries.filter { it != WatchStatus.NOT_IN_LIST }.chunked(2)
+                            .forEach { row ->
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    row.forEach { choice ->
+                                        Surface(
+                                            modifier = Modifier.weight(1f).clip(MaterialTheme.shapes.medium).selectable(
+                                                choice == status,
+                                                role = Role.RadioButton
+                                            ) {
+                                                status = choice
+                                                if (choice == WatchStatus.COMPLETED && total != null) {
+                                                    episodes = total; input = total.toString()
+                                                }
+                                                statusExpanded = false
+                                            },
+                                            shape = MaterialTheme.shapes.medium,
+                                            color = if (choice == status) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                        ) {
+                                            Row(
+                                                Modifier.heightIn(min = 48.dp)
+                                                    .padding(horizontal = 10.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                Icon(
+                                                    choice.editorIcon(),
+                                                    null,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                                Text(
+                                                    choice.displayName(),
+                                                    style = MaterialTheme.typography.labelLarge
+                                                )
+                                            }
+                                        }
                                     }
-                                },
-                            )
-                        }
-                        if (rowStatuses.size == 1) Spacer(Modifier.weight(1f))
+                                    if (row.size == 1) Spacer(Modifier.weight(1f))
+                                }
+                            }
                     }
                 }
             }
-
-            AppMaterialSurface(
-                modifier = Modifier.fillMaxWidth(),
-                material = AppMaterial.Grouped,
-                shape = MaterialTheme.shapes.large,
-            ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 11.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.list_status_episodes_label),
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            if (total != null) {
-                                Text(
-                                    text = "$episodesWatched / $total",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-                        StepperButton(
-                            icon = Icons.Default.Remove,
-                            description = stringResource(R.string.list_status_decrease_episode),
-                            enabled = episodesWatched > 0,
-                            onClick = { setEpisodes(episodesWatched - 1) },
+            EditorGroup {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            stringResource(R.string.list_status_episodes_label),
+                            Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
                         )
+                        Text(
+                            if (total != null) androidx.compose.ui.res.pluralStringResource(
+                                R.plurals.editor_remaining_count,
+                                (total - episodes).coerceAtLeast(0),
+                                (total - episodes).coerceAtLeast(0)
+                            ) else stringResource(R.string.editor_unknown_total),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            14.dp,
+                            Alignment.CenterHorizontally
+                        ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        FilledTonalIconButton(
+                            onClick = { setEpisodes(episodes - 1) },
+                            enabled = episodes > 0,
+                            modifier = Modifier.size(52.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Remove,
+                                stringResource(R.string.list_status_decrease_episode)
+                            )
+                        }
                         OutlinedTextField(
-                            value = episodeInput,
-                            onValueChange = { input ->
-                                if (input.length <= 5 && input.all(Char::isDigit)) {
-                                    episodeInput = input
-                                    episodesWatched = clampEpisodes(input.toIntOrNull() ?: 0)
-                                    if (input.isNotEmpty()) episodeInput = episodesWatched.toString()
+                            value = input,
+                            onValueChange = { value ->
+                                if (value.length <= 5 && value.all(Char::isDigit)) {
+                                    setEpisodes(value.toIntOrNull() ?: 0)
+                                    if (value.isEmpty()) input = ""
                                 }
                             },
-                            modifier = Modifier.width(80.dp).testTag("list-editor-episodes"),
+                            modifier = Modifier.width(128.dp).testTag("list-editor-episodes"),
+                            textStyle = (if (input.length > 3) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineMedium).copy(
+                                textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.Bold
+                            ),
                             singleLine = true,
-                            textStyle = MaterialTheme.typography.titleMedium.copy(textAlign = TextAlign.Center),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
-                            label = { Text(stringResource(R.string.editor_episode_short)) },
+                            suffix = {
+                                if (total != null && total.toString().length <= 3 && input.length <= 3) Text(
+                                    "/ $total",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(onDone = { focus.clearFocus(); keyboard?.hide() }),
+                            shape = MaterialTheme.shapes.large,
                         )
-                        StepperButton(
-                            icon = Icons.Default.Add,
-                            description = stringResource(R.string.list_status_increase_episode),
-                            enabled = total == null || episodesWatched < total,
-                            onClick = { setEpisodes(episodesWatched + 1) },
+                        FilledTonalIconButton(
+                            onClick = { setEpisodes(episodes + 1) },
+                            enabled = total == null || episodes < total,
+                            modifier = Modifier.size(52.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                stringResource(R.string.list_status_increase_episode)
+                            )
+                        }
+                    }
+                    if (total != null && (total.toString().length > 3 || input.length > 3)) {
+                        Text(
+                            "$episodes / $total",
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     if (total != null) {
                         val progress by animateFloatAsState(
-                            targetValue = episodesWatched.toFloat() / total.toFloat(),
-                            animationSpec = motion.iosSpring(),
-                            label = "episode-progress",
+                            episodes.toFloat() / total,
+                            motion.iosSpring(),
+                            label = "episode-progress"
                         )
                         LinearProgressIndicator(
                             progress = { progress },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(3.dp)
-                                .clip(PillShape),
-                            color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                            modifier = Modifier.fillMaxWidth().height(8.dp)
+                                .clip(MaterialTheme.shapes.small),
+                            gapSize = 0.dp,
+                            drawStopIndicator = {})
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        TextButton(
+                            onClick = { setEpisodes(episodes - 10) },
+                            enabled = episodes > 0
+                        ) { Text("−10") }
+                        if (total != null) TextButton(onClick = {
+                            setEpisodes(total); status = WatchStatus.COMPLETED
+                        }) { Text(stringResource(R.string.editor_finish_all)) }
+                        TextButton(
+                            onClick = { setEpisodes(episodes + 10) },
+                            enabled = total == null || episodes < total
+                        ) { Text("+10") }
+                    }
+                }
+            }
+            EditorGroup {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Star,
+                            null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
                         )
-                    }
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                TextButton(onClick = { setEpisodes(episodesWatched - 10) }, enabled = episodesWatched > 0) { Text("−10") }
-                if (total != null) {
-                    TextButton(onClick = { setEpisodes(total); selectedStatus = WatchStatus.COMPLETED }) {
-                        Text(stringResource(R.string.editor_finish_all))
-                    }
-                }
-                TextButton(onClick = { setEpisodes(episodesWatched + 10) }, enabled = total == null || episodesWatched < total) { Text("+10") }
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    SectionLabel(
-                        text = stringResource(R.string.detail_score),
-                        modifier = Modifier.weight(1f),
-                    )
-                    AnimatedContent(
-                        targetState = score,
-                        transitionSpec = {
-                            fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
-                                fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
-                        },
-                        label = "score-label",
-                    ) { value ->
                         Text(
-                            text = if (value == 0) {
-                                stringResource(R.string.list_status_score_unrated)
-                            } else {
-                                "$value / 10"
-                            },
+                            stringResource(R.string.detail_score),
+                            Modifier.weight(1f).padding(start = 8.dp),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            if (score == 0) stringResource(R.string.list_status_score_unrated) else "$score / 10",
                             style = MaterialTheme.typography.labelLarge,
-                            color = if (value == 0) {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            } else {
-                                MaterialTheme.colorScheme.primary
-                            },
-                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
+                    (1..10).chunked(5).forEach { values ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            values.forEach { value ->
+                                Surface(
+                                    modifier = Modifier.weight(1f).height(44.dp).clip(MaterialTheme.shapes.medium).selectable(
+                                        score == value,
+                                        role = Role.RadioButton
+                                    ) { score = value },
+                                    shape = MaterialTheme.shapes.medium,
+                                    color = if (score == value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest,
+                                    contentColor = if (score == value) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            value.toString(),
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (score > 0) TextButton(
+                        onClick = { score = 0 },
+                        contentPadding = PaddingValues(0.dp)
+                    ) { Text(stringResource(R.string.editor_clear_rating)) }
                 }
-                listOf((0..5).toList(), (6..10).toList()).forEach { values ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(7.dp),
-                    ) {
-                        values.forEach { value ->
-                            ScoreChoice(
-                                value = value,
-                                selected = score == value,
-                                modifier = Modifier.weight(1f),
-                                onClick = { score = value },
+            }
+            EditorGroup {
+                Row(Modifier.fillMaxWidth().clickable { noteExpanded = !noteExpanded }
+                    .padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.EditNote,
+                        null,
+                        modifier = Modifier.size(22.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        stringResource(R.string.personal_note),
+                        Modifier.weight(1f).padding(horizontal = 10.dp),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Icon(
+                        if (noteExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        null
+                    )
+                }
+                AnimatedVisibility(
+                    noteExpanded,
+                    enter = fadeIn(motion.iosTween(IosMotion.Quick)),
+                    exit = fadeOut(motion.iosTween(IosMotion.Quick))
+                ) {
+                    OutlinedTextField(
+                        note,
+                        { if (it.length <= 2000) note = it },
+                        Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, bottom = 14.dp)
+                            .testTag("editor-note"),
+                        placeholder = { Text(stringResource(R.string.note_placeholder)) },
+                        minLines = 2,
+                        maxLines = 5,
+                        supportingText = { Text(stringResource(R.string.note_local)) },
+                        shape = MaterialTheme.shapes.medium
+                    )
+                }
+            }
+            if (initialEntry != null && onRemove != null) {
+                if (confirmRemoval) {
+                    Text(
+                        stringResource(R.string.editor_remove_confirm),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                        TextButton(onClick = {
+                            confirmRemoval = false
+                        }) { Text(stringResource(R.string.common_cancel)) }
+                        TextButton(
+                            onClick = { onRemove(animeId); close() },
+                            modifier = Modifier.testTag("editor-remove-confirm")
+                        ) {
+                            Text(
+                                stringResource(R.string.list_status_remove),
+                                color = MaterialTheme.colorScheme.error
                             )
                         }
-                        repeat(6 - values.size) { Spacer(Modifier.weight(1f)) }
+                    }
+                } else {
+                    TextButton(
+                        onClick = { confirmRemoval = true },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Icon(Icons.Default.DeleteOutline, null, modifier = Modifier.size(18.dp))
+                        Text(
+                            stringResource(R.string.list_status_remove),
+                            Modifier.padding(start = 6.dp),
+                            color = MaterialTheme.colorScheme.error
+                        )
                     }
                 }
             }
-
-            if (initialEntry != null && onRemove != null) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                TextButton(
-                    onClick = {
-                        onRemove(animeId)
-                        close()
-                    },
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                ) {
-                    Text(
-                        text = stringResource(R.string.list_status_remove),
-                        color = MaterialTheme.colorScheme.error,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
         }
     }
 }
 
 @Composable
-private fun StatusChoice(
-    label: String,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    val motion = LocalMotionPolicy.current
-    val fill by animateColorAsState(
-        targetValue = if (selected) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.13f)
-        } else {
-            appMaterialColor(AppMaterial.Interactive)
-        },
-        animationSpec = motion.iosTween(IosMotion.Standard),
-        label = "status-choice-fill",
-    )
-    val contentColor by animateColorAsState(
-        targetValue = if (selected) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
-        },
-        animationSpec = motion.iosTween(IosMotion.Standard),
-        label = "status-choice-color",
-    )
+private fun EditorGroup(content: @Composable ColumnScope.() -> Unit) {
     Surface(
-        modifier = modifier
-            .sizeIn(minHeight = 44.dp)
-            .toggleable(
-                value = selected,
-                role = Role.RadioButton,
-                onValueChange = { onClick() },
-            ),
-        shape = PillShape,
-        color = fill,
-        contentColor = contentColor,
-        border = BorderStroke(
-            0.5.dp,
-            if (selected) {
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
-            } else {
-                MaterialTheme.colorScheme.outlineVariant
-            },
-        ),
-        tonalElevation = 0.dp,
+        shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Box(
-                modifier = Modifier.size(width = 20.dp, height = 16.dp),
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                if (selected) {
-                    Icon(
-                        Icons.Default.Check,
-                        contentDescription = null,
-                        modifier = Modifier.size(15.dp),
-                    )
-                }
-            }
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                maxLines = 1,
-                color = contentColor,
-            )
-        }
+        Column(Modifier.fillMaxWidth(), content = content)
     }
 }
 
-@Composable
-private fun ScoreChoice(
-    value: Int,
-    selected: Boolean,
-    modifier: Modifier,
-    onClick: () -> Unit,
-) {
-    val motion = LocalMotionPolicy.current
-    val fill by animateColorAsState(
-        targetValue = if (selected) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.13f)
-        } else {
-            appMaterialColor(AppMaterial.Interactive)
-        },
-        animationSpec = motion.iosTween(IosMotion.Standard),
-        label = "score-choice-fill",
-    )
-    val contentColor by animateColorAsState(
-        targetValue = if (selected) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
-        },
-        animationSpec = motion.iosTween(IosMotion.Standard),
-        label = "score-choice-color",
-    )
-    Surface(
-        modifier = modifier
-            .sizeIn(minHeight = 44.dp)
-            .toggleable(
-                value = selected,
-                role = Role.RadioButton,
-                onValueChange = { onClick() },
-            ),
-        shape = PillShape,
-        color = fill,
-        contentColor = contentColor,
-        border = BorderStroke(
-            0.5.dp,
-            if (selected) {
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
-            } else {
-                MaterialTheme.colorScheme.outlineVariant
-            },
-        ),
-        tonalElevation = 0.dp,
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(44.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = if (value == 0) "—" else value.toString(),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                color = contentColor,
-            )
-        }
-    }
-}
-
-@Composable
-private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text = text,
-        modifier = modifier,
-        style = MaterialTheme.typography.labelLarge,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-}
-
-@Composable
-private fun StepperButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    description: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .size(44.dp)
-            .clickable(
-                enabled = enabled,
-                role = Role.Button,
-                onClick = onClick,
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        Surface(
-            modifier = Modifier.size(36.dp),
-            shape = PillShape,
-            color = appMaterialColor(AppMaterial.Interactive),
-            contentColor = if (enabled) {
-                MaterialTheme.colorScheme.onSurface
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
-            },
-            tonalElevation = 0.dp,
-        ) {
-            Box(Modifier.size(36.dp), contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = description,
-                    modifier = Modifier.size(17.dp),
-                )
-            }
-        }
-    }
+private fun WatchStatus.editorIcon() = when (this) {
+    WatchStatus.WATCHING -> Icons.Default.PlayCircle
+    WatchStatus.COMPLETED -> Icons.Default.CheckCircle
+    WatchStatus.PLAN_TO_WATCH, WatchStatus.NOT_IN_LIST -> Icons.Default.Bookmark
+    WatchStatus.ON_HOLD -> Icons.Default.PauseCircle
+    WatchStatus.DROPPED -> Icons.Default.RemoveCircle
 }

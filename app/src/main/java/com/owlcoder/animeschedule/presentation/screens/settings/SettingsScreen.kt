@@ -202,14 +202,14 @@ fun SettingsScreen(
                         SettingsRow(
                             icon = Icons.Default.ColorLens,
                             title = stringResource(R.string.settings_appearance),
-                            value = themeModeLabel(uiState.themeMode),
+                            value = if (uiState.themeOptions.dynamicColors) stringResource(R.string.theme_dynamic) else "${themeModeLabel(uiState.themeMode)} · ${stringResource(uiState.themeOptions.palette.labelRes())}",
                             onClick = { activeSheet = SettingsSheet.Theme },
                         )
                         SettingsDivider()
                         SettingsRow(
                             icon = Icons.Default.ColorLens,
                             title = stringResource(R.string.settings_accent),
-                            value = accentLabel(uiState.accentColor),
+                            value = if (uiState.themeOptions.dynamicColors || uiState.themeOptions.palette != com.owlcoder.animeschedule.domain.model.ThemePalette.CLASSIC) stringResource(R.string.accent_classic_only) else accentLabel(uiState.accentColor),
                             onClick = { activeSheet = SettingsSheet.Accent },
                         )
                         SettingsDivider()
@@ -310,14 +310,16 @@ fun SettingsScreen(
     }
 
     when (activeSheet) {
-        SettingsSheet.Theme -> SelectionSheet(
-            title = stringResource(R.string.settings_appearance),
-            options = ThemeMode.entries,
-            selected = uiState.themeMode,
-            label = { themeModeLabel(it) },
-            onSelect = {
-                settingsViewModel.setThemeMode(it)
-                activeSheet = null
+        SettingsSheet.Theme -> AppearanceSheet(
+            mode = uiState.themeMode,
+            accent = uiState.accentColor,
+            options = uiState.themeOptions,
+            onModeChange = settingsViewModel::setThemeMode,
+            onOptionsChange = settingsViewModel::setThemeOptions,
+            onReset = {
+                settingsViewModel.setThemeMode(ThemeMode.SYSTEM)
+                settingsViewModel.setAccentColor(AccentColor.TELEGRAM_BLUE)
+                settingsViewModel.setThemeOptions(com.owlcoder.animeschedule.domain.model.ThemeOptions())
             },
             onDismiss = { activeSheet = null },
         )
@@ -325,6 +327,7 @@ fun SettingsScreen(
             current = uiState.accentColor,
             onSelect = {
                 settingsViewModel.setAccentColor(it)
+                settingsViewModel.setThemeOptions(uiState.themeOptions.copy(palette = com.owlcoder.animeschedule.domain.model.ThemePalette.CLASSIC, dynamicColors = false))
                 activeSheet = null
             },
             onDismiss = { activeSheet = null },

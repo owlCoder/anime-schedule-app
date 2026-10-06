@@ -6,9 +6,12 @@ Native Android app for tracking anime airing schedules and managing your MyAnime
 
 - **Today / Tomorrow / next 7 days** airing schedule, with title search, upcoming-only and own-list filters, shown in your device time zone or a time zone you pick
 - **Anime details** — cover, banner, synopsis, studios, characters, relations, countdown to the next episode, and links to the watch sources you configure
-- **Seasonal browser** — every anime of a season with genre/format filters and sorting
+- **Seasonal browser** — every anime of a season with title search, hide-tracked toggle, genre/format filters and sorting
 - **List insights** — sort by recent edits, title, score, progress, or remaining episodes; see completed titles, watched episodes, average score, and your Watching backlog
-- **Episode editor** — type progress directly, jump ±10 episodes, or mark a known series complete; consecutive edits reuse the schedule overlay
+- **Episode editor** — grouped status, large progress controls, direct entry, ±10 steps, ratings, notes and safe removal; consecutive edits reuse the schedule overlay
+- **Personal tracking tools** — account-scoped local favorites and notes, All-status and Unrated filters, random picks from current results, and UTF-8 CSV export through the Android document picker
+- **Activity and goals** — the latest 300 local progress changes (including offline edits), with a configurable Monday–Sunday episode goal using your schedule timezone
+- **Themes** — Classic, Midnight, Sakura, Forest and Sand palettes, Android wallpaper colors, AMOLED canvas, higher contrast, reduced animations, and accessible light/dark/system controls
 - **Share anime** — send the title and AniList link with the native Android share sheet
 - **MyAnimeList integration** — OAuth 2.0 login, list read/update, a "+1 episode" quick action, and offline edits that are queued and delivered when you are back online
 - **Search** — find anime by title (infinite scroll, recent searches, list status editing)
@@ -107,7 +110,7 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.2.0** (version code **24**, October 6, 2026).
+Current release: **5.3.0** (version code **25**, October 6, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.

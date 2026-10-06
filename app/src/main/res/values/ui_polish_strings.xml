@@ -8,7 +8,7 @@
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_accent">Accent color</string>
-    <string name="settings_accent_subtitle">Choose the highlight color used across the app.</string>
+    <string name="settings_accent_subtitle">Choose an accent for the Classic palette. Other palettes use their own colors.</string>
     <string name="accent_telegram_blue">Blue</string>
     <string name="accent_purple">Purple</string>
     <string name="accent_green">Green</string>
@@ -76,17 +76,17 @@
     <!-- Changelog -->
     <string name="changelog_release_date">October 6, 2026</string>
     <string name="changelog_whats_new">What\'s new</string>
-    <string name="changelog_hero_description">Faster overlays, easier tracking, and five new ways to manage your anime.</string>
-    <string name="changelog_nav_title">Reliable editing from overlays</string>
-    <string name="changelog_nav_description">Edit consecutive anime without stacked dialogs or stuck blur. The full day schedule scrolls more efficiently.</string>
-    <string name="changelog_motion_title">Search and quick schedule filters</string>
-    <string name="changelog_motion_description">Find titles across the week and show only upcoming broadcasts or your own list.</string>
-    <string name="changelog_filters_title">List sorting and watch statistics</string>
-    <string name="changelog_filters_description">Sort by title, score, progress, remaining episodes, or recent edits. Check totals, average score, and your backlog.</string>
-    <string name="changelog_states_title">Precise episode controls</string>
-    <string name="changelog_states_description">Enter episode progress directly, jump by ten, or finish a known series with one tap.</string>
-    <string name="changelog_about_title">Share your next anime</string>
-    <string name="changelog_about_description">Send a title and its AniList link through the Android share sheet. New controls are available in English and Serbian.</string>
+    <string name="changelog_hero_description">A cleaner editor, complete themes, and ten new tools for your anime list.</string>
+    <string name="changelog_nav_title">A clearer status and episode editor</string>
+    <string name="changelog_nav_description">Larger controls, grouped ratings, expandable status choices, personal notes and confirmed removal. Consecutive edits still reuse one overlay.</string>
+    <string name="changelog_motion_title">Themes that style the whole app</string>
+    <string name="changelog_motion_description">Five palettes, Android wallpaper colors, AMOLED black, higher contrast and reduced animations. Icon tabs and compact notifications fit the new design.</string>
+    <string name="changelog_filters_title">Favorites, notes and flexible list filters</string>
+    <string name="changelog_filters_description">Save local favorites and notes, browse every status together, or find anime that still need a rating.</string>
+    <string name="changelog_states_title">Watch activity, goals and list tools</string>
+    <string name="changelog_states_description">Review progress changes, set a weekly goal, pick an anime randomly from your results, and export your entire cached list to CSV.</string>
+    <string name="changelog_about_title">Discover a season more quickly</string>
+    <string name="changelog_about_description">Search season titles and hide anime already on your list. Everything is available in English and Serbian Latin.</string>
     <string name="changelog_footer">Made with care by the AnimeSchedule team</string>
 
     <!-- Watch sources -->

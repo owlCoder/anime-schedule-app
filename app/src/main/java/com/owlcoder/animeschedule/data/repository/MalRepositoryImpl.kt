@@ -39,13 +39,15 @@ class MalRepositoryImpl @Inject constructor(
     private val animeDetailDao: AnimeDetailDao,
     private val malAuthManager: MalAuthManager,
     private val prefsDataStore: UserPreferencesDataStore,
-    private val workScheduler: WorkScheduler
+    private val workScheduler: WorkScheduler,
+    private val watchToolsStore: com.owlcoder.animeschedule.data.local.datastore.WatchToolsStore? = null,
 ) : MalRepository {
 
     override fun getUserList(): Flow<List<MalListEntry>> =
         malListEntryDao.getAll().map { entities -> entities.map { it.toDomain() } }
 
     override suspend fun updateListEntry(animeId: Int, update: MalListUpdate): AppResult<Unit> {
+        val previousEntry = malListEntryDao.getByAnimeId(animeId)
         val result = executeWithRefresh {
             val patched = malApiService.updateListStatus(
                 animeId = animeId,
@@ -59,9 +61,24 @@ class MalRepositoryImpl @Inject constructor(
         // a background flush — the change is not lost, so report success to the UI.
         if (result is AppResult.Error && result.error is AppError.Network) {
             queueUpdate(animeId, update)
+            recordActivity(animeId, previousEntry)
             return AppResult.Success(Unit)
         }
+        if (result is AppResult.Success) recordActivity(animeId, previousEntry)
         return result
+    }
+
+    private suspend fun recordActivity(animeId: Int, before: MalListEntryEntity?) {
+        if (watchToolsStore == null) return
+        val after = malListEntryDao.getByAnimeId(animeId) ?: return
+        // Metadata failure must not turn a successful MAL edit into an apparent sync failure.
+        try {
+            watchToolsStore.recordProgress(animeId, after.title, before?.numEpisodesWatched ?: 0, after.numEpisodesWatched)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: IOException) {
+            Log.w(TAG, "Watch history could not be saved", error)
+        }
     }
 
     override suspend fun incrementEpisode(animeId: Int): AppResult<Unit> {

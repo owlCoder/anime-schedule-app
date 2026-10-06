@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="common_reset">Reset</string>
+    <string name="editor_local_hint">Your progress and personal rating</string>
+    <string name="editor_choose_status">Choose watch status</string>
+    <string name="editor_unknown_total">Total unknown</string>
+    <string name="editor_clear_rating">Clear rating</string>
+    <string name="editor_remove_confirm">Remove this anime from your MAL list?</string>
+    <string name="personal_note">Personal note</string>
+    <string name="note_placeholder">Where you stopped, thoughts, or a reminder…</string>
+    <string name="note_local">Saved on this device when you save the editor.</string>
+    <string name="favorites">Favorites</string>
+    <string name="add_favorite">Add to favorites</string>
+    <string name="remove_favorite">Remove from favorites</string>
+    <string name="list_tools">List tools</string>
+    <string name="list_all_statuses">All</string>
+    <string name="list_unrated">Unrated</string>
+    <string name="list_pick">Pick something to watch</string>
+    <string name="list_pick_hint">Random choice from the current results, excluding finished and dropped anime.</string>
+    <string name="pick_again">Try another</string>
+    <string name="pick_open">Open anime</string>
+    <string name="pick_empty">No anime to pick in these results.</string>
+    <string name="list_export">Export list as CSV</string>
+    <string name="list_export_hint">Entire cached list, including favorites and personal notes.</string>
+    <string name="list_exported">List exported</string>
+    <string name="list_export_error">Could not save the export</string>
+    <string name="watch_history">Watch activity &amp; goal</string>
+    <string name="watch_history_hint">Progress changes made in this app, including offline edits. Last 300 changes are kept locally.</string>
+    <string name="weekly_goal">Weekly episode goal</string>
+    <string name="weekly_goal_value">Goal: %1$d</string>
+    <string name="weekly_goal_hint">Monday to Sunday in your schedule timezone. Set 0 to turn the goal off. Corrections adjust the total.</string>
+    <string name="goal_decrease">Decrease weekly goal</string>
+    <string name="goal_increase">Increase weekly goal</string>
+    <string name="history_empty">New progress changes will appear here.</string>
+    <string name="history_episode">Episode %1$d</string>
+    <string name="history_clear">Clear activity</string>
+    <string name="history_clear_confirm">Clear local activity and this week’s progress? Your MAL list stays unchanged.</string>
+    <string name="seasonal_search">Search this season</string>
+    <string name="seasonal_hide_tracked">Hide anime already on my list</string>
+    <string name="list_filtered_empty">No matching anime</string>
+    <string name="list_filtered_empty_hint">Try another status, search, or quick filter.</string>
+    <string name="list_clear_filters">Clear quick filters</string>
+    <string name="palette_classic">Classic</string>
+    <string name="palette_midnight">Midnight</string>
+    <string name="palette_sakura">Sakura</string>
+    <string name="palette_forest">Forest</string>
+    <string name="palette_sand">Sand</string>
+    <string name="theme_palette">Color palette</string>
+    <string name="theme_preview">Live preview</string>
+    <string name="theme_preview_subtitle">Your next episode is ready</string>
+    <string name="theme_dynamic">Android wallpaper colors</string>
+    <string name="theme_dynamic_hint">Use the system palette instead of a preset or accent.</string>
+    <string name="theme_amoled">AMOLED black</string>
+    <string name="theme_amoled_hint">Pure black page background in dark mode.</string>
+    <string name="theme_contrast">Higher contrast</string>
+    <string name="theme_contrast_hint">Stronger secondary text and control outlines.</string>
+    <string name="theme_motion">Reduce animations</string>
+    <string name="theme_motion_hint">Simpler transitions. System accessibility settings are also respected.</string>
+    <plurals name="editor_remaining_count">
+        <item quantity="one">%1$d left</item>
+        <item quantity="other">%1$d left</item>
+    </plurals>
+    <plurals name="weekly_goal_off_count">
+        <item quantity="one">%1$d this week · goal off</item>
+        <item quantity="other">%1$d this week · goal off</item>
+    </plurals>
+    <plurals name="weekly_goal_progress_count">
+        <item quantity="one">%1$d / %2$d this week</item>
+        <item quantity="other">%1$d / %2$d this week</item>
+    </plurals>
+    <string name="toast_dismiss">Dismiss message</string>
+    <string name="accent_classic_only">Used by Classic</string>
+</resources>

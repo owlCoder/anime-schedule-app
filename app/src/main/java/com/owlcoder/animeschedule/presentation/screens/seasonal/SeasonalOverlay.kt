@@ -15,6 +15,9 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.FilterChip
+import com.owlcoder.animeschedule.presentation.components.AppSearchField
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -98,6 +101,14 @@ fun SeasonalOverlay(
                 onSelect = { season, year -> viewModel.setSeason(season, year) },
                 modifier = Modifier.padding(top = 4.dp, bottom = 3.dp),
             )
+
+            AppSearchField(
+                value = uiState.filter.query, onValueChange = viewModel::setQuery,
+                placeholder = stringResource(R.string.seasonal_search), leadingIcon = Icons.Default.Search,
+                onClear = { viewModel.setQuery("") }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+            )
+            FilterChip(selected = uiState.filter.hideTracked, onClick = viewModel::toggleHideTracked,
+                label = { Text(stringResource(R.string.seasonal_hide_tracked)) })
 
             if (!uiState.isLoading && uiState.errorRes == null) {
                 val countLabel = if (uiState.filter.isActive) {

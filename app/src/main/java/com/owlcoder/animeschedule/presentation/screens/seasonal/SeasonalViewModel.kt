@@ -26,11 +26,13 @@ enum class SeasonalSortOrder(@androidx.annotation.StringRes val labelRes: Int) {
 }
 
 data class SeasonalFilter(
+    val query: String = "",
+    val hideTracked: Boolean = false,
     val genres: Set<String> = emptySet(),
     val formats: Set<String> = emptySet(),
     val sortOrder: SeasonalSortOrder = SeasonalSortOrder.POPULARITY,
 ) {
-    val isActive: Boolean get() = genres.isNotEmpty() || formats.isNotEmpty()
+    val isActive: Boolean get() = query.isNotBlank() || hideTracked || genres.isNotEmpty() || formats.isNotEmpty()
 }
 
 data class SeasonalUiState(
@@ -55,8 +57,11 @@ private fun currentSeason(): AnimeSeason {
     }
 }
 
-private fun List<SeasonalAnimeItem>.applyFilter(filter: SeasonalFilter): List<SeasonalAnimeItem> {
-    var result = this
+internal fun List<SeasonalAnimeItem>.applyFilter(filter: SeasonalFilter, trackedIds: Set<Int> = emptySet()): List<SeasonalAnimeItem> {
+    val query = filter.query.trim()
+    var result = filter { item ->
+        (query.isBlank() || item.title.contains(query, ignoreCase = true)) && (!filter.hideTracked || item.malId !in trackedIds)
+    }
     if (filter.genres.isNotEmpty()) {
         result = result.filter { item -> item.genres.any { it in filter.genres } }
     }
@@ -111,7 +116,7 @@ class SeasonalViewModel @Inject constructor(
                     _uiState.update { state ->
                         state.copy(
                             allItems = items,
-                            filteredItems = items.applyFilter(currentFilter),
+                            filteredItems = items.applyFilter(currentFilter, state.malEntriesById.keys),
                             isLoading = false,
                             availableGenres = genres,
                             availableFormats = formats,
@@ -150,6 +155,9 @@ class SeasonalViewModel @Inject constructor(
         )
     }
 
+    fun setQuery(query: String) = updateFilter { it.copy(query = query) }
+    fun toggleHideTracked() = updateFilter { it.copy(hideTracked = !it.hideTracked) }
+
     fun setSortOrder(order: SeasonalSortOrder) = updateFilter { it.copy(sortOrder = order) }
 
     fun clearFilter() = updateFilter { SeasonalFilter(sortOrder = it.sortOrder) }
@@ -158,7 +166,7 @@ class SeasonalViewModel @Inject constructor(
         viewModelScope.launch {
             malRepository.getUserList().collect { entries ->
                 val entriesById = entries.associateBy { it.animeId }
-                _uiState.update { it.copy(malEntriesById = entriesById) }
+                _uiState.update { it.copy(malEntriesById = entriesById, filteredItems = it.allItems.applyFilter(it.filter, entriesById.keys)) }
             }
         }
     }
@@ -168,7 +176,7 @@ class SeasonalViewModel @Inject constructor(
             val newFilter = transform(state.filter)
             state.copy(
                 filter = newFilter,
-                filteredItems = state.allItems.applyFilter(newFilter),
+                filteredItems = state.allItems.applyFilter(newFilter, state.malEntriesById.keys),
             )
         }
     }

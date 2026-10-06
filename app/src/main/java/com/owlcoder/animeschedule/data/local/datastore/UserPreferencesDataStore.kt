@@ -10,6 +10,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.owlcoder.animeschedule.domain.model.AccentColor
 import com.owlcoder.animeschedule.domain.model.AppLanguage
 import com.owlcoder.animeschedule.domain.model.CacheRetentionPolicy
+import com.owlcoder.animeschedule.domain.model.ThemeOptions
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
 import com.owlcoder.animeschedule.domain.model.ThemeMode
 import com.owlcoder.animeschedule.domain.model.UserPreferences
 import kotlinx.coroutines.flow.Flow
@@ -32,6 +35,7 @@ class UserPreferencesDataStore @Inject constructor(
         val MAL_USERNAME = stringPreferencesKey("mal_username")
         val MAL_AVATAR_URL = stringPreferencesKey("mal_avatar_url")
         val LAST_MAL_LIST_SYNC = longPreferencesKey("last_mal_list_sync_epoch_ms")
+        val THEME_OPTIONS = stringPreferencesKey("theme_options_v1")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
         val NOTIFICATION_OFFSET = intPreferencesKey("notification_offset_minutes")
@@ -67,6 +71,7 @@ class UserPreferencesDataStore @Inject constructor(
             malLoggedIn = prefs[Keys.MAL_LOGGED_IN] ?: false,
             malUsername = prefs[Keys.MAL_USERNAME] ?: "",
             malAvatarUrl = prefs[Keys.MAL_AVATAR_URL] ?: "",
+            themeOptions = runCatching { Json.decodeFromString<ThemeOptions>(prefs[Keys.THEME_OPTIONS] ?: "{}") }.getOrDefault(ThemeOptions()),
             themeMode = runCatching { ThemeMode.valueOf(prefs[Keys.THEME_MODE] ?: "") }.getOrDefault(ThemeMode.SYSTEM),
             notificationsEnabled = prefs[Keys.NOTIFICATIONS_ENABLED] ?: true,
             notificationOffsetMinutes = prefs[Keys.NOTIFICATION_OFFSET] ?: 0,
@@ -98,6 +103,10 @@ class UserPreferencesDataStore @Inject constructor(
 
     suspend fun setLastMalListSyncEpochMs(epochMs: Long) {
         dataStore.edit { it[Keys.LAST_MAL_LIST_SYNC] = epochMs }
+    }
+
+    suspend fun setThemeOptions(options: ThemeOptions) {
+        dataStore.edit { it[Keys.THEME_OPTIONS] = Json.encodeToString(options) }
     }
 
     suspend fun setThemeMode(mode: ThemeMode) {

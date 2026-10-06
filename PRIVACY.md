@@ -35,6 +35,12 @@ schedules. This policy explains what data the app accesses and how it's used.
 - Schedule data is cached locally on-device (Room database) purely to reduce network calls and
   support offline viewing; it is not shared with any third party.
 
+- Favorites, personal notes, watch activity, weekly goals and theme settings are stored in
+  local preferences. Tracking metadata is separated by MyAnimeList username and is not sent
+  to the anime APIs. The device backup/transfer settings also apply to these preferences.
+- CSV export writes the cached list and local notes/favorites only to the destination you
+  choose with Android’s document picker.
+
 ## Notifications
 
 If you enable airing notifications, the app schedules local notifications on your device (via

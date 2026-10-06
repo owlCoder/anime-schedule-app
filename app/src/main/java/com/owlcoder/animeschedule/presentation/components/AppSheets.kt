@@ -8,13 +8,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.view.WindowCompat
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,7 +57,7 @@ fun AppSheet(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    val container = if (dark) Color(0xFF0D0D0F) else Color(0xFFFBFBFD)
+    val container = MaterialTheme.colorScheme.surfaceContainerHigh
     val scrim = Color.Black.copy(alpha = if (dark) 0.42f else 0.26f)
 
     ModalBottomSheet(
@@ -71,7 +76,25 @@ fun AppSheet(
         scrimColor = scrim,
         tonalElevation = 0.dp,
         dragHandle = null,
+        properties = ModalBottomSheetProperties(
+            isAppearanceLightStatusBars = !dark,
+            isAppearanceLightNavigationBars = !dark,
+        ),
     ) {
+        // Material 3 initializes these flags when the dialog is created, but does not
+        // update them when a live theme preview changes an already-open sheet.
+        val view = LocalView.current
+        SideEffect {
+            var parent = view.parent
+            while (parent != null && parent !is DialogWindowProvider) parent = parent.parent
+            val window = (parent as? DialogWindowProvider)?.window
+            if (window != null) {
+                WindowCompat.getInsetsController(window, view).apply {
+                    isAppearanceLightStatusBars = !dark
+                    isAppearanceLightNavigationBars = !dark
+                }
+            }
+        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()

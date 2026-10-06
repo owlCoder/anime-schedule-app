@@ -12,8 +12,8 @@ val AppLightGrouped = Color(0xFFFFFFFF)
 val AppLightElevated = Color(0xFFFBFCFF)
 val AppLightSecondary = Color(0xFFE7EAF2)
 
-// AMOLED-first iOS hierarchy: true black canvas with barely lifted neutral surfaces.
-val AppDarkBackground = Color(0xFF000000)
-val AppDarkGrouped = Color(0xFF09090A)
-val AppDarkElevated = Color(0xFF0F0F11)
-val AppDarkSecondary = Color(0xFF171719)
+// Dark hierarchy; the AMOLED option overrides the page canvas with pure black.
+val AppDarkBackground = Color(0xFF101116)
+val AppDarkGrouped = Color(0xFF18191F)
+val AppDarkElevated = Color(0xFF24252C)
+val AppDarkSecondary = Color(0xFF2D2E36)

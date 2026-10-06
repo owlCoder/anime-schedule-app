@@ -52,6 +52,14 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.PauseCircle
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.RemoveCircle
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material3.FilterChip
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.HorizontalDivider
@@ -72,6 +80,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -110,7 +119,7 @@ import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
-private enum class ListOverlay { SORT, INSIGHTS }
+private enum class ListOverlay { SORT, INSIGHTS, TOOLS, HISTORY, PICK }
 
 private val statusTabs = listOf(
     WatchStatus.WATCHING,
@@ -146,6 +155,22 @@ fun MyListScreen(
     val removedMsg = stringResource(R.string.toast_removed_from_list)
     val errorMsg = stringResource(R.string.toast_update_error)
     val totalCount = uiState.statusCounts.values.sum()
+    val scope = rememberCoroutineScope()
+    var exportSnapshot by remember { mutableStateOf("") }
+    var pickedEntry by remember { mutableStateOf<MalListEntry?>(null) }
+    val exportedMsg = stringResource(R.string.list_exported)
+    val exportErrorMsg = stringResource(R.string.list_export_error)
+    val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
+        if (uri != null) scope.launch {
+            val success = withContext(Dispatchers.IO) {
+                runCatching {
+                    val stream = context.contentResolver.openOutputStream(uri) ?: error("No output stream")
+                    stream.bufferedWriter(Charsets.UTF_8).use { it.write(exportSnapshot) }
+                }.isSuccess
+            }
+            if (success) toast.success(exportedMsg) else toast.error(exportErrorMsg)
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.updateEvent.collect { event ->
@@ -196,6 +221,10 @@ fun MyListScreen(
                 onEditStatus = { id -> editingEntry = uiState.entries.find { it.animeId == id } },
                 onShowSort = { overlay = ListOverlay.SORT },
                 onShowInsights = { overlay = ListOverlay.INSIGHTS },
+                onShowTools = { overlay = ListOverlay.TOOLS },
+                onFavorites = viewModel::toggleFavorites,
+                onUnrated = viewModel::toggleUnrated,
+                onClearQuickFilters = viewModel::clearQuickFilters,
             )
         }
     }
@@ -209,13 +238,32 @@ fun MyListScreen(
             onRemove = { id -> viewModel.removeEntry(id) },
         )
     }
-    overlay?.let { selected ->
-        MyListOptionsSheet(
-            overlay = selected,
-            uiState = uiState,
+    when (overlay) {
+        ListOverlay.SORT, ListOverlay.INSIGHTS -> MyListOptionsSheet(
+            overlay = overlay!!, uiState = uiState,
             onSortSelected = { viewModel.setSortOrder(it); overlay = null },
             onDismiss = { overlay = null },
         )
+        ListOverlay.TOOLS -> ListToolsSheet(
+            canPick = uiState.entries.any { it.status != WatchStatus.COMPLETED && it.status != WatchStatus.DROPPED },
+            canExport = uiState.allEntries.isNotEmpty(),
+            onHistory = { overlay = ListOverlay.HISTORY },
+            onPick = {
+                pickedEntry = uiState.entries.filter { it.status != WatchStatus.COMPLETED && it.status != WatchStatus.DROPPED }.randomOrNull()
+                overlay = ListOverlay.PICK
+            },
+            onExport = {
+                exportSnapshot = uiState.allEntries.toListCsv(uiState.tools)
+                overlay = null
+                exporter.launch("anime-list-${java.time.LocalDate.now()}.csv")
+            }, onDismiss = { overlay = null },
+        )
+        ListOverlay.HISTORY -> WatchHistorySheet(uiState.tools, viewModel::setWeeklyGoal, viewModel::clearActivity, { overlay = null })
+        ListOverlay.PICK -> AnimePickSheet(pickedEntry, onOpen = { entry -> overlay = null; onAnimeClick(entry.animeId) }, onReroll = {
+            val candidates = uiState.entries.filter { it.status != WatchStatus.COMPLETED && it.status != WatchStatus.DROPPED && it.animeId != pickedEntry?.animeId }
+            pickedEntry = candidates.randomOrNull() ?: pickedEntry
+        }, onDismiss = { overlay = null })
+        null -> Unit
     }
 }
 
@@ -227,12 +275,16 @@ private fun LoggedInList(
     errorMsg: String,
     onRefresh: () -> Unit,
     onSearchQueryChange: (String) -> Unit,
-    onFilterSelected: (WatchStatus) -> Unit,
+    onFilterSelected: (WatchStatus?) -> Unit,
     onAnimeClick: (Int) -> Unit,
     onIncrementEpisode: (Int) -> Unit,
     onEditStatus: (Int) -> Unit,
     onShowSort: () -> Unit,
     onShowInsights: () -> Unit,
+    onShowTools: () -> Unit,
+    onFavorites: () -> Unit,
+    onUnrated: () -> Unit,
+    onClearQuickFilters: () -> Unit,
 ) {
     val motion = LocalMotionPolicy.current
     Scaffold(
@@ -257,6 +309,7 @@ private fun LoggedInList(
                         GlassToolbarGroup {
                             GlassToolbarButton(Icons.Default.BarChart, stringResource(R.string.mylist_statistics), onShowInsights)
                             GlassToolbarButton(Icons.AutoMirrored.Filled.Sort, stringResource(R.string.mylist_sort), onShowSort)
+                            GlassToolbarButton(Icons.Default.MoreHoriz, stringResource(R.string.list_tools), onShowTools)
                         }
                     },
                 )
@@ -269,6 +322,10 @@ private fun LoggedInList(
                     onClear = { onSearchQueryChange("") },
                     modifier = Modifier.height(44.dp),
                 )
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(uiState.favoritesOnly, onFavorites, modifier = Modifier.testTag("list-favorites-filter"), label = { Text(stringResource(R.string.favorites)) }, leadingIcon = { Icon(Icons.Default.Star, null, Modifier.size(16.dp)) })
+                    FilterChip(uiState.unratedOnly, onUnrated, modifier = Modifier.testTag("list-unrated-filter"), label = { Text(stringResource(R.string.list_unrated)) })
+                }
                 StatusFilterRow(
                     activeFilter = uiState.activeFilter,
                     counts = uiState.statusCounts,
@@ -313,8 +370,10 @@ private fun LoggedInList(
                     )
                     2 -> EmptyState(
                         icon = Icons.AutoMirrored.Filled.FormatListBulleted,
-                        title = stringResource(R.string.mylist_empty_title),
-                        subtitle = stringResource(R.string.mylist_empty_subtitle),
+                        title = stringResource(if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly) R.string.list_filtered_empty else R.string.mylist_empty_title),
+                        subtitle = stringResource(if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly) R.string.list_filtered_empty_hint else R.string.mylist_empty_subtitle),
+                        actionLabel = if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly) stringResource(R.string.list_clear_filters) else null,
+                        onAction = if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly) onClearQuickFilters else null,
                         modifier = Modifier.fillMaxSize(),
                     )
                     else -> LazyColumn(
@@ -333,7 +392,7 @@ private fun LoggedInList(
                         }
                         item(key = "list-section-title", contentType = "section-title") {
                             Text(
-                                text = "${uiState.activeFilter.displayName()} · ${stringResource(uiState.sortOrder.labelRes)}",
+                                text = "${uiState.activeFilter?.displayName() ?: stringResource(R.string.list_all_statuses)} · ${stringResource(uiState.sortOrder.labelRes)}",
                                 modifier = Modifier.padding(
                                     start = 27.dp,
                                     end = 27.dp,
@@ -356,11 +415,13 @@ private fun LoggedInList(
                                 title = entry.title.ifEmpty { entry.animeId.toString() },
                                 coverImageUrl = entry.coverImageUrl,
                                 isIncrementing = entry.animeId in uiState.pendingIncrementIds,
+                                isFavorite = entry.animeId in uiState.tools.favorites,
+                                hasNote = uiState.tools.notes[entry.animeId]?.isNotBlank() == true,
                                 onCardClick = { onAnimeClick(entry.animeId) },
                                 onIncrementEpisode = { onIncrementEpisode(entry.animeId) },
                                 onEditStatus = { onEditStatus(entry.animeId) },
                                 showDivider = false,
-                                modifier = Modifier.padding(horizontal = 16.dp),
+                                modifier = Modifier.padding(horizontal = 16.dp).testTag("mylist-entry-${entry.animeId}"),
                             )
                         }
                     }
@@ -372,9 +433,9 @@ private fun LoggedInList(
 
 @Composable
 private fun StatusFilterRow(
-    activeFilter: WatchStatus,
+    activeFilter: WatchStatus?,
     counts: Map<WatchStatus, Int>,
-    onFilterSelected: (WatchStatus) -> Unit,
+    onFilterSelected: (WatchStatus?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val motion = LocalMotionPolicy.current
@@ -384,7 +445,7 @@ private fun StatusFilterRow(
             .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(5.dp),
     ) {
-        statusTabs.forEach { status ->
+        (listOf(null) + statusTabs).forEach { status ->
             val isSelected = status == activeFilter
             val contentColor by animateColorAsState(
                 targetValue = if (isSelected) MaterialTheme.colorScheme.primary
@@ -410,6 +471,7 @@ private fun StatusFilterRow(
                         scaleX = scale
                         scaleY = scale
                     }
+                    .testTag("list-status-${status?.name ?: "ALL"}")
                     .clickable(onClick = { onFilterSelected(status) })
                     .semantics {
                         role = Role.Tab
@@ -443,19 +505,19 @@ private fun StatusFilterRow(
                             label = "my-list-tab-icon",
                         ) { selectedState ->
                             Icon(
-                                status.tabIcon(selectedState),
+                                status?.tabIcon(selectedState) ?: Icons.AutoMirrored.Filled.FormatListBulleted,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp),
                                 tint = contentColor,
                             )
                         }
                         Text(
-                            text = status.displayName(),
+                            text = status?.displayName() ?: stringResource(R.string.list_all_statuses),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                             color = contentColor,
                         )
-                        counts[status]?.takeIf { it > 0 }?.let { count ->
+                        (if (status == null) counts.values.sum() else counts[status])?.takeIf { it > 0 }?.let { count ->
                             Text(
                                 text = count.toString(),
                                 style = MaterialTheme.typography.labelSmall,
@@ -623,19 +685,19 @@ private fun InsightsStrip(insights: MyListInsights, onClick: (() -> Unit)? = nul
         material = AppMaterial.Interactive,
         shape = ContinuousRoundedShape(16.dp),
     ) {
-        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 11.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-            InsightMetric(insights.completedAnime.toString(), stringResource(R.string.mylist_metric_completed))
-            InsightMetric(insights.watchedEpisodes.toString(), stringResource(R.string.mylist_metric_episodes))
-            InsightMetric(insights.averageScore?.let { String.format(java.util.Locale.getDefault(), "%.1f", it) } ?: "—", stringResource(R.string.mylist_metric_score))
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 11.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            InsightMetric(insights.completedAnime.toString(), stringResource(R.string.mylist_metric_completed), Modifier.weight(1f))
+            InsightMetric(insights.watchedEpisodes.toString(), stringResource(R.string.mylist_metric_episodes), Modifier.weight(1f))
+            InsightMetric(insights.averageScore?.let { String.format(java.util.Locale.getDefault(), "%.1f", it) } ?: "—", stringResource(R.string.mylist_metric_score), Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-private fun InsightMetric(value: String, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+private fun InsightMetric(value: String, label: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
     }
 }
 

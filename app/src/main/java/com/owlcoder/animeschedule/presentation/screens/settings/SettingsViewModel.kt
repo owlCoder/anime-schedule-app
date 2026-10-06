@@ -37,6 +37,7 @@ data class SettingsUiState(
     val username: String = "",
     val avatarUrl: String = "",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val themeOptions: com.owlcoder.animeschedule.domain.model.ThemeOptions = com.owlcoder.animeschedule.domain.model.ThemeOptions(),
     val notificationsEnabled: Boolean = true,
     val notificationOffsetMinutes: Int = 0,
     val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
@@ -79,6 +80,7 @@ class SettingsViewModel @Inject constructor(
             username = username,
             avatarUrl = avatarUrl,
             themeMode = preferences.themeMode,
+            themeOptions = preferences.themeOptions,
             notificationsEnabled = preferences.notificationsEnabled,
             notificationOffsetMinutes = preferences.notificationOffsetMinutes,
             accentColor = preferences.accentColor,
@@ -98,6 +100,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setTimezone(timezoneId: String) {
         viewModelScope.launch { settingsRepository.setTimezoneId(timezoneId) }
+    }
+
+    fun setThemeOptions(options: com.owlcoder.animeschedule.domain.model.ThemeOptions) {
+        viewModelScope.launch { settingsRepository.setThemeOptions(options) }
     }
 
     fun setThemeMode(mode: ThemeMode) {

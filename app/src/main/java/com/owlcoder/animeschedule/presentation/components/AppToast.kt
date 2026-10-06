@@ -1,177 +1,152 @@
 package com.owlcoder.animeschedule.presentation.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalAccessibilityManager
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.owlcoder.animeschedule.R
 import kotlinx.coroutines.delay
 
-/** Visual intent of a toast — drives its icon and accent tint. */
 enum class ToastTone { Info, Success, Error }
 
 @Immutable
 data class ToastData(val id: Long, val message: String, val tone: ToastTone)
 
-/**
- * App-styled toast controller. Replaces the classic Material `Snackbar`/`android.widget.Toast`
- * with a rounded glass card that appears below the status bar and auto-dismisses.
- */
+/** A single current message; a new notification replaces the old timeout as well as its text. */
 class ToastController {
     var current by mutableStateOf<ToastData?>(null)
         private set
-
     private var counter = 0L
-
     fun show(message: String, tone: ToastTone = ToastTone.Info) {
-        if (message.isBlank()) return
-        current = ToastData(id = ++counter, message = message.trim(), tone = tone)
+        if (message.isNotBlank()) current = ToastData(++counter, message.trim(), tone)
     }
 
     fun success(message: String) = show(message, ToastTone.Success)
     fun error(message: String) = show(message, ToastTone.Error)
-
     fun dismiss() {
         current = null
     }
 }
 
-/** No-op fallback so the local always has a value. */
 val LocalToast = compositionLocalOf { ToastController() }
 
 @Composable
-fun ToastHost(
-    controller: ToastController,
-    content: @Composable () -> Unit,
-) {
+fun ToastHost(controller: ToastController, content: @Composable () -> Unit) {
     val motion = LocalMotionPolicy.current
-
+    val accessibility = LocalAccessibilityManager.current
+    val navBarHeight = LocalNavBarHeight.current
+    val data = controller.current
+    var lastShown by remember { mutableStateOf<ToastData?>(null) }
+    SideEffect { if (data != null) lastShown = data }
+    LaunchedEffect(data?.id) {
+        if (data != null) {
+            val base = maxOf(
+                if (data.tone == ToastTone.Error) 4500L else 2600L,
+                (data.message.length * 45L).coerceAtMost(10_000L)
+            )
+            val timeout = accessibility?.calculateRecommendedTimeoutMillis(
+                base,
+                containsIcons = true,
+                containsText = true,
+                containsControls = true
+            ) ?: base
+            delay(timeout)
+            if (controller.current?.id == data.id) controller.dismiss()
+        }
+    }
     Box(Modifier.fillMaxSize()) {
         content()
-
-        val data = controller.current
-        LaunchedEffect(data?.id) {
-            if (data != null) {
-                delay(2400)
-                if (controller.current?.id == data.id) controller.dismiss()
-            }
-        }
-
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .padding(start = 16.dp, end = 16.dp, top = 10.dp),
-            contentAlignment = Alignment.TopCenter,
+            Modifier.fillMaxSize().imePadding().navigationBarsPadding()
+                .padding(start = 24.dp, end = 24.dp, bottom = navBarHeight + 16.dp),
+            contentAlignment = Alignment.BottomCenter
         ) {
             AnimatedVisibility(
-                visible = data != null,
+                data != null,
                 enter = slideInVertically(
-                    animationSpec = motion.iosSpring(
-                        dampingRatio = 0.92f,
-                        stiffness = 540f,
-                    ),
-                    initialOffsetY = { if (motion.animationsEnabled) -it / 2 else 0 },
-                ) + fadeIn(
-                    animationSpec = motion.iosDecelerate(IosMotion.Quick),
-                    initialAlpha = if (motion.animationsEnabled) 0.68f else 1f,
-                ),
-                exit = slideOutVertically(
-                    animationSpec = motion.iosAccelerate(IosMotion.Standard),
-                    targetOffsetY = { if (motion.animationsEnabled) -it / 3 else 0 },
-                ) + fadeOut(
-                    animationSpec = motion.iosAccelerate(IosMotion.Quick),
+                    motion.iosSpring(
+                        dampingRatio = .92f,
+                        stiffness = 540f
+                    )
+                ) { if (motion.animationsEnabled) it / 2 else 0 } + fadeIn(motion.iosTween(IosMotion.Quick)),
+                exit = slideOutVertically(motion.iosTween(IosMotion.Quick)) { if (motion.animationsEnabled) it / 3 else 0 } + fadeOut(
+                    motion.iosTween(IosMotion.Quick)
                 ),
             ) {
-                val shown = data ?: controller.current
-                if (shown != null) ToastCard(shown)
+                (data ?: lastShown)?.let { ToastCard(it, controller::dismiss) }
             }
         }
     }
 }
 
 @Composable
-private fun ToastCard(data: ToastData) {
-    val accent: Color = when (data.tone) {
+private fun ToastCard(data: ToastData, onDismiss: () -> Unit) {
+    val dark = MaterialTheme.colorScheme.background.luminance() < .35f
+    val accent = when (data.tone) {
+        ToastTone.Success -> if (dark) Color(0xFF9BD6AE) else Color(0xFF256A43)
         ToastTone.Info -> MaterialTheme.colorScheme.primary
-        ToastTone.Success -> MaterialTheme.colorScheme.primary
-        ToastTone.Error -> MaterialTheme.colorScheme.error
+        ToastTone.Error -> if (dark) Color(0xFFFFB4AB) else Color(0xFFB3261E)
     }
-    val icon: ImageVector = when (data.tone) {
-        ToastTone.Info -> Icons.Outlined.Info
+    val icon = when (data.tone) {
         ToastTone.Success -> Icons.Outlined.CheckCircle
+        ToastTone.Info -> Icons.Outlined.Info
         ToastTone.Error -> Icons.Outlined.ErrorOutline
     }
-    val shape = RoundedCornerShape(20.dp)
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .widthIn(max = 460.dp)
-            .clip(shape)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), shape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+    Surface(
+        modifier = Modifier.widthIn(min = 180.dp, max = 420.dp).testTag("app-toast")
+            .semantics { liveRegion = LiveRegionMode.Polite },
+        shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f)),
+        shadowElevation = 8.dp,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 13.dp),
+            Modifier.padding(start = 12.dp, end = 6.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(34.dp)
-                    .clip(RoundedCornerShape(11.dp))
-                    .background(accent.copy(alpha = 0.18f)),
-                contentAlignment = Alignment.Center,
-            ) {
+            Surface(shape = CircleShape, color = accent.copy(alpha = .12f)) {
+                Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
+                    Icon(
+                        icon,
+                        null,
+                        tint = accent,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            Text(
+                data.message,
+                modifier = Modifier.weight(1f, fill = false),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            IconButton(onDismiss, modifier = Modifier.size(40.dp).testTag("toast-dismiss")) {
                 Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = accent,
-                    modifier = Modifier.size(19.dp),
+                    Icons.Default.Close,
+                    stringResource(R.string.toast_dismiss),
+                    modifier = Modifier.size(16.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Spacer(Modifier.size(12.dp))
-            Text(
-                text = data.message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.fillMaxWidth(),
-            )
         }
     }
 }

@@ -7,27 +7,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import com.owlcoder.animeschedule.ui.theme.AppDarkElevated
-import com.owlcoder.animeschedule.ui.theme.AppDarkGrouped
-import com.owlcoder.animeschedule.ui.theme.AppDarkSecondary
-import com.owlcoder.animeschedule.ui.theme.AppLightElevated
-import com.owlcoder.animeschedule.ui.theme.AppLightGrouped
-import com.owlcoder.animeschedule.ui.theme.AppLightSecondary
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
-import androidx.compose.foundation.background
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 
 enum class AppMaterial { Background, Grouped, Elevated, Interactive }
 
 @Composable
 fun appMaterialColor(material: AppMaterial): Color {
-    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
     return when (material) {
         AppMaterial.Background -> MaterialTheme.colorScheme.background
-        AppMaterial.Grouped -> if (dark) AppDarkGrouped else AppLightGrouped
-        AppMaterial.Elevated -> if (dark) AppDarkElevated else AppLightElevated
-        AppMaterial.Interactive -> if (dark) AppDarkSecondary else AppLightSecondary
+        AppMaterial.Grouped -> MaterialTheme.colorScheme.surface
+        AppMaterial.Elevated -> MaterialTheme.colorScheme.surfaceContainerHigh
+        AppMaterial.Interactive -> MaterialTheme.colorScheme.surfaceContainerHighest
     }
 }
 
@@ -40,22 +31,9 @@ fun AppMaterialSurface(
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     content: @Composable () -> Unit,
 ) {
-    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    val border = when (material) {
-        AppMaterial.Background -> null
-        AppMaterial.Grouped -> BorderStroke(
-            0.5.dp,
-            if (dark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.08f),
-        )
-        AppMaterial.Elevated -> BorderStroke(
-            0.5.dp,
-            if (dark) Color.White.copy(alpha = 0.10f) else Color.Black.copy(alpha = 0.07f),
-        )
-        AppMaterial.Interactive -> BorderStroke(
-            0.5.dp,
-            if (dark) Color.White.copy(alpha = 0.09f) else Color.Black.copy(alpha = 0.06f),
-        )
-    }
+    val border = if (material == AppMaterial.Background) null else BorderStroke(
+        0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
+    )
     Surface(
         modifier = modifier,
         shape = shape,

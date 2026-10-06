@@ -21,6 +21,10 @@ class SettingsRepositoryImpl @Inject constructor(
         prefsDataStore.setTimezoneId(timezoneId)
     }
 
+    override suspend fun setThemeOptions(options: com.owlcoder.animeschedule.domain.model.ThemeOptions) {
+        prefsDataStore.setThemeOptions(options)
+    }
+
     override suspend fun setThemeMode(mode: ThemeMode) {
         prefsDataStore.setThemeMode(mode)
     }

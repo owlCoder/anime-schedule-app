@@ -8,7 +8,7 @@
     <string name="settings_theme_light">Svetla</string>
     <string name="settings_theme_dark">Tamna</string>
     <string name="settings_accent">Boja akcenta</string>
-    <string name="settings_accent_subtitle">Izaberi boju naglašavanja koja se koristi kroz aplikaciju.</string>
+    <string name="settings_accent_subtitle">Izaberi akcent za klasičnu temu. Ostale palete koriste svoje boje.</string>
     <string name="accent_telegram_blue">Plava</string>
     <string name="accent_purple">Ljubičasta</string>
     <string name="accent_green">Zelena</string>
@@ -76,17 +76,17 @@
     <!-- Changelog -->
     <string name="changelog_release_date">6. oktobar 2026.</string>
     <string name="changelog_whats_new">Šta je novo</string>
-    <string name="changelog_hero_description">Brži paneli, lakše praćenje i pet novih funkcija za tvoj anime.</string>
-    <string name="changelog_nav_title">Pouzdano uređivanje iz panela</string>
-    <string name="changelog_nav_description">Menjaj više animea bez preklopljenih prozora i zaglavljenog blura. Raspored dana se brže skroluje.</string>
-    <string name="changelog_motion_title">Pretraga i brzi filteri rasporeda</string>
-    <string name="changelog_motion_description">Pronađi naslove tokom nedelje i prikaži samo predstojeća emitovanja ili svoju listu.</string>
-    <string name="changelog_filters_title">Sortiranje liste i statistika gledanja</string>
-    <string name="changelog_filters_description">Sortiraj po naslovu, oceni, napretku, preostalim epizodama ili izmenama. Proveri ukupan napredak i prosek ocena.</string>
-    <string name="changelog_states_title">Precizne kontrole epizoda</string>
-    <string name="changelog_states_description">Unesi broj epizoda direktno, menjaj po deset ili završi seriju jednim dodirom.</string>
-    <string name="changelog_about_title">Podeli sledeći anime</string>
-    <string name="changelog_about_description">Podeli naslov i AniList link preko Android panela. Nove kontrole su dostupne na engleskom i srpskom.</string>
+    <string name="changelog_hero_description">Pregledniji editor, kompletne teme i deset novih alata za tvoju anime listu.</string>
+    <string name="changelog_nav_title">Pregledniji editor statusa i epizoda</string>
+    <string name="changelog_nav_description">Veće kontrole, grupisane ocene, izbor statusa, lične beleške i potvrda uklanjanja. Uzastopne izmene i dalje koriste jedan panel.</string>
+    <string name="changelog_motion_title">Teme za celu aplikaciju</string>
+    <string name="changelog_motion_description">Pet paleta, boje Android pozadine, AMOLED crna, veći kontrast i manje animacija. Tabovi sa ikonicama i kompaktna obaveštenja prate novi dizajn.</string>
+    <string name="changelog_filters_title">Favoriti, beleške i fleksibilni filteri</string>
+    <string name="changelog_filters_description">Sačuvaj lokalne favorite i beleške, pregledaj sve statuse zajedno ili pronađi anime koji još nema ocenu.</string>
+    <string name="changelog_states_title">Istorija, ciljevi i alati za listu</string>
+    <string name="changelog_states_description">Pregledaj promene napretka, postavi nedeljni cilj, izaberi nasumičan anime iz rezultata i izvezi celu sačuvanu listu u CSV.</string>
+    <string name="changelog_about_title">Brže istraži sezonu</string>
+    <string name="changelog_about_description">Pretraži naslove sezone i sakrij anime koji je već na tvojoj listi. Sve je dostupno na engleskom i srpskoj latinici.</string>
     <string name="changelog_footer">Napravljeno pažljivo od strane AnimeSchedule tima</string>
 
     <!-- Izvori za gledanje -->

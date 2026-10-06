@@ -16,6 +16,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOf
+import com.owlcoder.animeschedule.domain.model.WatchTools
+import com.owlcoder.animeschedule.data.local.datastore.WatchToolsStore
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.flowOn
@@ -28,7 +31,11 @@ data class MyListUiState(
     val isLoading: Boolean = false,
     val isLoggedIn: Boolean = false,
     val searchQuery: String = "",
-    val activeFilter: WatchStatus = WatchStatus.WATCHING,
+    val activeFilter: WatchStatus? = WatchStatus.WATCHING,
+    val allEntries: List<MalListEntry> = emptyList(),
+    val favoritesOnly: Boolean = false,
+    val unratedOnly: Boolean = false,
+    val tools: WatchTools = WatchTools(),
     val pendingIncrementIds: Set<Int> = emptySet(),
     /** Count of list entries per status, independent of [searchQuery]/[activeFilter]. */
     val statusCounts: Map<WatchStatus, Int> = emptyMap(),
@@ -39,7 +46,11 @@ data class MyListUiState(
 private data class MyListContent(
     val entries: List<MalListEntry>,
     val searchQuery: String,
-    val activeFilter: WatchStatus,
+    val activeFilter: WatchStatus?,
+    val allEntries: List<MalListEntry>,
+    val favoritesOnly: Boolean = false,
+    val unratedOnly: Boolean = false,
+    val tools: WatchTools = WatchTools(),
     val statusCounts: Map<WatchStatus, Int>,
     val sortOrder: MyListSortOrder,
     val insights: MyListInsights,
@@ -49,11 +60,13 @@ private data class MyListContent(
 class MyListViewModel @Inject constructor(
     private val malRepository: MalRepository,
     authRepository: AuthRepository,
+    private val toolsStore: WatchToolsStore? = null,
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
     private val _sortOrder = MutableStateFlow(MyListSortOrder.RECENT)
-    private val _activeFilter = MutableStateFlow(WatchStatus.WATCHING)
+    private val _activeFilter = MutableStateFlow<WatchStatus?>(WatchStatus.WATCHING)
+    private val _quickFilters = MutableStateFlow(false to false)
     private val _isLoading = MutableStateFlow(true)
     private val _pendingIncrementIds = MutableStateFlow<Set<Int>>(emptySet())
     private var syncJob: Job? = null
@@ -67,23 +80,32 @@ class MyListViewModel @Inject constructor(
     private val _updateEvent = Channel<UpdateEvent>(Channel.BUFFERED)
     val updateEvent = _updateEvent.receiveAsFlow()
 
-    private val listContent = combine(
+    private val baseContent = combine(
         malRepository.getUserList(),
         _searchQuery,
         _activeFilter,
         _sortOrder,
     ) { allEntries, query, filter, sortOrder ->
+        val trimmedQuery = query.trim()
         val filteredEntries = allEntries.filter { entry ->
-            entry.status == filter &&
-                (query.isBlank() || entry.title.contains(query.trim(), ignoreCase = true))
+            (filter == null || entry.status == filter) &&
+                (trimmedQuery.isBlank() || entry.title.contains(trimmedQuery, ignoreCase = true))
         }
         MyListContent(
             entries = filteredEntries.sortedFor(sortOrder),
+            allEntries = allEntries,
             searchQuery = query,
             activeFilter = filter,
             statusCounts = allEntries.groupingBy { it.status }.eachCount(),
             sortOrder = sortOrder,
             insights = allEntries.insights(),
+        )
+    }.flowOn(Dispatchers.Default)
+
+    private val listContent = combine(baseContent, _quickFilters, toolsStore?.data ?: flowOf(WatchTools())) { content, quick, tools ->
+        content.copy(
+            entries = content.entries.filter { (!quick.first || it.animeId in tools.favorites) && (!quick.second || it.score == 0) },
+            favoritesOnly = quick.first, unratedOnly = quick.second, tools = tools,
         )
     }.flowOn(Dispatchers.Default)
 
@@ -95,6 +117,10 @@ class MyListViewModel @Inject constructor(
     ) { content, loading, loggedIn, pending ->
         MyListUiState(
             entries = content.entries,
+            allEntries = content.allEntries,
+            favoritesOnly = content.favoritesOnly,
+            unratedOnly = content.unratedOnly,
+            tools = content.tools,
             isLoading = loading,
             isLoggedIn = loggedIn,
             searchQuery = content.searchQuery,
@@ -120,7 +146,13 @@ class MyListViewModel @Inject constructor(
 
     fun setSortOrder(order: MyListSortOrder) = _sortOrder.update { order }
 
-    fun setFilter(status: WatchStatus) = _activeFilter.update { status }
+    fun setFilter(status: WatchStatus?) = _activeFilter.update { status }
+
+    fun clearQuickFilters() { _searchQuery.value = ""; _quickFilters.value = false to false }
+    fun toggleFavorites() = _quickFilters.update { !it.first to it.second }
+    fun toggleUnrated() = _quickFilters.update { it.first to !it.second }
+    fun setWeeklyGoal(goal: Int) { viewModelScope.launch { toolsStore?.setWeeklyGoal(goal) } }
+    fun clearActivity() { viewModelScope.launch { toolsStore?.clearActivity() } }
 
     /** Forced refresh (pull-to-refresh). Joins a sync that is already running. */
     fun refresh() = sync(force = true)
