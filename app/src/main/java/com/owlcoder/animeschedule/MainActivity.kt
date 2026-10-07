@@ -128,6 +128,8 @@ class MainActivity : AppCompatActivity() {
                 setNote = { id, note -> scope.launch { watchToolsStore.setNote(id, note) } },
                 setTags = { id, tags -> scope.launch { watchToolsStore.setTags(id, tags) } },
                 setEpisodeMinutes = { minutes -> scope.launch { watchToolsStore.setEpisodeMinutes(minutes) } },
+                togglePin = { id -> scope.launch { watchToolsStore.togglePin(id) } },
+                setDurationOverride = { id, minutes -> scope.launch { watchToolsStore.setDurationOverride(id, minutes) } },
             )
 
             var pendingTheme by rememberSaveable { mutableStateOf(prefs.themeMode) }

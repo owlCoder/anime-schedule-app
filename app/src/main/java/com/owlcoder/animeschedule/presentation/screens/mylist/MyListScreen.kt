@@ -97,6 +97,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.WatchStatus
+import com.owlcoder.animeschedule.domain.model.SmartListFilter
+import com.owlcoder.animeschedule.domain.model.minutesFor
 import com.owlcoder.animeschedule.presentation.components.AppChoiceRow
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.GlassToolbarGroup
@@ -117,12 +119,13 @@ import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.displayName
+import com.owlcoder.animeschedule.presentation.components.labelRes
 import com.owlcoder.animeschedule.presentation.components.iosSpring
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
-private enum class ListOverlay { SORT, INSIGHTS, TOOLS, HISTORY, PICK, TAGS }
+private enum class ListOverlay { SORT, INSIGHTS, TOOLS, HISTORY, PICK, TAGS, SMART, VIEWS, PLANNER, CALENDAR }
 
 private val statusTabs = listOf(
     WatchStatus.WATCHING,
@@ -152,6 +155,7 @@ fun MyListScreen(
     var overlay by remember { mutableStateOf<ListOverlay?>(null) }
     var showError by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val resources = androidx.compose.ui.platform.LocalResources.current
     val toast = LocalToast.current
     val motion = LocalMotionPolicy.current
     val savedMsg = stringResource(R.string.toast_status_saved)
@@ -228,6 +232,8 @@ fun MyListScreen(
                 onFavorites = viewModel::toggleFavorites,
                 onUnrated = viewModel::toggleUnrated,
                 onTags = { overlay = ListOverlay.TAGS },
+                onSmart = { overlay = ListOverlay.SMART },
+                onViews = { overlay = ListOverlay.VIEWS },
                 onClearQuickFilters = viewModel::clearQuickFilters,
             )
         }
@@ -254,6 +260,25 @@ fun MyListScreen(
             continueTitle = uiState.allEntries.continueWatching()?.title,
             onContinue = { uiState.allEntries.continueWatching()?.let { overlay = null; onAnimeClick(it.animeId) } },
             onHistory = { overlay = ListOverlay.HISTORY },
+            onViews = { overlay = ListOverlay.VIEWS },
+            onPlanner = { overlay = ListOverlay.PLANNER },
+            onCalendar = { overlay = ListOverlay.CALENDAR },
+            canShare = uiState.entries.isNotEmpty(),
+            onShare = {
+                val payload = uiState.entries.toListShareText(
+                    resources.getQuantityString(R.plurals.list_share_title_count, uiState.entries.size, uiState.entries.size),
+                    line = { e -> resources.getString(R.string.list_share_line, e.title.ifBlank { "#${e.animeId}" }, resources.getString(e.status.labelRes()), e.episodesWatched, e.totalEpisodes?.takeIf { it > 0 }?.toString() ?: "?", e.score) },
+                    overflow = { resources.getString(R.string.list_share_more, it) },
+                )
+                overlay = null
+                runCatching {
+                    context.startActivity(android.content.Intent.createChooser(android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(android.content.Intent.EXTRA_TEXT, payload)
+                        putExtra(android.content.Intent.EXTRA_SUBJECT, resources.getString(R.string.mylist_title))
+                    }, resources.getString(R.string.list_share)))
+                }.onFailure { toast.error(resources.getString(R.string.list_share_failed)) }
+            },
             onPick = {
                 pickedEntry = uiState.entries.filter { it.status != WatchStatus.COMPLETED && it.status != WatchStatus.DROPPED }.randomOrNull()
                 overlay = ListOverlay.PICK
@@ -264,7 +289,11 @@ fun MyListScreen(
                 exporter.launch("anime-list-${java.time.LocalDate.now()}.csv")
             }, onDismiss = { overlay = null },
         )
-        ListOverlay.HISTORY -> WatchHistorySheet(uiState.tools, viewModel::setWeeklyGoal, viewModel::clearActivity, { overlay = null })
+        ListOverlay.HISTORY -> WatchHistorySheet(uiState.tools, viewModel::setWeeklyGoal, viewModel::clearActivity, { overlay = null }, onCalendar = { overlay = ListOverlay.CALENDAR })
+        ListOverlay.SMART -> SmartFiltersSheet(uiState.smartFilter, { viewModel.setSmartFilter(it); overlay = null }, { overlay = null })
+        ListOverlay.VIEWS -> SavedViewsSheet(uiState.tools.savedViews, viewModel::saveView, { viewModel.applyView(it); overlay = null }, viewModel::deleteView, { overlay = null })
+        ListOverlay.PLANNER -> WatchPlannerSheet(uiState.allEntries, uiState.tools, { overlay = null; onAnimeClick(it) }, { overlay = null })
+        ListOverlay.CALENDAR -> ActivityCalendarSheet(uiState.tools, viewModel::setDailyGoal, { overlay = null })
         ListOverlay.PICK -> AnimePickSheet(pickedEntry, onOpen = { entry -> overlay = null; onAnimeClick(entry.animeId) }, onReroll = {
             val candidates = uiState.entries.filter { it.status != WatchStatus.COMPLETED && it.status != WatchStatus.DROPPED && it.animeId != pickedEntry?.animeId }
             pickedEntry = candidates.randomOrNull() ?: pickedEntry
@@ -296,6 +325,8 @@ private fun LoggedInList(
     onFavorites: () -> Unit,
     onUnrated: () -> Unit,
     onTags: () -> Unit,
+    onSmart: () -> Unit,
+    onViews: () -> Unit,
     onClearQuickFilters: () -> Unit,
 ) {
     val motion = LocalMotionPolicy.current
@@ -335,9 +366,11 @@ private fun LoggedInList(
                     modifier = Modifier.heightIn(min = 48.dp),
                 )
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(uiState.smartFilter != SmartListFilter.ALL, onSmart, modifier = Modifier.testTag("list-smart-filter"), label = { Text(stringResource(if (uiState.smartFilter == SmartListFilter.ALL) R.string.smart_filters else uiState.smartFilter.labelRes())) }, leadingIcon = { Icon(Icons.Default.FilterAlt, null, Modifier.size(16.dp)) })
                     FilterChip(uiState.favoritesOnly, onFavorites, modifier = Modifier.testTag("list-favorites-filter"), label = { Text(stringResource(R.string.favorites)) }, leadingIcon = { Icon(Icons.Default.Star, null, Modifier.size(16.dp)) })
                     FilterChip(uiState.unratedOnly, onUnrated, modifier = Modifier.testTag("list-unrated-filter"), label = { Text(stringResource(R.string.list_unrated)) }, leadingIcon = { Icon(Icons.Default.StarBorder, null, Modifier.size(16.dp)) })
                     FilterChip(uiState.activeTag != null, onTags, modifier = Modifier.testTag("list-tags-filter"), label = { Text(uiState.activeTag ?: stringResource(R.string.personal_tags)) }, leadingIcon = { Icon(Icons.Default.Label, null, Modifier.size(16.dp)) })
+                    FilterChip(false, onViews, modifier = Modifier.testTag("list-saved-views"), label = { Text(stringResource(R.string.saved_list_views)) }, leadingIcon = { Icon(Icons.Default.Bookmarks, null, Modifier.size(16.dp)) })
                 }
                 StatusFilterRow(
                     activeFilter = uiState.activeFilter,
@@ -383,16 +416,16 @@ private fun LoggedInList(
                     )
                     2 -> EmptyState(
                         icon = Icons.AutoMirrored.Filled.FormatListBulleted,
-                        title = stringResource(if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null) R.string.list_filtered_empty else R.string.mylist_empty_title),
-                        subtitle = stringResource(if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null) R.string.list_filtered_empty_hint else R.string.mylist_empty_subtitle),
-                        actionLabel = if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null) stringResource(R.string.list_clear_filters) else null,
-                        onAction = if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null) onClearQuickFilters else null,
+                        title = stringResource(if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null || uiState.smartFilter != SmartListFilter.ALL) R.string.list_filtered_empty else R.string.mylist_empty_title),
+                        subtitle = stringResource(if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null || uiState.smartFilter != SmartListFilter.ALL) R.string.list_filtered_empty_hint else R.string.mylist_empty_subtitle),
+                        actionLabel = if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null || uiState.smartFilter != SmartListFilter.ALL) stringResource(R.string.list_clear_filters) else null,
+                        onAction = if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null || uiState.smartFilter != SmartListFilter.ALL) onClearQuickFilters else null,
                         modifier = Modifier.fillMaxSize(),
                     )
                     else -> LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(top = 5.dp, bottom = 116.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         if (showError) {
                             item(key = "sync-error", contentType = "error") {
@@ -429,9 +462,10 @@ private fun LoggedInList(
                                 coverImageUrl = entry.coverImageUrl,
                                 isIncrementing = entry.animeId in uiState.pendingIncrementIds,
                                 isFavorite = entry.animeId in uiState.tools.favorites,
+                                isPinned = entry.animeId in uiState.tools.pinned,
                                 hasNote = uiState.tools.notes[entry.animeId]?.isNotBlank() == true,
                                 tags = uiState.tools.tags[entry.animeId].orEmpty(),
-                                remainingMinutes = entry.totalEpisodes?.takeIf { it > 0 }?.let { (it - entry.episodesWatched).coerceAtLeast(0).toLong() * uiState.tools.episodeMinutes },
+                                remainingMinutes = entry.totalEpisodes?.takeIf { it > 0 }?.let { (it - entry.episodesWatched).coerceAtLeast(0).toLong() * uiState.tools.minutesFor(entry.animeId) },
                                 onCardClick = { onAnimeClick(entry.animeId) },
                                 onIncrementEpisode = { onIncrementEpisode(entry.animeId) },
                                 onEditStatus = { onEditStatus(entry.animeId) },

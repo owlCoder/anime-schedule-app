@@ -25,4 +25,6 @@ class NotificationRepositoryImpl @Inject constructor(
 
     override suspend fun markAllRead() =
         notificationDao.markAllRead()
+
+    override suspend fun deleteRead() = notificationDao.deleteRead()
 }

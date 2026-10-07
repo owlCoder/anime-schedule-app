@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="smart_all">All anime</string>
+    <string name="pinned_anime">Pinned anime</string>
+    <string name="smart_short">Short series</string>
+    <string name="smart_near_finish">Almost finished</string>
+    <string name="smart_unstarted">Not started</string>
+    <string name="smart_filters">Smart filters</string>
+    <string name="smart_filters_hint">Combine with status, search and tags. Short series have 1–13 episodes; almost finished titles have 1–3 episodes left. Completed and dropped titles are excluded from these two filters.</string>
+    <string name="saved_list_views">Saved list views</string>
+    <string name="saved_views_hint">Save your current search, status, quick filters and sort order. Keep up to eight views; saving the same name updates it.</string>
+    <string name="view_name">Name this view</string>
+    <string name="view_save">Save current view</string>
+    <string name="views_empty">Your saved list views will appear here.</string>
+    <string name="view_delete">Delete view %1$s</string>
+    <string name="watch_planner">Watch session planner</string>
+    <string name="planner_hint">Plan a session from your Watching list. Pinned titles get priority; episodes are shared between titles and use their individual duration. Open a title when ready.</string>
+    <string name="planner_budget">Available minutes</string>
+    <string name="planner_summary">%1$d episodes · %2$d min</string>
+    <string name="planner_unused">%1$d minutes spare</string>
+    <string name="planner_empty">No episodes fit yet</string>
+    <string name="planner_empty_hint">Increase the time budget or add an unfinished anime to Watching.</string>
+    <string name="planner_item">%1$d episodes · %2$d minutes</string>
+    <string name="activity_calendar">Activity calendar</string>
+    <string name="current_streak">Current streak</string>
+    <string name="best_streak">Best streak</string>
+    <string name="streak_days">%1$d days</string>
+    <string name="daily_goal">Daily episode goal</string>
+    <string name="daily_goal_off">%1$d episodes today · goal off</string>
+    <string name="daily_goal_progress">Today: %1$d / %2$d episodes</string>
+    <string name="calendar_hint">Your last 28 days. Tap a day for its activity. Streaks use retained local progress history and your schedule time zone; corrections subtract from daily totals.</string>
+    <string name="calendar_day_label">%1$s · %2$d episodes</string>
+    <string name="calendar_day_empty">No local progress changes on this day.</string>
+    <string name="value_decrease">Decrease %1$s</string>
+    <string name="value_increase">Increase %1$s</string>
+    <string name="anime_pin">Pin anime to top</string>
+    <string name="anime_unpin">Unpin anime</string>
+    <string name="anime_duration">Episode duration</string>
+    <string name="anime_duration_hint">Minutes per episode for this anime (1–180). Leave blank to use your default of %1$d minutes. Saved with this editor.</string>
+    <string name="anime_duration_default">Use default duration</string>
+    <string name="anime_duration_invalid">Enter 1–180 minutes or leave blank.</string>
+    <string name="list_share">Share current list</string>
+    <string name="list_share_hint">Share titles, statuses, progress and scores from current results as text (up to 200 titles).</string>
+    <string name="list_share_heading">My anime list · %1$d titles</string>
+    <string name="list_share_line">%1$s — %2$s · %3$d/%4$s episodes · score %5$d/10</string>
+    <string name="list_share_more">…and %1$d more titles</string>
+    <string name="list_share_failed">Could not open sharing. Try again.</string>
+    <string name="notif_search">Search notification titles</string>
+    <string name="notif_search_empty">No matching notifications</string>
+    <string name="notif_clear_read">Clear read history</string>
+    <string name="notif_clear_confirm">Delete all %1$d read notifications? Unread notifications are kept.</string>
+    <string name="notif_clear_failed">Could not clear read history. Try again.</string>
+    <string name="notification_episode_time">Episode %1$d · %2$s</string>
+    <string name="planner_menu_hint">Fit episodes into your available time.</string>
+    <string name="calendar_menu_hint">28 days of activity, streaks and a daily goal.</string>
+    <string name="views_menu_hint">Save and restore search, filters and sorting.</string>
+    <plurals name="streak_day_count">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <string name="calendar_range">%1$s – %2$s</string>
+    <plurals name="list_share_title_count">
+        <item quantity="one">My anime list · %1$d title</item>
+        <item quantity="other">My anime list · %1$d titles</item>
+    </plurals>
+    <plurals name="planner_episode_count">
+        <item quantity="one">%1$d episode · %2$d min</item>
+        <item quantity="other">%1$d episodes · %2$d min</item>
+    </plurals>
+</resources>

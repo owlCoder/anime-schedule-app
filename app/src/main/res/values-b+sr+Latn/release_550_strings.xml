@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="smart_all">Svi animei</string>
+    <string name="pinned_anime">Pinovani animei</string>
+    <string name="smart_short">Kratke serije</string>
+    <string name="smart_near_finish">Pri kraju</string>
+    <string name="smart_unstarted">Nisu započeti</string>
+    <string name="smart_filters">Pametni filteri</string>
+    <string name="smart_filters_hint">Kombinuj sa statusom, pretragom i oznakama. Kratke serije imaju 1–13 epizoda; naslovima pri kraju ostalo je 1–3 epizode. Završeni i odbačeni naslovi nisu u ova dva filtera.</string>
+    <string name="saved_list_views">Sačuvani prikazi liste</string>
+    <string name="saved_views_hint">Sačuvaj trenutnu pretragu, status, brze filtere i redosled. Do osam prikaza; isto ime ažurira postojeći prikaz.</string>
+    <string name="view_name">Naziv prikaza</string>
+    <string name="view_save">Sačuvaj trenutni prikaz</string>
+    <string name="views_empty">Sačuvani prikazi liste pojaviće se ovde.</string>
+    <string name="view_delete">Obriši prikaz %1$s</string>
+    <string name="watch_planner">Planer gledanja</string>
+    <string name="planner_hint">Isplaniraj gledanje iz liste Gledam. Pinovani naslovi imaju prednost; epizode se raspoređuju između naslova uz njihovo trajanje. Otvori naslov kada želiš da počneš.</string>
+    <string name="planner_budget">Raspoloživo minuta</string>
+    <string name="planner_summary">%1$d epizoda · %2$d min</string>
+    <string name="planner_unused">%1$d minuta preostalo</string>
+    <string name="planner_empty">Još nema epizoda koje staju u plan</string>
+    <string name="planner_empty_hint">Povećaj vreme ili dodaj nezavršen anime u Gledam.</string>
+    <string name="planner_item">%1$d epizoda · %2$d minuta</string>
+    <string name="activity_calendar">Kalendar aktivnosti</string>
+    <string name="current_streak">Trenutni niz</string>
+    <string name="best_streak">Najduži niz</string>
+    <string name="streak_days">%1$d dana</string>
+    <string name="daily_goal">Dnevni cilj epizoda</string>
+    <string name="daily_goal_off">%1$d epizoda danas · cilj isključen</string>
+    <string name="daily_goal_progress">Danas: %1$d / %2$d epizoda</string>
+    <string name="calendar_hint">Poslednjih 28 dana. Dodirni dan za aktivnosti. Nizovi koriste sačuvanu lokalnu istoriju i vremensku zonu rasporeda; ispravke umanjuju dnevni zbir.</string>
+    <string name="calendar_day_label">%1$s · %2$d epizoda</string>
+    <string name="calendar_day_empty">Nema lokalnih izmena napretka ovog dana.</string>
+    <string name="value_decrease">Smanji: %1$s</string>
+    <string name="value_increase">Povećaj: %1$s</string>
+    <string name="anime_pin">Pinuj anime na vrh</string>
+    <string name="anime_unpin">Ukloni pin</string>
+    <string name="anime_duration">Trajanje epizode</string>
+    <string name="anime_duration_hint">Minuta po epizodi za ovaj anime (1–180). Prazno polje koristi podrazumevanih %1$d minuta. Čuva se uz ovaj editor.</string>
+    <string name="anime_duration_default">Koristi podrazumevano trajanje</string>
+    <string name="anime_duration_invalid">Unesi 1–180 minuta ili ostavi prazno.</string>
+    <string name="list_share">Podeli trenutnu listu</string>
+    <string name="list_share_hint">Podeli naslove, statuse, napredak i ocene trenutnih rezultata kao tekst (do 200 naslova).</string>
+    <string name="list_share_heading">Moja anime lista · %1$d naslova</string>
+    <string name="list_share_line">%1$s — %2$s · %3$d/%4$s epizoda · ocena %5$d/10</string>
+    <string name="list_share_more">…i još %1$d naslova</string>
+    <string name="list_share_failed">Deljenje nije otvoreno. Pokušaj ponovo.</string>
+    <string name="notif_search">Pretraži naslove obaveštenja</string>
+    <string name="notif_search_empty">Nema odgovarajućih obaveštenja</string>
+    <string name="notif_clear_read">Obriši pročitanu istoriju</string>
+    <string name="notif_clear_confirm">Obrisati sva pročitana obaveštenja (%1$d)? Nepročitana ostaju sačuvana.</string>
+    <string name="notif_clear_failed">Pročitana istorija nije obrisana. Pokušaj ponovo.</string>
+    <string name="notification_episode_time">Epizoda %1$d · %2$s</string>
+    <string name="planner_menu_hint">Rasporedi epizode prema raspoloživom vremenu.</string>
+    <string name="calendar_menu_hint">28 dana aktivnosti, nizovi i dnevni cilj.</string>
+    <string name="views_menu_hint">Sačuvaj i primeni pretragu, filtere i redosled.</string>
+    <plurals name="streak_day_count">
+        <item quantity="one">%1$d dan</item>
+        <item quantity="few">%1$d dana</item>
+        <item quantity="other">%1$d dana</item>
+    </plurals>
+    <string name="calendar_range">%1$s – %2$s</string>
+    <plurals name="list_share_title_count">
+        <item quantity="one">Moja anime lista · %1$d naslov</item>
+        <item quantity="few">Moja anime lista · %1$d naslova</item>
+        <item quantity="other">Moja anime lista · %1$d naslova</item>
+    </plurals>
+    <plurals name="planner_episode_count">
+        <item quantity="one">%1$d epizoda · %2$d min</item>
+        <item quantity="few">%1$d epizode · %2$d min</item>
+        <item quantity="other">%1$d epizoda · %2$d min</item>
+    </plurals>
+</resources>

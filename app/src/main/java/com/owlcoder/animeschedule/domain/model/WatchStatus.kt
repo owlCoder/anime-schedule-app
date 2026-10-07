@@ -1,5 +1,6 @@
 package com.owlcoder.animeschedule.domain.model
 
+@kotlinx.serialization.Serializable
 enum class WatchStatus(val malValue: String) {
     WATCHING("watching"),
     COMPLETED("completed"),

@@ -22,6 +22,10 @@ data class WatchTools(
     val weeklyGoal: Int = 12,
     val tags: Map<Int, Set<String>> = emptyMap(),
     val episodeMinutes: Int = 24,
+    val pinned: Set<Int> = emptySet(),
+    val dailyGoal: Int = 3,
+    val durationOverrides: Map<Int, Int> = emptyMap(),
+    val savedViews: List<SavedListView> = emptyList(),
 ) {
     fun episodesThisWeek(today: LocalDate): Int {
         val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))

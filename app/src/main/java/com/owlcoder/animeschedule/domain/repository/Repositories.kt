@@ -104,6 +104,7 @@ interface NotificationRepository {
     fun getUnreadCount(): Flow<Int>
     suspend fun markRead(id: Int)
     suspend fun markAllRead()
+    suspend fun deleteRead(): Int
 }
 
 interface WatchSourceRepository {

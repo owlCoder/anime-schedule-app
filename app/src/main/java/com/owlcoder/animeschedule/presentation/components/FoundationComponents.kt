@@ -42,6 +42,8 @@ fun AppSearchField(
 ) {
     val shape = ContinuousRoundedShape(GlassTokens.controlRadius)
     val clearDescription = stringResource(R.string.search_clear_query)
+    val focus = androidx.compose.ui.platform.LocalFocusManager.current
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -71,10 +73,11 @@ fun AppSearchField(
             ),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             keyboardOptions = KeyboardOptions(
-                imeAction = if (onSearch != null) ImeAction.Search else ImeAction.Default,
+                imeAction = if (onSearch != null) ImeAction.Search else ImeAction.Done,
             ),
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(
                 onSearch = { onSearch?.invoke() },
+                onDone = { focus.clearFocus(); keyboard?.hide() },
             ),
             decorationBox = { inner ->
                 Box(contentAlignment = Alignment.CenterStart) {

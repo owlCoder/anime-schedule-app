@@ -11,6 +11,8 @@ data class WatchToolsActions(
     val setNote: (Int, String) -> Unit = { _, _ -> },
     val setTags: (Int, String) -> Unit = { _, _ -> },
     val setEpisodeMinutes: (Int) -> Unit = {},
+    val togglePin: (Int) -> Unit = {},
+    val setDurationOverride: (Int, Int?) -> Unit = { _, _ -> },
 )
 
 val LocalWatchTools = compositionLocalOf { WatchToolsActions() }

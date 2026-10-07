@@ -104,6 +104,9 @@ fun ListStatusEditor(
     var note by remember(animeId) { mutableStateOf(tools.data.notes[animeId].orEmpty()) }
     var tagsExpanded by remember(animeId) { mutableStateOf(false) }
     var tags by remember(animeId) { mutableStateOf(tools.data.tags[animeId]?.joinToString(", ").orEmpty()) }
+    var durationExpanded by remember(animeId) { mutableStateOf(false) }
+    var duration by remember(animeId) { mutableStateOf(tools.data.durationOverrides[animeId]?.toString().orEmpty()) }
+    val durationValid = duration.isBlank() || duration.toIntOrNull() in 1..180
     fun setEpisodes(value: Int) {
         episodes = clamp(value)
         input = episodes.toString()
@@ -113,6 +116,8 @@ fun ListStatusEditor(
 
     fun save() {
         tools.setNote(animeId, note)
+        if (!durationValid) return
+        tools.setDurationOverride(animeId, duration.toIntOrNull())
         tools.setTags(animeId, tags)
         onConfirm(
             animeId,
@@ -126,7 +131,7 @@ fun ListStatusEditor(
             title = stringResource(R.string.list_status_title), onBack = ::close,
             backContentDescription = stringResource(R.string.common_back),
             trailingContent = {
-                AppButton(stringResource(R.string.common_save), ::save, Modifier.testTag("list-editor-save"), icon = Icons.Default.Save)
+                AppButton(stringResource(R.string.common_save), ::save, Modifier.testTag("list-editor-save"), enabled = durationValid, icon = Icons.Default.Save)
             },
         )
         Column(
@@ -146,6 +151,9 @@ fun ListStatusEditor(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+                IconButton({ tools.togglePin(animeId) }, Modifier.testTag("editor-pin")) {
+                    Icon(Icons.Default.PushPin, stringResource(if (animeId in tools.data.pinned) R.string.anime_unpin else R.string.anime_pin), tint = if (animeId in tools.data.pinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 IconButton(
                     onClick = { tools.toggleFavorite(animeId) },
@@ -434,6 +442,22 @@ fun ListStatusEditor(
                 }
                 if (tagsExpanded) OutlinedTextField(tags, { tags = it.take(208) }, Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp).testTag("editor-tags"),
                     placeholder = { Text(stringResource(R.string.tags_placeholder)) }, supportingText = { Text(stringResource(R.string.tags_hint)) }, shape = MaterialTheme.shapes.medium)
+            }
+            EditorGroup {
+                Row(Modifier.fillMaxWidth().clickable { durationExpanded = !durationExpanded }.testTag("editor-duration-toggle").padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Timer, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.anime_duration), Modifier.weight(1f).padding(horizontal = 10.dp), fontWeight = FontWeight.SemiBold)
+                    Icon(if (durationExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null)
+                }
+                if (durationExpanded) Column(Modifier.padding(horizontal = 14.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(duration, { value -> if (value.length <= 3 && value.all(Char::isDigit)) duration = value }, Modifier.fillMaxWidth().testTag("editor-duration"),
+                        label = { Text(stringResource(R.string.anime_duration)) }, placeholder = { Text(tools.data.episodeMinutes.toString()) },
+                        singleLine = true, isError = !durationValid,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { focus.clearFocus(); keyboard?.hide() }),
+                        supportingText = { Text(stringResource(if (durationValid) R.string.anime_duration_hint else R.string.anime_duration_invalid, tools.data.episodeMinutes)) }, shape = MaterialTheme.shapes.medium)
+                    AppButton(stringResource(R.string.anime_duration_default), { duration = "" }, Modifier.fillMaxWidth().testTag("editor-duration-default"), variant = AppButtonVariant.Plain, icon = Icons.Default.RestartAlt)
+                }
             }
             if (initialEntry != null && onRemove != null) {
                 if (confirmRemoval) {

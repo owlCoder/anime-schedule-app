@@ -114,7 +114,9 @@ class TrackingAndThemesTest {
                     data = data,
                     toggleFavorite = { id -> uiScope.launch { tools.toggleFavorite(id) } },
                     setNote = { id, note -> uiScope.launch { tools.setNote(id, note) } },
-                    setTags = { id, tags -> uiScope.launch { tools.setTags(id, tags) } })
+                    setTags = { id, tags -> uiScope.launch { tools.setTags(id, tags) } },
+                    togglePin = { id -> uiScope.launch { tools.togglePin(id) } },
+                    setDurationOverride = { id, duration -> uiScope.launch { tools.setDurationOverride(id, duration) } })
             ) {
                 AnimeScheduleTheme(
                     themeMode = ThemeMode.LIGHT,
@@ -134,9 +136,9 @@ class TrackingAndThemesTest {
         val vm = showList()
         compose.onNodeWithTag("list-status-ALL").performClick()
         compose.waitUntil { vm.uiState.value.entries.size == 2 }
-        compose.onNodeWithTag("list-favorites-filter").performClick()
+        compose.onNodeWithTag("list-favorites-filter").performScrollTo().performClick()
         compose.waitUntil { vm.uiState.value.entries.map { it.animeId } == listOf(101) }
-        compose.onNodeWithTag("list-unrated-filter").performClick()
+        compose.onNodeWithTag("list-unrated-filter").performScrollTo().performClick()
         compose.onNodeWithText(text(R.string.list_filtered_empty)).assertIsDisplayed()
         compose.onNodeWithText(text(R.string.list_clear_filters)).performClick()
         compose.waitUntil { vm.uiState.value.entries.size == 2 }
@@ -162,7 +164,7 @@ class TrackingAndThemesTest {
         runBlocking { tools.recordProgress(101, "Alpha Adventure", 4, 7) }
         val vm = showList()
         compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
-        compose.onNodeWithText(text(R.string.watch_history)).performClick()
+        compose.onNodeWithText(text(R.string.watch_history)).performScrollTo().performClick()
         compose.onNodeWithTag("goal-increase").performClick()
         compose.waitUntil { vm.uiState.value.tools.weeklyGoal == 13 }
         compose.onNodeWithText(
@@ -177,9 +179,9 @@ class TrackingAndThemesTest {
         compose.onNodeWithContentDescription(instrumentation.targetContext.getString(android.R.string.cancel))
             .performClick()
         compose.onNodeWithTag("list-status-ALL").performClick()
-        compose.onNodeWithTag("list-unrated-filter").performClick()
+        compose.onNodeWithTag("list-unrated-filter").performScrollTo().performClick()
         compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
-        compose.onNodeWithText(text(R.string.list_pick)).performClick()
+        compose.onNodeWithText(text(R.string.list_pick)).performScrollTo().performClick()
         compose.onNode(hasText("Beta Journey") and hasAnyAncestor(isDialog())).assertIsDisplayed()
         compose.onNodeWithText(text(R.string.pick_again)).performClick()
         compose.onNode(hasText("Beta Journey") and hasAnyAncestor(isDialog())).assertIsDisplayed()
@@ -229,11 +231,11 @@ class TrackingAndThemesTest {
         compose.onNodeWithTag("list-editor-save").performClick()
         compose.waitUntil { vm.uiState.value.tools.tags[101] == setOf("Akcija","Drama") }
         compose.onNodeWithTag("list-status-ALL").performClick()
-        compose.onNodeWithTag("list-tags-filter").performClick()
+        compose.onNodeWithTag("list-tags-filter").performScrollTo().performClick()
         compose.onNode(hasText("Drama") and hasAnyAncestor(isDialog())).performClick()
         compose.waitUntil { vm.uiState.value.entries.map { it.animeId } == listOf(101) }
         screenshot("tag-filter-and-time-estimate")
-        compose.onNodeWithTag("list-unrated-filter").performClick()
+        compose.onNodeWithTag("list-unrated-filter").performScrollTo().performClick()
         compose.onNodeWithText(text(R.string.list_filtered_empty)).assertIsDisplayed()
         compose.onNode(hasText(text(R.string.list_clear_filters)) and hasClickAction()).assertIsDisplayed().performClick()
         compose.waitUntil(5_000) { vm.uiState.value.entries.size == 2 && vm.uiState.value.activeTag == null }
@@ -249,7 +251,7 @@ class TrackingAndThemesTest {
         runBlocking { tools.recordProgress(101,"Alpha Adventure",4,5); tools.recordProgress(102,"Beta Journey",0,1) }
         compose.waitUntil { vm.uiState.value.tools.activity.size == 2 }
         compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
-        compose.onNodeWithText(text(R.string.watch_history)).performClick()
+        compose.onNodeWithText(text(R.string.watch_history)).performScrollTo().performClick()
         compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("history-search"))).performTextInput("alpha")
         compose.onNodeWithTag("history-this-week").performClick()
         compose.onNode(hasText("Alpha Adventure") and hasAnyAncestor(isDialog())).assertIsDisplayed()
@@ -304,7 +306,7 @@ class TrackingAndThemesTest {
     fun exportOpensAndroidDocumentPickerAndSavesTheCsv() {
         showList()
         compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
-        compose.onNodeWithText(text(R.string.list_export)).performClick()
+        compose.onNodeWithText(text(R.string.list_export)).performScrollTo().performClick()
         val automation = instrumentation.uiAutomation
         compose.waitUntil(10_000) {
             automation.rootInActiveWindow?.packageName?.toString()?.contains("documentsui") == true
@@ -319,13 +321,104 @@ class TrackingAndThemesTest {
         compose.onNodeWithText(text(R.string.list_exported)).assertIsDisplayed()
     }
 
+    @Test
+    fun pinsSmartFiltersAndSavedViewsPersistAndRestoreSelection() {
+        val vm = showList()
+        compose.onNodeWithTag("list-status-ALL").performClick()
+        compose.onNode(hasContentDescription(text(R.string.cd_edit_list_status)) and hasAnyAncestor(hasTestTag("mylist-entry-102"))).performClick()
+        compose.onNodeWithTag("editor-pin").performClick()
+        compose.onNodeWithTag("list-editor-save").performClick()
+        compose.waitUntil(5_000) { vm.uiState.value.entries.first().animeId == 102 }
+        compose.onNodeWithTag("list-smart-filter").performClick()
+        compose.onNodeWithTag("smart-PINNED").performClick()
+        compose.waitUntil(5_000) { vm.uiState.value.entries.map { it.animeId } == listOf(102) }
+        compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
+        compose.onNode(hasText(text(R.string.saved_list_views)) and hasAnyAncestor(isDialog())).performScrollTo().performClick()
+        compose.onNodeWithTag("view-name").performTextInput("Pinned weekend")
+        compose.onNodeWithTag("view-save").performScrollTo().performClick()
+        compose.waitUntil(5_000) { vm.uiState.value.tools.savedViews.size == 1 }
+        screenshot("saved-list-views")
+        compose.onNodeWithContentDescription(instrumentation.targetContext.getString(android.R.string.cancel)).performClick()
+        compose.runOnIdle { vm.clearQuickFilters(); vm.setFilter(WatchStatus.WATCHING) }
+        compose.waitUntil(5_000) { vm.uiState.value.entries.map { it.animeId } == listOf(101) }
+        compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
+        compose.onNode(hasText(text(R.string.saved_list_views)) and hasAnyAncestor(isDialog())).performScrollTo().performClick()
+        compose.onNodeWithTag("saved-view-Pinned weekend").performScrollTo().performClick()
+        compose.waitUntil(5_000) { vm.uiState.value.entries.map { it.animeId } == listOf(102) && vm.uiState.value.activeFilter == null }
+        compose.onNodeWithTag("list-smart-filter").performClick()
+        compose.onNodeWithTag("smart-NEAR_FINISH").performClick()
+        compose.onNodeWithText(text(R.string.list_filtered_empty)).assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.list_clear_filters)).performClick()
+        compose.waitUntil(5_000) { vm.uiState.value.entries.size == 2 }
+        screenshot("pinned-list")
+    }
+
+    @Test
+    fun durationOverrideValidatesAndFeedsPlannerWithoutChangingProgress() {
+        val vm = showList()
+        fun editor() = compose.onNode(hasContentDescription(text(R.string.cd_edit_list_status)) and hasAnyAncestor(hasTestTag("mylist-entry-101"))).performClick()
+        editor()
+        compose.onNodeWithTag("editor-duration-toggle").performScrollTo().performClick()
+        compose.onNodeWithTag("editor-duration").performScrollTo().performTextInput("999")
+        compose.onNodeWithTag("list-editor-save").assertIsNotEnabled()
+        compose.onNodeWithTag("editor-duration").performTextReplacement("12")
+        compose.onNodeWithTag("list-editor-save").performClick()
+        compose.waitUntil(5_000) { vm.uiState.value.tools.durationOverrides[101] == 12 }
+        compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
+        compose.onNodeWithText(text(R.string.watch_planner)).performScrollTo().performClick()
+        compose.onNodeWithTag("planner-budget-30").performClick()
+        compose.onAllNodesWithText(instrumentation.targetContext.resources.getQuantityString(R.plurals.planner_episode_count, 2, 2, 24)).onFirst().assertIsDisplayed()
+        compose.onNodeWithTag("plan-101").assertIsDisplayed()
+        val presetBounds = listOf(30, 60, 120).map { compose.onNodeWithTag("planner-budget-$it").fetchSemanticsNode().boundsInRoot }
+        assertTrue("Planner presets must align when labels wrap", presetBounds.maxOf { it.height } - presetBounds.minOf { it.height } <= 1f)
+        assertEquals(4, vm.uiState.value.entries.single().episodesWatched)
+        screenshot("watch-planner")
+        compose.onNodeWithContentDescription(instrumentation.targetContext.getString(android.R.string.cancel)).performClick()
+        editor()
+        compose.onNodeWithTag("editor-duration-toggle").performScrollTo().performClick()
+        compose.onNodeWithTag("editor-duration-default").performScrollTo().performClick()
+        compose.onNodeWithTag("list-editor-save").performClick()
+        compose.waitUntil(5_000) { vm.uiState.value.tools.durationOverrides.isEmpty() }
+    }
+
+    @Test
+    fun calendarShowsDailyActivityAndSavesDailyGoal() {
+        runBlocking { tools.recordProgress(101, "Alpha Adventure", 4, 7) }
+        val vm = showList()
+        compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
+        compose.onNodeWithText(text(R.string.activity_calendar)).performScrollTo().performClick()
+        compose.onNodeWithTag("daily-goal-increase").performClick()
+        compose.waitUntil(5_000) { vm.uiState.value.tools.dailyGoal == 4 }
+        compose.onNodeWithText(instrumentation.targetContext.getString(R.string.daily_goal_progress, 3, 4)).assertIsDisplayed()
+        compose.onNodeWithTag("calendar-${LocalDate.now()}").performScrollTo().performClick()
+        screenshot("activity-calendar")
+        compose.onNodeWithTag("calendar-${LocalDate.now().minusDays(1)}").performScrollTo().performClick()
+        compose.onNodeWithTag("activity-calendar-list").performScrollToNode(hasText(text(R.string.calendar_day_empty)))
+        compose.onNodeWithText(text(R.string.calendar_day_empty)).assertIsDisplayed()
+        compose.onAllNodes(isDialog()).assertCountEquals(1)
+    }
+
+    @Test
+    fun sharingOpensAndroidChooserWithOnlyCurrentResults() {
+        val vm = showList()
+        compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
+        compose.onNodeWithText(text(R.string.list_share)).performScrollTo().performClick()
+        val automation = instrumentation.uiAutomation
+        compose.waitUntil(10_000) { automation.rootInActiveWindow?.findAccessibilityNodeInfosByText("Alpha Adventure")?.isNotEmpty() == true }
+        val content = automation.rootInActiveWindow.findAccessibilityNodeInfosByText("Alpha Adventure").joinToString { it.text?.toString().orEmpty() }
+        assertFalse(content.contains("Beta Journey"))
+        assertEquals(4, vm.uiState.value.entries.single().episodesWatched)
+        screenshot("list-share-chooser", waitForCompose = false)
+        android.os.ParcelFileDescriptor.AutoCloseInputStream(automation.executeShellCommand("input keyevent 4")).use { it.readBytes() }
+    }
+
     private fun screenshot(name: String, waitForCompose: Boolean = true) {
         if (waitForCompose) compose.waitForIdle()
         instrumentation.uiAutomation.waitForIdle(400, 5000)
         val bitmap = instrumentation.uiAutomation.takeScreenshot()
         File(
             instrumentation.targetContext.getExternalFilesDir(null),
-            "qa-540-$name.png"
+            "qa-550-$name.png"
         ).outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         bitmap.recycle()
     }

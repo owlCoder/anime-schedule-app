@@ -62,6 +62,19 @@ class WatchToolsStore @Inject constructor(
 
     suspend fun setEpisodeMinutes(minutes: Int) = edit { it.copy(episodeMinutes = minutes.coerceIn(1, 180)) }
 
+    suspend fun togglePin(id: Int) = edit {
+        if (id <= 0) it else it.copy(pinned = if (id in it.pinned) it.pinned - id else it.pinned + id)
+    }
+    suspend fun setDailyGoal(goal: Int) = edit { it.copy(dailyGoal = goal.coerceIn(0, 50)) }
+    suspend fun setDurationOverride(id: Int, minutes: Int?) = edit {
+        if (id <= 0) it else it.copy(durationOverrides = if (minutes == null) it.durationOverrides - id else it.durationOverrides + (id to minutes.coerceIn(1, 180)))
+    }
+    suspend fun saveView(view: SavedListView) = edit {
+        val value = view.normalized()
+        if (value.name.isBlank()) it else it.copy(savedViews = (listOf(value) + it.savedViews.filterNot { existing -> existing.name.equals(value.name, true) }).take(8))
+    }
+    suspend fun deleteView(name: String) = edit { it.copy(savedViews = it.savedViews.filterNot { view -> view.name.equals(name, true) }) }
+
     suspend fun setWeeklyGoal(goal: Int) = edit { it.copy(weeklyGoal = goal.coerceIn(0, 100)) }
     suspend fun clearActivity() = edit { it.copy(activity = emptyList()) }
 

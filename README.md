@@ -110,10 +110,27 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.4.0** (version code **26**, October 6, 2026).
+Current release: **5.5.0** (version code **27**, October 7, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### New in 5.5.0
+
+1. Pin anime above other results, preserving the selected sort within each group.
+2. Save up to eight named list views (search, status, quick filters, tags and sorting).
+3. Plan a watch session by available minutes, with pinned-title priority and fair episode allocation.
+4. Override episode duration per anime in the editor (or use the global default).
+5. Explore a 28-day activity calendar with current and best streaks from retained local history.
+6. Set a daily episode goal (0 disables it) using the selected schedule time zone.
+7. Combine smart filters for short series, near completion and unstarted titles with existing filters.
+8. Search notification titles in unread or read history.
+9. Clear all read notifications with an inline confirmation; unread records stay intact.
+10. Share current list results as plain text through Android (up to 200 titles, without personal notes).
+
+My List, activity history, tools and notifications use spaced rounded cards and aligned leading-icon
+controls. New preferences are account-scoped and included in personal backups; older backups remain
+compatible. The planner suggests episodes without updating progress automatically.
 
 ### New in 5.4.0
 

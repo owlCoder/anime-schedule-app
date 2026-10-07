@@ -35,7 +35,7 @@
     <string name="remaining_time_value">≈ %1$d h %2$d min left</string>
     <string name="personal_backup">Personal backup</string>
     <string name="personal_backup_subtitle">Export or restore tracking tools and appearance</string>
-    <string name="backup_description">Save favorites, notes, tags, activity, goals, episode length and themes as a JSON file. Restore files up to 2 MB.</string>
+    <string name="backup_description">Save favorites, pins, notes, tags, activity, goals, durations, list views and themes as a JSON file. Restore files up to 2 MB.</string>
     <string name="backup_export">Export personal backup</string>
     <string name="backup_select">Choose a backup to restore</string>
     <string name="backup_restore">Restore this backup</string>

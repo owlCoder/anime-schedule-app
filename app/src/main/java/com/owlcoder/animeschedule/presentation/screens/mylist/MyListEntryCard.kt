@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
+import androidx.compose.material.icons.filled.PushPin
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.WatchStatus
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
@@ -69,6 +70,7 @@ fun MyListEntryCard(
     coverImageUrl: String?,
     isIncrementing: Boolean = false,
     isFavorite: Boolean = false,
+    isPinned: Boolean = false,
     hasNote: Boolean = false,
     tags: Set<String> = emptySet(),
     remainingMinutes: Long? = null,
@@ -131,6 +133,7 @@ fun MyListEntryCard(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
+                            if (isPinned) Icon(Icons.Default.PushPin, stringResource(R.string.pinned_anime), Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
                             if (isFavorite) Icon(
                                 Icons.Default.Star,
                                 stringResource(R.string.favorites),

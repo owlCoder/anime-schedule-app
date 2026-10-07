@@ -22,6 +22,9 @@ interface NotificationDao {
     @Query("UPDATE notifications SET isRead = 1")
     suspend fun markAllRead()
 
+    @Query("DELETE FROM notifications WHERE isRead = 1")
+    suspend fun deleteRead(): Int
+
     @Query("DELETE FROM notifications WHERE isRead = 1 AND createdAtEpochSeconds < :cutoff")
     suspend fun deleteReadOlderThan(cutoff: Long)
 

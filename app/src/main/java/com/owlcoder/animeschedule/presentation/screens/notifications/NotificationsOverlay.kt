@@ -22,6 +22,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.*
+import com.owlcoder.animeschedule.presentation.components.AppButton
+import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
+import com.owlcoder.animeschedule.presentation.components.AppSearchField
+import com.owlcoder.animeschedule.presentation.components.EmptyState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -84,7 +93,11 @@ fun NotificationsOverlay(
     val (unread, read) = remember(notifications) {
         notifications.partition { notification -> !notification.isRead }
     }
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    var query by rememberSaveable { mutableStateOf("") }
+    var confirmClear by rememberSaveable { mutableStateOf(false) }
+    val clearing by viewModel.clearing.collectAsStateWithLifecycle()
+    val clearError by viewModel.clearError.collectAsStateWithLifecycle()
     val windowHeightPx = LocalWindowInfo.current.containerSize.height
     val density = LocalDensity.current
     val maxListHeight = remember(windowHeightPx, density) { with(density) { (windowHeightPx * 0.38f).toDp() } }
@@ -116,24 +129,42 @@ fun NotificationsOverlay(
             }
         },
     ) {
+        val focus = androidx.compose.ui.platform.LocalFocusManager.current
+        val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .animateContentSize(animationSpec = motion.iosSpring()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            AppSearchField(query, { query = it }, Modifier.testTag("notification-search"), stringResource(R.string.notif_search), Icons.Default.Search, onClear = { query = "" })
             NotificationTabs(
                 selectedTab = selectedTab,
                 unreadCount = unread.size,
                 readCount = read.size,
-                onTabSelected = { selectedTab = it },
+                onTabSelected = { selectedTab = it; confirmClear = false; focus.clearFocus(); keyboard?.hide() },
             )
+
+            if (selectedTab == 1 && read.isNotEmpty()) {
+                if (confirmClear) {
+                    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface) {
+                        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(stringResource(R.string.notif_clear_confirm, read.size), style = MaterialTheme.typography.bodyMedium)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                AppButton(stringResource(R.string.common_cancel), { confirmClear = false }, Modifier.weight(1f).testTag("notif-clear-cancel"), enabled = !clearing, variant = AppButtonVariant.Plain, icon = Icons.Default.Close)
+                                AppButton(stringResource(R.string.notif_clear_read), { viewModel.clearRead(); confirmClear = false }, Modifier.weight(1f).testTag("notif-clear-confirm"), enabled = !clearing, variant = AppButtonVariant.Destructive, icon = Icons.Default.DeleteOutline)
+                            }
+                        }
+                    }
+                } else AppButton(stringResource(R.string.notif_clear_read), { focus.clearFocus(); keyboard?.hide(); confirmClear = true }, Modifier.fillMaxWidth().testTag("notif-clear-read"), enabled = !clearing, variant = AppButtonVariant.Plain, icon = Icons.Default.DeleteOutline)
+            }
+            if (clearError) Text(stringResource(R.string.notif_clear_failed), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
 
             AnimatedContent(
                 targetState = selectedTab,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 310.dp, max = maxListHeight),
+                    .heightIn(max = maxListHeight.coerceAtLeast(180.dp)),
                 transitionSpec = {
                     (fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
                         scaleIn(
@@ -148,9 +179,10 @@ fun NotificationsOverlay(
                 },
                 label = "notification-tab-content",
             ) { tab ->
-                val list = if (tab == 0) unread else read
+                val source = if (tab == 0) unread else read
+                val list = remember(source, query) { source.filter { it.title.contains(query.trim(), ignoreCase = true) } }
                 if (list.isEmpty()) {
-                    NotificationEmptyState(tab)
+                    if (query.isNotBlank()) EmptyState(Icons.Default.SearchOff, stringResource(R.string.notif_search_empty), actionLabel = stringResource(R.string.search_clear_query), onAction = { query = ""; focus.clearFocus(); keyboard?.hide() }, modifier = Modifier.fillMaxSize()) else NotificationEmptyState(tab)
                 } else {
                     val groupedNotifications = remember(list, appLocale, zoneId) { groupedByDay(list, appLocale, zoneId) }
                     LazyColumn(
@@ -168,19 +200,12 @@ fun NotificationsOverlay(
                                     fontWeight = FontWeight.SemiBold,
                                 )
                             }
-                            item(key = "notification_group_$dayLabel") {
-                                InsetGroup {
-                                    items.forEach { notification ->
-                                        NotificationCard(
-                                            notification = notification,
-                                            onClick = {
-                                                viewModel.markRead(notification.id)
-                                                onDismiss()
-                                                onAnimeClick(notification.animeId)
-                                            },
-                                        )
-                                    }
-                                }
+                            items(items, key = { it.id }) { notification ->
+                                NotificationCard(notification, onClick = {
+                                    viewModel.markRead(notification.id)
+                                    onDismiss()
+                                    onAnimeClick(notification.animeId)
+                                })
                             }
                         }
                     }

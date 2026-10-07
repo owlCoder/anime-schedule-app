@@ -35,7 +35,7 @@
     <string name="remaining_time_value">≈ %1$d h %2$d min preostalo</string>
     <string name="personal_backup">Lična rezervna kopija</string>
     <string name="personal_backup_subtitle">Izvezi ili vrati alate za praćenje i izgled</string>
-    <string name="backup_description">Sačuvaj favorite, beleške, oznake, istoriju, ciljeve, trajanje epizode i teme u JSON fajl. Vrati fajlove do 2 MB.</string>
+    <string name="backup_description">Sačuvaj favorite, pinove, beleške, oznake, aktivnost, ciljeve, trajanja, prikaze liste i teme u JSON. Vrati kopije do 2 MB.</string>
     <string name="backup_export">Izvezi rezervnu kopiju</string>
     <string name="backup_select">Izaberi kopiju za vraćanje</string>
     <string name="backup_restore">Vrati ovu kopiju</string>

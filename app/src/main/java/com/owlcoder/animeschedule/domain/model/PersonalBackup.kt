@@ -43,6 +43,10 @@ fun WatchTools.normalized(): WatchTools = copy(
         .take(300).map { it.copy(title = it.title.take(500), progress = it.progress.coerceIn(0, 99999), episodeDelta = it.episodeDelta.coerceIn(-99999, 99999)) },
     weeklyGoal = weeklyGoal.coerceIn(0, 100),
     episodeMinutes = episodeMinutes.coerceIn(1, 180),
+    pinned = pinned.filter { it > 0 }.take(20_000).toSet(),
+    dailyGoal = dailyGoal.coerceIn(0, 50),
+    durationOverrides = durationOverrides.filterKeys { it > 0 }.entries.take(20_000).associate { it.key to it.value.coerceIn(1, 180) },
+    savedViews = savedViews.normalizedViews(),
 )
 
 /** Portable personal data only: no login tokens, credentials, API keys or MAL list mutations. */

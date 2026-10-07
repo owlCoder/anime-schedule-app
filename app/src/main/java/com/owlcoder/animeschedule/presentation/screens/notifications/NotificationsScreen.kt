@@ -2,6 +2,8 @@ package com.owlcoder.animeschedule.presentation.screens.notifications
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -18,7 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 
-/** Compact grouped-list row; the parent owns the inset surface and date grouping. */
+/** Each notification owns a rounded surface, including its selected background. */
 @Composable
 internal fun NotificationCard(
     notification: AppNotification,
@@ -26,29 +28,31 @@ internal fun NotificationCard(
 ) {
     val isUnread = !notification.isRead
 
-    InsetListRow(
-        label = notification.title,
-        supportingText = "Ep. ${notification.episode} · ${relativeTime(notification.createdAtEpochSeconds)}",
-        selected = isUnread,
-        onClick = onClick,
-        leadingContent = {
-            MediaThumbnail.Small(
-                url = notification.coverImageUrl,
-                contentDescription = notification.title,
-                modifier = Modifier.size(48.dp, 62.dp),
-            )
-        },
-        trailingContent = {
-            if (isUnread) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(androidx.compose.foundation.shape.CircleShape)
-                        .background(MaterialTheme.colorScheme.primary),
+    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface, border = BorderStroke(.5.dp, MaterialTheme.colorScheme.outlineVariant)) {
+        InsetListRow(
+            label = notification.title,
+            supportingText = stringResource(R.string.notification_episode_time, notification.episode, relativeTime(notification.createdAtEpochSeconds)),
+            selected = isUnread,
+            onClick = onClick,
+            leadingContent = {
+                MediaThumbnail.Small(
+                    url = notification.coverImageUrl,
+                    contentDescription = notification.title,
+                    modifier = Modifier.size(48.dp, 62.dp),
                 )
-            }
-        },
-    )
+            },
+            trailingContent = {
+                if (isUnread) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(androidx.compose.foundation.shape.CircleShape)
+                            .background(MaterialTheme.colorScheme.primary),
+                    )
+                }
+            },
+        )
+    }
 }
 
 @Composable

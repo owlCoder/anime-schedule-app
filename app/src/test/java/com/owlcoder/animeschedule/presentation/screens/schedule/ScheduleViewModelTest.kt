@@ -87,6 +87,7 @@ class ScheduleViewModelTest {
         override fun getUnreadCount(): Flow<Int> = flowOf(0)
         override suspend fun markRead(id: Int) = Unit
         override suspend fun markAllRead() = Unit
+        override suspend fun deleteRead() = 0
     }
 
     private class FakeWork : WorkScheduler {

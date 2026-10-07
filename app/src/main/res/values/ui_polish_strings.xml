@@ -74,19 +74,19 @@
     <string name="about_privacy">Privacy</string>
 
     <!-- Changelog -->
-    <string name="changelog_release_date">October 6, 2026</string>
+    <string name="changelog_release_date">October 7, 2026</string>
     <string name="changelog_whats_new">What\'s new</string>
-    <string name="changelog_hero_description">Refreshed Settings, eleven palettes and ten new personal tools.</string>
-    <string name="changelog_nav_title">Consistent Settings and controls</string>
-    <string name="changelog_nav_description">Search Settings, use clear pickers and edit watch sources in one panel. Leading icons and centered labels make actions easier to scan.</string>
-    <string name="changelog_motion_title">Six more palettes and saved looks</string>
-    <string name="changelog_motion_description">Ocean, Lavender, Ember, Ice, Coffee and Neon join the existing themes. Choose predefined accents, save looks, schedule day/night hours and enable compact layouts.</string>
-    <string name="changelog_filters_title">Personal tags and history search</string>
-    <string name="changelog_filters_description">Add tags to anime, search titles, notes and tags, filter your list by a tag, search watch activity and show only this week.</string>
-    <string name="changelog_states_title">Continue watching and plan your time</string>
-    <string name="changelog_states_description">Jump to your latest unfinished Watching anime and estimate remaining watch time using your preferred episode duration.</string>
-    <string name="changelog_about_title">Portable personal backup</string>
-    <string name="changelog_about_description">Export favorites, notes, tags, history, goals and appearance to JSON. Preview a backup before restoring local data; your MAL list and login stay intact.</string>
+    <string name="changelog_hero_description">Ten new tools for your list, watch sessions and notifications, with cleaner cards and panels.</string>
+    <string name="changelog_nav_title">Pins, smart filters and saved views</string>
+    <string name="changelog_nav_description">Pin anime to the top, filter short, almost finished or unstarted titles, and save up to eight combinations of search, filters and sorting.</string>
+    <string name="changelog_motion_title">Plan your next watch session</string>
+    <string name="changelog_motion_description">Set a time budget and let the planner distribute episodes across Watching titles. Individual episode durations also improve remaining-time estimates.</string>
+    <string name="changelog_filters_title">Activity calendar and daily goals</string>
+    <string name="changelog_filters_description">Explore your last 28 days, view current and best streaks from retained activity, and set a daily episode goal alongside your weekly goal.</string>
+    <string name="changelog_states_title">Search and tidy notifications</string>
+    <string name="changelog_states_description">Search titles in unread or read history and clear read notifications after confirmation. Separate rounded cards keep lists consistent.</string>
+    <string name="changelog_about_title">Share your current list</string>
+    <string name="changelog_about_description">Share titles, statuses, progress and scores from current results through Android. Personal backups now include pins, saved views, daily goals and duration overrides.</string>
     <string name="changelog_footer">Made with care by the AnimeSchedule team</string>
 
     <!-- Watch sources -->

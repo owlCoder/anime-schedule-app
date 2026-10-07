@@ -55,6 +55,13 @@ internal fun List<MalListEntry>.toListCsv(tools: WatchTools): String = buildStri
     }
 }
 
+/** Sharing preserves the current result order and bounds the chooser payload. */
+internal fun List<MalListEntry>.toListShareText(heading: String, line: (MalListEntry) -> String, overflow: (Int) -> String): String = buildString {
+    append(heading); append("\n\n")
+    this@toListShareText.take(200).forEachIndexed { index, entry -> append(index + 1); append(". "); append(line(entry).replace('\n', ' ').replace('\r', ' ')); append('\n') }
+    if (this@toListShareText.size > 200) append(overflow(this@toListShareText.size - 200))
+}.trimEnd()
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ListToolsSheet(
@@ -66,41 +73,58 @@ internal fun ListToolsSheet(
     onDismiss: () -> Unit,
     continueTitle: String? = null,
     onContinue: () -> Unit = {},
+    onViews: () -> Unit = {},
+    onPlanner: () -> Unit = {},
+    onCalendar: () -> Unit = {},
+    canShare: Boolean = false,
+    onShare: () -> Unit = {},
 ) {
     AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.list_tools)) {
         Column(Modifier.heightIn(max = 620.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        ToolsAction(Icons.Default.PlayArrow, R.string.continue_watching, R.string.continue_watching_hint, continueTitle != null, onContinue, continueTitle)
-        ToolsAction(
-            Icons.Default.History,
-            R.string.watch_history,
-            R.string.watch_history_hint,
-            true,
-            onHistory
-        )
-        ToolsAction(
-            Icons.Default.Shuffle,
-            R.string.list_pick,
-            R.string.list_pick_hint,
-            canPick,
-            onPick
-        )
-        ToolsAction(
-            Icons.Default.FileDownload,
-            R.string.list_export,
-            R.string.list_export_hint,
-            canExport,
-            onExport
-        )
+            ToolsAction(Icons.Default.PlayArrow, R.string.continue_watching, R.string.continue_watching_hint, continueTitle != null, onContinue, continueTitle)
+            ToolsAction(Icons.Default.Timer, R.string.watch_planner, R.string.planner_menu_hint, canExport, onPlanner)
+            ToolsAction(Icons.Default.CalendarMonth, R.string.activity_calendar, R.string.calendar_menu_hint, true, onCalendar)
+            ToolsAction(Icons.Default.Bookmarks, R.string.saved_list_views, R.string.views_menu_hint, true, onViews)
+            ToolsAction(Icons.Default.Share, R.string.list_share, R.string.list_share_hint, canShare, onShare)
+            ToolsAction(
+                Icons.Default.History,
+                R.string.watch_history,
+                R.string.watch_history_hint,
+                true,
+                onHistory
+            )
+            ToolsAction(
+                Icons.Default.Shuffle,
+                R.string.list_pick,
+                R.string.list_pick_hint,
+                canPick,
+                onPick
+            )
+            ToolsAction(
+                Icons.Default.FileDownload,
+                R.string.list_export,
+                R.string.list_export_hint,
+                canExport,
+                onExport
+            )
         }
     }
 }
 
 @Composable
 private fun ToolsAction(icon: androidx.compose.ui.graphics.vector.ImageVector, title: Int, subtitle: Int, enabled: Boolean, onClick: () -> Unit, subtitleText: String? = null) {
-    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        AppButton(stringResource(title), onClick, Modifier.fillMaxWidth(), variant = AppButtonVariant.Secondary, enabled = enabled, icon = icon)
-        Text(subtitleText ?: stringResource(subtitle), Modifier.padding(horizontal = 12.dp), style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface, border = androidx.compose.foundation.BorderStroke(.5.dp, MaterialTheme.colorScheme.outlineVariant)) {
+        Column(
+            Modifier.fillMaxWidth().padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            AppButton(stringResource(title), onClick, Modifier.fillMaxWidth(), variant = AppButtonVariant.Plain, enabled = enabled, icon = icon)
+            Text(
+                subtitleText ?: stringResource(subtitle), Modifier.padding(horizontal = 12.dp),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 
@@ -110,7 +134,8 @@ internal fun WatchHistorySheet(
     tools: WatchTools,
     onGoalChange: (Int) -> Unit,
     onClear: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onCalendar: () -> Unit = {},
 ) {
     val today = LocalWatchTools.current.today
     val count = tools.episodesThisWeek(today)
@@ -183,6 +208,7 @@ internal fun WatchHistorySheet(
                     }
                 }
             }
+            item { AppButton(stringResource(R.string.activity_calendar), onCalendar, Modifier.fillMaxWidth(), variant = AppButtonVariant.Secondary, icon = Icons.Default.CalendarMonth) }
             item {
                 Text(
                     stringResource(R.string.watch_history_hint),
@@ -202,41 +228,43 @@ internal fun WatchHistorySheet(
                 )
             }
             items(activities) { activity ->
-                Row(
-                    Modifier.fillMaxWidth().padding(vertical = 7.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        if (activity.episodeDelta > 0) Icons.Default.CheckCircle else Icons.Default.Edit,
-                        null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                        Text(
-                            activity.title.ifBlank { "#${activity.animeId}" },
-                            style = MaterialTheme.typography.titleSmall
+                Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface, border = androidx.compose.foundation.BorderStroke(.5.dp, MaterialTheme.colorScheme.outlineVariant)) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            if (activity.episodeDelta > 0) Icons.Default.CheckCircle else Icons.Default.Edit,
+                            null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(22.dp)
                         )
-                        val date = runCatching {
-                            LocalDate.parse(activity.date)
-                                .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale))
-                        }.getOrDefault(activity.date)
+                        Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                            Text(
+                                activity.title.ifBlank { "#${activity.animeId}" },
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            val date = runCatching {
+                                LocalDate.parse(activity.date)
+                                    .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale))
+                            }.getOrDefault(activity.date)
+                            Text(
+                                "$date · ${
+                                    stringResource(
+                                        R.string.history_episode,
+                                        activity.progress
+                                    )
+                                }",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         Text(
-                            "$date · ${
-                                stringResource(
-                                    R.string.history_episode,
-                                    activity.progress
-                                )
-                            }",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            if (activity.episodeDelta > 0) "+${activity.episodeDelta}" else activity.episodeDelta.toString(),
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    Text(
-                        if (activity.episodeDelta > 0) "+${activity.episodeDelta}" else activity.episodeDelta.toString(),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
                 }
             }
             if (tools.activity.isNotEmpty()) item {

@@ -85,6 +85,7 @@ class OverlayEditingTest {
         override fun getUnreadCount() = flowOf(0)
         override suspend fun markRead(id: Int) = Unit
         override suspend fun markAllRead() = Unit
+        override suspend fun deleteRead() = 0
     }
     private object Work : WorkScheduler {
         override fun scheduleFlushPendingUpdates() = Unit
