@@ -41,11 +41,11 @@ fun AppSearchField(
     enabled: Boolean = true,
 ) {
     val shape = ContinuousRoundedShape(GlassTokens.controlRadius)
-    val clearDescription = stringResource(R.string.search_clear_recent)
+    val clearDescription = stringResource(R.string.search_clear_query)
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 44.dp)
+            .heightIn(min = 48.dp)
             .background(appMaterialColor(AppMaterial.Interactive), shape)
             .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
             .padding(start = 11.dp, end = 2.dp),
@@ -81,6 +81,8 @@ fun AppSearchField(
                     if (value.isEmpty()) {
                         Text(
                             placeholder,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

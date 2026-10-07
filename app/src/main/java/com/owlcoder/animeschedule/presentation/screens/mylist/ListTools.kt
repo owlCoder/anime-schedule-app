@@ -1,6 +1,11 @@
 package com.owlcoder.animeschedule.presentation.screens.mylist
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.text.style.TextAlign
+import com.owlcoder.animeschedule.domain.model.filteredActivity
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -23,7 +28,7 @@ import java.time.format.FormatStyle
 
 /** UTF-8 CSV with quoted cells and spreadsheet formula prefixes neutralized. */
 internal fun List<MalListEntry>.toListCsv(tools: WatchTools): String = buildString {
-    append("\uFEFFmal_id,title,status,episodes_watched,total_episodes,score,favorite,note\r\n")
+    append("\uFEFFmal_id,title,status,episodes_watched,total_episodes,score,favorite,note,tags\r\n")
     sortedBy { it.animeId }.forEach { entry ->
         val cells = listOf(
             entry.animeId.toString(),
@@ -33,7 +38,8 @@ internal fun List<MalListEntry>.toListCsv(tools: WatchTools): String = buildStri
             entry.totalEpisodes?.toString().orEmpty(),
             entry.score.toString(),
             (entry.animeId in tools.favorites).toString(),
-            tools.notes[entry.animeId].orEmpty()
+            tools.notes[entry.animeId].orEmpty(),
+            tools.tags[entry.animeId].orEmpty().joinToString("; ")
         )
         append(cells.joinToString(",") { value ->
             val safe = if (value.trimStart().firstOrNull() in listOf(
@@ -57,9 +63,13 @@ internal fun ListToolsSheet(
     onHistory: () -> Unit,
     onPick: () -> Unit,
     onExport: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    continueTitle: String? = null,
+    onContinue: () -> Unit = {},
 ) {
     AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.list_tools)) {
+        Column(Modifier.heightIn(max = 620.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ToolsAction(Icons.Default.PlayArrow, R.string.continue_watching, R.string.continue_watching_hint, continueTitle != null, onContinue, continueTitle)
         ToolsAction(
             Icons.Default.History,
             R.string.watch_history,
@@ -81,36 +91,16 @@ internal fun ListToolsSheet(
             canExport,
             onExport
         )
+        }
     }
 }
 
 @Composable
-private fun ToolsAction(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: Int,
-    subtitle: Int,
-    enabled: Boolean,
-    onClick: () -> Unit
-) {
-    TextButton(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(vertical = 14.dp, horizontal = 8.dp)
-    ) {
-        Icon(icon, null, modifier = Modifier.size(24.dp))
-        Column(
-            Modifier.weight(1f).padding(start = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(3.dp)
-        ) {
-            Text(stringResource(title), style = MaterialTheme.typography.titleSmall)
-            Text(
-                stringResource(subtitle),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Icon(Icons.Default.ChevronRight, null)
+private fun ToolsAction(icon: androidx.compose.ui.graphics.vector.ImageVector, title: Int, subtitle: Int, enabled: Boolean, onClick: () -> Unit, subtitleText: String? = null) {
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        AppButton(stringResource(title), onClick, Modifier.fillMaxWidth(), variant = AppButtonVariant.Secondary, enabled = enabled, icon = icon)
+        Text(subtitleText ?: stringResource(subtitle), Modifier.padding(horizontal = 12.dp), style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
     }
 }
 
@@ -125,6 +115,10 @@ internal fun WatchHistorySheet(
     val today = LocalWatchTools.current.today
     val count = tools.episodesThisWeek(today)
     var clearConfirm by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    var thisWeekOnly by remember { mutableStateOf(false) }
+    val activities = tools.filteredActivity(query, thisWeekOnly, today)
+    val locale = LocalConfiguration.current.locales[0]
     AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.watch_history)) {
         LazyColumn(
             Modifier.fillMaxWidth().heightIn(max = 620.dp),
@@ -196,13 +190,18 @@ internal fun WatchHistorySheet(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            if (tools.activity.isEmpty()) item {
+            item {
+                AppSearchField(query, { query = it }, Modifier.testTag("history-search"), stringResource(R.string.history_search), Icons.Default.Search, onClear = { query = "" })
+                FilterChip(thisWeekOnly, { thisWeekOnly = !thisWeekOnly }, modifier = Modifier.testTag("history-this-week"),
+                    label = { Text(stringResource(R.string.history_this_week)) }, leadingIcon = { Icon(Icons.Default.DateRange, null, Modifier.size(18.dp)) })
+            }
+            if (activities.isEmpty()) item {
                 Text(
                     stringResource(R.string.history_empty),
                     modifier = Modifier.padding(vertical = 20.dp)
                 )
             }
-            items(tools.activity) { activity ->
+            items(activities) { activity ->
                 Row(
                     Modifier.fillMaxWidth().padding(vertical = 7.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -220,7 +219,7 @@ internal fun WatchHistorySheet(
                         )
                         val date = runCatching {
                             LocalDate.parse(activity.date)
-                                .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+                                .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale))
                         }.getOrDefault(activity.date)
                         Text(
                             "$date · ${
@@ -244,26 +243,10 @@ internal fun WatchHistorySheet(
                 if (clearConfirm) {
                     Text(stringResource(R.string.history_clear_confirm))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton({
-                            clearConfirm = false
-                        }) { Text(stringResource(R.string.common_cancel)) }
-                        TextButton({
-                            onClear(); clearConfirm = false
-                        }) {
-                            Text(
-                                stringResource(R.string.history_clear),
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
+                        AppButton(stringResource(R.string.common_cancel), { clearConfirm = false }, modifier = Modifier.weight(1f), variant = AppButtonVariant.Plain, icon = Icons.Default.Close)
+                        AppButton(stringResource(R.string.history_clear), { onClear(); clearConfirm = false }, modifier = Modifier.weight(1f), variant = AppButtonVariant.Destructive, icon = Icons.Default.DeleteOutline)
                     }
-                } else TextButton({
-                    clearConfirm = true
-                }) {
-                    Text(
-                        stringResource(R.string.history_clear),
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
+                } else AppButton(stringResource(R.string.history_clear), { clearConfirm = true }, variant = AppButtonVariant.Plain, icon = Icons.Default.DeleteOutline)
             }
         }
     }
@@ -303,15 +286,21 @@ internal fun AnimePickSheet(
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedButton(
-                    onReroll,
-                    modifier = Modifier.weight(1f)
-                ) { Text(stringResource(R.string.pick_again)) }
-                Button(
-                    { onOpen(entry) },
-                    modifier = Modifier.weight(1f)
-                ) { Text(stringResource(R.string.pick_open)) }
+                AppButton(stringResource(R.string.pick_again), onReroll, Modifier.weight(1f), variant = AppButtonVariant.Secondary, icon = Icons.Default.Shuffle)
+                AppButton(stringResource(R.string.pick_open), { onOpen(entry) }, Modifier.weight(1f), icon = Icons.Default.PlayArrow)
             }
         } else Text(stringResource(R.string.pick_empty), modifier = Modifier.padding(20.dp))
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun TagFilterSheet(tags: List<String>, selected: String?, onSelect: (String?) -> Unit, onDismiss: () -> Unit) {
+    AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.personal_tags)) {
+        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 560.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            item { AppChoiceRow(stringResource(R.string.tags_all), Icons.Default.LabelOff, selected == null, { onSelect(null) }) }
+            if (tags.isEmpty()) item { Text(stringResource(R.string.tags_empty), style = MaterialTheme.typography.bodyMedium) }
+            items(tags, key = { it }) { tag -> AppChoiceRow(tag, Icons.Default.Label, selected.equals(tag, true), { onSelect(tag) }) }
+        }
     }
 }

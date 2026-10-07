@@ -2,6 +2,7 @@ package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -20,7 +21,7 @@ import androidx.compose.ui.unit.dp
 
 data class SegmentOption(val label: String, val icon: ImageVector, val count: Int? = null)
 
-/** Icons sit above labels so translated tabs remain readable at larger font sizes. */
+/** Each segment centers its leading icon and wrapping label as a single group. */
 @Composable
 fun AppSegmentedControl(
     options: List<SegmentOption>,
@@ -58,15 +59,15 @@ fun AppSegmentedControl(
                     ) else null,
                     shadowElevation = if (selected) 1.dp else 0.dp,
                 ) {
-                    Column(
-                        Modifier.fillMaxWidth().heightIn(min = 58.dp)
-                            .padding(horizontal = 4.dp, vertical = 8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)
+                    Row(
+                        Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                            .padding(horizontal = 8.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
                     ) {
-                        Icon(option.icon, null, modifier = Modifier.size(20.dp))
-                        Text(option.label + (option.count?.takeIf { it > 0 }?.let { " · $it" }
-                            ?: ""),
+                        Icon(option.icon, null, modifier = Modifier.size(18.dp))
+                        Text(option.label + (option.count?.takeIf { it > 0 }?.let { " · $it" } ?: ""),
+                            modifier = Modifier.weight(1f, fill = false),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                             textAlign = TextAlign.Center)

@@ -126,6 +126,8 @@ class MainActivity : AppCompatActivity() {
                 today = java.time.LocalDate.now(prefs.effectiveZoneId),
                 toggleFavorite = { id -> scope.launch { watchToolsStore.toggleFavorite(id) } },
                 setNote = { id, note -> scope.launch { watchToolsStore.setNote(id, note) } },
+                setTags = { id, tags -> scope.launch { watchToolsStore.setTags(id, tags) } },
+                setEpisodeMinutes = { minutes -> scope.launch { watchToolsStore.setEpisodeMinutes(minutes) } },
             )
 
             var pendingTheme by rememberSaveable { mutableStateOf(prefs.themeMode) }
@@ -188,13 +190,10 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         val toastController = remember { ToastController() }
-                        var appLoading by rememberSaveable { mutableStateOf(true) }
                         var isSearchFocused by rememberSaveable { mutableStateOf(false) }
                         val backStackEntry by navController.currentBackStackEntryAsState()
                         val currentRoute = backStackEntry?.destination?.route
                         val showBottomBar = shouldShowBottomBar(currentRoute) && !isSearchFocused
-                        val showInitialScheduleLoading = appLoading &&
-                                (currentRoute == null || currentRoute == Screen.Schedule.route)
 
                         AppSystemBarAppearance(
                             statusBarOnImagery = currentRoute == Screen.Detail.ROUTE,
@@ -226,7 +225,6 @@ class MainActivity : AppCompatActivity() {
                                                     LocaleHelper.applyLanguage(lang)
                                                 }
                                             },
-                                            onScheduleInitialLoadChange = { appLoading = it },
                                             onSearchFocusChanged = { isSearchFocused = it },
                                         )
                                     }
@@ -253,15 +251,7 @@ class MainActivity : AppCompatActivity() {
                                         )
                                     }
 
-                                    AnimatedVisibility(
-                                        visible = showInitialScheduleLoading,
-                                        enter = fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)),
-                                        exit = fadeOut(animationSpec = motion.iosTween(IosMotion.Standard)),
-                                    ) {
-                                        com.owlcoder.animeschedule.presentation.components.AnimatedSplashScreen(
-                                            modifier = Modifier.fillMaxSize(),
-                                        )
-                                    }
+
                                 }
                             }
                         }

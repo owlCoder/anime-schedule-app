@@ -11,13 +11,13 @@ Native Android app for tracking anime airing schedules and managing your MyAnime
 - **Episode editor** — grouped status, large progress controls, direct entry, ±10 steps, ratings, notes and safe removal; consecutive edits reuse the schedule overlay
 - **Personal tracking tools** — account-scoped local favorites and notes, All-status and Unrated filters, random picks from current results, and UTF-8 CSV export through the Android document picker
 - **Activity and goals** — the latest 300 local progress changes (including offline edits), with a configurable Monday–Sunday episode goal using your schedule timezone
-- **Themes** — Classic, Midnight, Sakura, Forest and Sand palettes, Android wallpaper colors, AMOLED canvas, higher contrast, reduced animations, and accessible light/dark/system controls
+- **Themes** — eleven predefined palettes, Classic accent colors, Android wallpaper colors, saved looks, scheduled light/dark hours, compact layouts, AMOLED canvas, higher contrast and reduced animations
 - **Share anime** — send the title and AniList link with the native Android share sheet
 - **MyAnimeList integration** — OAuth 2.0 login, list read/update, a "+1 episode" quick action, and offline edits that are queued and delivered when you are back online
 - **Search** — find anime by title (infinite scroll, recent searches, list status editing)
 - **Notifications** — optional local notifications when an anime on your *Watching* list airs, plus an in-app history with an unread badge
 - **Watch sources** — your own search-URL templates (Crunchyroll and Netflix are preset), opened in the app's built-in browser with an ad/tracker filter or in another app
-- **Settings** — theme (Light / Dark / System), accent colour, time zone override, notification timing, language, cache retention
+- **Settings** — searchable options, one Appearance menu for themes and accent colors, time zone override, notification timing, language, cache retention, episode duration and personal backups
 - **Languages** — English and Serbian (Latin), switchable without restarting the app
 - **Onboarding** and an in-app **changelog**
 
@@ -110,10 +110,26 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.3.0** (version code **25**, October 6, 2026).
+Current release: **5.4.0** (version code **26**, October 6, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### New in 5.4.0
+
+- Search Settings, save up to eight appearance profiles, schedule
+  light/dark hours, and use a compact list layout.
+- Add personal anime tags and filter by them, search watch history or restrict it to this week,
+  search list titles, notes and tags, continue the latest unfinished anime, and estimate remaining watch time with an adjustable
+  episode duration.
+- Export and restore local personal data and appearance through Android’s document picker.
+  Restoration shows a preview and requires an explicit confirmation; it leaves MAL list data
+  and authentication unchanged.
+- Six additional palettes: Ocean, Lavender, Ember, Ice, Coffee and Neon (11 in total).
+  Appearance combines colors, display options and saved looks in one scrolling menu with predefined colors.
+  Settings pickers have separate rounded rows; source editing uses one sheet and text actions use leading
+  icons and centered labels. Cached schedule content appears immediately during refresh; the
+  orbit loader stays within the schedule pane so navigation remains available.
 
 ## Privacy
 

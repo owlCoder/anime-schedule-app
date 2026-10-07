@@ -35,6 +35,7 @@ data class MyListUiState(
     val allEntries: List<MalListEntry> = emptyList(),
     val favoritesOnly: Boolean = false,
     val unratedOnly: Boolean = false,
+    val activeTag: String? = null,
     val tools: WatchTools = WatchTools(),
     val pendingIncrementIds: Set<Int> = emptySet(),
     /** Count of list entries per status, independent of [searchQuery]/[activeFilter]. */
@@ -50,6 +51,7 @@ private data class MyListContent(
     val allEntries: List<MalListEntry>,
     val favoritesOnly: Boolean = false,
     val unratedOnly: Boolean = false,
+    val activeTag: String? = null,
     val tools: WatchTools = WatchTools(),
     val statusCounts: Map<WatchStatus, Int>,
     val sortOrder: MyListSortOrder,
@@ -66,6 +68,7 @@ class MyListViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     private val _sortOrder = MutableStateFlow(MyListSortOrder.RECENT)
     private val _activeFilter = MutableStateFlow<WatchStatus?>(WatchStatus.WATCHING)
+    private val _tagFilter = MutableStateFlow<String?>(null)
     private val _quickFilters = MutableStateFlow(false to false)
     private val _isLoading = MutableStateFlow(true)
     private val _pendingIncrementIds = MutableStateFlow<Set<Int>>(emptySet())
@@ -86,10 +89,8 @@ class MyListViewModel @Inject constructor(
         _activeFilter,
         _sortOrder,
     ) { allEntries, query, filter, sortOrder ->
-        val trimmedQuery = query.trim()
         val filteredEntries = allEntries.filter { entry ->
-            (filter == null || entry.status == filter) &&
-                (trimmedQuery.isBlank() || entry.title.contains(trimmedQuery, ignoreCase = true))
+            filter == null || entry.status == filter
         }
         MyListContent(
             entries = filteredEntries.sortedFor(sortOrder),
@@ -102,10 +103,10 @@ class MyListViewModel @Inject constructor(
         )
     }.flowOn(Dispatchers.Default)
 
-    private val listContent = combine(baseContent, _quickFilters, toolsStore?.data ?: flowOf(WatchTools())) { content, quick, tools ->
+    private val listContent = combine(baseContent, _quickFilters, toolsStore?.data ?: flowOf(WatchTools()), _tagFilter) { content, quick, tools, tag ->
         content.copy(
-            entries = content.entries.filter { (!quick.first || it.animeId in tools.favorites) && (!quick.second || it.score == 0) },
-            favoritesOnly = quick.first, unratedOnly = quick.second, tools = tools,
+            entries = content.entries.filter { (content.searchQuery.trim().let { query -> query.isBlank() || it.title.contains(query, true) || tools.notes[it.animeId].orEmpty().contains(query, true) || tools.tags[it.animeId].orEmpty().any { tag -> tag.contains(query, true) } }) && (!quick.first || it.animeId in tools.favorites) && (!quick.second || it.score == 0) && (tag == null || tools.tags[it.animeId].orEmpty().any { value -> value.equals(tag, ignoreCase = true) }) },
+            favoritesOnly = quick.first, unratedOnly = quick.second, tools = tools, activeTag = tag,
         )
     }.flowOn(Dispatchers.Default)
 
@@ -120,6 +121,7 @@ class MyListViewModel @Inject constructor(
             allEntries = content.allEntries,
             favoritesOnly = content.favoritesOnly,
             unratedOnly = content.unratedOnly,
+            activeTag = content.activeTag,
             tools = content.tools,
             isLoading = loading,
             isLoggedIn = loggedIn,
@@ -148,7 +150,8 @@ class MyListViewModel @Inject constructor(
 
     fun setFilter(status: WatchStatus?) = _activeFilter.update { status }
 
-    fun clearQuickFilters() { _searchQuery.value = ""; _quickFilters.value = false to false }
+    fun clearQuickFilters() { _searchQuery.value = ""; _quickFilters.value = false to false; _tagFilter.value = null }
+    fun setTagFilter(tag: String?) { _tagFilter.value = tag }
     fun toggleFavorites() = _quickFilters.update { !it.first to it.second }
     fun toggleUnrated() = _quickFilters.update { it.first to !it.second }
     fun setWeeklyGoal(goal: Int) { viewModelScope.launch { toolsStore?.setWeeklyGoal(goal) } }

@@ -65,6 +65,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AiringEpisode
 import com.owlcoder.animeschedule.domain.model.MalListEntry
+import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
+import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
+import com.owlcoder.animeschedule.presentation.components.AppButton
 import com.owlcoder.animeschedule.presentation.components.AppSearchField
 import com.owlcoder.animeschedule.presentation.components.ListStatusEditor
 import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
@@ -100,6 +103,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -196,8 +202,7 @@ private fun ScheduleScreenContent(
                 .fillMaxSize(),
         ) {
             when {
-                uiState.isInitialLoad -> Unit
-                uiState.isLoading && uiState.todayEpisodes.isEmpty() -> LoadingShimmer()
+                uiState.isInitialLoad -> com.owlcoder.animeschedule.presentation.components.AnimatedSplashScreen(Modifier.fillMaxSize().padding(bottom = LocalNavBarHeight.current))
                 else -> TodayHomeContent(
                     uiState = uiState,
                     selectedDate = selectedDate,
@@ -398,7 +403,7 @@ private fun TodayHomeContent(
                     }
                     Spacer(Modifier.weight(1f))
                     if (uiState.filter.isActive) {
-                        TextButton(onClick = onClearFilter) { Text(stringResource(R.string.filter_reset)) }
+                        AppButton(stringResource(R.string.filter_reset), onClearFilter, variant = AppButtonVariant.Plain, icon = Icons.Default.RestartAlt)
                     } else {
                         Text(
                             text = stringResource(R.string.schedule_match_count, uiState.episodesForDate(selectedDate).size),
@@ -634,22 +639,7 @@ private fun RecentlyChangedSection(
                 fontWeight = FontWeight.SemiBold,
             )
             if (entries.size > previewEntries.size) {
-                TextButton(
-                    onClick = { showAll = true },
-                    modifier = Modifier.height(36.dp),
-                    contentPadding = PaddingValues(horizontal = 4.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.schedule_see_all),
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Spacer(Modifier.width(3.dp))
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp),
-                    )
-                }
+                AppButton(stringResource(R.string.schedule_see_all), { showAll = true }, variant = AppButtonVariant.Plain, icon = Icons.AutoMirrored.Filled.ArrowForward)
             }
         }
 
@@ -820,22 +810,7 @@ private fun DashboardSectionHeader(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        TextButton(
-            onClick = onSeeAll,
-            modifier = Modifier.height(36.dp),
-            contentPadding = PaddingValues(horizontal = 4.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.schedule_see_all),
-                fontWeight = FontWeight.SemiBold,
-            )
-            Spacer(Modifier.width(3.dp))
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = null,
-                modifier = Modifier.size(14.dp),
-            )
-        }
+        AppButton(stringResource(R.string.schedule_see_all), onSeeAll, variant = AppButtonVariant.Plain, icon = Icons.AutoMirrored.Filled.ArrowForward)
     }
 }
 

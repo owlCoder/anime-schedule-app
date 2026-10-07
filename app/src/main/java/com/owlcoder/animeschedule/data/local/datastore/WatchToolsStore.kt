@@ -5,7 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.owlcoder.animeschedule.domain.model.WatchTools
+import com.owlcoder.animeschedule.domain.model.*
 import com.owlcoder.animeschedule.domain.model.effectiveZoneId
 import java.io.IOException
 import java.time.LocalDate
@@ -27,14 +27,14 @@ class WatchToolsStore @Inject constructor(
     private val preferences: UserPreferencesDataStore,
 ) {
     private val json = Json { ignoreUnknownKeys = true }
-    private fun key(prefs: Preferences) = stringPreferencesKey(
+    internal fun key(prefs: Preferences) = stringPreferencesKey(
         "watch_tools_v1_${
             prefs[stringPreferencesKey("mal_username")]?.lowercase(Locale.ROOT)
                 ?.takeIf { it.isNotBlank() } ?: "guest"
         }"
     )
 
-    private fun read(prefs: Preferences): WatchTools = runCatching {
+    internal fun read(prefs: Preferences): WatchTools = runCatching {
         json.decodeFromString<WatchTools>(prefs[key(prefs)] ?: "{}")
     }.getOrDefault(WatchTools())
 
@@ -54,6 +54,13 @@ class WatchToolsStore @Inject constructor(
         val trimmed = note.trim().take(2000)
         it.copy(notes = if (trimmed.isBlank()) it.notes - id else it.notes + (id to trimmed))
     }
+
+    suspend fun setTags(id: Int, text: String) = edit {
+        val tags = normalizedTags(text)
+        it.copy(tags = if (tags.isEmpty()) it.tags - id else it.tags + (id to tags))
+    }
+
+    suspend fun setEpisodeMinutes(minutes: Int) = edit { it.copy(episodeMinutes = minutes.coerceIn(1, 180)) }
 
     suspend fun setWeeklyGoal(goal: Int) = edit { it.copy(weeklyGoal = goal.coerceIn(0, 100)) }
     suspend fun clearActivity() = edit { it.copy(activity = emptyList()) }

@@ -46,4 +46,9 @@ class MyListInsightsTest {
         assertEquals(listOf(2, 3, 1), entries.sortedFor(MyListSortOrder.TITLE).map { it.animeId })
         assertEquals(listOf(1, 2, 3), entries.sortedFor(MyListSortOrder.SCORE).map { it.animeId })
     }
+    @Test fun `continue watching selects most recent unfinished watching entry from whole list`() {
+        val entries = listOf(entry(1,"Old",1,12,updated="2026-10-05T12:00:00Z"), entry(2,"New",5,null,updated="2026-10-06T12:00:00Z"),entry(3,"Finished",12,12,updated="2026-10-07T12:00:00Z"),entry(4,"Planned",0,12,status=WatchStatus.PLAN_TO_WATCH,updated="2026-10-08T12:00:00Z"))
+        assertEquals(2, entries.continueWatching()?.animeId)
+        assertNull(entries.filter { it.animeId >= 3 }.continueWatching())
+    }
 }

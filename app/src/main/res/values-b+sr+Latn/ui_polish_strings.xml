@@ -76,17 +76,17 @@
     <!-- Changelog -->
     <string name="changelog_release_date">6. oktobar 2026.</string>
     <string name="changelog_whats_new">Šta je novo</string>
-    <string name="changelog_hero_description">Pregledniji editor, kompletne teme i deset novih alata za tvoju anime listu.</string>
-    <string name="changelog_nav_title">Pregledniji editor statusa i epizoda</string>
-    <string name="changelog_nav_description">Veće kontrole, grupisane ocene, izbor statusa, lične beleške i potvrda uklanjanja. Uzastopne izmene i dalje koriste jedan panel.</string>
-    <string name="changelog_motion_title">Teme za celu aplikaciju</string>
-    <string name="changelog_motion_description">Pet paleta, boje Android pozadine, AMOLED crna, veći kontrast i manje animacija. Tabovi sa ikonicama i kompaktna obaveštenja prate novi dizajn.</string>
-    <string name="changelog_filters_title">Favoriti, beleške i fleksibilni filteri</string>
-    <string name="changelog_filters_description">Sačuvaj lokalne favorite i beleške, pregledaj sve statuse zajedno ili pronađi anime koji još nema ocenu.</string>
-    <string name="changelog_states_title">Istorija, ciljevi i alati za listu</string>
-    <string name="changelog_states_description">Pregledaj promene napretka, postavi nedeljni cilj, izaberi nasumičan anime iz rezultata i izvezi celu sačuvanu listu u CSV.</string>
-    <string name="changelog_about_title">Brže istraži sezonu</string>
-    <string name="changelog_about_description">Pretraži naslove sezone i sakrij anime koji je već na tvojoj listi. Sve je dostupno na engleskom i srpskoj latinici.</string>
+    <string name="changelog_hero_description">Osvežena podešavanja, jedanaest paleta i deset novih ličnih alata.</string>
+    <string name="changelog_nav_title">Usklađena podešavanja i kontrole</string>
+    <string name="changelog_nav_description">Pretraži podešavanja, koristi pregledne izbore i izmeni izvore za gledanje u jednom panelu. Ikonice levo i centriran tekst olakšavaju korišćenje.</string>
+    <string name="changelog_motion_title">Šest novih paleta i sačuvani izgledi</string>
+    <string name="changelog_motion_description">Okean, Lavanda, Žar, Led, Kafa i Neon dopunjuju postojeće teme. Izaberi predefinisanu boju, sačuvaj izgled, zakaži dnevne i noćne sate i uključi kompaktan prikaz.</string>
+    <string name="changelog_filters_title">Lične oznake i pretraga istorije</string>
+    <string name="changelog_filters_description">Dodaj oznake animeu, pretraži naslove, beleške i oznake i filtriraj listu po oznakama, pretraži istoriju gledanja i prikaži samo tekuću nedelju.</string>
+    <string name="changelog_states_title">Nastavi gledanje i isplaniraj vreme</string>
+    <string name="changelog_states_description">Otvori poslednji nezavršeni anime koji gledaš i proceni preostalo vreme prema željenom trajanju epizode.</string>
+    <string name="changelog_about_title">Lična rezervna kopija</string>
+    <string name="changelog_about_description">Izvezi favorite, beleške, oznake, istoriju, cilj i izgled u JSON. Pregledaj kopiju pre vraćanja lokalnih podataka; MAL lista i prijava ostaju sačuvani.</string>
     <string name="changelog_footer">Napravljeno pažljivo od strane AnimeSchedule tima</string>
 
     <!-- Izvori za gledanje -->

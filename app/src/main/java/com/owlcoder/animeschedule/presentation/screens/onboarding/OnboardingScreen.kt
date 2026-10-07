@@ -6,6 +6,14 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +27,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +43,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -285,6 +291,7 @@ private fun LanguageChoiceCard(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    icon: ImageVector = Icons.Default.Schedule,
 ) {
     val background by animateColorAsState(
         targetValue = if (selected) {
@@ -727,6 +734,7 @@ private fun PersonalizePage(
                             ThemeMode.LIGHT -> language.t("Light", "Svetlo")
                             ThemeMode.DARK -> language.t("Dark", "Tamno")
                         },
+                        icon = when (mode) { ThemeMode.SYSTEM -> Icons.Default.PhoneAndroid; ThemeMode.LIGHT -> Icons.Default.LightMode; ThemeMode.DARK -> Icons.Default.DarkMode },
                         selected = selectedTheme == mode,
                         onClick = { onThemeChange(mode) },
                         modifier = Modifier.weight(1f),
@@ -912,7 +920,8 @@ private fun DatePreviewCell(
         modifier = Modifier
             .size(width = 48.dp, height = 54.dp)
             .iosPressScale()
-            .onboardingClickable(onClick),
+            .clip(ContinuousRoundedShape(16.dp))
+            .selectable(selected, role = Role.RadioButton, onClick = onClick),
         shape = ContinuousRoundedShape(16.dp),
         color = color,
         border = if (selected) {
@@ -981,6 +990,7 @@ private fun SelectionChip(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    icon: ImageVector = Icons.Default.Schedule,
 ) {
     val background by animateColorAsState(
         targetValue = if (selected) {
@@ -992,9 +1002,10 @@ private fun SelectionChip(
     )
     Surface(
         modifier = modifier
-            .height(46.dp)
+            .heightIn(min = 48.dp)
             .iosPressScale()
-            .onboardingClickable(onClick),
+            .clip(ContinuousRoundedShape(16.dp))
+            .selectable(selected, role = Role.RadioButton, onClick = onClick),
         shape = ContinuousRoundedShape(16.dp),
         color = background,
         border = androidx.compose.foundation.BorderStroke(
@@ -1008,21 +1019,16 @@ private fun SelectionChip(
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp),
+                .fillMaxWidth()
+                .heightIn(min = 48.dp)
+                .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
         ) {
-            if (selected) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(15.dp),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
+            Icon(icon, null, Modifier.size(18.dp), tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
                 text = label,
+                modifier = Modifier.weight(1f, fill = false),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                 color = if (selected) MaterialTheme.colorScheme.primary

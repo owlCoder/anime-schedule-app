@@ -1,10 +1,12 @@
 package com.owlcoder.animeschedule.presentation.components
 
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
@@ -65,6 +67,8 @@ fun ErrorBanner(
                     onClick = onRetry,
                     shape = MaterialTheme.shapes.small,
                 ) {
+                    Icon(Icons.Default.Refresh, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onErrorContainer)
+                    Spacer(Modifier.width(8.dp))
                     Text(
                         stringResource(R.string.common_retry),
                         color = MaterialTheme.colorScheme.onErrorContainer,

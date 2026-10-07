@@ -76,17 +76,17 @@
     <!-- Changelog -->
     <string name="changelog_release_date">October 6, 2026</string>
     <string name="changelog_whats_new">What\'s new</string>
-    <string name="changelog_hero_description">A cleaner editor, complete themes, and ten new tools for your anime list.</string>
-    <string name="changelog_nav_title">A clearer status and episode editor</string>
-    <string name="changelog_nav_description">Larger controls, grouped ratings, expandable status choices, personal notes and confirmed removal. Consecutive edits still reuse one overlay.</string>
-    <string name="changelog_motion_title">Themes that style the whole app</string>
-    <string name="changelog_motion_description">Five palettes, Android wallpaper colors, AMOLED black, higher contrast and reduced animations. Icon tabs and compact notifications fit the new design.</string>
-    <string name="changelog_filters_title">Favorites, notes and flexible list filters</string>
-    <string name="changelog_filters_description">Save local favorites and notes, browse every status together, or find anime that still need a rating.</string>
-    <string name="changelog_states_title">Watch activity, goals and list tools</string>
-    <string name="changelog_states_description">Review progress changes, set a weekly goal, pick an anime randomly from your results, and export your entire cached list to CSV.</string>
-    <string name="changelog_about_title">Discover a season more quickly</string>
-    <string name="changelog_about_description">Search season titles and hide anime already on your list. Everything is available in English and Serbian Latin.</string>
+    <string name="changelog_hero_description">Refreshed Settings, eleven palettes and ten new personal tools.</string>
+    <string name="changelog_nav_title">Consistent Settings and controls</string>
+    <string name="changelog_nav_description">Search Settings, use clear pickers and edit watch sources in one panel. Leading icons and centered labels make actions easier to scan.</string>
+    <string name="changelog_motion_title">Six more palettes and saved looks</string>
+    <string name="changelog_motion_description">Ocean, Lavender, Ember, Ice, Coffee and Neon join the existing themes. Choose predefined accents, save looks, schedule day/night hours and enable compact layouts.</string>
+    <string name="changelog_filters_title">Personal tags and history search</string>
+    <string name="changelog_filters_description">Add tags to anime, search titles, notes and tags, filter your list by a tag, search watch activity and show only this week.</string>
+    <string name="changelog_states_title">Continue watching and plan your time</string>
+    <string name="changelog_states_description">Jump to your latest unfinished Watching anime and estimate remaining watch time using your preferred episode duration.</string>
+    <string name="changelog_about_title">Portable personal backup</string>
+    <string name="changelog_about_description">Export favorites, notes, tags, history, goals and appearance to JSON. Preview a backup before restoring local data; your MAL list and login stay intact.</string>
     <string name="changelog_footer">Made with care by the AnimeSchedule team</string>
 
     <!-- Watch sources -->

@@ -9,6 +9,8 @@ data class WatchToolsActions(
     val today: java.time.LocalDate = java.time.LocalDate.now(),
     val toggleFavorite: (Int) -> Unit = {},
     val setNote: (Int, String) -> Unit = { _, _ -> },
+    val setTags: (Int, String) -> Unit = { _, _ -> },
+    val setEpisodeMinutes: (Int) -> Unit = {},
 )
 
 val LocalWatchTools = compositionLocalOf { WatchToolsActions() }

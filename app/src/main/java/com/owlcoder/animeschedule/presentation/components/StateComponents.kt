@@ -39,12 +39,7 @@ fun AppLoadingState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
     ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(30.dp),
-            color = MaterialTheme.colorScheme.primary,
-            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
-            strokeWidth = 2.5.dp,
-        )
+        OrbitLoader(Modifier.size(40.dp))
         if (!label.isNullOrBlank()) {
             Text(
                 text = label,

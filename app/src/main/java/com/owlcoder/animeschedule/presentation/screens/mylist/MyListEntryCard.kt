@@ -1,6 +1,7 @@
 package com.owlcoder.animeschedule.presentation.screens.mylist
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -28,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import com.owlcoder.animeschedule.ui.theme.LocalCompactLayout
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -68,12 +70,15 @@ fun MyListEntryCard(
     isIncrementing: Boolean = false,
     isFavorite: Boolean = false,
     hasNote: Boolean = false,
+    tags: Set<String> = emptySet(),
+    remainingMinutes: Long? = null,
     onCardClick: () -> Unit,
     onIncrementEpisode: () -> Unit,
     onEditStatus: () -> Unit,
     showDivider: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
+    val compact = LocalCompactLayout.current
     val statusTint = statusColor(entry.status)
     val progress = entry.totalEpisodes
         ?.takeIf { it > 0 && entry.episodesWatched > 0 }
@@ -97,8 +102,8 @@ fun MyListEntryCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 88.dp)
-                    .padding(start = 10.dp, end = 7.dp, top = 9.dp, bottom = 9.dp),
+                    .heightIn(min = if (compact) 72.dp else 88.dp)
+                    .padding(start = 10.dp, end = 7.dp, top = if (compact) 5.dp else 9.dp, bottom = if (compact) 5.dp else 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(
@@ -115,7 +120,7 @@ fun MyListEntryCard(
                     MediaThumbnail.Small(
                         url = coverImageUrl,
                         contentDescription = title,
-                        modifier = Modifier.size(50.dp, 68.dp),
+                        modifier = Modifier.size(if (compact) 42.dp else 50.dp, if (compact) 56.dp else 68.dp),
                     )
                     Spacer(Modifier.width(11.dp))
                     Column(
@@ -180,6 +185,16 @@ fun MyListEntryCard(
                                     maxLines = 1,
                                 )
                             }
+                        }
+                        if (remainingMinutes != null && remainingMinutes > 0) Text(
+                            stringResource(R.string.remaining_time_value, remainingMinutes / 60, remainingMinutes % 60),
+                            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (tags.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                            tags.take(3).forEach { tag ->
+                                Text(tag, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.clip(MaterialTheme.shapes.small).background(MaterialTheme.colorScheme.primaryContainer).padding(horizontal = 6.dp, vertical = 3.dp))
+                            }
+                            if (tags.size > 3) Text("+${tags.size - 3}", style = MaterialTheme.typography.labelSmall)
                         }
                         if (progress != null) {
                             LinearProgressIndicator(

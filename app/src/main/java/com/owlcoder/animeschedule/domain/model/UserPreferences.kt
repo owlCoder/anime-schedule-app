@@ -5,7 +5,7 @@ import java.time.ZoneId
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class ThemePalette { CLASSIC, MIDNIGHT, SAKURA, FOREST, SAND }
+enum class ThemePalette { CLASSIC, MIDNIGHT, SAKURA, FOREST, SAND, OCEAN, LAVENDER, EMBER, ICE, COFFEE, NEON }
 
 @Serializable
 data class ThemeOptions(
@@ -14,10 +14,16 @@ data class ThemeOptions(
     val amoled: Boolean = true,
     val highContrast: Boolean = false,
     val reduceMotion: Boolean = false,
+    val scheduled: Boolean = false,
+    val darkStartHour: Int = 22,
+    val darkEndHour: Int = 7,
+    val compactLayout: Boolean = false,
 )
 
+@Serializable
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+@Serializable
 enum class AccentColor {
     TELEGRAM_BLUE,
     PURPLE,
@@ -41,6 +47,7 @@ data class UserPreferences(
     val malAvatarUrl: String = "",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val themeOptions: ThemeOptions = ThemeOptions(),
+    val appearancePresets: List<AppearancePreset> = emptyList(),
     val notificationsEnabled: Boolean = true,
     val notificationOffsetMinutes: Int = 0,
     val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,

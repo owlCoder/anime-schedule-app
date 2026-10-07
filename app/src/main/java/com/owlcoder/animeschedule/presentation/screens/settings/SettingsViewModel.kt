@@ -15,6 +15,9 @@ import com.owlcoder.animeschedule.domain.model.AccentColor
 import com.owlcoder.animeschedule.domain.model.AppLanguage
 import com.owlcoder.animeschedule.domain.model.CacheRetentionPolicy
 import com.owlcoder.animeschedule.domain.model.ThemeMode
+import com.owlcoder.animeschedule.domain.model.AppearancePreset
+import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
+import com.owlcoder.animeschedule.data.local.datastore.PersonalBackupStore
 import com.owlcoder.animeschedule.data.work.CacheMaintenance
 import com.owlcoder.animeschedule.domain.repository.AuthRepository
 import com.owlcoder.animeschedule.domain.repository.SettingsRepository
@@ -37,6 +40,7 @@ data class SettingsUiState(
     val username: String = "",
     val avatarUrl: String = "",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val appearancePresets: List<AppearancePreset> = emptyList(),
     val themeOptions: com.owlcoder.animeschedule.domain.model.ThemeOptions = com.owlcoder.animeschedule.domain.model.ThemeOptions(),
     val notificationsEnabled: Boolean = true,
     val notificationOffsetMinutes: Int = 0,
@@ -52,6 +56,8 @@ class SettingsViewModel @Inject constructor(
     authRepository: AuthRepository,
     malRepository: MalRepository,
     private val cacheMaintenance: CacheMaintenance,
+    val personalBackupStore: PersonalBackupStore,
+    private val preferencesStore: UserPreferencesDataStore,
 ) : ViewModel() {
 
     private val _cacheSizeBytes = MutableStateFlow(0L)
@@ -81,6 +87,7 @@ class SettingsViewModel @Inject constructor(
             avatarUrl = avatarUrl,
             themeMode = preferences.themeMode,
             themeOptions = preferences.themeOptions,
+            appearancePresets = preferences.appearancePresets,
             notificationsEnabled = preferences.notificationsEnabled,
             notificationOffsetMinutes = preferences.notificationOffsetMinutes,
             accentColor = preferences.accentColor,
@@ -101,6 +108,10 @@ class SettingsViewModel @Inject constructor(
     fun setTimezone(timezoneId: String) {
         viewModelScope.launch { settingsRepository.setTimezoneId(timezoneId) }
     }
+
+    fun saveAppearancePreset(preset: AppearancePreset) { viewModelScope.launch { preferencesStore.saveAppearancePreset(preset) } }
+    fun applyAppearancePreset(preset: AppearancePreset) { viewModelScope.launch { preferencesStore.applyAppearancePreset(preset) } }
+    fun deleteAppearancePreset(name: String) { viewModelScope.launch { preferencesStore.deleteAppearancePreset(name) } }
 
     fun setThemeOptions(options: com.owlcoder.animeschedule.domain.model.ThemeOptions) {
         viewModelScope.launch { settingsRepository.setThemeOptions(options) }

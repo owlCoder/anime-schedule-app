@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -52,6 +53,7 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.PauseCircle
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.RemoveCircle
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.FilterChip
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -95,6 +97,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.WatchStatus
+import com.owlcoder.animeschedule.presentation.components.AppChoiceRow
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.GlassToolbarGroup
 import com.owlcoder.animeschedule.presentation.components.GlassToolbarButton
@@ -119,7 +122,7 @@ import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
-private enum class ListOverlay { SORT, INSIGHTS, TOOLS, HISTORY, PICK }
+private enum class ListOverlay { SORT, INSIGHTS, TOOLS, HISTORY, PICK, TAGS }
 
 private val statusTabs = listOf(
     WatchStatus.WATCHING,
@@ -224,6 +227,7 @@ fun MyListScreen(
                 onShowTools = { overlay = ListOverlay.TOOLS },
                 onFavorites = viewModel::toggleFavorites,
                 onUnrated = viewModel::toggleUnrated,
+                onTags = { overlay = ListOverlay.TAGS },
                 onClearQuickFilters = viewModel::clearQuickFilters,
             )
         }
@@ -247,6 +251,8 @@ fun MyListScreen(
         ListOverlay.TOOLS -> ListToolsSheet(
             canPick = uiState.entries.any { it.status != WatchStatus.COMPLETED && it.status != WatchStatus.DROPPED },
             canExport = uiState.allEntries.isNotEmpty(),
+            continueTitle = uiState.allEntries.continueWatching()?.title,
+            onContinue = { uiState.allEntries.continueWatching()?.let { overlay = null; onAnimeClick(it.animeId) } },
             onHistory = { overlay = ListOverlay.HISTORY },
             onPick = {
                 pickedEntry = uiState.entries.filter { it.status != WatchStatus.COMPLETED && it.status != WatchStatus.DROPPED }.randomOrNull()
@@ -263,6 +269,11 @@ fun MyListScreen(
             val candidates = uiState.entries.filter { it.status != WatchStatus.COMPLETED && it.status != WatchStatus.DROPPED && it.animeId != pickedEntry?.animeId }
             pickedEntry = candidates.randomOrNull() ?: pickedEntry
         }, onDismiss = { overlay = null })
+        ListOverlay.TAGS -> TagFilterSheet(
+            tags = uiState.allEntries.flatMap { uiState.tools.tags[it.animeId].orEmpty() }.distinctBy { it.lowercase(java.util.Locale.ROOT) }.sortedBy { it.lowercase(java.util.Locale.ROOT) },
+            selected = uiState.activeTag,
+            onSelect = { viewModel.setTagFilter(it); overlay = null }, onDismiss = { overlay = null },
+        )
         null -> Unit
     }
 }
@@ -284,6 +295,7 @@ private fun LoggedInList(
     onShowTools: () -> Unit,
     onFavorites: () -> Unit,
     onUnrated: () -> Unit,
+    onTags: () -> Unit,
     onClearQuickFilters: () -> Unit,
 ) {
     val motion = LocalMotionPolicy.current
@@ -320,11 +332,12 @@ private fun LoggedInList(
                     placeholder = stringResource(R.string.mylist_search_placeholder),
                     leadingIcon = Icons.Default.Search,
                     onClear = { onSearchQueryChange("") },
-                    modifier = Modifier.height(44.dp),
+                    modifier = Modifier.heightIn(min = 48.dp),
                 )
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(uiState.favoritesOnly, onFavorites, modifier = Modifier.testTag("list-favorites-filter"), label = { Text(stringResource(R.string.favorites)) }, leadingIcon = { Icon(Icons.Default.Star, null, Modifier.size(16.dp)) })
-                    FilterChip(uiState.unratedOnly, onUnrated, modifier = Modifier.testTag("list-unrated-filter"), label = { Text(stringResource(R.string.list_unrated)) })
+                    FilterChip(uiState.unratedOnly, onUnrated, modifier = Modifier.testTag("list-unrated-filter"), label = { Text(stringResource(R.string.list_unrated)) }, leadingIcon = { Icon(Icons.Default.StarBorder, null, Modifier.size(16.dp)) })
+                    FilterChip(uiState.activeTag != null, onTags, modifier = Modifier.testTag("list-tags-filter"), label = { Text(uiState.activeTag ?: stringResource(R.string.personal_tags)) }, leadingIcon = { Icon(Icons.Default.Label, null, Modifier.size(16.dp)) })
                 }
                 StatusFilterRow(
                     activeFilter = uiState.activeFilter,
@@ -370,10 +383,10 @@ private fun LoggedInList(
                     )
                     2 -> EmptyState(
                         icon = Icons.AutoMirrored.Filled.FormatListBulleted,
-                        title = stringResource(if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly) R.string.list_filtered_empty else R.string.mylist_empty_title),
-                        subtitle = stringResource(if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly) R.string.list_filtered_empty_hint else R.string.mylist_empty_subtitle),
-                        actionLabel = if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly) stringResource(R.string.list_clear_filters) else null,
-                        onAction = if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly) onClearQuickFilters else null,
+                        title = stringResource(if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null) R.string.list_filtered_empty else R.string.mylist_empty_title),
+                        subtitle = stringResource(if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null) R.string.list_filtered_empty_hint else R.string.mylist_empty_subtitle),
+                        actionLabel = if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null) stringResource(R.string.list_clear_filters) else null,
+                        onAction = if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null) onClearQuickFilters else null,
                         modifier = Modifier.fillMaxSize(),
                     )
                     else -> LazyColumn(
@@ -417,6 +430,8 @@ private fun LoggedInList(
                                 isIncrementing = entry.animeId in uiState.pendingIncrementIds,
                                 isFavorite = entry.animeId in uiState.tools.favorites,
                                 hasNote = uiState.tools.notes[entry.animeId]?.isNotBlank() == true,
+                                tags = uiState.tools.tags[entry.animeId].orEmpty(),
+                                remainingMinutes = entry.totalEpisodes?.takeIf { it > 0 }?.let { (it - entry.episodesWatched).coerceAtLeast(0).toLong() * uiState.tools.episodeMinutes },
                                 onCardClick = { onAnimeClick(entry.animeId) },
                                 onIncrementEpisode = { onIncrementEpisode(entry.animeId) },
                                 onEditStatus = { onEditStatus(entry.animeId) },
@@ -711,11 +726,16 @@ private fun MyListOptionsSheet(
 ) {
     AppSheet(onDismissRequest = onDismiss, title = stringResource(if (overlay == ListOverlay.SORT) R.string.mylist_sort else R.string.mylist_statistics)) {
         if (overlay == ListOverlay.SORT) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             MyListSortOrder.entries.forEach { order ->
-                TextButton(onClick = { onSortSelected(order) }, modifier = Modifier.fillMaxWidth().height(48.dp)) {
-                    Text(stringResource(order.labelRes), modifier = Modifier.weight(1f), textAlign = TextAlign.Start)
-                    if (order == uiState.sortOrder) Icon(Icons.Default.Check, contentDescription = null)
-                }
+                AppChoiceRow(stringResource(order.labelRes), when (order) {
+                    MyListSortOrder.RECENT -> Icons.Default.Update
+                    MyListSortOrder.TITLE -> Icons.Default.SortByAlpha
+                    MyListSortOrder.SCORE -> Icons.Default.Star
+                    MyListSortOrder.PROGRESS -> Icons.Default.TrendingUp
+                    MyListSortOrder.REMAINING -> Icons.Default.Timer
+                }, order == uiState.sortOrder, { onSortSelected(order) })
+            }
             }
         } else {
             InsightsStrip(uiState.insights)

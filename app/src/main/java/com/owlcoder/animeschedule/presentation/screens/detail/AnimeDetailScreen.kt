@@ -23,6 +23,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
@@ -94,6 +96,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
@@ -452,6 +455,7 @@ private fun DetailActions(
         ) {
             AppButton(
                 label = stringResource(R.string.detail_login_cta),
+                icon = Icons.Default.Login,
                 onClick = onLogin,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -478,9 +482,10 @@ private fun DetailActions(
                 variant = AppButtonVariant.Secondary,
             )
             AppButton(
-                label = if (isIncrementing) "…" else "+1",
+                label = if (isIncrementing) "…" else "1",
+                icon = Icons.Default.Add,
                 onClick = onIncrement,
-                modifier = Modifier.width(68.dp),
+                modifier = Modifier.widthIn(min = 88.dp),
                 enabled = detail.malListEntry.status == WatchStatus.WATCHING && !isIncrementing,
                 variant = AppButtonVariant.Primary,
             )
@@ -828,15 +833,12 @@ private fun ExpandableSynopsis(text: String) {
             onTextLayout = { result -> if (!expanded) isOverflowing = result.hasVisualOverflow },
         )
         if (isOverflowing || expanded) {
-            Text(
-                text = if (expanded) stringResource(R.string.detail_show_less) else stringResource(R.string.detail_read_more),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .heightIn(min = 36.dp)
-                    .clickable { expanded = !expanded }
-                    .padding(top = 9.dp),
+            AppButton(
+                label = if (expanded) stringResource(R.string.detail_show_less) else stringResource(R.string.detail_read_more),
+                onClick = { expanded = !expanded },
+                modifier = Modifier.padding(top = 4.dp),
+                variant = AppButtonVariant.Plain,
+                icon = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
             )
         }
     }

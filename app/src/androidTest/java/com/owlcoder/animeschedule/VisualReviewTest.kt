@@ -98,18 +98,19 @@ class VisualReviewTest {
     @Test
     fun themeIconsAndEveryPaletteAreReadableInSerbianWithLargerText() {
         var options by mutableStateOf(ThemeOptions(palette = ThemePalette.FOREST, amoled = false))
+        var appearanceVisible by mutableStateOf(true)
         compose.setContent {
             SerbianLargeText {
                 AnimeScheduleTheme(themeMode = ThemeMode.DARK, options = options) {
-                    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
-                    AppearanceSheet(
+                    AnimatedSplashScreen(Modifier.fillMaxSize())
+                    if (appearanceVisible) AppearanceSheet(
                         ThemeMode.DARK,
                         AccentColor.GREEN,
                         options,
                         {},
                         { options = it },
                         {},
-                        {})
+                        { appearanceVisible = false })
                 }
             }
         }
@@ -117,6 +118,12 @@ class VisualReviewTest {
             .performClick()
         compose.runOnIdle { assertEquals(ThemePalette.SAND, options.palette) }
         screenshot("appearance-serbian-large")
+        val localized = instrumentation.targetContext.createConfigurationContext(
+            Configuration(instrumentation.targetContext.resources.configuration).apply { setLocale(Locale.forLanguageTag("sr-Latn")) }
+        )
+        compose.onNodeWithContentDescription(localized.getString(android.R.string.cancel)).performClick()
+        compose.onNodeWithTag("schedule-loading").assertIsDisplayed()
+        screenshot("orbit-loading-serbian-large")
     }
 
     @Test

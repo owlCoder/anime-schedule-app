@@ -113,7 +113,8 @@ class TrackingAndThemesTest {
                 LocalToast provides toast, LocalWatchTools provides WatchToolsActions(
                     data = data,
                     toggleFavorite = { id -> uiScope.launch { tools.toggleFavorite(id) } },
-                    setNote = { id, note -> uiScope.launch { tools.setNote(id, note) } })
+                    setNote = { id, note -> uiScope.launch { tools.setNote(id, note) } },
+                    setTags = { id, tags -> uiScope.launch { tools.setTags(id, tags) } })
             ) {
                 AnimeScheduleTheme(
                     themeMode = ThemeMode.LIGHT,
@@ -151,6 +152,8 @@ class TrackingAndThemesTest {
         compose.onNodeWithTag("editor-note").performTextReplacement("Remember the ending")
         compose.onNodeWithTag("list-editor-save").performClick()
         compose.waitUntil { vm.uiState.value.tools.notes[101] == "Remember the ending" }
+        vm.setSearchQuery("remember the ending")
+        compose.waitUntil { vm.uiState.value.entries.map { it.animeId } == listOf(101) }
         screenshot("favorites-notes-sakura")
     }
 
@@ -218,6 +221,69 @@ class TrackingAndThemesTest {
         screenshot("appearance-dynamic-dark")
     }
 
+    @Test fun tagsCanBeEditedSavedAndCombinedWithListFilters() {
+        val vm = showList()
+        compose.onNode(hasContentDescription(text(R.string.cd_edit_list_status)) and hasAnyAncestor(hasTestTag("mylist-entry-101"))).performClick()
+        compose.onNode(hasText(text(R.string.personal_tags)) and hasAnyAncestor(isDialog())).performScrollTo().performClick()
+        compose.onNodeWithTag("editor-tags").performScrollTo().performTextReplacement("Akcija, Drama, akcija")
+        compose.onNodeWithTag("list-editor-save").performClick()
+        compose.waitUntil { vm.uiState.value.tools.tags[101] == setOf("Akcija","Drama") }
+        compose.onNodeWithTag("list-status-ALL").performClick()
+        compose.onNodeWithTag("list-tags-filter").performClick()
+        compose.onNode(hasText("Drama") and hasAnyAncestor(isDialog())).performClick()
+        compose.waitUntil { vm.uiState.value.entries.map { it.animeId } == listOf(101) }
+        screenshot("tag-filter-and-time-estimate")
+        compose.onNodeWithTag("list-unrated-filter").performClick()
+        compose.onNodeWithText(text(R.string.list_filtered_empty)).assertIsDisplayed()
+        compose.onNode(hasText(text(R.string.list_clear_filters)) and hasClickAction()).assertIsDisplayed().performClick()
+        compose.waitUntil(5_000) { vm.uiState.value.entries.size == 2 && vm.uiState.value.activeTag == null }
+        vm.setSearchQuery("dRaMa")
+        compose.waitUntil { vm.uiState.value.entries.map { it.animeId } == listOf(101) }
+        vm.setSearchQuery("")
+        compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
+        compose.onNodeWithText(text(R.string.continue_watching)).assertIsEnabled()
+    }
+
+    @Test fun historySearchAndWeekFilterApplyTogether() {
+        val vm = showList()
+        runBlocking { tools.recordProgress(101,"Alpha Adventure",4,5); tools.recordProgress(102,"Beta Journey",0,1) }
+        compose.waitUntil { vm.uiState.value.tools.activity.size == 2 }
+        compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
+        compose.onNodeWithText(text(R.string.watch_history)).performClick()
+        compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("history-search"))).performTextInput("alpha")
+        compose.onNodeWithTag("history-this-week").performClick()
+        compose.onNode(hasText("Alpha Adventure") and hasAnyAncestor(isDialog())).assertIsDisplayed()
+        compose.onNode(hasText("Beta Journey") and hasAnyAncestor(isDialog())).assertDoesNotExist()
+        screenshot("history-search-this-week")
+    }
+
+    @Test fun predefinedAccentsSchedulingCompactModeAndSavedLooksWorkTogether() {
+        var options by mutableStateOf(ThemeOptions())
+        var mode by mutableStateOf(ThemeMode.LIGHT)
+        var accent by mutableStateOf(AccentColor.TELEGRAM_BLUE)
+        var presets by mutableStateOf(emptyList<AppearancePreset>())
+        compose.setContent {
+            AnimeScheduleTheme(themeMode=mode,options=options) {
+                AppearanceSheet(mode,accent,options,{ mode=it },{ options=it },{ options=ThemeOptions() },{},presets,{ presets=listOf(it) },{ mode=it.mode;options=it.options;accent=it.accent },{ name -> presets=presets.filterNot{it.name==name} },{ accent=it;options=options.copy(palette=ThemePalette.CLASSIC,dynamicColors=false) })
+            }
+        }
+        compose.onNodeWithTag("theme-accent-GREEN").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals(AccentColor.GREEN,accent) }
+        compose.onNodeWithText(text(R.string.compact_layout)).performScrollTo().performClick()
+        compose.onNodeWithText(text(R.string.scheduled_theme)).performScrollTo().performClick()
+        compose.runOnIdle { assertTrue(options.compactLayout);assertTrue(options.scheduled) }
+        screenshot("scheduled-theme-display")
+        compose.onNodeWithTag("preset-name").performScrollTo().performTextInput("Evening")
+        compose.onNodeWithTag("preset-save").performScrollTo().performClick()
+        compose.onNodeWithTag("preset-name").assertIsNotFocused()
+        compose.runOnIdle { assertEquals(1,presets.size);options=ThemeOptions() }
+        compose.onNodeWithTag("preset-Evening").performScrollTo().assertIsDisplayed().performClick()
+        compose.runOnIdle { assertTrue(options.compactLayout);assertTrue(options.scheduled);assertEquals(AccentColor.GREEN,accent) }
+        screenshot("appearance-saved-look")
+        compose.onNodeWithContentDescription(instrumentation.targetContext.getString(R.string.preset_delete,"Evening")).performScrollTo().assertIsDisplayed().performClick()
+        compose.runOnIdle { assertTrue(presets.isEmpty()) }
+    }
+
     private fun assertSheetSystemBars(darkIcons: Boolean) = compose.runOnIdle {
         fun findDialog(view: View): DialogWindowProvider? {
             if (view is DialogWindowProvider) return view
@@ -255,10 +321,11 @@ class TrackingAndThemesTest {
 
     private fun screenshot(name: String, waitForCompose: Boolean = true) {
         if (waitForCompose) compose.waitForIdle()
+        instrumentation.uiAutomation.waitForIdle(400, 5000)
         val bitmap = instrumentation.uiAutomation.takeScreenshot()
         File(
             instrumentation.targetContext.getExternalFilesDir(null),
-            "qa-530-$name.png"
+            "qa-540-$name.png"
         ).outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         bitmap.recycle()
     }

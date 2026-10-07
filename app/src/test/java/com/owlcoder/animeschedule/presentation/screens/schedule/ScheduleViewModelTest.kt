@@ -211,4 +211,22 @@ class ScheduleViewModelTest {
         assertEquals(listOf(2), state.todayEpisodes.map { it.airingId })
         assertEquals(listOf("Action", "Drama"), state.availableGenres)
     }
+    @Test fun `cached schedule is visible while the initial network request is still pending`() = runTest {
+        val repo=FakeScheduleRepository().apply {
+            refreshGate=CompletableDeferred()
+            days={ today -> listOf(ScheduleDay(today.plusDays(1),listOf(episode(7)))) }
+        }
+        val vm=viewModel(repo);runCurrent()
+        assertTrue(vm.uiState.value.isLoading)
+        assertEquals(false,vm.uiState.value.isInitialLoad)
+        assertEquals(7,vm.uiState.value.tomorrowEpisodes.single().airingId)
+    }
+    @Test fun `a first launch without cache keeps the content loader until refresh finishes`() = runTest {
+        val repo=FakeScheduleRepository().apply { refreshGate=CompletableDeferred() }
+        val vm=viewModel(repo);runCurrent()
+        assertTrue(vm.uiState.value.isInitialLoad)
+        repo.refreshGate.complete(AppResult.Error(AppError.Network("offline")));runCurrent()
+        assertEquals(false,vm.uiState.value.isInitialLoad)
+        assertEquals(R.string.error_load_schedule,vm.uiState.value.errorRes)
+    }
 }

@@ -64,3 +64,8 @@ private fun String?.epochOrZero(): Long {
     return runCatching { Instant.parse(this).epochSecond }
         .getOrElse { runCatching { OffsetDateTime.parse(this).toEpochSecond() }.getOrDefault(0) }
 }
+
+/** The shortcut considers the entire list rather than the current search/filter. */
+internal fun List<MalListEntry>.continueWatching(): MalListEntry? = filter {
+    it.status == WatchStatus.WATCHING && (it.totalEpisodes == null || it.totalEpisodes <= 0 || it.episodesWatched < it.totalEpisodes)
+}.sortedFor(MyListSortOrder.RECENT).firstOrNull()

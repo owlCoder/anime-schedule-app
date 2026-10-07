@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import com.owlcoder.animeschedule.ui.theme.LocalCompactLayout
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -48,6 +49,7 @@ fun SearchResultCard(
     modifier: Modifier = Modifier,
     showDivider: Boolean = true,
 ) {
+    val compact = LocalCompactLayout.current
     val displayTitle = result.title.toDisplayTitle()
     val secondaryTitle = result.titleEnglish
         ?.takeIf { it.isNotBlank() && !it.equals(result.title, ignoreCase = true) }
@@ -76,8 +78,8 @@ fun SearchResultCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 86.dp)
-                    .padding(start = 10.dp, end = 7.dp, top = 9.dp, bottom = 9.dp),
+                    .heightIn(min = if (compact) 72.dp else 86.dp)
+                    .padding(start = 10.dp, end = 7.dp, top = if (compact) 5.dp else 9.dp, bottom = if (compact) 5.dp else 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(11.dp),
             ) {
@@ -96,7 +98,7 @@ fun SearchResultCard(
                     MediaThumbnail.Small(
                         url = result.coverImageUrl,
                         contentDescription = displayTitle,
-                        modifier = Modifier.size(50.dp, 68.dp),
+                        modifier = Modifier.size(if (compact) 42.dp else 50.dp, if (compact) 56.dp else 68.dp),
                     )
                     Column(
                         modifier = Modifier.weight(1f),

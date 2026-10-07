@@ -58,6 +58,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
+import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
+import com.owlcoder.animeschedule.presentation.components.AppButton
 import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
@@ -81,6 +83,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
@@ -479,16 +484,7 @@ private fun RecentSearches(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
-            TextButton(
-                onClick = onClear,
-                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-            ) {
-                Text(
-                    stringResource(R.string.search_clear_recent),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
+            AppButton(stringResource(R.string.search_clear_recent), onClear, variant = AppButtonVariant.Plain, icon = Icons.Default.DeleteSweep)
         }
         InsetGroup {
             searches.forEachIndexed { index, recent ->

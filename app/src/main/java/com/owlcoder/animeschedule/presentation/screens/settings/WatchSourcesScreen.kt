@@ -54,6 +54,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.PlayCircle
@@ -72,81 +74,32 @@ fun WatchSourcesBottomSheet(
     var showAddSheet by remember { mutableStateOf(false) }
     var editingSource by remember { mutableStateOf<WatchSource?>(null) }
 
+    val editing = showAddSheet || editingSource != null
+    var name by remember(showAddSheet, editingSource?.id) { mutableStateOf(editingSource?.name.orEmpty()) }
+    var url by remember(showAddSheet, editingSource?.id) { mutableStateOf(editingSource?.urlTemplate.orEmpty()) }
+    var external by remember(showAddSheet, editingSource?.id) { mutableStateOf(editingSource?.openExternally ?: false) }
+    val leaveEditor = { showAddSheet = false; editingSource = null }
     AppSheet(
-        onDismissRequest = onDismiss,
-        title = stringResource(R.string.watch_sources_title),
+        onDismissRequest = { if (editing) leaveEditor() else onDismiss() },
+        title = stringResource(if (editing) { if (showAddSheet) R.string.watch_sources_add else R.string.watch_sources_edit } else R.string.watch_sources_title),
         trailingContent = {
-            GlassIconButton(
-                icon = Icons.Default.Add,
-                iconSize = 21.dp,
-                contentDescription = stringResource(R.string.watch_sources_add),
-                onClick = { showAddSheet = true },
-            )
+            if (editing) AppButton(stringResource(R.string.common_save), {
+                val source = editingSource
+                if (source == null) viewModel.addSource(name.trim(), url.trim(), external)
+                else viewModel.updateSource(source, name.trim(), url.trim(), external)
+                leaveEditor()
+            }, variant = AppButtonVariant.Plain, icon = Icons.Default.Save,
+                enabled = name.isNotBlank() && isValidWatchSourceTemplate(url.trim()))
+            else GlassIconButton(Icons.Default.Add, stringResource(R.string.watch_sources_add), { showAddSheet = true })
         },
     ) {
-        WatchSourcesContent(
-            sources = sources,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 590.dp),
-            onAdd = { showAddSheet = true },
-            onEdit = { editingSource = it },
-            onOpenExternallyChange = viewModel::setOpenExternally,
-        )
-    }
-
-    WatchSourceEditorOverlays(
-        showAddSheet = showAddSheet,
-        editingSource = editingSource,
-        onAddDismiss = { showAddSheet = false },
-        onEditDismiss = { editingSource = null },
-        onAdd = { name, url, external ->
-            viewModel.addSource(name, url, external)
-            showAddSheet = false
-        },
-        onUpdate = { source, name, url, external ->
-            viewModel.updateSource(source, name, url, external)
-            editingSource = null
-        },
-        onDelete = { source ->
-            viewModel.deleteSource(source)
-            editingSource = null
-        },
-    )
-}
-
-@Composable
-private fun WatchSourceEditorOverlays(
-    showAddSheet: Boolean,
-    editingSource: WatchSource?,
-    onAddDismiss: () -> Unit,
-    onEditDismiss: () -> Unit,
-    onAdd: (String, String, Boolean) -> Unit,
-    onUpdate: (WatchSource, String, String, Boolean) -> Unit,
-    onDelete: (WatchSource) -> Unit,
-) {
-    if (showAddSheet) {
-        WatchSourceFormSheet(
-            title = stringResource(R.string.watch_sources_add),
-            initialName = "",
-            initialUrl = "",
-            initialOpenExternally = false,
-            onDismiss = onAddDismiss,
-            onConfirm = onAdd,
-        )
-    }
-    editingSource?.let { source ->
-        WatchSourceFormSheet(
-            title = stringResource(R.string.watch_sources_edit),
-            initialName = source.name,
-            initialUrl = source.urlTemplate,
-            initialOpenExternally = source.openExternally,
-            onDismiss = onEditDismiss,
-            onConfirm = { name, url, external ->
-                onUpdate(source, name, url, external)
-            },
-            onDelete = { onDelete(source) },
-        )
+        if (editing) Column(Modifier.fillMaxWidth().heightIn(max = 540.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SourceForm(name, { name = it }, url, { url = it }, external, { external = it })
+            editingSource?.let { source ->
+                AppButton(stringResource(R.string.watch_sources_delete), { viewModel.deleteSource(source); leaveEditor() }, Modifier.fillMaxWidth(), variant = AppButtonVariant.Destructive, icon = Icons.Default.DeleteOutline)
+            }
+            AppButton(stringResource(R.string.common_cancel), leaveEditor, Modifier.fillMaxWidth(), variant = AppButtonVariant.Secondary, icon = Icons.Default.Close)
+        } else WatchSourcesContent(sources, Modifier.fillMaxWidth().heightIn(max = 590.dp), { showAddSheet = true }, { editingSource = it }, viewModel::setOpenExternally)
     }
 }
 
@@ -292,77 +245,6 @@ private fun SourceRow(
             checked = source.openExternally,
             onCheckedChange = onOpenExternallyChange,
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun WatchSourceFormSheet(
-    title: String,
-    initialName: String,
-    initialUrl: String,
-    initialOpenExternally: Boolean,
-    onDismiss: () -> Unit,
-    onConfirm: (name: String, urlTemplate: String, openExternally: Boolean) -> Unit,
-    onDelete: (() -> Unit)? = null,
-) {
-    var name by remember(initialName) { mutableStateOf(initialName) }
-    var urlTemplate by remember(initialUrl) { mutableStateOf(initialUrl) }
-    var openExternally by remember(initialOpenExternally) {
-        mutableStateOf(initialOpenExternally)
-    }
-    val isValid = name.isNotBlank() && isValidWatchSourceTemplate(urlTemplate.trim())
-
-    AppSheet(
-        onDismissRequest = onDismiss,
-        title = title,
-        trailingContent = {
-            TextButton(
-                onClick = {
-                    onConfirm(name.trim(), urlTemplate.trim(), openExternally)
-                },
-                enabled = isValid,
-                contentPadding = PaddingValues(horizontal = 8.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.common_save),
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-        },
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 470.dp)
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            AppMaterialSurface(
-                modifier = Modifier.fillMaxWidth(),
-                material = AppMaterial.Grouped,
-                shape = ContinuousRoundedShape(18.dp),
-            ) {
-                SourceForm(
-                    name = name,
-                    onNameChange = { name = it },
-                    urlTemplate = urlTemplate,
-                    onUrlChange = { urlTemplate = it },
-                    openExternally = openExternally,
-                    onOpenExternallyChange = { openExternally = it },
-                )
-            }
-            if (onDelete != null) {
-                AppButton(
-                    label = stringResource(R.string.watch_sources_delete),
-                    icon = Icons.Default.DeleteOutline,
-                    onClick = onDelete,
-                    modifier = Modifier.fillMaxWidth(),
-                    variant = AppButtonVariant.Destructive,
-                )
-            }
-        }
     }
 }
 

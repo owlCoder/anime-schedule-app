@@ -102,6 +102,8 @@ fun ListStatusEditor(
     var noteExpanded by remember(animeId) { mutableStateOf(false) }
     var confirmRemoval by remember(animeId) { mutableStateOf(false) }
     var note by remember(animeId) { mutableStateOf(tools.data.notes[animeId].orEmpty()) }
+    var tagsExpanded by remember(animeId) { mutableStateOf(false) }
+    var tags by remember(animeId) { mutableStateOf(tools.data.tags[animeId]?.joinToString(", ").orEmpty()) }
     fun setEpisodes(value: Int) {
         episodes = clamp(value)
         input = episodes.toString()
@@ -111,6 +113,7 @@ fun ListStatusEditor(
 
     fun save() {
         tools.setNote(animeId, note)
+        tools.setTags(animeId, tags)
         onConfirm(
             animeId,
             MalListUpdate(status = status, episodesWatched = clamp(episodes), score = score)
@@ -123,13 +126,7 @@ fun ListStatusEditor(
             title = stringResource(R.string.list_status_title), onBack = ::close,
             backContentDescription = stringResource(R.string.common_back),
             trailingContent = {
-                Button(
-                    onClick = ::save,
-                    modifier = Modifier.testTag("list-editor-save"),
-                    contentPadding = PaddingValues(horizontal = 18.dp)
-                ) {
-                    Text(stringResource(R.string.common_save), fontWeight = FontWeight.SemiBold)
-                }
+                AppButton(stringResource(R.string.common_save), ::save, Modifier.testTag("list-editor-save"), icon = Icons.Default.Save)
             },
         )
         Column(
@@ -338,17 +335,11 @@ fun ListStatusEditor(
                             drawStopIndicator = {})
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        TextButton(
-                            onClick = { setEpisodes(episodes - 10) },
-                            enabled = episodes > 0
-                        ) { Text("−10") }
-                        if (total != null) TextButton(onClick = {
+                        AppButton("−10", { setEpisodes(episodes - 10) }, Modifier.weight(1f), variant = AppButtonVariant.Plain, enabled = episodes > 0, icon = Icons.Default.FastRewind)
+                        if (total != null) AppButton(stringResource(R.string.editor_finish_all), {
                             setEpisodes(total); status = WatchStatus.COMPLETED
-                        }) { Text(stringResource(R.string.editor_finish_all)) }
-                        TextButton(
-                            onClick = { setEpisodes(episodes + 10) },
-                            enabled = total == null || episodes < total
-                        ) { Text("+10") }
+                        }, Modifier.weight(1.6f), variant = AppButtonVariant.Plain, icon = Icons.Default.DoneAll)
+                        AppButton("+10", { setEpisodes(episodes + 10) }, Modifier.weight(1f), variant = AppButtonVariant.Plain, enabled = total == null || episodes < total, icon = Icons.Default.FastForward)
                     }
                 }
             }
@@ -395,10 +386,7 @@ fun ListStatusEditor(
                             }
                         }
                     }
-                    if (score > 0) TextButton(
-                        onClick = { score = 0 },
-                        contentPadding = PaddingValues(0.dp)
-                    ) { Text(stringResource(R.string.editor_clear_rating)) }
+                    if (score > 0) AppButton(stringResource(R.string.editor_clear_rating), { score = 0 }, variant = AppButtonVariant.Plain, icon = Icons.Default.StarBorder)
                 }
             }
             EditorGroup {
@@ -438,6 +426,15 @@ fun ListStatusEditor(
                     )
                 }
             }
+            EditorGroup {
+                Row(Modifier.fillMaxWidth().clickable { tagsExpanded = !tagsExpanded }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Label, null, Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.personal_tags), Modifier.weight(1f).padding(horizontal = 10.dp), fontWeight = FontWeight.SemiBold)
+                    Icon(if (tagsExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, null)
+                }
+                if (tagsExpanded) OutlinedTextField(tags, { tags = it.take(208) }, Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp).testTag("editor-tags"),
+                    placeholder = { Text(stringResource(R.string.tags_placeholder)) }, supportingText = { Text(stringResource(R.string.tags_hint)) }, shape = MaterialTheme.shapes.medium)
+            }
             if (initialEntry != null && onRemove != null) {
                 if (confirmRemoval) {
                     Text(
@@ -445,31 +442,11 @@ fun ListStatusEditor(
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = {
-                            confirmRemoval = false
-                        }) { Text(stringResource(R.string.common_cancel)) }
-                        TextButton(
-                            onClick = { onRemove(animeId); close() },
-                            modifier = Modifier.testTag("editor-remove-confirm")
-                        ) {
-                            Text(
-                                stringResource(R.string.list_status_remove),
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
+                        AppButton(stringResource(R.string.common_cancel), { confirmRemoval = false }, Modifier.weight(1f), variant = AppButtonVariant.Plain, icon = Icons.Default.Close)
+                        AppButton(stringResource(R.string.list_status_remove), { onRemove(animeId); close() }, Modifier.weight(1f).testTag("editor-remove-confirm"), variant = AppButtonVariant.Destructive, icon = Icons.Default.DeleteOutline)
                     }
                 } else {
-                    TextButton(
-                        onClick = { confirmRemoval = true },
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    ) {
-                        Icon(Icons.Default.DeleteOutline, null, modifier = Modifier.size(18.dp))
-                        Text(
-                            stringResource(R.string.list_status_remove),
-                            Modifier.padding(start = 6.dp),
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
+                    AppButton(stringResource(R.string.list_status_remove), { confirmRemoval = true }, Modifier.align(Alignment.CenterHorizontally), variant = AppButtonVariant.Plain, icon = Icons.Default.DeleteOutline)
                 }
             }
         }

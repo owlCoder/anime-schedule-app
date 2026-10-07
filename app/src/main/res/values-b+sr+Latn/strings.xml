@@ -110,7 +110,7 @@
 
     <!-- My list screen -->
     <string name="mylist_title">Moja lista</string>
-    <string name="mylist_search_placeholder">Pretraži moju listu</string>
+    <string name="mylist_search_placeholder">Naslov, beleške ili oznake</string>
     <string name="mylist_empty_title">Lista je prazna</string>
     <string name="mylist_empty_subtitle">Dodaj anime iz rasporeda ili pretrage</string>
     <string name="mylist_not_logged_in_title">Nisi prijavljen</string>

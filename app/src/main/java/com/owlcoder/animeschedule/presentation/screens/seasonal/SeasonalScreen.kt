@@ -31,8 +31,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeSeason
-import com.owlcoder.animeschedule.presentation.components.AppButton
 import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
+import com.owlcoder.animeschedule.presentation.components.AppButton
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
@@ -47,8 +47,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.filled.AcUnit
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.LocalFlorist
 import androidx.compose.material.icons.filled.WbSunny
@@ -191,13 +193,7 @@ internal fun SeasonalFilterSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         title = stringResource(R.string.seasonal_filter_title),
         trailingContent = {
-            TextButton(onClick = onClear, enabled = filter.isActive) {
-                Text(
-                    text = stringResource(R.string.seasonal_filter_reset),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
+            AppButton(stringResource(R.string.seasonal_filter_reset), onClear, enabled = filter.isActive, variant = AppButtonVariant.Plain, icon = Icons.Default.RestartAlt)
         },
     ) {
         Column(
@@ -284,6 +280,7 @@ internal fun SeasonalFilterSheet(
 
             AppButton(
                 label = stringResource(R.string.seasonal_filter_apply),
+                icon = Icons.Default.Check,
                 onClick = onDismiss,
                 modifier = Modifier.fillMaxWidth(),
                 variant = AppButtonVariant.Primary,

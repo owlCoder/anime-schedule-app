@@ -9,6 +9,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.*
+import com.owlcoder.animeschedule.domain.model.isDarkAt
+import java.time.LocalTime
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
@@ -37,6 +41,8 @@ val AnimeScheduleShapes = Shapes().copy(
     large = RoundedCornerShape(16.dp),
     extraLarge = RoundedCornerShape(24.dp),
 )
+
+val LocalCompactLayout = compositionLocalOf { false }
 
 val PillShape = RoundedCornerShape(percent = 50)
 
@@ -136,6 +142,12 @@ internal fun buildAppColorScheme(dark: Boolean, accent: AccentColor, options: Th
         ThemePalette.SAKURA -> Color(if (dark) 0xFFFFADC4 else 0xFFAC345C)
         ThemePalette.FOREST -> Color(if (dark) 0xFF9BD6AE else 0xFF256A43)
         ThemePalette.SAND -> Color(if (dark) 0xFFEAC58D else 0xFF80551D)
+        ThemePalette.OCEAN -> Color(if (dark) 0xFF80D9ED else 0xFF00677A)
+        ThemePalette.LAVENDER -> Color(if (dark) 0xFFD2BAFF else 0xFF6B489E)
+        ThemePalette.EMBER -> Color(if (dark) 0xFFFFB18C else 0xFF9D441C)
+        ThemePalette.ICE -> Color(if (dark) 0xFFADC9FF else 0xFF315D9C)
+        ThemePalette.COFFEE -> Color(if (dark) 0xFFDDBAA4 else 0xFF79513B)
+        ThemePalette.NEON -> Color(if (dark) 0xFFB3E778 else 0xFF486C16)
     }
     val scheme = if (dark) darkColors(seed) else lightColors(seed)
     val tinted = if (options.palette == ThemePalette.CLASSIC) scheme else scheme.copy(
@@ -179,7 +191,13 @@ fun AnimeScheduleTheme(
     content: @Composable () -> Unit,
 ) {
     val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
-    val darkTheme = when (themeMode) {
+    val hour by produceState(initialValue = LocalTime.now().hour, options.scheduled) {
+        if (options.scheduled) while (true) {
+            value = LocalTime.now().hour
+            delay(60_000L - System.currentTimeMillis() % 60_000L)
+        }
+    }
+    val darkTheme = if (options.scheduled) options.isDarkAt(hour) else when (themeMode) {
         ThemeMode.SYSTEM -> systemDark
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
@@ -216,7 +234,9 @@ fun AnimeScheduleTheme(
         typography = Typography,
         shapes = AnimeScheduleShapes,
     ) {
-        ProvideMotionPolicy(policy = MotionPolicy(systemMotion.reduceMotion || options.reduceMotion), content = content)
+        CompositionLocalProvider(LocalCompactLayout provides options.compactLayout) {
+            ProvideMotionPolicy(policy = MotionPolicy(systemMotion.reduceMotion || options.reduceMotion), content = content)
+        }
     }
 }
 

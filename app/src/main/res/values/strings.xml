@@ -110,7 +110,7 @@
 
     <!-- My list screen -->
     <string name="mylist_title">My List</string>
-    <string name="mylist_search_placeholder">Search my list</string>
+    <string name="mylist_search_placeholder">Titles, notes or tags</string>
     <string name="mylist_empty_title">List is empty</string>
     <string name="mylist_empty_subtitle">Add anime from the schedule or search</string>
     <string name="mylist_not_logged_in_title">Not signed in</string>

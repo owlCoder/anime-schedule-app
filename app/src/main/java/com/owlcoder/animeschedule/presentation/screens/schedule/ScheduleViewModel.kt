@@ -188,7 +188,7 @@ class ScheduleViewModel @Inject constructor(
             tomorrowEpisodes = byDate[snapshot.today.plusDays(1)]?.episodes.orEmpty().applyFilter(filter, now),
             weekDays = snapshot.days.map { day -> day.copy(episodes = day.episodes.applyFilter(filter, now)) },
             isLoading = aux.refresh.isRefreshing,
-            isInitialLoad = aux.refresh.isRefreshing && !aux.refresh.hasLoadedOnce,
+            isInitialLoad = aux.refresh.isRefreshing && !aux.refresh.hasLoadedOnce && snapshot.days.isEmpty(),
             // A failed refresh only matters when there is nothing cached to show instead.
             errorRes = R.string.error_load_schedule.takeIf {
                 aux.refresh.failed && snapshot.days.isEmpty()

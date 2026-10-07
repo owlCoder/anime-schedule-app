@@ -45,7 +45,7 @@ fun AppButton(
     modifier: Modifier = Modifier,
     variant: AppButtonVariant = AppButtonVariant.Primary,
     enabled: Boolean = true,
-    icon: ImageVector? = null,
+    icon: ImageVector? = Icons.AutoMirrored.Filled.ArrowForward,
 ) {
     val accent = MaterialTheme.colorScheme.primary
     val interactionSource = remember { MutableInteractionSource() }
@@ -72,7 +72,7 @@ fun AppButton(
             }
             Surface(
                 modifier = animatedModifier
-                    .height(AppButtonHeight)
+                    .heightIn(min = AppButtonHeight)
                     .clickable(
                         interactionSource = interactionSource,
                         indication = null,
@@ -124,7 +124,7 @@ private fun StandardOutlinedButton(
 ) {
     Surface(
         modifier = modifier
-            .height(AppButtonHeight)
+            .heightIn(min = AppButtonHeight)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -147,10 +147,10 @@ private fun StandardOutlinedButton(
 private fun ButtonRow(label: String, icon: ImageVector?, color: Color, enabled: Boolean) {
     Row(
         modifier = Modifier
-            .height(AppButtonHeight)
-            .padding(horizontal = 17.dp),
+            .heightIn(min = AppButtonHeight)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.Center,
     ) {
         ButtonContent(label, icon, color, enabled)
     }
@@ -159,20 +159,18 @@ private fun ButtonRow(label: String, icon: ImageVector?, color: Color, enabled: 
 @Composable
 private fun ButtonContent(label: String, icon: ImageVector?, color: Color, enabled: Boolean) {
     val resolved = if (enabled) color else color.copy(alpha = 0.42f)
-    val trailingIcon = icon == Icons.AutoMirrored.Filled.ArrowForward
-    if (icon != null && !trailingIcon) {
+    if (icon != null) {
         Icon(icon, null, Modifier.size(18.dp), tint = resolved)
+        androidx.compose.foundation.layout.Spacer(Modifier.size(8.dp))
     }
     Text(
         text = label,
         color = resolved,
         style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.SemiBold,
-        maxLines = 1,
+        maxLines = 2,
+        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
     )
-    if (icon != null && trailingIcon) {
-        Icon(icon, null, Modifier.size(18.dp), tint = resolved)
-    }
 }
 
 @Composable
@@ -197,7 +195,7 @@ fun GlassButton(
     GlassSurface(
         modifier = modifier
             .iosPressScale(interactionSource)
-            .height(AppButtonHeight)
+            .heightIn(min = AppButtonHeight)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -212,7 +210,7 @@ fun GlassButton(
     ) {
         Row(
             modifier = Modifier
-                .height(AppButtonHeight)
+                .heightIn(min = AppButtonHeight)
                 .padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally),

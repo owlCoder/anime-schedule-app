@@ -20,6 +20,8 @@ data class WatchTools(
     val notes: Map<Int, String> = emptyMap(),
     val activity: List<WatchActivity> = emptyList(),
     val weeklyGoal: Int = 12,
+    val tags: Map<Int, Set<String>> = emptyMap(),
+    val episodeMinutes: Int = 24,
 ) {
     fun episodesThisWeek(today: LocalDate): Int {
         val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
@@ -48,5 +50,14 @@ data class WatchTools(
                 )
             ) + activity).take(300)
         )
+    }
+}
+
+fun WatchTools.filteredActivity(query: String, thisWeek: Boolean, today: LocalDate): List<WatchActivity> {
+    val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+    val search = query.trim()
+    return activity.filter { item ->
+        val date = runCatching { LocalDate.parse(item.date) }.getOrNull()
+        (search.isBlank() || item.title.contains(search, true)) && (!thisWeek || date != null && !date.isBefore(monday) && !date.isAfter(today))
     }
 }
