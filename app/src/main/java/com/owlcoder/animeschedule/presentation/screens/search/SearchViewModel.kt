@@ -18,6 +18,7 @@ import com.owlcoder.animeschedule.domain.model.MalListUpdate
 import com.owlcoder.animeschedule.domain.repository.MalRepository
 import com.owlcoder.animeschedule.domain.repository.SearchRepository
 import javax.inject.Inject
+import com.owlcoder.animeschedule.presentation.screens.discovery.*
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -32,7 +33,11 @@ data class SearchUiState(
     val isLoadingMore: Boolean = false,
     val hasNextPage: Boolean = false,
     @StringRes val errorRes: Int? = null,
-    val noResults: Boolean = false
+    val noResults: Boolean = false,
+    val filter: SearchFilter = SearchFilter(),
+    val loadedCount: Int = 0,
+    val availableFormats: List<String> = emptyList(),
+    val loadMoreError: Boolean = false
 )
 
 @OptIn(FlowPreview::class)
@@ -42,6 +47,8 @@ class SearchViewModel @Inject constructor(
     private val malRepository: MalRepository
 ) : ViewModel() {
 
+    private val _filter = MutableStateFlow(SearchFilter())
+    private var generation = 0
     private val _query = MutableStateFlow("")
     private val _search = MutableStateFlow(SearchUiState())
     private var searchJob: Job? = null
@@ -61,13 +68,14 @@ class SearchViewModel @Inject constructor(
 
     // Results are a snapshot from search time — re-derive each result's list entry from
     // the live local list so "on list" badges update right after a status edit.
-    val uiState: StateFlow<SearchUiState> = _search
-        .combine(malRepository.getUserList()) { state, entries ->
+    val uiState: StateFlow<SearchUiState> = combine(_search, malRepository.getUserList(), _filter) { state, entries, filter ->
             val byMalId = entries.associateBy { it.animeId }
-            state.copy(results = state.results.map { r ->
+            val live = state.results.map { r ->
                 val fresh = r.malId?.let { byMalId[it] }
                 if (fresh != r.userListEntry) r.copy(userListEntry = fresh) else r
-            })
+            }
+            state.copy(results = live.discover(filter), filter = filter, loadedCount = live.size,
+                availableFormats = live.mapNotNull { it.type?.uppercase(java.util.Locale.ROOT) }.distinct().sorted())
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SearchUiState())
 
@@ -77,7 +85,20 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    fun setQuery(query: String) = _query.update { query }
+    fun setQuery(query: String) {
+        if (_query.value == query) return
+        // Invalidate in-flight responses immediately, including the debounce window.
+        generation++
+        searchJob?.cancel()
+        loadMoreJob?.cancel()
+        _query.value = query
+        _search.value = SearchUiState(query = query.trim(), isLoading = query.trim().length >= MIN_QUERY_LENGTH)
+    }
+    fun setTracking(value: TrackingFilter) = _filter.update { it.copy(tracking = value) }
+    fun toggleFormat(value: String) = _filter.update { it.copy(formats = if (value in it.formats) it.formats - value else it.formats + value) }
+    fun setSort(value: SearchSort) = _filter.update { it.copy(sort = value) }
+    fun clearFilter() { _filter.value = SearchFilter() }
+    fun removeRecentSearch(query: String) { viewModelScope.launch { searchRepository.removeRecentSearch(query) } }
 
     fun onSearchSubmit(query: String) {
         viewModelScope.launch { searchRepository.saveRecentSearch(query) }
@@ -91,6 +112,7 @@ class SearchViewModel @Inject constructor(
 
     private fun startSearch(rawQuery: String) {
         val query = rawQuery.trim()
+        val requestGeneration = ++generation
         searchJob?.cancel()
         loadMoreJob?.cancel()
         currentPage = 0
@@ -100,10 +122,12 @@ class SearchViewModel @Inject constructor(
         }
         _search.value = SearchUiState(query = query, isLoading = true)
         searchJob = viewModelScope.launch {
-            when (val result = searchRepository.searchAnime(query, page = 0)) {
+            val result = searchRepository.searchAnime(query, page = 0)
+            if (requestGeneration != generation) return@launch
+            when (result) {
                 is AppResult.Success -> _search.update {
                     it.copy(
-                        results = result.data.results,
+                        results = result.data.results.distinctBy { result -> result.anilistId },
                         isLoading = false,
                         hasNextPage = result.data.hasNextPage,
                         noResults = result.data.results.isEmpty()
@@ -119,9 +143,12 @@ class SearchViewModel @Inject constructor(
     fun loadMore() {
         val state = _search.value
         if (state.isLoading || state.isLoadingMore || !state.hasNextPage) return
-        _search.update { it.copy(isLoadingMore = true) }
+        val requestGeneration = generation
+        _search.update { it.copy(isLoadingMore = true, loadMoreError = false) }
         loadMoreJob = viewModelScope.launch {
-            when (val result = searchRepository.searchAnime(state.query, page = currentPage + 1)) {
+            val result = searchRepository.searchAnime(state.query, page = currentPage + 1)
+            if (requestGeneration != generation) return@launch
+            when (result) {
                 is AppResult.Success -> {
                     currentPage++
                     _search.update {
@@ -134,9 +161,8 @@ class SearchViewModel @Inject constructor(
                         )
                     }
                 }
-                // Silent stop: the already-loaded results stay usable; the next scroll to the
-                // end simply retries because hasNextPage is still true.
-                is AppResult.Error -> _search.update { it.copy(isLoadingMore = false) }
+                // Keep results available and expose an explicit retry after a page failure.
+                is AppResult.Error -> _search.update { it.copy(isLoadingMore = false, loadMoreError = true) }
             }
         }
     }

@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
 import java.time.Month
 import javax.inject.Inject
+import com.owlcoder.animeschedule.presentation.screens.discovery.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,8 +32,11 @@ data class SeasonalFilter(
     val genres: Set<String> = emptySet(),
     val formats: Set<String> = emptySet(),
     val sortOrder: SeasonalSortOrder = SeasonalSortOrder.POPULARITY,
+    val release: ReleaseFilter = ReleaseFilter.ALL,
+    val length: EpisodeLength = EpisodeLength.ANY,
+    val minimumScore: Int = 0,
 ) {
-    val isActive: Boolean get() = query.isNotBlank() || hideTracked || genres.isNotEmpty() || formats.isNotEmpty()
+    val isActive: Boolean get() = query.isNotBlank() || hideTracked || genres.isNotEmpty() || formats.isNotEmpty() || release != ReleaseFilter.ALL || length != EpisodeLength.ANY || minimumScore > 0
 }
 
 data class SeasonalUiState(
@@ -46,6 +50,7 @@ data class SeasonalUiState(
     val filter: SeasonalFilter = SeasonalFilter(),
     val availableGenres: List<String> = emptyList(),
     val availableFormats: List<String> = emptyList(),
+    val listLayout: Boolean = false,
 )
 
 private fun currentSeason(): AnimeSeason {
@@ -68,6 +73,11 @@ internal fun List<SeasonalAnimeItem>.applyFilter(filter: SeasonalFilter, tracked
     if (filter.formats.isNotEmpty()) {
         result = result.filter { item -> item.format in filter.formats }
     }
+    result = result.filter { item ->
+        filter.release.matches(item.status) &&
+            filter.length.matches(item.episodes) &&
+            (filter.minimumScore == 0 || (item.averageScore ?: item.meanScore ?: -1) >= filter.minimumScore * 10)
+    }
     return when (filter.sortOrder) {
         SeasonalSortOrder.POPULARITY -> result
         SeasonalSortOrder.SCORE -> result.sortedByDescending {
@@ -87,6 +97,7 @@ class SeasonalViewModel @Inject constructor(
     val uiState: StateFlow<SeasonalUiState> = _uiState.asStateFlow()
 
     private var loadJob: Job? = null
+    private var generation = 0
 
     init {
         observeMalList()
@@ -95,7 +106,8 @@ class SeasonalViewModel @Inject constructor(
 
     fun load(season: AnimeSeason? = null, year: Int? = null) {
         val targetSeason = season ?: _uiState.value.season
-        val targetYear = year ?: _uiState.value.year
+        val targetYear = (year ?: _uiState.value.year).coerceIn(1940, LocalDate.now().year + 2)
+        val requestGeneration = ++generation
         _uiState.update {
             it.copy(
                 season = targetSeason,
@@ -107,9 +119,11 @@ class SeasonalViewModel @Inject constructor(
         // Switching seasons quickly must not let a slow earlier response overwrite a later one.
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
-            when (val result = seasonalRepository.getSeasonalAnime(targetSeason, targetYear)) {
+            val result = seasonalRepository.getSeasonalAnime(targetSeason, targetYear)
+            if (requestGeneration != generation) return@launch
+            when (result) {
                 is AppResult.Success -> {
-                    val items = result.data
+                    val items = result.data.distinctBy { it.anilistId }
                     val genres = items.flatMap { it.genres }.distinct().sorted()
                     val formats = items.mapNotNull { it.format }.distinct().sorted()
                     val currentFilter = _uiState.value.filter
@@ -134,6 +148,15 @@ class SeasonalViewModel @Inject constructor(
     }
 
     fun setSeason(season: AnimeSeason, year: Int) = load(season, year)
+    fun moveSeason(direction: Int) {
+        val (season, year) = adjacentSeason(_uiState.value.season, _uiState.value.year, direction)
+        if (year in 1940..LocalDate.now().year + 2) load(season, year)
+    }
+    fun toggleLayout() = _uiState.update { it.copy(listLayout = !it.listLayout) }
+    fun randomAnime(): SeasonalAnimeItem? = _uiState.value.takeUnless { it.isLoading || it.errorRes != null }?.filteredItems?.randomOrNull()
+    fun setRelease(value: ReleaseFilter) = updateFilter { it.copy(release = value) }
+    fun setLength(value: EpisodeLength) = updateFilter { it.copy(length = value) }
+    fun setMinimumScore(value: Int) = updateFilter { it.copy(minimumScore = value.coerceIn(0, 10)) }
 
     fun toggleGenre(genre: String) = updateFilter { filter ->
         filter.copy(

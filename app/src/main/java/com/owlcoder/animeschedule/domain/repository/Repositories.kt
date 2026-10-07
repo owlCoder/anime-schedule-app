@@ -93,6 +93,7 @@ interface SearchRepository {
     suspend fun searchAnime(query: String, page: Int = 0): AppResult<SearchPage>
     suspend fun saveRecentSearch(query: String)
     suspend fun clearRecentSearches()
+    suspend fun removeRecentSearch(query: String)
 }
 
 interface SeasonalRepository {

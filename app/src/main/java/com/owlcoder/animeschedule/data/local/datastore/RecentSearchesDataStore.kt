@@ -39,9 +39,16 @@ class RecentSearchesDataStore @Inject constructor(
 
     // A malformed stored value is treated as "no history" rather than failing the search screen.
     private fun decode(raw: String): List<String> =
-        runCatching { json.decodeFromString<List<String>>(raw) }.getOrDefault(emptyList())
+        runCatching { json.decodeFromString<List<String>>(raw) }.getOrDefault(emptyList()).filter { it.isNotBlank() }.distinct().take(MAX_RECENT)
 
     suspend fun clear() {
         dataStore.edit { it.remove(key) }
+    }
+
+    suspend fun remove(query: String) {
+        dataStore.edit { prefs ->
+            val updated = prefs[key]?.let(::decode).orEmpty().filterNot { it == query }
+            if (updated.isEmpty()) prefs.remove(key) else prefs[key] = json.encodeToString(updated)
+        }
     }
 }

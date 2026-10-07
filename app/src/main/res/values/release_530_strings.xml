@@ -36,7 +36,7 @@
     <string name="history_clear">Clear activity</string>
     <string name="history_clear_confirm">Clear local activity and this week’s progress? Your MAL list stays unchanged.</string>
     <string name="seasonal_search">Search this season</string>
-    <string name="seasonal_hide_tracked">Hide anime already on my list</string>
+    <string name="seasonal_hide_tracked">Hide tracked titles</string>
     <string name="list_filtered_empty">No matching anime</string>
     <string name="list_filtered_empty_hint">Try another status, search, or quick filter.</string>
     <string name="list_clear_filters">Clear quick filters</string>

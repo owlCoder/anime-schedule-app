@@ -36,7 +36,7 @@
     <string name="history_clear">Obriši istoriju</string>
     <string name="history_clear_confirm">Obrisati lokalnu istoriju i napredak ove nedelje? MAL lista ostaje nepromenjena.</string>
     <string name="seasonal_search">Pretraži ovu sezonu</string>
-    <string name="seasonal_hide_tracked">Sakrij anime koji je već na mojoj listi</string>
+    <string name="seasonal_hide_tracked">Sakrij naslove sa liste</string>
     <string name="list_filtered_empty">Nema odgovarajućih animea</string>
     <string name="list_filtered_empty_hint">Probaj drugi status, pretragu ili brzi filter.</string>
     <string name="list_clear_filters">Ukloni brze filtere</string>

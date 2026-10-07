@@ -40,6 +40,8 @@ import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
 import com.owlcoder.animeschedule.presentation.components.iosPressScale
 import java.util.Locale
+import com.owlcoder.animeschedule.presentation.screens.discovery.discoveryFormatLabel
+import com.owlcoder.animeschedule.presentation.components.displayName
 
 @Composable
 fun SearchResultCard(
@@ -54,7 +56,7 @@ fun SearchResultCard(
     val secondaryTitle = result.titleEnglish
         ?.takeIf { it.isNotBlank() && !it.equals(result.title, ignoreCase = true) }
     val metadata = listOfNotNull(
-        result.type?.replace('_', ' ')?.lowercase()?.replaceFirstChar { it.titlecase() },
+        discoveryFormatLabel(result.type),
         result.year,
         result.totalEpisodes?.let { "$it ep" },
     ).joinToString(" · ")
@@ -152,6 +154,12 @@ fun SearchResultCard(
                                 }
                             }
                         }
+                        result.userListEntry?.let { entry ->
+                            val total = entry.totalEpisodes?.takeIf { it > 0 }
+                                ?: result.totalEpisodes?.takeIf { it > 0 }
+                            Text("${entry.status.displayName()} · ${entry.episodesWatched}/${total ?: "?"}",
+                                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        }
                     }
                 }
 
@@ -176,7 +184,7 @@ private fun SearchListAction(
     val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
-            .size(42.dp)
+            .size(48.dp)
             .iosPressScale(interactionSource, pressedScale = 0.91f)
             .clickable(
                 interactionSource = interactionSource,

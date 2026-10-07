@@ -11,10 +11,27 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.ui.platform.testTag
+import com.owlcoder.animeschedule.presentation.components.AppButton
+import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
+import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
+import com.owlcoder.animeschedule.presentation.screens.search.SearchResultCard
+import java.time.LocalDate
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Icon
 import androidx.compose.material3.FilterChip
 import com.owlcoder.animeschedule.presentation.components.AppSearchField
 import androidx.compose.material.icons.filled.Search
@@ -49,6 +66,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -86,6 +104,12 @@ fun SeasonalOverlay(
                 trailingContent = {
                     GlassToolbarGroup {
                         GlassToolbarButton(
+                            icon = if (uiState.listLayout) Icons.Default.GridView else Icons.AutoMirrored.Filled.ViewList,
+                            contentDescription = stringResource(if (uiState.listLayout) R.string.discovery_grid else R.string.discovery_list),
+                            onClick = viewModel::toggleLayout,
+                            modifier = Modifier.testTag("season-layout"),
+                        )
+                        GlassToolbarButton(
                             icon = Icons.Outlined.Tune,
                             contentDescription = stringResource(R.string.seasonal_filter_title),
                             onClick = { showFilterSheet = true },
@@ -95,6 +119,11 @@ fun SeasonalOverlay(
                 },
             )
 
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                GlassToolbarButton(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.discovery_previous_season), { viewModel.moveSeason(-1) }, Modifier.testTag("season-previous"), enabled = uiState.year > 1940 || uiState.season.ordinal > 0)
+                Text(uiState.year.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                GlassToolbarButton(Icons.AutoMirrored.Filled.ArrowForward, stringResource(R.string.discovery_next_season), { viewModel.moveSeason(1) }, Modifier.testTag("season-next"), enabled = uiState.year < LocalDate.now().year + 2 || uiState.season.ordinal < 3)
+            }
             SeasonTabRow(
                 currentSeason = uiState.season,
                 currentYear = uiState.year,
@@ -107,8 +136,12 @@ fun SeasonalOverlay(
                 placeholder = stringResource(R.string.seasonal_search), leadingIcon = Icons.Default.Search,
                 onClear = { viewModel.setQuery("") }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
             )
-            FilterChip(selected = uiState.filter.hideTracked, onClick = viewModel::toggleHideTracked,
-                label = { Text(stringResource(R.string.seasonal_hide_tracked)) })
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                FilterChip(selected = uiState.filter.hideTracked, onClick = viewModel::toggleHideTracked,
+                    label = { Text(stringResource(R.string.seasonal_hide_tracked)) }, leadingIcon = { Icon(Icons.Default.VisibilityOff, null, Modifier.size(18.dp)) }, modifier = Modifier.weight(1f))
+                GlassToolbarButton(Icons.Default.Shuffle, stringResource(R.string.discovery_random_hint), { viewModel.randomAnime()?.let { onAnimeClick(it.anilistId) } }, Modifier.testTag("season-random"), enabled = !uiState.isLoading && uiState.errorRes == null && uiState.filteredItems.isNotEmpty())
+                if (uiState.filter.isActive) GlassToolbarButton(Icons.Default.RestartAlt, stringResource(R.string.seasonal_filter_reset), viewModel::clearFilter)
+            }
 
             if (!uiState.isLoading && uiState.errorRes == null) {
                 val countLabel = if (uiState.filter.isActive) {
@@ -204,7 +237,13 @@ fun SeasonalOverlay(
                             onAction = viewModel::clearFilter,
                         )
                     }
-                    SeasonalContentMode.Grid -> LazyVerticalGrid(
+                    SeasonalContentMode.Grid -> if (uiState.listLayout) {
+                        LazyColumn(Modifier.fillMaxSize().testTag("season-results-list"), contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            items(uiState.filteredItems, key = { it.anilistId }) { item ->
+                                SearchResultCard(AnimeSearchResult(item.anilistId, item.malId, item.title, null, item.coverImageUrl, item.format, item.seasonYear?.toString(), (item.averageScore ?: item.meanScore)?.div(10.0), item.episodes, item.malId?.let(uiState.malEntriesById::get)), { onAnimeClick(item.anilistId) }, null, showDivider = false)
+                            }
+                        }
+                    } else LazyVerticalGrid(
                         columns = GridCells.Adaptive(minSize = 104.dp),
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(top = 4.dp, bottom = 24.dp),
@@ -236,6 +275,9 @@ fun SeasonalOverlay(
             onGenreToggle = viewModel::toggleGenre,
             onFormatToggle = viewModel::toggleFormat,
             onSortChange = viewModel::setSortOrder,
+            onRelease = viewModel::setRelease,
+            onLength = viewModel::setLength,
+            onScore = viewModel::setMinimumScore,
             onClear = viewModel::clearFilter,
             onDismiss = { showFilterSheet = false },
         )

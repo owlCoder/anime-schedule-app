@@ -76,17 +76,17 @@
     <!-- Changelog -->
     <string name="changelog_release_date">October 7, 2026</string>
     <string name="changelog_whats_new">What\'s new</string>
-    <string name="changelog_hero_description">Ten new ways to organize, plan and compare your anime, with clearer tools and filters.</string>
-    <string name="changelog_nav_title">Rating filters and watch-time sorting</string>
-    <string name="changelog_nav_description">Choose a score range and save it with list views. Sort by remaining watch time using individual episode durations. Unknown totals stay at the end.</string>
-    <string name="changelog_motion_title">Flexible session planning</string>
-    <string name="changelog_motion_description">Choose balanced, shortest-finish-first or focused allocation, and include only the titles you want for this session.</string>
-    <string name="changelog_filters_title">Bulk organization and tag management</string>
-    <string name="changelog_filters_description">Set local favorites or pins for selected titles. Rename, merge or remove tags across anime and saved views, with confirmation before removal.</string>
-    <string name="changelog_states_title">Backlog and side-by-side comparison</string>
-    <string name="changelog_states_description">See episode and time totals by status with daily-goal estimates. Compare two titles by rating, progress, duration and time left.</string>
-    <string name="changelog_about_title">History filters and activity export</string>
-    <string name="changelog_about_description">Filter retained local history to this week, 30 or 90 days, and export the visible changes as CSV. Tools now use grouped icon rows and clearer active-filter summaries.</string>
+    <string name="changelog_hero_description">Ten new discovery tools with readable filters, flexible season controls and smoother search lists.</string>
+    <string name="changelog_nav_title">Search by list membership and format</string>
+    <string name="changelog_nav_description">Show tracked or untracked titles and combine formats from loaded results. Sort by relevance, title, community score or episode count.</string>
+    <string name="changelog_motion_title">Seasonal status, length and score filters</string>
+    <string name="changelog_motion_description">Choose airing, finished or upcoming titles, a series length and a minimum community score. Unknown metadata is excluded only when you set a limit.</string>
+    <string name="changelog_filters_title">Readable discovery lists and year navigation</string>
+    <string name="changelog_filters_description">Switch seasonal posters to a list with your progress. Previous and next season controls automatically cross year boundaries. Labels wrap at larger font sizes.</string>
+    <string name="changelog_states_title">A random pick and selective search history</string>
+    <string name="changelog_states_description">Open a random title from the filtered seasonal catalog. Remove an individual recent search without clearing your other searches.</string>
+    <string name="changelog_about_title">More reliable search and polished controls</string>
+    <string name="changelog_about_description">Search lists render items as needed. Failed pages keep current results and offer retry; old responses cannot overwrite a new query. Filter options have separate rounded surfaces.</string>
     <string name="changelog_footer">Made with care by the AnimeSchedule team</string>
 
     <!-- Watch sources -->

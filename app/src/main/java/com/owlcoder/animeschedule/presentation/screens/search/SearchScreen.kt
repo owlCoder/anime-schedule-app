@@ -17,19 +17,23 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material.icons.filled.Tune
+import com.owlcoder.animeschedule.presentation.components.AppLoadingState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -85,7 +89,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.DeleteSweep
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
@@ -111,6 +114,7 @@ fun SearchScreen(
     val recentSearches by viewModel.recentSearches.collectAsStateWithLifecycle()
     var query by rememberSaveable { mutableStateOf("") }
     var isFocused by remember { mutableStateOf(false) }
+    var showFilters by rememberSaveable { mutableStateOf(false) }
     var editingResult by remember { mutableStateOf<AnimeSearchResult?>(null) }
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
@@ -217,7 +221,7 @@ fun SearchScreen(
             }
             SearchField(
                 query = query,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).testTag("anime-search-field"),
                 focusRequester = focusRequester,
                 onFieldTap = ::requestInputFocus,
                 onFocusChanged = ::updateFocus,
@@ -237,12 +241,21 @@ fun SearchScreen(
         }
 
         Spacer(Modifier.height(if (isFocused) 10.dp else 12.dp))
+        if (query.trim().length >= 2) {
+            Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                AppButton(stringResource(R.string.discovery_search_filters), { clearFocusAndKeyboard(); showFilters = true }, variant = AppButtonVariant.Secondary, icon = Icons.Default.Tune, modifier = Modifier.testTag("search-filters"))
+                Text(stringResource(R.string.discovery_result_count, uiState.results.size, uiState.loadedCount), Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (uiState.filter.isActive) GlassIconButton(Icons.Default.RestartAlt, stringResource(R.string.seasonal_filter_reset), viewModel::clearFilter)
+            }
+        }
         SearchContent(
             query = query,
             recentSearches = recentSearches,
             uiState = uiState,
             bottomPadding = if (isFocused) 24.dp else 112.dp,
             onClearRecent = viewModel::clearRecentSearches,
+            onRemoveRecent = viewModel::removeRecentSearch,
+            onClearFilter = viewModel::clearFilter,
             onRecentClick = { recent ->
                 query = recent
                 viewModel.setQuery(recent)
@@ -263,6 +276,8 @@ fun SearchScreen(
             onLoadMore = viewModel::loadMore,
         )
     }
+
+    if (showFilters) SearchFilterSheet(uiState.filter, uiState.availableFormats, viewModel::setTracking, viewModel::toggleFormat, viewModel::setSort, viewModel::clearFilter, { showFilters = false })
 
     editingResult?.let { result ->
         result.malId?.let { malId ->
@@ -296,7 +311,7 @@ private fun SearchField(
     val motion = LocalMotionPolicy.current
     AppMaterialSurface(
         modifier = modifier
-            .height(48.dp)
+            .height(52.dp)
             .animateContentSize(animationSpec = motion.iosSpring())
             .clickable(
                 interactionSource = interactionSource,
@@ -398,6 +413,8 @@ private fun SearchContent(
     uiState: SearchUiState,
     bottomPadding: Dp,
     onClearRecent: () -> Unit,
+    onRemoveRecent: (String) -> Unit,
+    onClearFilter: () -> Unit,
     onRecentClick: (String) -> Unit,
     onAnimeClick: (AnimeSearchResult) -> Unit,
     onEditStatus: (AnimeSearchResult) -> Unit,
@@ -408,7 +425,7 @@ private fun SearchContent(
     val motion = LocalMotionPolicy.current
     val mode = when {
         query.isBlank() && recentSearches.isNotEmpty() -> SearchContentMode.Recents
-        query.isBlank() -> SearchContentMode.Empty
+        query.trim().length < 2 -> SearchContentMode.Empty
         uiState.isLoading -> SearchContentMode.Loading
         uiState.errorRes != null -> SearchContentMode.Error
         uiState.noResults -> SearchContentMode.NoResults
@@ -431,11 +448,12 @@ private fun SearchContent(
                 searches = recentSearches,
                 onClear = onClearRecent,
                 onSelect = onRecentClick,
+                onRemove = onRemoveRecent,
             )
             SearchContentMode.Empty -> CompactSearchState(
                 icon = Icons.Default.Search,
                 title = stringResource(R.string.search_empty_title),
-                subtitle = stringResource(R.string.search_empty_subtitle),
+                subtitle = stringResource(if (query.isBlank()) R.string.search_empty_subtitle else R.string.discovery_min_query),
             )
             SearchContentMode.Loading -> SearchLoadingState()
             SearchContentMode.Error -> CompactSearchState(
@@ -460,62 +478,30 @@ private fun SearchContent(
                 onAnimeClick = onAnimeClick,
                 onEditStatus = onEditStatus,
                 onLoadMore = onLoadMore,
+                loadMoreError = uiState.loadMoreError,
+                onClearFilter = onClearFilter,
             )
         }
     }
 }
 
 @Composable
-private fun RecentSearches(
-    searches: List<String>,
-    onClear: () -> Unit,
-    onSelect: (String) -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 5.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(R.string.search_recent),
-                modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            AppButton(stringResource(R.string.search_clear_recent), onClear, variant = AppButtonVariant.Plain, icon = Icons.Default.DeleteSweep)
+internal fun RecentSearches(searches: List<String>, onClear: () -> Unit, onSelect: (String) -> Unit, onRemove: (String) -> Unit) {
+    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 112.dp)) {
+        item {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.search_recent), Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                AppButton(stringResource(R.string.search_clear_recent), onClear, variant = AppButtonVariant.Plain, icon = Icons.Default.DeleteSweep)
+            }
         }
-        InsetGroup {
-            searches.forEachIndexed { index, recent ->
-                if (index > 0) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(start = 44.dp),
-                        thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                    )
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(44.dp)
-                        .clickable(onClick = { onSelect(recent) })
-                        .semantics { role = Role.Button }
-                        .padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(9.dp),
-                ) {
-                    Icon(
-                        Icons.Default.History,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = recent,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                    )
+        items(searches, key = { it }) { recent ->
+            Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
+                Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Row(Modifier.weight(1f).clickable(role = Role.Button) { onSelect(recent) }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                        Icon(Icons.Default.History, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(recent, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    }
+                    GlassIconButton(Icons.Default.Close, stringResource(R.string.discovery_remove_recent, recent), { onRemove(recent) }, Modifier.testTag("recent-remove-$recent"))
                 }
             }
         }
@@ -523,44 +509,23 @@ private fun RecentSearches(
 }
 
 @Composable
-private fun SearchResults(
-    results: List<AnimeSearchResult>,
-    hasNextPage: Boolean,
-    isLoadingMore: Boolean,
-    bottomPadding: Dp,
-    onAnimeClick: (AnimeSearchResult) -> Unit,
-    onEditStatus: (AnimeSearchResult) -> Unit,
-    onLoadMore: () -> Unit,
-) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = bottomPadding),
-    ) {
-        item(key = "results_group") {
-            InsetGroup {
-                results.forEachIndexed { index, result ->
-                    SearchResultCard(
-                        result = result,
-                        onCardClick = { onAnimeClick(result) },
-                        onEditStatus = if (result.malId != null) ({ onEditStatus(result) }) else null,
-                        showDivider = index < results.lastIndex,
-                    )
-                }
+internal fun SearchResults(results: List<AnimeSearchResult>, hasNextPage: Boolean, isLoadingMore: Boolean, bottomPadding: Dp, onAnimeClick: (AnimeSearchResult) -> Unit, onEditStatus: (AnimeSearchResult) -> Unit, onLoadMore: () -> Unit, loadMoreError: Boolean = false, onClearFilter: () -> Unit = {}) {
+    LazyColumn(Modifier.fillMaxSize().testTag("search-results"), contentPadding = PaddingValues(bottom = bottomPadding), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (results.isEmpty()) item {
+            Column(Modifier.fillMaxWidth().padding(vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.discovery_filtered_empty), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.discovery_filtered_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                AppButton(stringResource(R.string.seasonal_filter_reset), onClearFilter, icon = Icons.Default.RestartAlt, variant = AppButtonVariant.Secondary)
             }
         }
-        if (hasNextPage || isLoadingMore) {
-            item(key = "load_more") {
-                LaunchedEffect(results.size, isLoadingMore) {
-                    if (hasNextPage && !isLoadingMore) onLoadMore()
-                }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                }
+        items(results, key = { it.anilistId }, contentType = { "search-result" }) { result ->
+            SearchResultCard(result, { onAnimeClick(result) }, if (result.malId != null) ({ onEditStatus(result) }) else null, showDivider = false)
+        }
+        if (hasNextPage || isLoadingMore) item(key = "load_more") {
+            Column(Modifier.fillMaxWidth().padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (loadMoreError) Text(stringResource(R.string.discovery_page_error), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                if (isLoadingMore) AppLoadingState(Modifier.fillMaxWidth())
+                else AppButton(stringResource(if (loadMoreError) R.string.common_retry else R.string.discovery_load_more), onLoadMore, Modifier.fillMaxWidth().testTag("search-load-more"), icon = Icons.Default.Search, variant = AppButtonVariant.Secondary)
             }
         }
     }

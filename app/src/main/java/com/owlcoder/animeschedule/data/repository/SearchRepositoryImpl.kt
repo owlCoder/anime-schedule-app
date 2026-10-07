@@ -48,6 +48,7 @@ class SearchRepositoryImpl @Inject constructor(
     }
 
     override suspend fun clearRecentSearches() = recentSearchesDataStore.clear()
+    override suspend fun removeRecentSearch(query: String) = recentSearchesDataStore.remove(query)
 
     override suspend fun searchAnime(query: String, page: Int): AppResult<SearchPage> {
         val normalized = query.trim()

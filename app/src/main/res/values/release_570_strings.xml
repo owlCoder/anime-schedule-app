@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="discovery_all_titles">All titles</string>
+    <string name="discovery_tracked">On my list</string>
+    <string name="discovery_untracked">Not on my list</string>
+    <string name="discovery_relevance">Relevance</string>
+    <string name="discovery_shortest">Fewest episodes</string>
+    <string name="discovery_any_status">Any release status</string>
+    <string name="discovery_airing">Currently airing</string>
+    <string name="discovery_finished">Finished airing</string>
+    <string name="discovery_upcoming">Not yet released</string>
+    <string name="discovery_any_length">Any episode count</string>
+    <string name="discovery_short_length">Short · 1–13 episodes</string>
+    <string name="discovery_standard_length">Standard · 14–26 episodes</string>
+    <string name="discovery_long_length">Long · 27+ episodes</string>
+    <string name="discovery_search_filters">Search filters</string>
+    <string name="discovery_loaded_hint">Filters and sorting apply to loaded results. Load more to explore additional matches.</string>
+    <string name="discovery_result_count">%1$d shown · %2$d loaded</string>
+    <string name="discovery_tracking">List membership</string>
+    <string name="discovery_release">Release status</string>
+    <string name="discovery_length">Episode count</string>
+    <string name="discovery_minimum_score">Minimum community score</string>
+    <string name="discovery_any_score">Any score</string>
+    <string name="discovery_score_value">%1$d.0+</string>
+    <string name="discovery_score_hint">Titles with unknown scores or episode counts are excluded when you set a limit.</string>
+    <string name="discovery_previous_season">Previous season</string>
+    <string name="discovery_next_season">Next season</string>
+    <string name="discovery_grid">Poster view</string>
+    <string name="discovery_list">List view</string>
+    <string name="discovery_random_hint">Pick randomly from current results</string>
+    <string name="discovery_remove_recent">Remove search: %1$s</string>
+    <string name="discovery_min_query">Enter at least two characters to search.</string>
+    <string name="discovery_page_error">More results could not be loaded. Your current results are still available.</string>
+    <string name="discovery_load_more">Load more results</string>
+    <string name="discovery_filtered_empty">No loaded titles match these filters</string>
+    <string name="discovery_filtered_hint">Reset filters or load another page to find more titles.</string>
+</resources>

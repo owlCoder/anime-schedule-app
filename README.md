@@ -14,7 +14,7 @@ Native Android app for tracking anime airing schedules and managing your MyAnime
 - **Themes** — eleven predefined palettes, Classic accent colors, Android wallpaper colors, saved looks, scheduled light/dark hours, compact layouts, AMOLED canvas, higher contrast and reduced animations
 - **Share anime** — send the title and AniList link with the native Android share sheet
 - **MyAnimeList integration** — OAuth 2.0 login, list read/update, a "+1 episode" quick action, and offline edits that are queued and delivered when you are back online
-- **Search** — find anime by title (infinite scroll, recent searches, list status editing)
+- **Search** — find anime by title (paged results, recent searches, list status editing)
 - **Notifications** — optional local notifications when an anime on your *Watching* list airs, plus an in-app history with an unread badge
 - **Watch sources** — your own search-URL templates (Crunchyroll and Netflix are preset), opened in the app's built-in browser with an ad/tracker filter or in another app
 - **Settings** — searchable options, one Appearance menu for themes and accent colors, time zone override, notification timing, language, cache retention, episode duration and personal backups
@@ -110,10 +110,28 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.6.0** (version code **28**, October 7, 2026).
+Current release: **5.7.0** (version code **29**, October 7, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### New in 5.7.0
+
+1. Filter search results by titles on your list or titles you have not tracked.
+2. Combine search format filters from loaded pages.
+3. Sort search results by relevance, title, community score or fewest episodes.
+4. Remove individual recent searches while preserving the rest of your history.
+5. Filter the seasonal catalog by airing, finished or upcoming release status.
+6. Limit seasonal results to short (1–13), standard (14–26) or long (27+) series.
+7. Set a minimum seasonal community score; unknown metadata is excluded only when constrained.
+8. Switch seasonal discovery between posters and a readable list with progress metadata.
+9. Move to previous/next seasons with automatic year rollover (1940 through current year + 2).
+10. Open a random title from current filtered seasonal results; disabled while loading or empty.
+
+Discovery controls wrap with large fonts, option rows use separate rounded surfaces, and search
+results use individually keyed lazy items. A failed next page preserves current results and offers
+an explicit retry. Query changes immediately invalidate earlier responses, even during debounce.
+Search filters and sorting apply to loaded pages; load more to explore additional results.
 
 ### New in 5.6.0
 

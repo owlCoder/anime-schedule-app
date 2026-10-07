@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="discovery_all_titles">Svi naslovi</string>
+    <string name="discovery_tracked">Na mojoj listi</string>
+    <string name="discovery_untracked">Van moje liste</string>
+    <string name="discovery_relevance">Relevantnost</string>
+    <string name="discovery_shortest">Najmanje epizoda</string>
+    <string name="discovery_any_status">Svi statusi emitovanja</string>
+    <string name="discovery_airing">Trenutno se emituje</string>
+    <string name="discovery_finished">Emitovanje završeno</string>
+    <string name="discovery_upcoming">Još nije emitovano</string>
+    <string name="discovery_any_length">Bilo koji broj epizoda</string>
+    <string name="discovery_short_length">Kratko · 1–13 epizoda</string>
+    <string name="discovery_standard_length">Standardno · 14–26 epizoda</string>
+    <string name="discovery_long_length">Dugo · 27+ epizoda</string>
+    <string name="discovery_search_filters">Filteri pretrage</string>
+    <string name="discovery_loaded_hint">Filteri i sortiranje važe za učitane rezultate. Učitaj još za dodatne naslove.</string>
+    <string name="discovery_result_count">Prikazano %1$d · učitano %2$d</string>
+    <string name="discovery_tracking">Moja lista</string>
+    <string name="discovery_release">Status emitovanja</string>
+    <string name="discovery_length">Broj epizoda</string>
+    <string name="discovery_minimum_score">Najmanja ocena zajednice</string>
+    <string name="discovery_any_score">Sve ocene</string>
+    <string name="discovery_score_value">%1$d.0+</string>
+    <string name="discovery_score_hint">Naslovi bez poznate ocene ili broja epizoda se izostavljaju kada izabereš ograničenje.</string>
+    <string name="discovery_previous_season">Prethodna sezona</string>
+    <string name="discovery_next_season">Sledeća sezona</string>
+    <string name="discovery_grid">Pregled postera</string>
+    <string name="discovery_list">Pregled u listi</string>
+    <string name="discovery_random_hint">Nasumičan izbor iz trenutnih rezultata</string>
+    <string name="discovery_remove_recent">Obriši pretragu: %1$s</string>
+    <string name="discovery_min_query">Unesi najmanje dva znaka za pretragu.</string>
+    <string name="discovery_page_error">Dodatni rezultati nisu učitani. Trenutni rezultati su i dalje dostupni.</string>
+    <string name="discovery_load_more">Učitaj još rezultata</string>
+    <string name="discovery_filtered_empty">Nijedan učitan naslov ne odgovara filterima</string>
+    <string name="discovery_filtered_hint">Poništi filtere ili učitaj sledeću stranicu za još naslova.</string>
+</resources>

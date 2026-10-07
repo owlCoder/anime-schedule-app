@@ -1,72 +1,22 @@
 package com.owlcoder.animeschedule.presentation.screens.seasonal
 
 import androidx.annotation.StringRes
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeSeason
-import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
-import com.owlcoder.animeschedule.presentation.components.AppButton
-import com.owlcoder.animeschedule.presentation.components.AppMaterial
-import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
-import com.owlcoder.animeschedule.presentation.components.AppSheet
-import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
-import com.owlcoder.animeschedule.presentation.components.IosMotion
-import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
-import java.util.Locale
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material.icons.filled.DeleteSweep
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.AcUnit
-import androidx.compose.material.icons.filled.Eco
-import androidx.compose.material.icons.filled.LocalFlorist
-import androidx.compose.material.icons.filled.WbSunny
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
-import com.owlcoder.animeschedule.presentation.components.iosTween
-
-private val FORMAT_LABEL_RES = mapOf(
-    "TV" to R.string.format_tv,
-    "TV_SHORT" to R.string.format_tv_short,
-    "MOVIE" to R.string.format_movie,
-    "SPECIAL" to R.string.format_special,
-    "OVA" to R.string.format_ova,
-    "ONA" to R.string.format_ona,
-    "MUSIC" to R.string.format_music,
-)
+import com.owlcoder.animeschedule.presentation.components.*
+import com.owlcoder.animeschedule.presentation.screens.discovery.*
 
 @StringRes
 internal fun AnimeSeason.labelRes(): Int = when (this) {
@@ -83,363 +33,81 @@ private fun AnimeSeason.icon(): ImageVector = when (this) {
     AnimeSeason.FALL -> Icons.Default.Eco
 }
 
-private fun formatCommunityScore(score: Int): String =
-    String.format(Locale.ROOT, "%.1f", score / 10.0)
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun SeasonTabRow(
-    currentSeason: AnimeSeason,
-    currentYear: Int,
-    onSelect: (AnimeSeason, Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val motion = LocalMotionPolicy.current
-    AppMaterialSurface(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(42.dp),
-        material = AppMaterial.Interactive,
-        shape = ContinuousRoundedShape(14.dp),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(42.dp)
-                .padding(3.dp),
-            horizontalArrangement = Arrangement.spacedBy(3.dp),
-        ) {
-            AnimeSeason.entries.forEach { season ->
-                val isSelected = season == currentSeason
-                val fill by animateColorAsState(
-                    targetValue = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
-                    animationSpec = motion.iosTween(IosMotion.Standard),
-                    label = "season-tab-fill",
-                )
-                val contentColor by animateColorAsState(
-                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    animationSpec = motion.iosTween(IosMotion.Standard),
-                    label = "season-tab-color",
-                )
-                Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(36.dp)
-                        .clickable(role = Role.Tab) { onSelect(season, currentYear) }
-                        .semantics {
-                            role = Role.Tab
-                            selected = isSelected
-                        },
-                    shape = ContinuousRoundedShape(11.dp),
-                    color = fill,
-                    contentColor = contentColor,
-                    tonalElevation = 0.dp,
-                    shadowElevation = 0.dp,
-                ) {
-                    SeasonLabel(season, isSelected, contentColor)
+internal fun SeasonTabRow(currentSeason: AnimeSeason, currentYear: Int, onSelect: (AnimeSeason, Int) -> Unit, modifier: Modifier = Modifier) {
+    val columns = if (LocalDensity.current.fontScale > 1.15f) 2 else 4
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        AnimeSeason.entries.chunked(columns).forEach { seasons ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                seasons.forEach { season ->
+                    DiscoveryChip(stringResource(season.labelRes()), season.icon(), season == currentSeason,
+                        { onSelect(season, currentYear) }, Modifier.weight(1f).testTag("season-${season.name}"))
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun SeasonLabel(
-    season: AnimeSeason,
-    selected: Boolean,
-    contentColor: Color,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(36.dp)
-            .padding(horizontal = 5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-    ) {
-        Icon(
-            imageVector = season.icon(),
-            contentDescription = null,
-            modifier = Modifier.size(15.dp),
-            tint = contentColor,
-        )
-        Text(
-            text = stringResource(season.labelRes()),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-            color = contentColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-internal fun SeasonalFilterSheet(
-    filter: SeasonalFilter,
-    availableGenres: List<String>,
-    availableFormats: List<String>,
-    onGenreToggle: (String) -> Unit,
-    onFormatToggle: (String) -> Unit,
-    onSortChange: (SeasonalSortOrder) -> Unit,
-    onClear: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    val selectionCount = filter.genres.size + filter.formats.size
-
-    AppSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        title = stringResource(R.string.seasonal_filter_title),
-        trailingContent = {
-            AppButton(stringResource(R.string.seasonal_filter_reset), onClear, enabled = filter.isActive, variant = AppButtonVariant.Plain, icon = Icons.Default.RestartAlt)
-        },
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = 620.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            if (filter.isActive) {
-                AppMaterialSurface(
-                    modifier = Modifier.fillMaxWidth(),
-                    material = AppMaterial.Interactive,
-                    shape = ContinuousRoundedShape(13.dp),
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 13.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = if (selectionCount > 0) {
-                                stringResource(R.string.seasonal_filter_selected_count, selectionCount)
-                            } else {
-                                stringResource(R.string.seasonal_filter_custom_sort)
-                            },
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
+internal fun SeasonalFilterSheet(filter: SeasonalFilter, availableGenres: List<String>, availableFormats: List<String>, onGenreToggle: (String) -> Unit, onFormatToggle: (String) -> Unit, onSortChange: (SeasonalSortOrder) -> Unit, onRelease: (ReleaseFilter) -> Unit, onLength: (EpisodeLength) -> Unit, onScore: (Int) -> Unit, onClear: () -> Unit, onDismiss: () -> Unit) {
+    AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.seasonal_filter_title), trailingContent = {
+        AppButton(stringResource(R.string.seasonal_filter_reset), onClear, enabled = filter.isActive, variant = AppButtonVariant.Plain, icon = Icons.Default.RestartAlt)
+    }) {
+        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 580.dp).testTag("season-filter-list"), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 12.dp)) {
+            item { DiscoverySection(stringResource(R.string.seasonal_sort_label)) }
+            items(SeasonalSortOrder.entries.size) { index ->
+                val value = SeasonalSortOrder.entries[index]
+                AppChoiceRow(stringResource(value.labelRes), when(value) { SeasonalSortOrder.POPULARITY -> Icons.Default.TrendingUp; SeasonalSortOrder.SCORE -> Icons.Default.Star; SeasonalSortOrder.TITLE -> Icons.Default.SortByAlpha }, filter.sortOrder == value, { onSortChange(value) }, Modifier.testTag("season-sort-${value.name}"))
+            }
+            item { DiscoverySection(stringResource(R.string.discovery_release)) }
+            items(ReleaseFilter.entries.size) { index ->
+                val value = ReleaseFilter.entries[index]
+                AppChoiceRow(stringResource(value.labelRes), Icons.Default.LiveTv, filter.release == value, { onRelease(value) }, Modifier.testTag("season-release-${value.name}"))
+            }
+            item { DiscoverySection(stringResource(R.string.discovery_length)) }
+            items(EpisodeLength.entries.size) { index ->
+                val value = EpisodeLength.entries[index]
+                AppChoiceRow(stringResource(value.labelRes), Icons.Default.PlayCircle, filter.length == value, { onLength(value) }, Modifier.testTag("season-length-${value.name}"))
+            }
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DiscoverySection(stringResource(R.string.discovery_minimum_score))
+                    AppChoiceRow(stringResource(R.string.discovery_any_score), Icons.Default.Star, filter.minimumScore == 0, { onScore(0) }, Modifier.testTag("season-score-0"))
+                    listOf(listOf(6, 7), listOf(8, 9)).forEach { scores ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            scores.forEach { value -> DiscoveryChip(stringResource(R.string.discovery_score_value, value), Icons.Default.Star, filter.minimumScore == value, { onScore(value) }, Modifier.weight(1f).testTag("season-score-$value")) }
+                        }
+                    }
+                    Text(stringResource(R.string.discovery_score_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            if (availableFormats.isNotEmpty()) item {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DiscoverySection(stringResource(R.string.filter_format))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        availableFormats.forEach { value -> DiscoveryChip(localizedFormatLabel(value), Icons.Default.Movie, value in filter.formats, { onFormatToggle(value) }, multiple = true) }
                     }
                 }
             }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f, fill = false)
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = 2.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                FilterSectionTitle(stringResource(R.string.seasonal_sort_label))
-                SortSegmentedControl(
-                    selected = filter.sortOrder,
-                    onSelect = onSortChange,
-                )
-
-                if (availableFormats.isNotEmpty()) {
-                    FilterSectionTitle(stringResource(R.string.filter_format))
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(7.dp),
-                        verticalArrangement = Arrangement.spacedBy(7.dp),
-                    ) {
-                        availableFormats.forEach { format ->
-                            CompactFilterChip(
-                                label = localizedFormatLabel(format),
-                                selected = format in filter.formats,
-                                onClick = { onFormatToggle(format) },
-                            )
-                        }
-                    }
-                }
-
-                if (availableGenres.isNotEmpty()) {
-                    FilterSectionTitle(stringResource(R.string.filter_genre))
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(7.dp),
-                        verticalArrangement = Arrangement.spacedBy(7.dp),
-                    ) {
-                        availableGenres.forEach { genre ->
-                            CompactFilterChip(
-                                label = localizedGenreLabel(genre),
-                                selected = genre in filter.genres,
-                                onClick = { onGenreToggle(genre) },
-                            )
-                        }
-                    }
-                }
-            }
-
-            AppButton(
-                label = stringResource(R.string.seasonal_filter_apply),
-                icon = Icons.Default.Check,
-                onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth(),
-                variant = AppButtonVariant.Primary,
-            )
-        }
-    }
-}
-
-@Composable
-private fun FilterSectionTitle(title: String) {
-    Text(
-        text = title,
-        modifier = Modifier.padding(start = 2.dp),
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.onSurface,
-    )
-}
-
-@Composable
-private fun SortSegmentedControl(
-    selected: SeasonalSortOrder,
-    onSelect: (SeasonalSortOrder) -> Unit,
-) {
-    val motion = LocalMotionPolicy.current
-    AppMaterialSurface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(42.dp),
-        material = AppMaterial.Interactive,
-        shape = ContinuousRoundedShape(14.dp),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(42.dp)
-                .padding(3.dp),
-            horizontalArrangement = Arrangement.spacedBy(3.dp),
-        ) {
-            SeasonalSortOrder.entries.forEach { option ->
-                val isSelected = selected == option
-                val container by animateColorAsState(
-                    targetValue = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
-                    animationSpec = motion.iosTween(IosMotion.Standard),
-                    label = "seasonal-sort-fill",
-                )
-                val content by animateColorAsState(
-                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    animationSpec = motion.iosTween(IosMotion.Standard),
-                    label = "seasonal-sort-color",
-                )
-                Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(36.dp)
-                        .clickable(role = Role.RadioButton) { onSelect(option) }
-                        .semantics { this.selected = isSelected },
-                    shape = ContinuousRoundedShape(11.dp),
-                    color = container,
-                    contentColor = content,
-                    tonalElevation = 0.dp,
-                    shadowElevation = 0.dp,
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(36.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        if (isSelected) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp),
-                                tint = content,
-                            )
-                        }
-                        Text(
-                            text = stringResource(option.labelRes),
-                            modifier = Modifier.padding(start = if (isSelected) 4.dp else 0.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                            color = content,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+            if (availableGenres.isNotEmpty()) item {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    DiscoverySection(stringResource(R.string.filter_genre))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        availableGenres.forEach { value -> DiscoveryChip(localizedGenreLabel(value), Icons.Default.Category, value in filter.genres, { onGenreToggle(value) }, multiple = true) }
                     }
                 }
             }
         }
+        Spacer(Modifier.height(12.dp))
+        AppButton(stringResource(R.string.seasonal_filter_apply), onDismiss, Modifier.fillMaxWidth(), icon = Icons.Default.Check)
     }
 }
-
-@Composable
-private fun CompactFilterChip(
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val motion = LocalMotionPolicy.current
-    val contentColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = motion.iosTween(IosMotion.Standard),
-        label = "seasonal-filter-chip-color",
-    )
-    val containerColor by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)
-        else MaterialTheme.colorScheme.surface,
-        animationSpec = motion.iosTween(IosMotion.Standard),
-        label = "seasonal-filter-chip-fill",
-    )
-
-    Surface(
-        modifier = Modifier
-            .height(36.dp)
-            .clickable(role = Role.Checkbox, onClick = onClick)
-            .semantics { this.selected = selected },
-        shape = ContinuousRoundedShape(11.dp),
-        color = containerColor,
-        contentColor = contentColor,
-        border = BorderStroke(
-            width = 0.6.dp,
-            color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.62f)
-            else MaterialTheme.colorScheme.outlineVariant,
-        ),
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 11.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-        ) {
-            if (selected) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = contentColor,
-                )
-            }
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                color = contentColor,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-}
-
 @Composable
 private fun localizedFormatLabel(format: String): String =
-    FORMAT_LABEL_RES[format]?.let { stringResource(it) } ?: format
+    discoveryFormatLabel(format) ?: format
 
 @Composable
 private fun localizedGenreLabel(genre: String): String = when (genre.lowercase()) {
