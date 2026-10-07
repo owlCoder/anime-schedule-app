@@ -67,4 +67,36 @@ class WatchToolsStoreTest {
             assertEquals(0, tools.data.first().weeklyGoal)
         } finally { job.cancelAndJoin() }
     }
+    @Test fun `bulk markers and tag changes remain account scoped after reopening`() = runTest {
+        val file = File(temporary.root, "bulk.preferences_pb")
+        var job = SupervisorJob()
+        var backing = PreferenceDataStoreFactory.create(scope = CoroutineScope(job + Dispatchers.IO)) { file }
+        var prefs = UserPreferencesDataStore(backing)
+        var tools = WatchToolsStore(backing, prefs)
+        prefs.setMalLoggedIn(true,"First")
+        tools.setMarkers(setOf(1,2), favorite=true, pin=true)
+        tools.setTags(1,"Action, Weekend")
+        tools.saveView(SavedListView("Tagged",tag="Action",minimumScore=7,maximumScore=10,sort="WATCH_TIME"))
+        tools.renameTag("action","Weekend")
+        prefs.setMalLoggedIn(true,"Second")
+        assertTrue(tools.data.first().favorites.isEmpty()); assertTrue(tools.data.first().tags.isEmpty())
+        tools.setMarkers(setOf(3),favorite=true)
+        prefs.setMalLoggedIn(true,"FIRST")
+        job.cancelAndJoin()
+        job = SupervisorJob()
+        backing = PreferenceDataStoreFactory.create(scope = CoroutineScope(job + Dispatchers.IO)) { file }
+        prefs = UserPreferencesDataStore(backing); tools = WatchToolsStore(backing,prefs)
+        try {
+            assertEquals(setOf(1,2),tools.data.first().favorites)
+            assertEquals(setOf(1,2),tools.data.first().pinned)
+            assertEquals(setOf("Weekend"),tools.data.first().tags[1])
+            assertEquals("Weekend",tools.data.first().savedViews.single().tag)
+            assertEquals(7,tools.data.first().savedViews.single().minimumScore)
+            tools.renameTag("Weekend",null)
+            assertTrue(tools.data.first().tags.isEmpty()); assertNull(tools.data.first().savedViews.single().tag)
+            tools.setMarkers(setOf(1),favorite=false,pin=false)
+            assertEquals(setOf(2),tools.data.first().favorites); assertEquals(setOf(2),tools.data.first().pinned)
+        } finally { job.cancelAndJoin() }
+    }
+
 }

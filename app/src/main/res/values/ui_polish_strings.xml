@@ -76,17 +76,17 @@
     <!-- Changelog -->
     <string name="changelog_release_date">October 7, 2026</string>
     <string name="changelog_whats_new">What\'s new</string>
-    <string name="changelog_hero_description">Ten new tools for your list, watch sessions and notifications, with cleaner cards and panels.</string>
-    <string name="changelog_nav_title">Pins, smart filters and saved views</string>
-    <string name="changelog_nav_description">Pin anime to the top, filter short, almost finished or unstarted titles, and save up to eight combinations of search, filters and sorting.</string>
-    <string name="changelog_motion_title">Plan your next watch session</string>
-    <string name="changelog_motion_description">Set a time budget and let the planner distribute episodes across Watching titles. Individual episode durations also improve remaining-time estimates.</string>
-    <string name="changelog_filters_title">Activity calendar and daily goals</string>
-    <string name="changelog_filters_description">Explore your last 28 days, view current and best streaks from retained activity, and set a daily episode goal alongside your weekly goal.</string>
-    <string name="changelog_states_title">Search and tidy notifications</string>
-    <string name="changelog_states_description">Search titles in unread or read history and clear read notifications after confirmation. Separate rounded cards keep lists consistent.</string>
-    <string name="changelog_about_title">Share your current list</string>
-    <string name="changelog_about_description">Share titles, statuses, progress and scores from current results through Android. Personal backups now include pins, saved views, daily goals and duration overrides.</string>
+    <string name="changelog_hero_description">Ten new ways to organize, plan and compare your anime, with clearer tools and filters.</string>
+    <string name="changelog_nav_title">Rating filters and watch-time sorting</string>
+    <string name="changelog_nav_description">Choose a score range and save it with list views. Sort by remaining watch time using individual episode durations. Unknown totals stay at the end.</string>
+    <string name="changelog_motion_title">Flexible session planning</string>
+    <string name="changelog_motion_description">Choose balanced, shortest-finish-first or focused allocation, and include only the titles you want for this session.</string>
+    <string name="changelog_filters_title">Bulk organization and tag management</string>
+    <string name="changelog_filters_description">Set local favorites or pins for selected titles. Rename, merge or remove tags across anime and saved views, with confirmation before removal.</string>
+    <string name="changelog_states_title">Backlog and side-by-side comparison</string>
+    <string name="changelog_states_description">See episode and time totals by status with daily-goal estimates. Compare two titles by rating, progress, duration and time left.</string>
+    <string name="changelog_about_title">History filters and activity export</string>
+    <string name="changelog_about_description">Filter retained local history to this week, 30 or 90 days, and export the visible changes as CSV. Tools now use grouped icon rows and clearer active-filter summaries.</string>
     <string name="changelog_footer">Made with care by the AnimeSchedule team</string>
 
     <!-- Watch sources -->

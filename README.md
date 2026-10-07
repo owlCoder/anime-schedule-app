@@ -110,10 +110,27 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.5.0** (version code **27**, October 7, 2026).
+Current release: **5.6.0** (version code **28**, October 7, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### New in 5.6.0
+
+1. Filter your list by an inclusive score range (0 includes unrated); save it with list views.
+2. Sort by remaining watch time, including per-anime episode duration; unknown totals sort last.
+3. Select multiple current results and add/remove local favorites or pins in one operation.
+4. Rename, merge or delete tags across local metadata and saved views, with removal confirmation.
+5. View backlog totals by Watching, Plan to Watch and On Hold, with unknown totals and daily-goal estimates.
+6. Choose balanced, shortest-finish-first or focused watch-planner allocation.
+7. Include/exclude individual Watching titles for the current planning session.
+8. Export visible watch activity as UTF-8 CSV through Android’s document picker.
+9. Compare two titles’ status, rating, progress, episode duration and remaining time.
+10. Filter watch history to all records, the current week, the last 30 or the last 90 days.
+
+Tools are grouped into watch/planning, organization and history/data, with aligned icon tiles,
+compact navigation rows, separate rounded surfaces and clear active-filter counts. Multi-selection
+uses checkbox accessibility semantics. Local bulk actions never update MAL progress or status.
 
 ### New in 5.5.0
 

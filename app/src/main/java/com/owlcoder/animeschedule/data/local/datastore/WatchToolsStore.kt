@@ -75,6 +75,9 @@ class WatchToolsStore @Inject constructor(
     }
     suspend fun deleteView(name: String) = edit { it.copy(savedViews = it.savedViews.filterNot { view -> view.name.equals(name, true) }) }
 
+    suspend fun setMarkers(ids: Set<Int>, favorite: Boolean? = null, pin: Boolean? = null) = edit { it.withMarkers(ids, favorite, pin) }
+    suspend fun renameTag(old: String, replacement: String?) = edit { it.renameTag(old, replacement) }
+
     suspend fun setWeeklyGoal(goal: Int) = edit { it.copy(weeklyGoal = goal.coerceIn(0, 100)) }
     suspend fun clearActivity() = edit { it.copy(activity = emptyList()) }
 

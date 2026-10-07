@@ -17,12 +17,16 @@ data class SavedListView(
     val tag: String? = null,
     val smartFilter: SmartListFilter = SmartListFilter.ALL,
     val sort: String = "RECENT",
+    val minimumScore: Int = 0,
+    val maximumScore: Int = 10,
 ) {
     fun normalized() = copy(
         name = name.trim().take(32), query = query.trim().take(128),
         status = status?.takeUnless { it == WatchStatus.NOT_IN_LIST },
         tag = tag?.trim()?.take(24)?.takeIf { it.isNotBlank() },
-        sort = sort.takeIf { it in setOf("RECENT", "TITLE", "SCORE", "PROGRESS", "REMAINING") } ?: "RECENT",
+        minimumScore = minimumScore.coerceIn(0, 10),
+        maximumScore = maximumScore.coerceIn(minimumScore.coerceIn(0, 10), 10),
+        sort = sort.takeIf { it in setOf("RECENT", "TITLE", "SCORE", "PROGRESS", "REMAINING", "WATCH_TIME") } ?: "RECENT",
     )
 }
 
@@ -62,16 +66,28 @@ fun WatchTools.streak(today: LocalDate): WatchStreak {
     return WatchStreak(current, best)
 }
 
+enum class PlannerStrategy { BALANCED, FINISH_FIRST, FOCUS }
+
 data class WatchPlanItem(val entry: MalListEntry, val episodes: Int, val minutes: Int)
 
-/** Round-robin allocates one episode per title before a second pass. Never exceeds the budget. */
-fun planWatchSession(entries: List<MalListEntry>, tools: WatchTools, budgetMinutes: Int): List<WatchPlanItem> {
+/** Balanced rounds share episodes; focused modes fill each title in priority order. All modes respect the budget and known remainder. */
+fun planWatchSession(entries: List<MalListEntry>, tools: WatchTools, budgetMinutes: Int, strategy: PlannerStrategy = PlannerStrategy.BALANCED, excluded: Set<Int> = emptySet()): List<WatchPlanItem> {
     val candidates = entries.distinctBy { it.animeId }.filter {
-        it.animeId > 0 && it.status == WatchStatus.WATCHING && (it.totalEpisodes == null || it.totalEpisodes <= 0 || it.episodesWatched < it.totalEpisodes)
-    }.sortedByDescending { it.animeId in tools.pinned }
+        it.animeId > 0 && it.animeId !in excluded && it.status == WatchStatus.WATCHING && (it.totalEpisodes == null || it.totalEpisodes <= 0 || it.episodesWatched < it.totalEpisodes)
+    }.let { candidates ->
+        if (strategy == PlannerStrategy.FINISH_FIRST) candidates.sortedWith(compareBy<MalListEntry> { it.remainingMinutes(tools) ?: Long.MAX_VALUE }.thenByDescending { it.animeId in tools.pinned })
+        else candidates.sortedByDescending { it.animeId in tools.pinned }
+    }
     val counts = linkedMapOf<Int, Int>()
     var left = budgetMinutes.coerceIn(0, 480)
-    do {
+    if (strategy != PlannerStrategy.BALANCED) {
+        candidates.forEach { entry ->
+            val duration = tools.minutesFor(entry.animeId)
+            val remaining = entry.totalEpisodes?.takeIf { it > 0 }?.let { (it - entry.episodesWatched.coerceAtLeast(0)).coerceAtLeast(0) } ?: Int.MAX_VALUE
+            val count = minOf(left / duration, remaining)
+            if (count > 0) { counts[entry.animeId] = count; left -= count * duration }
+        }
+    } else do {
         var added = false
         candidates.forEach { entry ->
             val duration = tools.minutesFor(entry.animeId)

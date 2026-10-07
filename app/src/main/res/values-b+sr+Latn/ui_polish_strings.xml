@@ -76,17 +76,17 @@
     <!-- Changelog -->
     <string name="changelog_release_date">7. oktobar 2026.</string>
     <string name="changelog_whats_new">Šta je novo</string>
-    <string name="changelog_hero_description">Deset novih alata za listu, planiranje i obaveštenja, uz preglednije kartice i panele.</string>
-    <string name="changelog_nav_title">Pinovi, pametni filteri i sačuvani prikazi</string>
-    <string name="changelog_nav_description">Pinuj anime na vrh, filtriraj kratke serije, naslove pri kraju ili nezapočete i sačuvaj do osam kombinacija pretrage, filtera i redosleda.</string>
-    <string name="changelog_motion_title">Isplaniraj sledeće gledanje</string>
-    <string name="changelog_motion_description">Odredi raspoloživo vreme i rasporedi epizode između naslova koje gledaš. Trajanje epizode po animeu poboljšava i procene preostalog vremena.</string>
-    <string name="changelog_filters_title">Kalendar aktivnosti i dnevni cilj</string>
-    <string name="changelog_filters_description">Pregledaj poslednjih 28 dana, trenutni i najduži niz iz sačuvane aktivnosti i podesi dnevni cilj uz postojeći nedeljni.</string>
-    <string name="changelog_states_title">Pretraga i sređivanje obaveštenja</string>
-    <string name="changelog_states_description">Pretraži naslove u pročitanoj ili nepročitanoj istoriji i obriši pročitana uz potvrdu. Odvojene zaobljene kartice ujednačavaju liste.</string>
-    <string name="changelog_about_title">Podeli trenutnu listu</string>
-    <string name="changelog_about_description">Podeli naslove, statuse, napredak i ocene trenutnih rezultata kroz Android. Rezervne kopije sada sadrže pinove, sačuvane prikaze, dnevni cilj i trajanje po animeu.</string>
+    <string name="changelog_hero_description">Deset novih načina za organizaciju, planiranje i poređenje animea, uz preglednije alate i filtere.</string>
+    <string name="changelog_nav_title">Filter ocena i redosled po vremenu</string>
+    <string name="changelog_nav_description">Izaberi raspon ocena i sačuvaj ga uz prikaz liste. Sortiraj po preostalom vremenu uz trajanje epizode svakog animea. Nepoznati ukupni brojevi ostaju na kraju.</string>
+    <string name="changelog_motion_title">Fleksibilno planiranje sesije</string>
+    <string name="changelog_motion_description">Izaberi ravnomeran raspored, prvo završi najkraće ili se fokusiraj na jedan naslov. Uključi samo naslove koje želiš u ovoj sesiji.</string>
+    <string name="changelog_filters_title">Grupno uređivanje i upravljanje tagovima</string>
+    <string name="changelog_filters_description">Postavi lokalne favorite ili pinove za izabrane naslove. Preimenuj, spoji ili ukloni tagove sa animea i sačuvanih prikaza, uz potvrdu pre uklanjanja.</string>
+    <string name="changelog_states_title">Pregled preostalih epizoda i poređenje</string>
+    <string name="changelog_states_description">Pogledaj broj epizoda i vreme po statusu uz procenu prema dnevnom cilju. Uporedi dva naslova po oceni, napretku, trajanju i preostalom vremenu.</string>
+    <string name="changelog_about_title">Filteri istorije i izvoz aktivnosti</string>
+    <string name="changelog_about_description">Filtriraj sačuvanu lokalnu istoriju na ovu nedelju, 30 ili 90 dana i izvezi prikazane izmene u CSV. Alati imaju grupisane redove sa ikonama i jasniji pregled aktivnih filtera.</string>
     <string name="changelog_footer">Napravljeno pažljivo od strane AnimeSchedule tima</string>
 
     <!-- Izvori za gledanje -->

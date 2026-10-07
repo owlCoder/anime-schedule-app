@@ -91,6 +91,7 @@ internal fun SavedViewsSheet(views: List<SavedListView>, onSave: (String) -> Uni
                         }
                         val status = view.status?.displayName() ?: stringResource(R.string.list_all_statuses)
                         Text("$status · ${stringResource(view.smartFilter.labelRes())}", Modifier.padding(horizontal = 12.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (view.minimumScore != 0 || view.maximumScore != 10) Text(stringResource(R.string.rating_value, view.minimumScore, view.maximumScore), Modifier.padding(horizontal = 12.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                         if (view.query.isNotBlank()) Text(view.query, Modifier.padding(horizontal = 12.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall)
                     }
                 }
@@ -102,10 +103,15 @@ internal fun SavedViewsSheet(views: List<SavedListView>, onSave: (String) -> Uni
 @Composable
 internal fun WatchPlannerSheet(entries: List<MalListEntry>, tools: WatchTools, onOpen: (Int) -> Unit, onDismiss: () -> Unit) {
     var budget by rememberSaveable { mutableIntStateOf(60) }
-    val plan = remember(entries, tools, budget) { planWatchSession(entries.sortedFor(MyListSortOrder.RECENT), tools, budget) }
+    var strategy by remember { mutableStateOf(PlannerStrategy.BALANCED) }
+    var excluded by remember { mutableStateOf(emptySet<Int>()) }
+    var showStyle by remember { mutableStateOf(false) }
+    var showTitles by remember { mutableStateOf(false) }
+    val candidates = entries.filter { it.animeId > 0 && it.status == WatchStatus.WATCHING && (it.totalEpisodes == null || it.totalEpisodes <= 0 || it.episodesWatched < it.totalEpisodes) }.distinctBy { it.animeId }
+    val plan = remember(entries, tools, budget, strategy, excluded) { planWatchSession(entries.sortedFor(MyListSortOrder.RECENT), tools, budget, strategy, excluded) }
     val used = plan.sumOf { it.minutes }
     AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.watch_planner)) {
-        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 620.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 620.dp).testTag("planner-list"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item { Text(stringResource(R.string.planner_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             item { NumberSetting(stringResource(R.string.planner_budget), budget, 15, 480, 15, { budget = it }, "planner") }
             item {
@@ -130,6 +136,25 @@ internal fun WatchPlannerSheet(entries: List<MalListEntry>, tools: WatchTools, o
                     }
                 }
             }
+            item {
+                AppButton(stringResource(R.string.planner_strategy) + " · " + stringResource(when (strategy) { PlannerStrategy.BALANCED -> R.string.planner_balanced; PlannerStrategy.FINISH_FIRST -> R.string.planner_finish_first; PlannerStrategy.FOCUS -> R.string.planner_focus }), { showStyle = !showStyle }, Modifier.fillMaxWidth().testTag("planner-style"), variant = AppButtonVariant.Secondary, icon = Icons.Default.Tune)
+            }
+            if (showStyle) items(PlannerStrategy.entries, key = { "style-$it" }) { option ->
+                val label = when (option) { PlannerStrategy.BALANCED -> R.string.planner_balanced; PlannerStrategy.FINISH_FIRST -> R.string.planner_finish_first; PlannerStrategy.FOCUS -> R.string.planner_focus }
+                val hint = when (option) { PlannerStrategy.BALANCED -> R.string.planner_balanced_hint; PlannerStrategy.FINISH_FIRST -> R.string.planner_finish_first_hint; PlannerStrategy.FOCUS -> R.string.planner_focus_hint }
+                AppChoiceRow(stringResource(label), Icons.Default.Tune, strategy == option, { strategy = option; showStyle = false }, Modifier.testTag("planner-style-${option.name}"), subtitle = stringResource(hint))
+            }
+            item {
+                AppButton(stringResource(R.string.planner_choose), { showTitles = !showTitles }, Modifier.fillMaxWidth().testTag("planner-choose"), variant = AppButtonVariant.Secondary, icon = Icons.Default.Checklist)
+                Text(stringResource(R.string.planner_candidates, candidates.count { it.animeId !in excluded }, candidates.size), Modifier.padding(top = 6.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (showTitles) {
+                item { Text(stringResource(R.string.planner_selection_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                items(candidates, key = { "candidate-${it.animeId}" }) { entry ->
+                    AppChoiceRow(entry.title, Icons.Default.PlayCircle, entry.animeId !in excluded, { excluded = if (entry.animeId in excluded) excluded - entry.animeId else excluded + entry.animeId }, Modifier.testTag("planner-include-${entry.animeId}"), selectionRole = Role.Checkbox)
+                }
+            }
+
         }
     }
 }

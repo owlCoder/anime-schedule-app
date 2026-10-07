@@ -14,7 +14,7 @@
     <string name="views_empty">Your saved list views will appear here.</string>
     <string name="view_delete">Delete view %1$s</string>
     <string name="watch_planner">Watch session planner</string>
-    <string name="planner_hint">Plan a session from your Watching list. Pinned titles get priority; episodes are shared between titles and use their individual duration. Open a title when ready.</string>
+    <string name="planner_hint">Plan episodes from your Watching list within a time budget. Choose a session style and included titles below; each anime uses its own duration. Progress is updated only when you edit it.</string>
     <string name="planner_budget">Available minutes</string>
     <string name="planner_summary">%1$d episodes · %2$d min</string>
     <string name="planner_unused">%1$d minutes spare</string>

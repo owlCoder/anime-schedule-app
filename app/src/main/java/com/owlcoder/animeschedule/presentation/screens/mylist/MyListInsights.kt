@@ -3,6 +3,8 @@ package com.owlcoder.animeschedule.presentation.screens.mylist
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.WatchStatus
+import com.owlcoder.animeschedule.domain.model.WatchTools
+import com.owlcoder.animeschedule.domain.model.remainingMinutes
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.Locale
@@ -13,6 +15,7 @@ enum class MyListSortOrder(val labelRes: Int) {
     SCORE(R.string.mylist_sort_score),
     PROGRESS(R.string.mylist_sort_progress),
     REMAINING(R.string.mylist_sort_remaining),
+    WATCH_TIME(R.string.sort_watch_time),
 }
 
 data class MyListInsights(
@@ -40,7 +43,7 @@ internal fun List<MalListEntry>.insights(): MyListInsights {
     )
 }
 
-internal fun List<MalListEntry>.sortedFor(order: MyListSortOrder): List<MalListEntry> {
+internal fun List<MalListEntry>.sortedFor(order: MyListSortOrder, tools: WatchTools = WatchTools()): List<MalListEntry> {
     val titleOrder = compareBy<MalListEntry> { it.title.lowercase(Locale.ROOT) }.thenBy { it.animeId }
     return when (order) {
         MyListSortOrder.TITLE -> sortedWith(titleOrder)
@@ -52,6 +55,7 @@ internal fun List<MalListEntry>.sortedFor(order: MyListSortOrder): List<MalListE
             it.totalEpisodes?.takeIf { total -> total > 0 }
                 ?.let { total -> it.episodesWatched.coerceIn(0, total).toDouble() / total } ?: -1.0
         }.then(titleOrder))
+        MyListSortOrder.WATCH_TIME -> sortedWith(compareBy<MalListEntry> { it.remainingMinutes(tools) ?: Long.MAX_VALUE }.then(titleOrder))
         MyListSortOrder.REMAINING -> sortedWith(compareBy<MalListEntry> {
             it.totalEpisodes?.takeIf { total -> total > 0 }
                 ?.let { total -> (total - it.episodesWatched.coerceAtLeast(0)).coerceAtLeast(0) } ?: Int.MAX_VALUE

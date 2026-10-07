@@ -39,7 +39,8 @@ schedules. This policy explains what data the app accesses and how it's used.
   local preferences. Tracking metadata is separated by MyAnimeList username and is not sent
   to the anime APIs. The device backup/transfer settings also apply to these preferences.
 - CSV export writes the cached list and local notes/favorites/tags only to the destination you
-  choose with Android’s document picker.
+  choose with Android’s document picker. Activity CSV export similarly writes only the visible
+  local history (titles, dates, episode changes and resulting progress) to your selected destination.
 
 - Personal JSON backup writes these local tracking preferences and appearance profiles to the
   destination you select through Android’s document picker. Restoring a selected backup replaces

@@ -5,7 +5,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.text.style.TextAlign
 import com.owlcoder.animeschedule.domain.model.filteredActivity
+import com.owlcoder.animeschedule.domain.model.ActivityRange
+import com.owlcoder.animeschedule.domain.model.WatchActivity
+import com.owlcoder.animeschedule.domain.model.activityInRange
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -78,13 +86,33 @@ internal fun ListToolsSheet(
     onCalendar: () -> Unit = {},
     canShare: Boolean = false,
     onShare: () -> Unit = {},
+    onRating: () -> Unit = {},
+    onBulk: () -> Unit = {},
+    onManageTags: () -> Unit = {},
+    onBacklog: () -> Unit = {},
+    onCompare: () -> Unit = {},
 ) {
     AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.list_tools)) {
         Column(Modifier.heightIn(max = 620.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            ToolsSection(R.string.workspace_watch)
             ToolsAction(Icons.Default.PlayArrow, R.string.continue_watching, R.string.continue_watching_hint, continueTitle != null, onContinue, continueTitle)
             ToolsAction(Icons.Default.Timer, R.string.watch_planner, R.string.planner_menu_hint, canExport, onPlanner)
-            ToolsAction(Icons.Default.CalendarMonth, R.string.activity_calendar, R.string.calendar_menu_hint, true, onCalendar)
+            ToolsAction(Icons.Default.HourglassTop, R.string.backlog_dashboard, R.string.backlog_menu_hint, canExport, onBacklog)
+            ToolsAction(Icons.Default.CompareArrows, R.string.compare_anime, R.string.compare_menu_hint, canExport, onCompare)
+            ToolsAction(
+                Icons.Default.Shuffle,
+                R.string.list_pick,
+                R.string.list_pick_hint,
+                canPick,
+                onPick
+            )
+            ToolsSection(R.string.workspace_organize)
+            ToolsAction(Icons.Default.StarHalf, R.string.rating_filter, R.string.rating_filter_menu_hint, canExport, onRating)
+            ToolsAction(Icons.Default.Checklist, R.string.bulk_tools, R.string.bulk_menu_hint, canShare, onBulk)
+            ToolsAction(Icons.Default.Label, R.string.manage_tags, R.string.manage_tags_menu_hint, true, onManageTags)
             ToolsAction(Icons.Default.Bookmarks, R.string.saved_list_views, R.string.views_menu_hint, true, onViews)
+            ToolsSection(R.string.workspace_data)
+            ToolsAction(Icons.Default.CalendarMonth, R.string.activity_calendar, R.string.calendar_menu_hint, true, onCalendar)
             ToolsAction(Icons.Default.Share, R.string.list_share, R.string.list_share_hint, canShare, onShare)
             ToolsAction(
                 Icons.Default.History,
@@ -92,13 +120,6 @@ internal fun ListToolsSheet(
                 R.string.watch_history_hint,
                 true,
                 onHistory
-            )
-            ToolsAction(
-                Icons.Default.Shuffle,
-                R.string.list_pick,
-                R.string.list_pick_hint,
-                canPick,
-                onPick
             )
             ToolsAction(
                 Icons.Default.FileDownload,
@@ -112,18 +133,22 @@ internal fun ListToolsSheet(
 }
 
 @Composable
+private fun ToolsSection(title: Int) {
+    Text(stringResource(title), Modifier.padding(start = 8.dp, top = 8.dp), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+}
+
+@Composable
 private fun ToolsAction(icon: androidx.compose.ui.graphics.vector.ImageVector, title: Int, subtitle: Int, enabled: Boolean, onClick: () -> Unit, subtitleText: String? = null) {
-    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface, border = androidx.compose.foundation.BorderStroke(.5.dp, MaterialTheme.colorScheme.outlineVariant)) {
-        Column(
-            Modifier.fillMaxWidth().padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            AppButton(stringResource(title), onClick, Modifier.fillMaxWidth(), variant = AppButtonVariant.Plain, enabled = enabled, icon = icon)
-            Text(
-                subtitleText ?: stringResource(subtitle), Modifier.padding(horizontal = 12.dp),
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
+    Surface(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).clickable(enabled = enabled, role = Role.Button, onClick = onClick), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface, border = androidx.compose.foundation.BorderStroke(.5.dp, MaterialTheme.colorScheme.outlineVariant)) {
+        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.primary.copy(alpha = if (enabled) .12f else .05f)) {
+                Icon(icon, null, Modifier.padding(10.dp).size(22.dp), tint = MaterialTheme.colorScheme.primary.copy(alpha = if (enabled) 1f else .4f))
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(stringResource(title), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else .4f))
+                Text(subtitleText ?: stringResource(subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (enabled) 1f else .4f))
+            }
+            Icon(Icons.Default.ChevronRight, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (enabled) 1f else .4f))
         }
     }
 }
@@ -136,15 +161,18 @@ internal fun WatchHistorySheet(
     onClear: () -> Unit,
     onDismiss: () -> Unit,
     onCalendar: () -> Unit = {},
+    onExport: (List<WatchActivity>) -> Unit = {},
 ) {
     val today = LocalWatchTools.current.today
     val count = tools.episodesThisWeek(today)
     var clearConfirm by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
-    var thisWeekOnly by remember { mutableStateOf(false) }
-    val activities = tools.filteredActivity(query, thisWeekOnly, today)
+    var range by remember { mutableStateOf(ActivityRange.ALL) }
+    val activities = tools.activityInRange(query, range, today)
     val locale = LocalConfiguration.current.locales[0]
     AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.watch_history)) {
+        val focus = LocalFocusManager.current
+        val keyboard = LocalSoftwareKeyboardController.current
         LazyColumn(
             Modifier.fillMaxWidth().heightIn(max = 620.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -218,8 +246,16 @@ internal fun WatchHistorySheet(
             }
             item {
                 AppSearchField(query, { query = it }, Modifier.testTag("history-search"), stringResource(R.string.history_search), Icons.Default.Search, onClear = { query = "" })
-                FilterChip(thisWeekOnly, { thisWeekOnly = !thisWeekOnly }, modifier = Modifier.testTag("history-this-week"),
-                    label = { Text(stringResource(R.string.history_this_week)) }, leadingIcon = { Icon(Icons.Default.DateRange, null, Modifier.size(18.dp)) })
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ActivityRange.entries.forEach { option ->
+                        val label = when (option) { ActivityRange.ALL -> R.string.history_all; ActivityRange.THIS_WEEK -> R.string.history_this_week; ActivityRange.LAST_30 -> R.string.history_30; ActivityRange.LAST_90 -> R.string.history_90 }
+                        FilterChip(range == option, { range = option; focus.clearFocus(); keyboard?.hide() }, modifier = Modifier.testTag(if (option == ActivityRange.THIS_WEEK) "history-this-week" else "history-range-${option.name}"), label = { Text(stringResource(label)) }, leadingIcon = { Icon(Icons.Default.DateRange, null, Modifier.size(18.dp)) })
+                    }
+                }
+                Text(stringResource(R.string.history_results, activities.size), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            item {
+                AppButton(stringResource(R.string.history_export), { onExport(activities) }, Modifier.fillMaxWidth().testTag("history-export"), enabled = activities.isNotEmpty(), variant = AppButtonVariant.Secondary, icon = Icons.Default.FileDownload)
             }
             if (activities.isEmpty()) item {
                 Text(
@@ -270,9 +306,9 @@ internal fun WatchHistorySheet(
             if (tools.activity.isNotEmpty()) item {
                 if (clearConfirm) {
                     Text(stringResource(R.string.history_clear_confirm))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        AppButton(stringResource(R.string.common_cancel), { clearConfirm = false }, modifier = Modifier.weight(1f), variant = AppButtonVariant.Plain, icon = Icons.Default.Close)
-                        AppButton(stringResource(R.string.history_clear), { onClear(); clearConfirm = false }, modifier = Modifier.weight(1f), variant = AppButtonVariant.Destructive, icon = Icons.Default.DeleteOutline)
+                    EqualActions {
+                        AppButton(stringResource(R.string.common_cancel), { clearConfirm = false }, modifier = Modifier.weight(1f).fillMaxHeight(), variant = AppButtonVariant.Plain, icon = Icons.Default.Close)
+                        AppButton(stringResource(R.string.history_clear), { onClear(); clearConfirm = false }, modifier = Modifier.weight(1f).fillMaxHeight(), variant = AppButtonVariant.Destructive, icon = Icons.Default.DeleteOutline)
                     }
                 } else AppButton(stringResource(R.string.history_clear), { clearConfirm = true }, variant = AppButtonVariant.Plain, icon = Icons.Default.DeleteOutline)
             }

@@ -3,6 +3,7 @@ package com.owlcoder.animeschedule.presentation.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
@@ -26,9 +27,10 @@ fun AppChoiceRow(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     iconTint: Color = MaterialTheme.colorScheme.primary,
+    selectionRole: Role = Role.RadioButton,
 ) {
-    Surface(modifier.fillMaxWidth().clip(MaterialTheme.shapes.large)
-        .selectable(selected, role = Role.RadioButton, onClick = onClick),
+    val interaction = if (selectionRole == Role.Checkbox) Modifier.toggleable(selected, role = selectionRole, onValueChange = { onClick() }) else Modifier.selectable(selected, role = selectionRole, onClick = onClick)
+    Surface(modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).then(interaction),
         shape = MaterialTheme.shapes.large,
         color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         border = BorderStroke(if (selected) 1.dp else .5.dp,

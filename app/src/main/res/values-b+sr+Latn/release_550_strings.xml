@@ -14,7 +14,7 @@
     <string name="views_empty">Sačuvani prikazi liste pojaviće se ovde.</string>
     <string name="view_delete">Obriši prikaz %1$s</string>
     <string name="watch_planner">Planer gledanja</string>
-    <string name="planner_hint">Isplaniraj gledanje iz liste Gledam. Pinovani naslovi imaju prednost; epizode se raspoređuju između naslova uz njihovo trajanje. Otvori naslov kada želiš da počneš.</string>
+    <string name="planner_hint">Isplaniraj epizode sa liste Gledam u okviru raspoloživog vremena. Ispod izaberi stil sesije i uključene naslove; svaki anime koristi svoje trajanje. Napredak se menja tek kada ga urediš.</string>
     <string name="planner_budget">Raspoloživo minuta</string>
     <string name="planner_summary">%1$d epizoda · %2$d min</string>
     <string name="planner_unused">%1$d minuta preostalo</string>

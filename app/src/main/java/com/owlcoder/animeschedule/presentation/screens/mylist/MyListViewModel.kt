@@ -21,6 +21,7 @@ import com.owlcoder.animeschedule.domain.model.WatchTools
 import com.owlcoder.animeschedule.domain.model.SmartListFilter
 import com.owlcoder.animeschedule.domain.model.SavedListView
 import com.owlcoder.animeschedule.domain.model.matchesSmart
+import com.owlcoder.animeschedule.domain.model.matchesRating
 import com.owlcoder.animeschedule.data.local.datastore.WatchToolsStore
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
@@ -41,6 +42,7 @@ data class MyListUiState(
     val activeTag: String? = null,
     val tools: WatchTools = WatchTools(),
     val smartFilter: SmartListFilter = SmartListFilter.ALL,
+    val scoreRange: Pair<Int, Int> = 0 to 10,
     val pendingIncrementIds: Set<Int> = emptySet(),
     /** Count of list entries per status, independent of [searchQuery]/[activeFilter]. */
     val statusCounts: Map<WatchStatus, Int> = emptyMap(),
@@ -58,6 +60,7 @@ private data class MyListContent(
     val activeTag: String? = null,
     val tools: WatchTools = WatchTools(),
     val smartFilter: SmartListFilter = SmartListFilter.ALL,
+    val scoreRange: Pair<Int, Int> = 0 to 10,
     val statusCounts: Map<WatchStatus, Int>,
     val sortOrder: MyListSortOrder,
     val insights: MyListInsights,
@@ -75,6 +78,7 @@ class MyListViewModel @Inject constructor(
     private val _activeFilter = MutableStateFlow<WatchStatus?>(WatchStatus.WATCHING)
     private val _tagFilter = MutableStateFlow<String?>(null)
     private val _smartFilter = MutableStateFlow(SmartListFilter.ALL)
+    private val _scoreRange = MutableStateFlow(0 to 10)
     private val _quickFilters = MutableStateFlow(false to false)
     private val _isLoading = MutableStateFlow(true)
     private val _pendingIncrementIds = MutableStateFlow<Set<Int>>(emptySet())
@@ -83,6 +87,7 @@ class MyListViewModel @Inject constructor(
     sealed interface UpdateEvent {
         data object Success : UpdateEvent
         data object Removed : UpdateEvent
+        data object PersonalSaved : UpdateEvent
         data object Error : UpdateEvent
     }
 
@@ -99,7 +104,7 @@ class MyListViewModel @Inject constructor(
             filter == null || entry.status == filter
         }
         MyListContent(
-            entries = filteredEntries.sortedFor(sortOrder),
+            entries = filteredEntries,
             allEntries = allEntries,
             searchQuery = query,
             activeFilter = filter,
@@ -110,8 +115,9 @@ class MyListViewModel @Inject constructor(
     }.flowOn(Dispatchers.Default)
 
     private val listContent = combine(
-        baseContent, _quickFilters, toolsStore?.data ?: flowOf(WatchTools()), _tagFilter, _smartFilter,
-    ) { content, quick, tools, tag, smart ->
+        baseContent, _quickFilters, toolsStore?.data ?: flowOf(WatchTools()), _tagFilter, combine(_smartFilter, _scoreRange) { smart, scores -> smart to scores },
+    ) { content, quick, tools, tag, filters ->
+        val (smart, scores) = filters
         val query = content.searchQuery.trim()
         val entries = content.entries.filter { entry ->
             val id = entry.animeId
@@ -121,11 +127,11 @@ class MyListViewModel @Inject constructor(
             matchesQuery && (!quick.first || id in tools.favorites) &&
                 (!quick.second || entry.score == 0) &&
                 (tag == null || tools.tags[id].orEmpty().any { it.equals(tag, ignoreCase = true) }) &&
-                entry.matchesSmart(smart, tools)
-        }.sortedByDescending { it.animeId in tools.pinned }
+                entry.matchesSmart(smart, tools) && entry.matchesRating(scores.first, scores.second)
+        }.sortedFor(content.sortOrder, tools).sortedByDescending { it.animeId in tools.pinned }
         content.copy(
             entries = entries, favoritesOnly = quick.first, unratedOnly = quick.second,
-            tools = tools, activeTag = tag, smartFilter = smart,
+            tools = tools, activeTag = tag, smartFilter = smart, scoreRange = scores,
         )
     }.flowOn(Dispatchers.Default)
 
@@ -142,6 +148,7 @@ class MyListViewModel @Inject constructor(
             unratedOnly = content.unratedOnly,
             activeTag = content.activeTag,
             smartFilter = content.smartFilter,
+            scoreRange = content.scoreRange,
             tools = content.tools,
             isLoading = loading,
             isLoggedIn = loggedIn,
@@ -170,16 +177,32 @@ class MyListViewModel @Inject constructor(
 
     fun setFilter(status: WatchStatus?) = _activeFilter.update { status }
 
-    fun clearQuickFilters() { _searchQuery.value = ""; _quickFilters.value = false to false; _tagFilter.value = null; _smartFilter.value = SmartListFilter.ALL }
+    fun clearQuickFilters() { _searchQuery.value = ""; _quickFilters.value = false to false; _tagFilter.value = null; _smartFilter.value = SmartListFilter.ALL; _scoreRange.value = 0 to 10 }
     fun setTagFilter(tag: String?) { _tagFilter.value = tag }
     fun toggleFavorites() = _quickFilters.update { !it.first to it.second }
     fun toggleUnrated() = _quickFilters.update { it.first to !it.second }
     fun setWeeklyGoal(goal: Int) { viewModelScope.launch { toolsStore?.setWeeklyGoal(goal) } }
     fun clearActivity() { viewModelScope.launch { toolsStore?.clearActivity() } }
     fun setSmartFilter(filter: SmartListFilter) { _smartFilter.value = filter }
+    fun setScoreRange(minimum: Int, maximum: Int) { val min = minimum.coerceIn(0, 10); _scoreRange.value = min to maximum.coerceIn(min, 10) }
+    fun setMarkers(ids: Set<Int>, favorite: Boolean? = null, pin: Boolean? = null) {
+        viewModelScope.launch {
+            try { toolsStore?.setMarkers(ids, favorite, pin); _updateEvent.send(UpdateEvent.PersonalSaved) }
+            catch (_: java.io.IOException) { _updateEvent.send(UpdateEvent.Error) }
+        }
+    }
+    fun renameTag(old: String, replacement: String?) {
+        viewModelScope.launch {
+            try {
+                toolsStore?.renameTag(old, replacement)
+                if (_tagFilter.value.equals(old, true)) _tagFilter.value = replacement?.trim()?.take(24)
+                _updateEvent.send(UpdateEvent.PersonalSaved)
+            } catch (_: java.io.IOException) { _updateEvent.send(UpdateEvent.Error) }
+        }
+    }
     fun setDailyGoal(goal: Int) { viewModelScope.launch { toolsStore?.setDailyGoal(goal) } }
     fun saveView(name: String) {
-        val view = SavedListView(name, _searchQuery.value, _activeFilter.value, _quickFilters.value.first, _quickFilters.value.second, _tagFilter.value, _smartFilter.value, _sortOrder.value.name)
+        val view = SavedListView(name, _searchQuery.value, _activeFilter.value, _quickFilters.value.first, _quickFilters.value.second, _tagFilter.value, _smartFilter.value, _sortOrder.value.name, _scoreRange.value.first, _scoreRange.value.second)
         viewModelScope.launch { toolsStore?.saveView(view) }
     }
     fun deleteView(name: String) { viewModelScope.launch { toolsStore?.deleteView(name) } }
@@ -188,6 +211,7 @@ class MyListViewModel @Inject constructor(
         _searchQuery.value = value.query; _activeFilter.value = value.status
         _quickFilters.value = value.favoritesOnly to value.unratedOnly; _tagFilter.value = value.tag
         _smartFilter.value = value.smartFilter
+        _scoreRange.value = value.minimumScore to value.maximumScore
         _sortOrder.value = runCatching { MyListSortOrder.valueOf(value.sort) }.getOrDefault(MyListSortOrder.RECENT)
     }
 

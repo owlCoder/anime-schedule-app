@@ -254,7 +254,8 @@ class TrackingAndThemesTest {
         compose.onNodeWithText(text(R.string.watch_history)).performScrollTo().performClick()
         compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("history-search"))).performTextInput("alpha")
         compose.onNodeWithTag("history-this-week").performClick()
-        compose.onNode(hasText("Alpha Adventure") and hasAnyAncestor(isDialog())).assertIsDisplayed()
+        compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("history-search"))).assertIsNotFocused()
+        compose.onNode(hasText("Alpha Adventure") and hasAnyAncestor(isDialog())).performScrollTo().assertIsDisplayed()
         compose.onNode(hasText("Beta Journey") and hasAnyAncestor(isDialog())).assertDoesNotExist()
         screenshot("history-search-this-week")
     }
@@ -410,6 +411,50 @@ class TrackingAndThemesTest {
         assertEquals(4, vm.uiState.value.entries.single().episodesWatched)
         screenshot("list-share-chooser", waitForCompose = false)
         android.os.ParcelFileDescriptor.AutoCloseInputStream(automation.executeShellCommand("input keyevent 4")).use { it.readBytes() }
+    }
+
+    @Test
+    fun ratingRangeSavedViewsAndTimeSortingAreConnectedToList() {
+        val vm = showList()
+        vm.setFilter(null)
+        vm.setScoreRange(7,10)
+        compose.waitUntil { vm.uiState.value.entries.map { it.animeId } == listOf(101) }
+        vm.saveView("Rated picks")
+        compose.waitUntil { vm.uiState.value.tools.savedViews.size == 1 }
+        val saved = vm.uiState.value.tools.savedViews.single()
+        assertEquals(7, saved.minimumScore)
+        vm.clearQuickFilters()
+        compose.waitUntil { vm.uiState.value.entries.size == 2 }
+        vm.applyView(saved)
+        compose.waitUntil { vm.uiState.value.scoreRange == (7 to 10) && vm.uiState.value.entries.size == 1 }
+        compose.onNodeWithTag("list-clear-active").performClick()
+        compose.waitUntil { vm.uiState.value.entries.size == 2 }
+        runBlocking { tools.setDurationOverride(102,1) }
+        compose.onNodeWithContentDescription(text(R.string.mylist_sort)).performClick()
+        compose.onNodeWithText(text(R.string.sort_watch_time)).performClick()
+        compose.waitUntil { vm.uiState.value.entries.map { it.animeId } == listOf(102,101) }
+        screenshot("time-sort")
+    }
+
+    @Test
+    fun groupedToolsBulkChangesAndTagManagerUsePersistentStore() {
+        runBlocking { tools.setTags(101,"Action") }
+        val vm = showList()
+        vm.setFilter(null)
+        compose.waitUntil { vm.uiState.value.entries.size == 2 }
+        compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
+        screenshot("grouped-tools")
+        compose.onNodeWithText(text(R.string.bulk_tools)).performScrollTo().performClick()
+        compose.onNodeWithTag("bulk-all").performClick()
+        compose.onNodeWithTag("bulk-action-0").performClick()
+        compose.waitUntil { vm.uiState.value.tools.favorites == setOf(101,102) }
+        compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
+        compose.onNodeWithText(text(R.string.manage_tags)).performScrollTo().performClick()
+        compose.onNodeWithTag("tag-edit-Action").performClick()
+        compose.onNodeWithTag("tag-replacement").performTextReplacement("Adventure")
+        compose.onNodeWithTag("tag-rename-save").performClick()
+        compose.waitUntil { vm.uiState.value.tools.tags[101] == setOf("Adventure") }
+        screenshot("tags-persisted")
     }
 
     private fun screenshot(name: String, waitForCompose: Boolean = true) {
