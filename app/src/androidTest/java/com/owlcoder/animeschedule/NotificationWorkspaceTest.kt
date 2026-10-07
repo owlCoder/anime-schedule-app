@@ -55,7 +55,7 @@ class NotificationWorkspaceTest {
                 NotificationsOverlay({}, {}, vm)
             }
         }
-        compose.waitUntil(5_000) { vm.notifications.value.size == 4 }
+        compose.waitUntil(5_000) { vm.notifications.value.size == repo.rows.value.size }
     }
     private fun search() = compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("notification-search")))
     private fun readTab() = compose.onNodeWithText(text(R.string.notif_tab_read), substring = true).performClick()
@@ -124,4 +124,56 @@ class NotificationWorkspaceTest {
             assertEquals(0, dao.deleteRead())
         } finally { db.close() }
     }
+    @Test fun filteredMarkLeavesOtherUnreadRecordsUntouched() {
+        val repo = Repository(); show(repo)
+        search().performTextInput("alpha"); search().performImeAction()
+        compose.onNodeWithTag("notif-tools").performClick()
+        compose.onNodeWithTag("notif-mark-visible").performClick()
+        compose.waitUntil(5000) { repo.rows.value.first { it.id == 1 }.isRead }
+        assertFalse(repo.rows.value.first { it.id == 2 }.isRead)
+        compose.onNodeWithTag("notif-mark-visible").assertIsNotEnabled()
+        androidx.test.espresso.Espresso.pressBack(); compose.waitForIdle()
+        compose.onAllNodes(isDialog()).assertCountEquals(1)
+        compose.onNodeWithText(text(R.string.notif_search_empty)).assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.search_clear_query)).performClick()
+        compose.onNodeWithText("Beta Journey").assertIsDisplayed()
+    }
+    @Test fun sortChangesChronologicalHistoryAndToolsBackRetainsFilters() {
+        val repo = Repository()
+        repo.rows.value = repo.rows.value.map { if (it.id == 1) it.copy(createdAtEpochSeconds = 1_700_000_000) else it }
+        show(repo)
+        compose.onNodeWithTag("notif-tools").performClick()
+        compose.onNodeWithTag("notif-sort-OLDEST").performClick().assertIsSelected()
+        screenshot("notification-tools")
+        androidx.test.espresso.Espresso.pressBack(); compose.waitForIdle()
+        val alpha = compose.onNodeWithText("Alpha Adventure").fetchSemanticsNode().boundsInRoot.top
+        val beta = compose.onNodeWithText("Beta Journey").fetchSemanticsNode().boundsInRoot.top
+        assertTrue(alpha < beta)
+        compose.onNodeWithTag("notif-tools").performClick()
+        compose.onNodeWithTag("notif-sort-NEWEST").performClick()
+        androidx.test.espresso.Espresso.pressBack(); compose.waitForIdle()
+        assertTrue(compose.onNodeWithText("Beta Journey").fetchSemanticsNode().boundsInRoot.top < compose.onNodeWithText("Alpha Adventure").fetchSemanticsNode().boundsInRoot.top)
+    }
+    @Test fun databaseBatchMarksMoreThanSqliteParameterLimitAndPreservesOthers() = runBlocking {
+        val db = Room.inMemoryDatabaseBuilder(instrumentation.targetContext, AnimeScheduleDatabase::class.java).build()
+        try {
+            val dao = db.notificationDao()
+            for (id in 1..1205) dao.upsert(NotificationEntity(id,id,"Anime $id",1,null,0,false,1))
+            dao.markReadBatch((1..1200).toList() + listOf(1,2))
+            assertEquals(5,dao.getUnreadCount().first())
+            assertEquals(1200,dao.getAll().first().count { it.isRead })
+            dao.markReadBatch(emptyList()); assertEquals(5,dao.getUnreadCount().first())
+        } finally { db.close() }
+    }
+
+    @Test fun toolsUseTheirOwnScrollPositionAfterLongHistory() {
+        val repo = Repository()
+        repo.rows.value = (1..40).map { AppNotification(it,it,"Anime $it",1,null,0,false,1_791_360_000 - it * 86400L) }
+        show(repo)
+        compose.onNodeWithTag("notif-history").performScrollToNode(hasText("Anime 40"))
+        compose.onNodeWithTag("notif-tools").performClick()
+        compose.onNodeWithTag("notif-sort-NEWEST").assertIsDisplayed()
+        compose.onNodeWithTag("notif-mark-visible").assertIsDisplayed()
+    }
+
 }

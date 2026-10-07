@@ -1,316 +1,130 @@
 package com.owlcoder.animeschedule.presentation.screens.notifications
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import com.owlcoder.animeschedule.presentation.components.AppButton
-import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
-import com.owlcoder.animeschedule.presentation.components.AppSearchField
-import com.owlcoder.animeschedule.presentation.components.EmptyState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.owlcoder.animeschedule.R
-import com.owlcoder.animeschedule.presentation.screens.schedule.LocalScheduleZone
-import com.owlcoder.animeschedule.domain.model.AppNotification
-import com.owlcoder.animeschedule.domain.model.NotificationPeriod
-import com.owlcoder.animeschedule.domain.model.inPeriod
-import com.owlcoder.animeschedule.core.time.currentDateFlow
-import com.owlcoder.animeschedule.presentation.screens.discovery.DiscoveryChip
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import com.owlcoder.animeschedule.presentation.components.AppSegmentedControl
-import com.owlcoder.animeschedule.presentation.components.SegmentOption
-import com.owlcoder.animeschedule.presentation.components.AppMaterial
-import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
-import com.owlcoder.animeschedule.presentation.components.AppSheet
-import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
-import com.owlcoder.animeschedule.presentation.components.InsetGroup
-import com.owlcoder.animeschedule.presentation.components.IosMotion
-import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.filled.DoneAll
-import androidx.compose.material.icons.filled.MarkEmailRead
-import androidx.compose.material.icons.filled.MarkEmailUnread
 import androidx.compose.material.icons.outlined.NotificationsNone
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.*
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.owlcoder.animeschedule.presentation.components.iosSpring
-import com.owlcoder.animeschedule.presentation.components.iosTween
+import com.owlcoder.animeschedule.R
+import com.owlcoder.animeschedule.core.time.currentDateFlow
+import com.owlcoder.animeschedule.domain.model.*
+import com.owlcoder.animeschedule.presentation.components.*
+import com.owlcoder.animeschedule.presentation.screens.discovery.DiscoveryChip
+import com.owlcoder.animeschedule.presentation.screens.schedule.LocalScheduleZone
+import java.time.Instant
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NotificationsOverlay(
-    onAnimeClick: (Int) -> Unit,
-    onDismiss: () -> Unit,
-    viewModel: NotificationsViewModel = hiltViewModel(),
-) {
+fun NotificationsOverlay(onAnimeClick: (Int) -> Unit, onDismiss: () -> Unit,
+    viewModel: NotificationsViewModel = hiltViewModel()) {
     val notifications by viewModel.notifications.collectAsStateWithLifecycle()
-    val (unread, read) = remember(notifications) {
-        notifications.partition { notification -> !notification.isRead }
-    }
+    val (unread, read) = remember(notifications) { notifications.partition { !it.isRead } }
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var period by rememberSaveable { mutableStateOf(NotificationPeriod.ALL) }
     var query by rememberSaveable { mutableStateOf("") }
+    var sort by rememberSaveable { mutableStateOf(NotificationSort.NEWEST) }
     var confirmClear by rememberSaveable { mutableStateOf(false) }
+    var showTools by rememberSaveable { mutableStateOf(false) }
     val clearing by viewModel.clearing.collectAsStateWithLifecycle()
     val clearError by viewModel.clearError.collectAsStateWithLifecycle()
-    val windowHeightPx = LocalWindowInfo.current.containerSize.height
-    val density = LocalDensity.current
-    val maxListHeight = remember(windowHeightPx, density) { with(density) { (windowHeightPx * 0.38f).toDp() } }
-    val motion = LocalMotionPolicy.current
-    val appLocale = LocalConfiguration.current.locales[0]
-    val zoneId = LocalScheduleZone.current
-    val today by remember(zoneId) { currentDateFlow(zoneId) }.collectAsStateWithLifecycle(initialValue = java.time.LocalDate.now(zoneId))
-
-    AppSheet(
-        onDismissRequest = onDismiss,
-        title = stringResource(R.string.notif_screen_title),
-        trailingContent = {
-            if (unread.isNotEmpty()) {
-                TextButton(
-                    onClick = viewModel::markAllRead,
-                    contentPadding = PaddingValues(horizontal = 6.dp),
-                ) {
-                    Icon(
-                        Icons.Default.DoneAll,
-                        contentDescription = null,
-                        modifier = Modifier.size(15.dp),
-                    )
-                    Text(
-                        text = stringResource(R.string.notifications_mark_all),
-                        modifier = Modifier.padding(start = 4.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+    val marking by viewModel.marking.collectAsStateWithLifecycle()
+    val markError by viewModel.markError.collectAsStateWithLifecycle()
+    val locale = LocalConfiguration.current.locales[0]
+    val zone = LocalScheduleZone.current
+    val today by remember(zone) { currentDateFlow(zone) }.collectAsStateWithLifecycle(initialValue = LocalDate.now(zone))
+    val visibleUnread = remember(unread, query, period, today, zone, sort) { unread.visibleNotifications(query, period, today, zone, sort) }
+    val visible = if (selectedTab == 0) visibleUnread else remember(read, query, period, today, zone, sort) {
+        read.visibleNotifications(query, period, today, zone, sort)
+    }
+    val historyState = rememberLazyListState()
+    val toolsState = rememberLazyListState()
+    LaunchedEffect(sort) { historyState.scrollToItem(0) }
+    // The already sorted rows determine group order. Date keys include the year, independent of locale.
+    val grouped = remember(visible, zone) { visible.groupBy { Instant.ofEpochSecond(it.createdAtEpochSeconds).atZone(zone).toLocalDate() } }
+    val formatter = remember(locale) { DateTimeFormatter.ofPattern("EEEE, d MMM yyyy", locale) }
+    val currentPage by rememberUpdatedState(showTools)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = {
+        if (it == SheetValue.Hidden && currentPage) { showTools = false; false } else true
+    })
+    AppSheet(onDismissRequest = { if (showTools) showTools = false else onDismiss() }, sheetState = sheetState,
+        title = stringResource(if (showTools) R.string.notif_tools else R.string.notif_screen_title),
+        trailingContent = { if (!showTools) GlassIconButton(Icons.Default.Tune, stringResource(R.string.notif_tools), { showTools = true }, Modifier.testTag("notif-tools")) }) {
+        val focus = LocalFocusManager.current
+        val keyboard = LocalSoftwareKeyboardController.current
+        fun finishInput() { focus.clearFocus(force = true); keyboard?.hide() }
+        LaunchedEffect(showTools) { finishInput() }
+        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 650.dp).testTag(if (showTools) "notif-tools-list" else "notif-history"),
+            state = if (showTools) toolsState else historyState,
+            verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
+            if (showTools) {
+                item { Text(stringResource(R.string.notif_sort), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                items(NotificationSort.entries, key = { "sort-$it" }) { option ->
+                    AppChoiceRow(stringResource(if (option == NotificationSort.NEWEST) R.string.notif_newest else R.string.notif_oldest),
+                        Icons.Default.Sort, option == sort, { sort = option }, Modifier.testTag("notif-sort-$option"))
                 }
-            }
-        },
-    ) {
-        val focus = androidx.compose.ui.platform.LocalFocusManager.current
-        val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .animateContentSize(animationSpec = motion.iosSpring()),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            AppSearchField(query, { query = it }, Modifier.testTag("notification-search"), stringResource(R.string.notif_search), Icons.Default.Search, onClear = { query = "" })
-            NotificationTabs(
-                selectedTab = selectedTab,
-                unreadCount = unread.size,
-                readCount = read.size,
-                onTabSelected = { selectedTab = it; confirmClear = false; focus.clearFocus(); keyboard?.hide() },
-            )
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                NotificationPeriod.entries.chunked(2).forEach { row ->
-                    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    row.forEach { option ->
-                    DiscoveryChip(stringResource(when (option) {
-                        NotificationPeriod.ALL -> R.string.notif_period_all
-                        NotificationPeriod.TODAY -> R.string.notif_period_today
-                        NotificationPeriod.WEEK -> R.string.notif_period_week
-                        NotificationPeriod.MONTH -> R.string.notif_period_month
-                    }), Icons.Default.DateRange, period == option, { period = option; focus.clearFocus(); keyboard?.hide() }, Modifier.weight(1f).fillMaxHeight().testTag("notif-period-$option"))
+                item { Text(stringResource(R.string.notif_scope_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                item { AppButton(stringResource(R.string.notif_mark_visible, visibleUnread.size), { viewModel.markVisibleRead(visibleUnread.map { it.id }) },
+                    Modifier.fillMaxWidth().testTag("notif-mark-visible"), enabled = visibleUnread.isNotEmpty() && !marking, icon = Icons.Default.MarkEmailRead) }
+                item { AppButton(stringResource(R.string.notifications_mark_all), viewModel::markAllRead,
+                    Modifier.fillMaxWidth().testTag("notif-mark-all"), enabled = unread.isNotEmpty() && !marking, variant = AppButtonVariant.Secondary, icon = Icons.Default.DoneAll) }
+                if (markError) item { Text(stringResource(R.string.notif_mark_failed), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            } else {
+                item("search") { AppSearchField(query, { query = it }, Modifier.testTag("notification-search"), stringResource(R.string.notif_search), Icons.Default.Search, onClear = { query = "" }) }
+                item("tabs") { AppSegmentedControl(listOf(
+                    SegmentOption(stringResource(R.string.notif_tab_unread), Icons.Default.MarkEmailUnread, unread.size),
+                    SegmentOption(stringResource(R.string.notif_tab_read), Icons.Default.MarkEmailRead, read.size)), selectedTab,
+                    { selectedTab = it; confirmClear = false; finishInput() }) }
+                item("periods") { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    NotificationPeriod.entries.chunked(2).forEach { row ->
+                        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            row.forEach { option -> DiscoveryChip(stringResource(when (option) {
+                                NotificationPeriod.ALL -> R.string.notif_period_all
+                                NotificationPeriod.TODAY -> R.string.notif_period_today
+                                NotificationPeriod.WEEK -> R.string.notif_period_week
+                                NotificationPeriod.MONTH -> R.string.notif_period_month
+                            }), Icons.Default.DateRange, option == period, { period = option; finishInput() }, Modifier.weight(1f).fillMaxHeight().testTag("notif-period-$option")) }
+                        }
                     }
-                    }
-                }
-            }
-            if (selectedTab == 1 && read.isNotEmpty()) {
-                if (confirmClear) {
-                    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface) {
+                } }
+                if (selectedTab == 1 && read.isNotEmpty()) item("clear") {
+                    if (confirmClear) Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface) {
                         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text(stringResource(R.string.notif_clear_confirm, read.size), style = MaterialTheme.typography.bodyMedium)
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                AppButton(stringResource(R.string.common_cancel), { confirmClear = false }, Modifier.weight(1f).testTag("notif-clear-cancel"), enabled = !clearing, variant = AppButtonVariant.Plain, icon = Icons.Default.Close)
-                                AppButton(stringResource(R.string.notif_clear_read), { viewModel.clearRead(); confirmClear = false }, Modifier.weight(1f).testTag("notif-clear-confirm"), enabled = !clearing, variant = AppButtonVariant.Destructive, icon = Icons.Default.DeleteOutline)
-                            }
+                            AppButton(stringResource(R.string.notif_clear_read), { viewModel.clearRead(); confirmClear = false }, Modifier.fillMaxWidth().testTag("notif-clear-confirm"), enabled = !clearing, variant = AppButtonVariant.Destructive, icon = Icons.Default.DeleteOutline)
+                            AppButton(stringResource(R.string.common_cancel), { confirmClear = false }, Modifier.fillMaxWidth().testTag("notif-clear-cancel"), enabled = !clearing, variant = AppButtonVariant.Plain, icon = Icons.Default.Close)
                         }
+                    } else AppButton(stringResource(R.string.notif_clear_read), { finishInput(); confirmClear = true }, Modifier.fillMaxWidth().testTag("notif-clear-read"), enabled = !clearing, variant = AppButtonVariant.Plain, icon = Icons.Default.DeleteOutline)
+                }
+                if (clearError) item("error") { Text(stringResource(R.string.notif_clear_failed), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                if (visible.isEmpty()) item("empty") {
+                    val emptyModifier = Modifier.fillMaxWidth().heightIn(min = 200.dp)
+                    when {
+                        query.isNotBlank() -> EmptyState(Icons.Default.SearchOff, stringResource(R.string.notif_search_empty), actionLabel = stringResource(R.string.search_clear_query), onAction = { query = ""; finishInput() }, modifier = emptyModifier)
+                        period != NotificationPeriod.ALL -> EmptyState(Icons.Default.DateRange, stringResource(R.string.notif_period_empty), actionLabel = stringResource(R.string.notif_period_reset), onAction = { period = NotificationPeriod.ALL }, modifier = emptyModifier)
+                        else -> EmptyState(Icons.Outlined.NotificationsNone, stringResource(if (selectedTab == 0) R.string.notif_empty_unread else R.string.notif_empty_read), subtitle = if (selectedTab == 0) stringResource(R.string.notif_screen_empty_subtitle) else null, modifier = emptyModifier)
                     }
-                } else AppButton(stringResource(R.string.notif_clear_read), { focus.clearFocus(); keyboard?.hide(); confirmClear = true }, Modifier.fillMaxWidth().testTag("notif-clear-read"), enabled = !clearing, variant = AppButtonVariant.Plain, icon = Icons.Default.DeleteOutline)
-            }
-            if (clearError) Text(stringResource(R.string.notif_clear_failed), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-
-            AnimatedContent(
-                targetState = selectedTab,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = maxListHeight.coerceAtLeast(180.dp)),
-                transitionSpec = {
-                    (fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
-                        scaleIn(
-                            initialScale = 0.985f,
-                            animationSpec = motion.iosTween(IosMotion.Standard),
-                        )) togetherWith
-                        (fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                            scaleOut(
-                                targetScale = 0.995f,
-                                animationSpec = motion.iosTween(IosMotion.Quick),
-                            ))
-                },
-                label = "notification-tab-content",
-            ) { tab ->
-                val source = if (tab == 0) unread else read
-                val list = remember(source, query, period, today, zoneId) { source.filter { it.title.contains(query.trim(), ignoreCase = true) && it.inPeriod(period, today, zoneId) } }
-                if (list.isEmpty()) {
-                    if (query.isNotBlank()) EmptyState(Icons.Default.SearchOff, stringResource(R.string.notif_search_empty), actionLabel = stringResource(R.string.search_clear_query), onAction = { query = ""; focus.clearFocus(); keyboard?.hide() }, modifier = Modifier.fillMaxSize()) else if (period != NotificationPeriod.ALL) EmptyState(Icons.Default.DateRange, stringResource(R.string.notif_period_empty), actionLabel = stringResource(R.string.notif_period_reset), onAction = { period = NotificationPeriod.ALL }, modifier = Modifier.fillMaxSize()) else NotificationEmptyState(tab)
-                } else {
-                    val groupedNotifications = remember(list, appLocale, zoneId) { groupedByDay(list, appLocale, zoneId) }
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = 2.dp, bottom = 14.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        groupedNotifications.forEach { (dayLabel, items) ->
-                            item(key = "notification_day_$dayLabel") {
-                                Text(
-                                    text = dayLabel,
-                                    modifier = Modifier.padding(horizontal = 8.dp),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                            }
-                            items(items, key = { it.id }) { notification ->
-                                NotificationCard(notification, onClick = {
-                                    viewModel.markRead(notification.id)
-                                    onDismiss()
-                                    onAnimeClick(notification.animeId)
-                                })
-                            }
-                        }
-                    }
+                }
+                grouped.forEach { (date, rows) ->
+                    item("day-${date.toEpochDay()}") { Text(date.format(formatter), Modifier.padding(horizontal = 8.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold) }
+                    items(rows, key = { "notification-${it.id}" }) { notification -> NotificationCard(notification, onClick = {
+                        viewModel.markRead(notification.id); onDismiss(); onAnimeClick(notification.animeId)
+                    }) }
                 }
             }
         }
     }
-}
-
-@Composable
-private fun NotificationTabs(
-    selectedTab: Int,
-    unreadCount: Int,
-    readCount: Int,
-    onTabSelected: (Int) -> Unit,
-) {
-    AppSegmentedControl(
-        options = listOf(
-            SegmentOption(stringResource(R.string.notif_tab_unread), Icons.Default.MarkEmailUnread, unreadCount),
-            SegmentOption(stringResource(R.string.notif_tab_read), Icons.Default.MarkEmailRead, readCount),
-        ), selectedIndex = selectedTab, onSelect = onTabSelected,
-    )
-}
-
-@Composable
-private fun NotificationEmptyState(selectedTab: Int) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp, vertical = 18.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Surface(
-            modifier = Modifier.size(82.dp),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.075f),
-            contentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.52f),
-            tonalElevation = 0.dp,
-        ) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = Icons.Outlined.NotificationsNone,
-                    contentDescription = null,
-                    modifier = Modifier.size(38.dp),
-                )
-            }
-        }
-        Text(
-            text = if (selectedTab == 0) {
-                stringResource(R.string.notif_empty_unread)
-            } else {
-                stringResource(R.string.notif_empty_read)
-            },
-            modifier = Modifier.padding(top = 16.dp),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center,
-        )
-        if (selectedTab == 0) {
-            Text(
-                text = stringResource(R.string.notif_screen_empty_subtitle),
-                modifier = Modifier.padding(top = 6.dp),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-        }
-    }
-}
-
-private fun groupedByDay(
-    notifications: List<AppNotification>,
-    locale: Locale,
-    zone: ZoneId,
-): List<Pair<String, List<AppNotification>>> {
-    val formatter = DateTimeFormatter.ofPattern("EEEE, d. MMMM", locale)
-    return notifications
-        .sortedByDescending { it.createdAtEpochSeconds }
-        .groupBy { notification ->
-            Instant.ofEpochSecond(notification.createdAtEpochSeconds).atZone(zone).toLocalDate()
-        }
-        .toSortedMap(compareByDescending { it })
-        .map { (date, items) -> date.format(formatter) to items }
 }

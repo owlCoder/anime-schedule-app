@@ -22,6 +22,10 @@ class NotificationsViewModel @Inject constructor(
     val clearing = _clearing.asStateFlow()
     private val _clearError = MutableStateFlow(false)
     val clearError = _clearError.asStateFlow()
+    private val _marking = MutableStateFlow(false)
+    val marking = _marking.asStateFlow()
+    private val _markError = MutableStateFlow(false)
+    val markError = _markError.asStateFlow()
 
     val notifications: StateFlow<List<AppNotification>> = notificationRepository.getAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -31,7 +35,25 @@ class NotificationsViewModel @Inject constructor(
     }
 
     fun markAllRead() {
-        viewModelScope.launch { notificationRepository.markAllRead() }
+        mark { notificationRepository.markAllRead() }
+    }
+
+    fun markVisibleRead(ids: List<Int>) {
+        if (ids.isEmpty()) return
+        val snapshot = ids.distinct()
+        mark { notificationRepository.markRead(snapshot) }
+    }
+
+    private fun mark(action: suspend () -> Unit) {
+        if (_marking.value) return
+        _marking.value = true
+        _markError.value = false
+        viewModelScope.launch {
+            try { action() }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { _markError.value = true }
+            finally { _marking.value = false }
+        }
     }
 
     fun clearRead() {

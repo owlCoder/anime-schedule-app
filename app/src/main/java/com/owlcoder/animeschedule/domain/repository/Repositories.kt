@@ -104,6 +104,7 @@ interface NotificationRepository {
     fun getAll(): Flow<List<AppNotification>>
     fun getUnreadCount(): Flow<Int>
     suspend fun markRead(id: Int)
+    suspend fun markRead(ids: List<Int>) { ids.distinct().forEach { markRead(it) } }
     suspend fun markAllRead()
     suspend fun deleteRead(): Int
 }

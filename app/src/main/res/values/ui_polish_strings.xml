@@ -76,17 +76,17 @@
     <!-- Changelog -->
     <string name="changelog_release_date">October 7, 2026</string>
     <string name="changelog_whats_new">What\'s new</string>
-    <string name="changelog_hero_description">Ten new schedule, notification and anime-detail tools, with polished filters and larger-font layouts.</string>
-    <string name="changelog_nav_title">Schedule that stays current</string>
-    <string name="changelog_nav_description">The featured broadcast updates while the dashboard is open. Day and week views reuse one filtered schedule; badges and edit state no longer repeat that work.</string>
-    <string name="changelog_motion_title">Smoother search</string>
-    <string name="changelog_motion_description">Whitespace edits preserve results and avoid extra catalog requests. Search inputs focus across their whole surface and dismiss the keyboard after submission.</string>
-    <string name="changelog_filters_title">Readable controls at every text size</string>
-    <string name="changelog_filters_description">Headers give titles and actions separate space with enlarged text or narrow screens. Compact icons now have full 48 dp touch targets.</string>
-    <string name="changelog_states_title">Reliable character overlays</string>
-    <string name="changelog_states_description">Reopened character details use a small session cache. Failed loads offer retry; late responses cannot replace another character or reopen a dismissed overlay.</string>
-    <string name="changelog_about_title">Consistent feedback and navigation</string>
-    <string name="changelog_about_description">Character sheets use the shared loading and error designs. Page changes close the keyboard, and notification settings show when no anime are muted.</string>
+    <string name="changelog_hero_description">Ten new tools for a more personal schedule, calendar exports and notification history.</string>
+    <string name="changelog_nav_title">Choose what airs</string>
+    <string name="changelog_nav_description">Combine premiere, release status, minimum community score and time-of-day filters. Broadcast times follow your selected schedule timezone.</string>
+    <string name="changelog_motion_title">Reminders in your calendar</string>
+    <string name="changelog_motion_description">Export events with an optional reminder at air time or 5, 15, 30 or 60 minutes before. Your calendar app handles the alerts.</string>
+    <string name="changelog_filters_title">Explore and share anime</string>
+    <string name="changelog_filters_description">Find related anime by title and relation type. Copy a plain-text synopsis or share your status, episode progress and score.</string>
+    <string name="changelog_states_title">Control notification history</string>
+    <string name="changelog_states_description">Sort newest or oldest first and mark only filtered unread notifications as read. Search and date filters keep their scope.</string>
+    <string name="changelog_about_title">More comfortable menus</string>
+    <string name="changelog_about_description">Scrollable notification controls, aligned action icons and one-sheet navigation keep longer menus usable with larger text and the keyboard open.</string>
     <string name="changelog_footer">Made with care by the AnimeSchedule team</string>
 
     <!-- Watch sources -->

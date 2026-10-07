@@ -23,6 +23,8 @@ class NotificationRepositoryImpl @Inject constructor(
     override suspend fun markRead(id: Int) =
         notificationDao.markRead(id)
 
+    override suspend fun markRead(ids: List<Int>) = notificationDao.markReadBatch(ids)
+
     override suspend fun markAllRead() =
         notificationDao.markAllRead()
 

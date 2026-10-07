@@ -11,6 +11,8 @@ import com.owlcoder.animeschedule.domain.model.AiringEpisode
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
 import com.owlcoder.animeschedule.domain.model.ScheduleDay
+import com.owlcoder.animeschedule.domain.model.ScheduleTimeOfDay
+import com.owlcoder.animeschedule.presentation.screens.discovery.ReleaseFilter
 import com.owlcoder.animeschedule.domain.model.WatchStatus
 import com.owlcoder.animeschedule.domain.repository.MalRepository
 import com.owlcoder.animeschedule.domain.repository.NotificationRepository
@@ -51,8 +53,12 @@ data class ScheduleFilter(
     val favoritesOnly: Boolean = false,
     val genres: Set<String> = emptySet(),
     val formats: Set<String> = emptySet(),
+    val premieresOnly: Boolean = false,
+    val minimumScore: Int = 0,
+    val release: ReleaseFilter = ReleaseFilter.ALL,
+    val timeOfDay: ScheduleTimeOfDay = ScheduleTimeOfDay.ALL,
 ) {
-    val isActive: Boolean get() = onlyMyList || query.isNotBlank() || upcomingOnly || hideWatched || favoritesOnly || genres.isNotEmpty() || formats.isNotEmpty()
+    val isActive: Boolean get() = onlyMyList || query.isNotBlank() || upcomingOnly || hideWatched || favoritesOnly || genres.isNotEmpty() || formats.isNotEmpty() || premieresOnly || minimumScore > 0 || release != ReleaseFilter.ALL || timeOfDay != ScheduleTimeOfDay.ALL
 }
 
 enum class ScheduleSection { TODAY, TOMORROW, WEEK }
@@ -194,7 +200,7 @@ class ScheduleViewModel internal constructor(
     // the whole week, and today/tomorrow reuse the same lists as the weekly overview.
     private val filteredSchedule = combine(snapshot, _filter, filterClock, favoriteIds) { snapshot, filter, now, favorites ->
         FilteredSchedule(snapshot, filter, snapshot.days.map { day ->
-            day.copy(episodes = day.episodes.applyFilter(filter, now, favorites))
+            day.copy(episodes = day.episodes.applyFilter(filter, now, favorites, snapshot.zoneId))
         })
     }
 
@@ -236,6 +242,11 @@ class ScheduleViewModel internal constructor(
     fun setFavoritesOnly(enabled: Boolean) = _filter.update { it.copy(favoritesOnly = enabled) }
 
     fun setOnlyMyList(enabled: Boolean) = _filter.update { it.copy(onlyMyList = enabled) }
+
+    fun setPremieresOnly(enabled: Boolean) = _filter.update { it.copy(premieresOnly = enabled) }
+    fun setMinimumScore(score: Int) = _filter.update { it.copy(minimumScore = score.coerceIn(0, 100)) }
+    fun setRelease(release: ReleaseFilter) = _filter.update { it.copy(release = release) }
+    fun setTimeOfDay(timeOfDay: ScheduleTimeOfDay) = _filter.update { it.copy(timeOfDay = timeOfDay) }
 
     fun toggleGenre(genre: String) = _filter.update { filter ->
         filter.copy(genres = filter.genres.toggled(genre))
@@ -329,7 +340,7 @@ private fun buildSnapshot(
     )
 }
 
-internal fun List<AiringEpisode>.applyFilter(filter: ScheduleFilter, nowEpochSeconds: Long, favoriteIds: Set<Int> = emptySet()): List<AiringEpisode> {
+internal fun List<AiringEpisode>.applyFilter(filter: ScheduleFilter, nowEpochSeconds: Long, favoriteIds: Set<Int> = emptySet(), zone: ZoneId = ZoneId.systemDefault()): List<AiringEpisode> {
     if (!filter.isActive) return this
     val query = filter.query.trim()
     return filter { episode ->
@@ -338,6 +349,9 @@ internal fun List<AiringEpisode>.applyFilter(filter: ScheduleFilter, nowEpochSec
             (!filter.onlyMyList || episode.malListEntry != null) &&
             (!filter.hideWatched || episode.malListEntry == null || episode.episode > episode.malListEntry.episodesWatched) &&
             (!filter.favoritesOnly || (episode.malId ?: episode.malListEntry?.animeId) in favoriteIds) &&
+            (!filter.premieresOnly || episode.episode == 1) &&
+            (filter.minimumScore <= 0 || episode.averageScore?.let { it >= filter.minimumScore } == true) &&
+            filter.release.matches(episode.status) && filter.timeOfDay.matches(episode.airingAtEpochSeconds, zone) &&
             (filter.genres.isEmpty() || episode.genres.any { it in filter.genres }) &&
             (filter.formats.isEmpty() || episode.format in filter.formats)
     }

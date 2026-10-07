@@ -20,14 +20,32 @@ import com.owlcoder.animeschedule.domain.model.*
 import com.owlcoder.animeschedule.presentation.components.*
 import com.owlcoder.animeschedule.presentation.screens.discovery.DiscoveryChip
 
-private enum class DetailToolPage { MENU, TITLES, CHARACTERS }
+private enum class DetailToolPage { MENU, TITLES, CHARACTERS, RELATIONS }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-internal fun DetailToolsSheet(detail: AnimeDetail, onDismiss: () -> Unit, onCharacter: (Int) -> Unit, onCopy: (String) -> Unit) {
+internal fun DetailToolsSheet(detail: AnimeDetail, onDismiss: () -> Unit, onCharacter: (Int) -> Unit, onCopy: (String) -> Unit,
+    onRelated: (Int) -> Unit = {}, onCopySynopsis: (String) -> Unit = onCopy, onShareProgress: (String) -> Unit = {}) {
     var page by rememberSaveable(detail.animeId) { mutableStateOf(DetailToolPage.MENU) }
     var query by rememberSaveable(detail.animeId) { mutableStateOf("") }
     var role by rememberSaveable(detail.animeId) { mutableStateOf(CharacterRole.ALL) }
+    var relatedQuery by rememberSaveable(detail.animeId) { mutableStateOf("") }
+    var relation by rememberSaveable(detail.animeId) { mutableStateOf<String?>(null) }
+    val related = remember(detail.relations) { detail.relations.findRelatedAnime() }
+    val relationTypes = remember(detail.relations) {
+        detail.relations.mapNotNull { it.relationType?.takeIf(String::isNotBlank) }.distinct().sorted()
+            .filter { detail.relations.findRelatedAnime(relationType = it).isNotEmpty() }
+    }
+    val synopsis = remember(detail.description) {
+        androidx.core.text.HtmlCompat.fromHtml(detail.description.orEmpty(), androidx.core.text.HtmlCompat.FROM_HTML_MODE_LEGACY).toString().trim()
+    }
+    val entry = detail.malListEntry
+    val progressText = entry?.let {
+        listOf(detail.titleRomaji ?: detail.titleEnglish.orEmpty(), it.status.displayName(),
+            stringResource(R.string.detail_progress_line, it.episodesWatched, (detail.episodes ?: it.totalEpisodes)?.toString() ?: "?"),
+            if (it.score > 0) stringResource(R.string.detail_progress_score, it.score) else stringResource(R.string.detail_progress_unrated),
+            if (it.animeId > 0) "https://myanimelist.net/anime/${it.animeId}" else "https://anilist.co/anime/${detail.animeId}").joinToString("\n")
+    }
     fun navigate(target: DetailToolPage) {
         page = target
     }
@@ -43,6 +61,7 @@ internal fun DetailToolsSheet(detail: AnimeDetail, onDismiss: () -> Unit, onChar
         DetailToolPage.MENU -> R.string.detail_tools
         DetailToolPage.TITLES -> R.string.detail_alternative_titles
         DetailToolPage.CHARACTERS -> R.string.detail_character_finder
+        DetailToolPage.RELATIONS -> R.string.detail_related_finder
     })
     AppSheet(onDismissRequest = {
         if (page == DetailToolPage.MENU) onDismiss() else navigate(DetailToolPage.MENU)
@@ -52,16 +71,61 @@ internal fun DetailToolsSheet(detail: AnimeDetail, onDismiss: () -> Unit, onChar
         val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
         LaunchedEffect(page) { focus.clearFocus(force = true); keyboard?.hide() }
         when (page) {
-            DetailToolPage.MENU -> Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                AppButton(stringResource(R.string.detail_alternative_titles), { navigate(DetailToolPage.TITLES) }, Modifier.fillMaxWidth().testTag("detail-titles"), variant = AppButtonVariant.Secondary, icon = Icons.Default.Translate)
-                AppButton(stringResource(R.string.detail_character_finder), { navigate(DetailToolPage.CHARACTERS) }, Modifier.fillMaxWidth().testTag("detail-character-finder"), variant = AppButtonVariant.Secondary, enabled = detail.characters.isNotEmpty(), icon = Icons.Default.PersonSearch)
-                val tools = LocalWatchTools.current
-                if (detail.animeId > 0) {
-                    val muted = detail.animeId in tools.data.mutedNotifications
-                    AppChoiceRow(stringResource(R.string.notifications_mute), Icons.Default.NotificationsOff, muted,
-                        { tools.setNotificationMuted(detail.animeId, detail.titleRomaji ?: detail.titleEnglish.orEmpty(), !muted) },
-                        Modifier.testTag("detail-mute"), subtitle = stringResource(R.string.notifications_mute_hint), selectionRole = Role.Checkbox)
-                } else Text(stringResource(R.string.notifications_mute_unavailable), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            DetailToolPage.MENU -> LazyColumn(Modifier.heightIn(max = 580.dp), verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 8.dp)) {
+                item {
+                    AppButton(stringResource(R.string.detail_alternative_titles), { navigate(DetailToolPage.TITLES) }, Modifier.fillMaxWidth().testTag("detail-titles"), variant = AppButtonVariant.Secondary, icon = Icons.Default.Translate)
+                }
+                item {
+                    AppButton(stringResource(R.string.detail_character_finder), { navigate(DetailToolPage.CHARACTERS) }, Modifier.fillMaxWidth().testTag("detail-character-finder"), variant = AppButtonVariant.Secondary, enabled = detail.characters.isNotEmpty(), icon = Icons.Default.PersonSearch)
+                }
+                item { AppButton(stringResource(R.string.detail_related_finder), { navigate(DetailToolPage.RELATIONS) }, Modifier.fillMaxWidth().testTag("detail-related-finder"),
+                    enabled = related.isNotEmpty(), variant = AppButtonVariant.Secondary, icon = Icons.Default.AccountTree) }
+                item { AppButton(stringResource(R.string.detail_copy_synopsis), { onCopySynopsis(synopsis) }, Modifier.fillMaxWidth().testTag("detail-copy-synopsis"),
+                    enabled = synopsis.isNotBlank(), variant = AppButtonVariant.Secondary, icon = Icons.Default.ContentCopy) }
+                item {
+                    AppButton(stringResource(R.string.detail_share_progress), { progressText?.let(onShareProgress) }, Modifier.fillMaxWidth().testTag("detail-share-progress"),
+                        enabled = entry != null, variant = AppButtonVariant.Secondary, icon = Icons.Default.Share)
+                    if (entry == null) Text(stringResource(R.string.detail_progress_hint), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp))
+                }
+                item {
+                    val tools = LocalWatchTools.current
+                    if (detail.animeId > 0) {
+                        val muted = detail.animeId in tools.data.mutedNotifications
+                        AppChoiceRow(stringResource(R.string.notifications_mute), Icons.Default.NotificationsOff, muted,
+                            { tools.setNotificationMuted(detail.animeId, detail.titleRomaji ?: detail.titleEnglish.orEmpty(), !muted) },
+                            Modifier.testTag("detail-mute"), subtitle = stringResource(R.string.notifications_mute_hint), selectionRole = Role.Checkbox)
+                    } else Text(stringResource(R.string.notifications_mute_unavailable), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            DetailToolPage.RELATIONS -> {
+                val matches = remember(detail.relations, relatedQuery, relation) { detail.relations.findRelatedAnime(relatedQuery, relation) }
+                LazyColumn(Modifier.heightIn(max = 580.dp).fillMaxWidth().testTag("related-results"), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    item { Text(stringResource(R.string.detail_related_loaded, related.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    item { AppSearchField(relatedQuery, { relatedQuery = it }, Modifier.testTag("related-search"), stringResource(R.string.detail_related_search), Icons.Default.Search, onClear = { relatedQuery = "" }) }
+                    item { FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        (listOf<String?>(null) + relationTypes).forEach { type ->
+                            DiscoveryChip(if (type == null) stringResource(R.string.detail_relation_all) else relationTypeLabel(type).orEmpty(), Icons.Default.AccountTree,
+                                type == relation, { relation = type; focus.clearFocus(); keyboard?.hide() }, Modifier.testTag("related-type-${type ?: "ALL"}"))
+                        }
+                    } }
+                    if (matches.isEmpty()) item { EmptyState(Icons.Default.SearchOff, stringResource(R.string.detail_related_empty),
+                        actionLabel = stringResource(R.string.filter_reset), onAction = { relatedQuery = ""; relation = null; focus.clearFocus(); keyboard?.hide() }) }
+                    items(matches, key = { it.animeId }) { anime ->
+                        Surface(Modifier.fillMaxWidth().clickable(role = Role.Button) {
+                            focus.clearFocus(force = true); keyboard?.hide(); onRelated(anime.animeId)
+                        }.testTag("finder-related-${anime.animeId}"), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface) {
+                            Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                MediaThumbnail.Small(anime.coverImageUrl, null, Modifier.size(44.dp, 60.dp))
+                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(anime.title, style = MaterialTheme.typography.titleSmall)
+                                    relationTypeLabel(anime.relationType)?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary) }
+                                }
+                                Icon(Icons.Default.ChevronRight, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+                }
             }
             DetailToolPage.TITLES -> LazyColumn(Modifier.heightIn(max = 580.dp).testTag("detail-title-list"), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 item { Text(stringResource(R.string.detail_alternative_titles_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp)) }

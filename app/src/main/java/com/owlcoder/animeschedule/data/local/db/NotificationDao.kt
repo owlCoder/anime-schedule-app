@@ -3,6 +3,7 @@ package com.owlcoder.animeschedule.data.local.db
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -18,6 +19,14 @@ interface NotificationDao {
 
     @Query("UPDATE notifications SET isRead = 1 WHERE id = :id")
     suspend fun markRead(id: Int)
+
+    @Query("UPDATE notifications SET isRead = 1 WHERE id IN (:ids)")
+    suspend fun markReadIds(ids: List<Int>)
+
+    @Transaction
+    suspend fun markReadBatch(ids: List<Int>) {
+        ids.distinct().chunked(400).forEach { markReadIds(it) }
+    }
 
     @Query("UPDATE notifications SET isRead = 1")
     suspend fun markAllRead()

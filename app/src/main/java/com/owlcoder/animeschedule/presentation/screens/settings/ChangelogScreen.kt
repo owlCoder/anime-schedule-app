@@ -15,7 +15,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.PersonSearch
+import androidx.compose.material.icons.outlined.AccountTree
+import androidx.compose.material.icons.outlined.Alarm
+import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.AutoAwesome
@@ -65,17 +67,17 @@ fun ChangelogBottomSheet(onDismiss: () -> Unit) {
             stringResource(R.string.changelog_nav_description),
         ),
         ReleaseNote(
-            Icons.Outlined.Search,
+            Icons.Outlined.Alarm,
             stringResource(R.string.changelog_motion_title),
             stringResource(R.string.changelog_motion_description),
         ),
         ReleaseNote(
-            Icons.Outlined.Tune,
+            Icons.Outlined.AccountTree,
             stringResource(R.string.changelog_filters_title),
             stringResource(R.string.changelog_filters_description),
         ),
         ReleaseNote(
-            Icons.Outlined.PersonSearch,
+            Icons.Outlined.NotificationsActive,
             stringResource(R.string.changelog_states_title),
             stringResource(R.string.changelog_states_description),
         ),

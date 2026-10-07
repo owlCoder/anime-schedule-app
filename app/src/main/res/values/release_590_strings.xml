@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="schedule_premieres">Premieres only</string>
+    <string name="schedule_premieres_hint">Show first episodes in this schedule</string>
+    <string name="schedule_release">Release status</string>
+    <string name="schedule_score_hint">Titles without a score are excluded when a minimum is selected.</string>
+    <string name="schedule_score_floor">At least %1$d/100</string>
+    <string name="schedule_time">Time of day</string>
+    <string name="schedule_time_hint">Uses the timezone selected for your schedule.</string>
+    <string name="schedule_time_all">Any time</string>
+    <string name="schedule_time_morning">Morning · 06–12</string>
+    <string name="schedule_time_afternoon">Afternoon · 12–18</string>
+    <string name="schedule_time_evening">Evening · 18–24</string>
+    <string name="schedule_time_night">Night · 00–06</string>
+    <string name="calendar_reminder">Calendar reminder</string>
+    <string name="calendar_reminder_hint">Included in each exported event. Your calendar app handles these alerts.</string>
+    <string name="calendar_reminder_none">No reminder</string>
+    <string name="calendar_reminder_start">At air time</string>
+    <string name="calendar_reminder_before">%1$d min before air time</string>
+    <string name="detail_related_finder">Find related anime</string>
+    <string name="detail_related_loaded">Search %1$d loaded anime titles</string>
+    <string name="detail_related_search">Search related titles</string>
+    <string name="detail_relation_all">All relations</string>
+    <string name="detail_related_empty">No related titles match</string>
+    <string name="detail_copy_synopsis">Copy synopsis</string>
+    <string name="detail_synopsis_copied">Synopsis copied</string>
+    <string name="detail_share_progress">Share my progress</string>
+    <string name="detail_progress_line">Progress: %1$d/%2$s episodes</string>
+    <string name="detail_progress_score">My score: %1$d/10</string>
+    <string name="detail_progress_unrated">Not rated yet</string>
+    <string name="detail_progress_hint">Add this anime to your list to share your progress.</string>
+    <string name="notif_tools">Notification tools</string>
+    <string name="notif_sort">History order</string>
+    <string name="notif_newest">Newest first</string>
+    <string name="notif_oldest">Oldest first</string>
+    <string name="notif_mark_visible">Mark filtered as read (%1$d)</string>
+    <string name="notif_scope_hint">Applies to unread notifications matching your search and date filter.</string>
+    <string name="notif_mark_failed">Could not mark notifications as read. Try again.</string>
+</resources>

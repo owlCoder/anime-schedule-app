@@ -21,6 +21,16 @@ data class QuietHours(val enabled: Boolean = false, val startHour: Int = 22, val
     }
 }
 
+enum class NotificationSort { NEWEST, OLDEST }
+
+fun List<AppNotification>.visibleNotifications(query: String, period: NotificationPeriod, today: LocalDate,
+    zone: ZoneId, sort: NotificationSort = NotificationSort.NEWEST): List<AppNotification> {
+    val search = query.trim()
+    val result = filter { it.title.contains(search, true) && it.inPeriod(period, today, zone) }
+    val order = compareBy<AppNotification> { it.createdAtEpochSeconds }.thenBy { it.id }
+    return result.sortedWith(if (sort == NotificationSort.NEWEST) order.reversed() else order)
+}
+
 /** Silencing system alerts never discards the corresponding in-app history entry. */
 fun shouldPostSystemAlert(animeId: Int, muted: Set<Int>, quietHours: QuietHours, now: Instant, zone: ZoneId, scheduledAt: Instant = now): Boolean =
     animeId !in muted && !quietHours.isQuietAt(now, zone) && !quietHours.isQuietAt(scheduledAt, zone)

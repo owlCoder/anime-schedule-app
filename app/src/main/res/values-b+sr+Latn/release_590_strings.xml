@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="schedule_premieres">Samo premijere</string>
+    <string name="schedule_premieres_hint">Prikaži prve epizode u rasporedu</string>
+    <string name="schedule_release">Status emitovanja</string>
+    <string name="schedule_score_hint">Naslovi bez ocene se izostavljaju kada izabereš minimum.</string>
+    <string name="schedule_score_floor">Najmanje %1$d/100</string>
+    <string name="schedule_time">Deo dana</string>
+    <string name="schedule_time_hint">Koristi vremensku zonu izabranu za raspored.</string>
+    <string name="schedule_time_all">Bilo koje vreme</string>
+    <string name="schedule_time_morning">Jutro · 06–12</string>
+    <string name="schedule_time_afternoon">Popodne · 12–18</string>
+    <string name="schedule_time_evening">Veče · 18–24</string>
+    <string name="schedule_time_night">Noć · 00–06</string>
+    <string name="calendar_reminder">Podsetnik u kalendaru</string>
+    <string name="calendar_reminder_hint">Dodaje se svakom izvezenom događaju. Obaveštenja šalje tvoja aplikacija kalendara.</string>
+    <string name="calendar_reminder_none">Bez podsetnika</string>
+    <string name="calendar_reminder_start">U vreme emitovanja</string>
+    <string name="calendar_reminder_before">%1$d min pre emitovanja</string>
+    <string name="detail_related_finder">Pronađi povezane anime</string>
+    <string name="detail_related_loaded">Pretraži %1$d učitanih anime naslova</string>
+    <string name="detail_related_search">Pretraži povezane naslove</string>
+    <string name="detail_relation_all">Sve veze</string>
+    <string name="detail_related_empty">Nema povezanih naslova za ovaj izbor</string>
+    <string name="detail_copy_synopsis">Kopiraj sinopsis</string>
+    <string name="detail_synopsis_copied">Sinopsis je kopiran</string>
+    <string name="detail_share_progress">Podeli moj napredak</string>
+    <string name="detail_progress_line">Napredak: %1$d/%2$s epizoda</string>
+    <string name="detail_progress_score">Moja ocena: %1$d/10</string>
+    <string name="detail_progress_unrated">Još nije ocenjeno</string>
+    <string name="detail_progress_hint">Dodaj ovaj anime na svoju listu da podeliš napredak.</string>
+    <string name="notif_tools">Alatke za obaveštenja</string>
+    <string name="notif_sort">Redosled istorije</string>
+    <string name="notif_newest">Prvo najnovija</string>
+    <string name="notif_oldest">Prvo najstarija</string>
+    <string name="notif_mark_visible">Označi filtrirana kao pročitana (%1$d)</string>
+    <string name="notif_scope_hint">Važi za nepročitana obaveštenja koja odgovaraju pretrazi i filteru datuma.</string>
+    <string name="notif_mark_failed">Označavanje obaveštenja nije uspelo. Pokušaj ponovo.</string>
+</resources>

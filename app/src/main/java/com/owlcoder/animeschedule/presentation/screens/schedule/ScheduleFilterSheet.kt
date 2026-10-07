@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.presentation.components.*
 import com.owlcoder.animeschedule.presentation.screens.discovery.*
+import com.owlcoder.animeschedule.domain.model.ScheduleTimeOfDay
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -24,6 +25,8 @@ fun ScheduleFilterSheet(
     onGenreToggle: (String) -> Unit, onFormatToggle: (String) -> Unit,
     onClear: () -> Unit, onDismiss: () -> Unit,
     onHideWatchedChange: (Boolean) -> Unit = {}, onFavoritesChange: (Boolean) -> Unit = {},
+    onPremieresChange: (Boolean) -> Unit = {}, onMinimumScoreChange: (Int) -> Unit = {},
+    onReleaseChange: (ReleaseFilter) -> Unit = {}, onTimeOfDayChange: (ScheduleTimeOfDay) -> Unit = {},
 ) {
     AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.filter_title), trailingContent = {
         AppButton(stringResource(R.string.filter_reset), onClear, enabled = filter.isActive, variant = AppButtonVariant.Plain, icon = Icons.Default.RestartAlt)
@@ -54,6 +57,34 @@ fun ScheduleFilterSheet(
                         availableFormats.forEach { format -> DiscoveryChip(discoveryFormatLabel(format) ?: format, Icons.Default.LiveTv, format in filter.formats, { onFormatToggle(format) }, Modifier.testTag("schedule-format-$format"), multiple = true) }
                     } }
                 }
+                item {
+                    AppChoiceRow(stringResource(R.string.schedule_premieres), Icons.Default.NewReleases, filter.premieresOnly,
+                        { onPremieresChange(!filter.premieresOnly) }, Modifier.testTag("schedule-premieres"),
+                        subtitle = stringResource(R.string.schedule_premieres_hint), selectionRole = Role.Checkbox)
+                }
+                item { DiscoverySection(stringResource(R.string.schedule_release)) }
+                item { FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ReleaseFilter.entries.forEach { option -> DiscoveryChip(stringResource(option.labelRes), Icons.Default.LiveTv,
+                        filter.release == option, { onReleaseChange(option) }, Modifier.testTag("schedule-release-$option")) }
+                } }
+                item { DiscoverySection(stringResource(R.string.discovery_minimum_score)) }
+                item { Text(stringResource(R.string.schedule_score_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                item { FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(0, 60, 70, 80, 90).forEach { score -> DiscoveryChip(
+                        if (score == 0) stringResource(R.string.discovery_any_score) else stringResource(R.string.schedule_score_floor, score),
+                        Icons.Default.Star, filter.minimumScore == score, { onMinimumScoreChange(score) }, Modifier.testTag("schedule-score-$score")) }
+                } }
+                item { DiscoverySection(stringResource(R.string.schedule_time)) }
+                item { Text(stringResource(R.string.schedule_time_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                item { FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ScheduleTimeOfDay.entries.forEach { option -> DiscoveryChip(stringResource(when (option) {
+                        ScheduleTimeOfDay.ALL -> R.string.schedule_time_all
+                        ScheduleTimeOfDay.MORNING -> R.string.schedule_time_morning
+                        ScheduleTimeOfDay.AFTERNOON -> R.string.schedule_time_afternoon
+                        ScheduleTimeOfDay.EVENING -> R.string.schedule_time_evening
+                        ScheduleTimeOfDay.NIGHT -> R.string.schedule_time_night
+                    }), Icons.Default.Schedule, filter.timeOfDay == option, { onTimeOfDayChange(option) }, Modifier.testTag("schedule-time-$option")) }
+                } }
                 if (availableGenres.isNotEmpty()) {
                     item { DiscoverySection(stringResource(R.string.filter_genre)) }
                     item { FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

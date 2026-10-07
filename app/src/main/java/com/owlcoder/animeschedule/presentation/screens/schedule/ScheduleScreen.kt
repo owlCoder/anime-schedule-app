@@ -169,6 +169,7 @@ private fun ScheduleScreenContent(
     val scope = rememberCoroutineScope()
     val tools = LocalWatchTools.current
     var calendarSnapshot by rememberSaveable { mutableStateOf("") }
+    var calendarReminder by rememberSaveable { mutableStateOf(com.owlcoder.animeschedule.domain.model.CalendarReminder.NONE) }
     val exportedMessage = stringResource(R.string.schedule_agenda_exported)
     val exportError = stringResource(R.string.schedule_agenda_error)
     val calendarExporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/calendar")) { uri ->
@@ -299,7 +300,7 @@ private fun ScheduleScreenContent(
                 pickedEpochDay = date.toEpochDay()
                 viewModel.setOpenOverlay(ScheduleOverlay.None)
             }, onExport = {
-                calendarSnapshot = days.toCalendarIcs(tools.data, java.time.Instant.now()) { resources.getString(R.string.schedule_agenda_episode, it) }
+                calendarSnapshot = days.toCalendarIcs(tools.data, java.time.Instant.now(), calendarReminder) { resources.getString(R.string.schedule_agenda_episode, it) }
                 viewModel.setOpenOverlay(ScheduleOverlay.None)
                 calendarExporter.launch("anime-schedule-${uiState.today}.ics")
             }, onShare = {
@@ -312,7 +313,8 @@ private fun ScheduleScreenContent(
                     viewModel.setOpenOverlay(ScheduleOverlay.None)
                     context.startActivity(android.content.Intent.createChooser(send, resources.getString(R.string.schedule_agenda_share)))
                 }
-            }, onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) })
+            }, onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) },
+                reminder = calendarReminder, onReminderChange = { calendarReminder = it })
         }
         is ScheduleOverlay.Filter -> ScheduleFilterSheet(
             filter = uiState.filter,
@@ -325,6 +327,10 @@ private fun ScheduleScreenContent(
             onFormatToggle = viewModel::toggleFormat,
             onHideWatchedChange = viewModel::setHideWatched,
             onFavoritesChange = viewModel::setFavoritesOnly,
+            onPremieresChange = viewModel::setPremieresOnly,
+            onMinimumScoreChange = viewModel::setMinimumScore,
+            onReleaseChange = viewModel::setRelease,
+            onTimeOfDayChange = viewModel::setTimeOfDay,
             onClear = viewModel::clearFilter,
             onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) },
         )

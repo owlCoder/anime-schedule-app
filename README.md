@@ -110,10 +110,39 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.8.1** (version code **31**, October 7, 2026).
+Current release: **5.9.0** (version code **32**, October 7, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### New in 5.9.0
+
+1. Show only premieres (first episodes) in the schedule.
+2. Filter scheduled anime by minimum community score.
+3. Filter the schedule by airing, finished or upcoming release status.
+4. Select morning, afternoon, evening or night broadcasts in your schedule timezone.
+5. Include optional reminders in exported ICS events: at air time or 5, 15, 30 or 60 minutes before.
+6. Search loaded related anime and filter by relation type before opening a title.
+7. Copy an anime synopsis as readable plain text, with HTML removed.
+8. Share your list status, episode progress and personal score through Android’s share sheet.
+9. Mark only unread notifications matching the current title and date filters as read.
+10. Sort notification history from newest or oldest, including its date groups.
+
+Notification controls and results share one scrollable surface. Detail tools and reminder choices
+reuse the same sheet for predictable Back navigation; action icons remain aligned with text.
+Score filters exclude titles without a known score when a minimum is active. Time filters follow
+the schedule timezone and daylight saving transitions. Related search uses loaded anime relations,
+with duplicate edges and unsupported media excluded, without another catalog request.
+
+Calendar reminders default to none and are handled by the importing calendar app; no calendar
+permissions are requested. Shared progress excludes private notes. Marking filtered notifications
+captures the matching unread IDs and updates them in one database transaction, using batches for
+large histories. Clearing read history remains a separately confirmed action over all read entries.
+
+Validated on Pixel 10 Pro (Android API 36.1): 183 unit tests, 63 distinct instrumentation cases,
+and 21 additional checks at 130% font scale. Debug lint and the signed, optimized release build
+pass; native document export, clipboard and share-sheet flows are exercised with local QA data.
+
 
 ### Refined in 5.8.1
 
@@ -142,7 +171,7 @@ Quiet hours and per-anime muting preserve in-app notification history. Suppresse
 are not replayed later; delayed checks also respect the intended alert time, including the offset. Muted anime are account-scoped local metadata and are included in personal
 backups; quiet hours are device preferences. Favorites use MAL IDs; muted alerts use AniList IDs.
 Character search uses characters already loaded with the detail (up to twelve from AniList),
-so opening it makes no additional catalog request. Calendar exports use currently cached, filtered broadcasts and estimated durations, include no
+so opening it makes no additional catalog request. Calendar exports use currently cached, filtered broadcasts and estimated durations, default to no
 reminders, and write only to the file chosen by the user. Details tools reuse one sheet, schedule
 controls wrap with large fonts, and the detail title panel maintains contrast over banner images.
 

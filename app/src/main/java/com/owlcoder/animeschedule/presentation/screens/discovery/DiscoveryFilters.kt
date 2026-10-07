@@ -43,7 +43,7 @@ enum class ReleaseFilter(@StringRes val labelRes: Int, val status: String?) {
     FINISHED(R.string.discovery_finished, "FINISHED"), UPCOMING(R.string.discovery_upcoming, "NOT_YET_RELEASED");
     fun matches(value: String?): Boolean {
         val normalized = when (val raw = value?.trim()?.uppercase(Locale.ROOT)?.replace(' ', '_')) {
-            "CURRENT", "AIRING", "ONGOING" -> "RELEASING"
+            "CURRENT", "AIRING", "ONGOING", "CURRENTLY_AIRING" -> "RELEASING"
             "UPCOMING", "TBA", "UNRELEASED" -> "NOT_YET_RELEASED"
             "COMPLETED" -> "FINISHED"
             else -> raw

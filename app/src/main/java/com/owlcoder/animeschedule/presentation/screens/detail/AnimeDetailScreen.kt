@@ -127,6 +127,8 @@ fun AnimeDetailScreen(
     val clipboard = androidx.compose.ui.platform.LocalClipboard.current
     val clipboardScope = androidx.compose.runtime.rememberCoroutineScope()
     val titleCopied = stringResource(R.string.detail_title_copied)
+    val synopsisCopied = stringResource(R.string.detail_synopsis_copied)
+    val progressShareLabel = stringResource(R.string.detail_share_progress)
     var showStatusSheet by remember { mutableStateOf(false) }
     var finaleOverrideEntry by remember { mutableStateOf<MalListEntry?>(null) }
     val context = LocalContext.current
@@ -330,6 +332,17 @@ fun AnimeDetailScreen(
                 clipboard.setClipEntry(androidx.compose.ui.platform.ClipEntry(android.content.ClipData.newPlainText("Anime title", value)))
                 toast.success(titleCopied)
             }
+        }, onRelated = { id -> showTools = false; onAnimeClick(id) }, onCopySynopsis = { value ->
+            clipboardScope.launch {
+                clipboard.setClipEntry(androidx.compose.ui.platform.ClipEntry(android.content.ClipData.newPlainText("Anime synopsis", value)))
+                toast.success(synopsisCopied)
+            }
+        }, onShareProgress = { value ->
+            val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(android.content.Intent.EXTRA_TEXT, value)
+            }
+            context.startActivity(android.content.Intent.createChooser(send, progressShareLabel))
         })
     }
 
@@ -812,7 +825,7 @@ private fun formatCommunityScore(score: Int): String {
 
 
 @Composable
-private fun relationTypeLabel(type: String?): String? = when (type) {
+internal fun relationTypeLabel(type: String?): String? = when (type) {
     "PREQUEL" -> stringResource(R.string.relation_prequel)
     "SEQUEL" -> stringResource(R.string.relation_sequel)
     "SIDE_STORY" -> stringResource(R.string.relation_side_story)

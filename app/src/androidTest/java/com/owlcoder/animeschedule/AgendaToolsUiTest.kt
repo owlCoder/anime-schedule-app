@@ -135,11 +135,13 @@ class AgendaToolsUiTest {
         val vm = scheduleVm(); vm.setOpenOverlay(ScheduleOverlay.Agenda)
         show(true) { ScheduleScreen({}, viewModel = vm) }
         compose.waitUntil(5000) { vm.uiState.value.weekDays.isNotEmpty() }
+        compose.onNodeWithTag("agenda-reminder").performClick()
+        compose.onNodeWithTag("agenda-reminder-FIFTEEN").performClick()
         compose.onNodeWithTag("agenda-export").performClick()
         val automation = instrumentation.uiAutomation
         compose.waitUntil(10_000) { automation.rootInActiveWindow?.packageName?.toString()?.contains("documentsui") == true }
         fun descendants(root: AccessibilityNodeInfo): Sequence<AccessibilityNodeInfo> = sequence { yield(root); for (i in 0 until root.childCount) root.getChild(i)?.let { yieldAll(descendants(it)) } }
-        val name = "qa580-${System.nanoTime() % 1_000_000}.ics"
+        val name = "qa590-${System.nanoTime() % 1_000_000}.ics"
         val input = descendants(automation.rootInActiveWindow).first { it.isEditable }
         assertTrue(input.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply { putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, name) }))
         screenshot("calendar-picker", false)
@@ -263,6 +265,13 @@ class AgendaToolsUiTest {
         compose.onNodeWithText(detail.titleRomaji!!).assertIsDisplayed()
         screenshot("detail-light-header")
         compose.onNodeWithTag("detail-tools").performClick()
+        compose.onNodeWithTag("detail-copy-synopsis").performClick()
+        val synopsisClipboard = instrumentation.targetContext.getSystemService(android.content.ClipboardManager::class.java)
+        compose.waitUntil(5000) { synopsisClipboard.primaryClip?.getItemAt(0)?.text?.toString() == detail.description!!.trim() }
+        compose.onNodeWithTag("detail-share-progress").performClick()
+        compose.waitUntil(10000) { instrumentation.uiAutomation.rootInActiveWindow?.packageName?.toString()?.contains("intentresolver") == true }
+        android.os.ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand("input keyevent 4")).use { it.readBytes() }
+        compose.waitUntil(10000) { instrumentation.uiAutomation.rootInActiveWindow?.packageName?.toString() == instrumentation.targetContext.packageName }
         compose.onNodeWithTag("detail-titles").performClick()
         compose.onNodeWithTag("copy-title-${R.string.detail_title_romaji}").performClick()
         val clipboard = instrumentation.targetContext.getSystemService(android.content.ClipboardManager::class.java)
@@ -292,4 +301,62 @@ class AgendaToolsUiTest {
         compose.onNodeWithText("Character description").assertIsDisplayed()
         assertEquals(2, characterRequests)
     }
+    @Test fun fourNewScheduleFiltersSelectCombineAndReset() {
+        var filter by mutableStateOf(ScheduleFilter())
+        show(true) { ScheduleFilterSheet(filter, emptyList(), emptyList(), false, {}, {}, {}, {}, { filter = ScheduleFilter() }, {},
+            onPremieresChange = { filter = filter.copy(premieresOnly = it) },
+            onMinimumScoreChange = { filter = filter.copy(minimumScore = it) },
+            onReleaseChange = { filter = filter.copy(release = it) },
+            onTimeOfDayChange = { filter = filter.copy(timeOfDay = it) }) }
+        fun pick(tag: String) { compose.onNodeWithTag("schedule-filter-list").performScrollToNode(hasTestTag(tag)); compose.onNodeWithTag(tag).performClick() }
+        pick("schedule-premieres"); compose.onNodeWithTag("schedule-premieres").assertIsOn()
+        pick("schedule-release-AIRING"); compose.onNodeWithTag("schedule-release-AIRING").assertIsSelected()
+        pick("schedule-score-80"); compose.onNodeWithTag("schedule-score-80").assertIsSelected()
+        pick("schedule-time-EVENING"); compose.onNodeWithTag("schedule-time-EVENING").assertIsSelected()
+        assertTrue(filter.premieresOnly); assertEquals(80, filter.minimumScore)
+        assertEquals(com.owlcoder.animeschedule.presentation.screens.discovery.ReleaseFilter.AIRING, filter.release)
+        assertEquals(ScheduleTimeOfDay.EVENING, filter.timeOfDay)
+        screenshot("new-schedule-filters")
+        compose.onNodeWithText(text(R.string.filter_reset)).performClick(); assertEquals(ScheduleFilter(), filter)
+    }
+    @Test fun reminderPickerChangesExportChoiceAndBackKeepsOneSheet() {
+        var reminder by mutableStateOf(CalendarReminder.NONE)
+        var dismissed = false
+        show { ScheduleAgendaSheet(days, today, {}, {}, {}, { dismissed = true }, reminder, { reminder = it }) }
+        compose.onNodeWithTag("agenda-reminder").performClick()
+        compose.onNodeWithTag("agenda-reminder-THIRTY").performClick()
+        assertEquals(CalendarReminder.THIRTY, reminder)
+        compose.onNodeWithTag("agenda-reminder").performClick()
+        compose.onNodeWithTag("agenda-reminder-THIRTY").assertIsSelected()
+        screenshot("calendar-reminders")
+        Espresso.pressBack(); compose.waitForIdle()
+        compose.onAllNodes(isDialog()).assertCountEquals(1)
+        compose.onNodeWithTag("agenda-export").assertIsDisplayed(); assertFalse(dismissed)
+    }
+    @Test fun relatedFinderFiltersAndOpensLoadedAnimeInOneSheet() {
+        var picked = 0
+        val relations = listOf(RelatedAnime(2,"Alpha Returns",null,"TV","FINISHED","SEQUEL"), RelatedAnime(3,"Alpha Origins",null,"MOVIE","FINISHED","PREQUEL"), RelatedAnime(4,"Alpha Manga",null,null,null,"ADAPTATION","MANGA"))
+        show(true) { DetailToolsSheet(detail.copy(relations = relations), {}, {}, {}, onRelated = { picked = it }) }
+        compose.onNodeWithTag("detail-related-finder").performClick()
+        compose.onNodeWithTag("related-type-SEQUEL").performClick().assertIsSelected()
+        val relatedInput = compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("related-search")))
+        relatedInput.performTextInput("alpha"); relatedInput.performImeAction()
+        compose.onNodeWithTag("finder-related-3").assertDoesNotExist(); compose.onNodeWithTag("finder-related-4").assertDoesNotExist()
+        screenshot("related-finder")
+        compose.onNodeWithTag("finder-related-2").performClick(); assertEquals(2,picked)
+        Espresso.pressBack(); compose.waitForIdle()
+        compose.onNodeWithTag("detail-related-finder").assertIsDisplayed()
+        compose.onAllNodes(isDialog()).assertCountEquals(1)
+    }
+    @Test fun synopsisIsPlainTextAndSharedProgressContainsOnlyPublicListFields() {
+        var copied = ""; var shared = ""
+        show { DetailToolsSheet(detail.copy(description = "<b>Alpha</b> &amp; Beta<br>Next"), {}, {}, {},
+            onCopySynopsis = { copied = it }, onShareProgress = { shared = it }) }
+        compose.onNodeWithTag("detail-copy-synopsis").performClick()
+        assertEquals("Alpha & Beta\nNext",copied)
+        compose.onNodeWithTag("detail-share-progress").performClick()
+        assertTrue(shared.contains("4/12")); assertTrue(shared.contains("8/10")); assertTrue(shared.contains("https://myanimelist.net/anime/101"))
+        screenshot("expanded-detail-tools")
+    }
+
 }

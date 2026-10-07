@@ -76,17 +76,17 @@
     <!-- Changelog -->
     <string name="changelog_release_date">7. oktobar 2026.</string>
     <string name="changelog_whats_new">Šta je novo</string>
-    <string name="changelog_hero_description">Deset novih alata za raspored, obaveštenja i detalje animea, uz doterane filtere i prikaz sa većim fontom.</string>
-    <string name="changelog_nav_title">Raspored koji ostaje ažuran</string>
-    <string name="changelog_nav_description">Izdvojeno emitovanje se osvežava dok je raspored otvoren. Dnevni i nedeljni prikaz koriste isti filtrirani raspored; oznake obaveštenja i stanje izmena ne ponavljaju taj posao.</string>
-    <string name="changelog_motion_title">Ugodnija pretraga</string>
-    <string name="changelog_motion_description">Suvišni razmaci čuvaju rezultate i ne pokreću dodatne zahteve. Polja reaguju na dodir cele površine, a potvrda unosa zatvara tastaturu.</string>
-    <string name="changelog_filters_title">Čitljive kontrole pri većem tekstu</string>
-    <string name="changelog_filters_description">Zaglavlja odvajaju naslov i akcije pri većem fontu ili na užem ekranu. Male ikonice sada imaju dodirne površine od 48 dp.</string>
-    <string name="changelog_states_title">Pouzdaniji detalji likova</string>
-    <string name="changelog_states_description">Ponovo otvoreni detalji likova koriste mali keš za ovu sesiju. Neuspešno učitavanje nudi ponovni pokušaj; zakasneli odgovori ne menjaju drugi lik i ne otvaraju zatvoren overlay.</string>
-    <string name="changelog_about_title">Ujednačena povratna informacija</string>
-    <string name="changelog_about_description">Detalji likova koriste zajednički izgled učitavanja i greške. Promena stranice zatvara tastaturu, a podešavanja obaveštenja jasno prikazuju kada nema utišanih animea.</string>
+    <string name="changelog_hero_description">Deset novih alata za lični raspored, izvoz u kalendar i istoriju obaveštenja.</string>
+    <string name="changelog_nav_title">Izaberi šta se emituje</string>
+    <string name="changelog_nav_description">Kombinuj premijere, status emitovanja, minimalnu ocenu zajednice i deo dana. Vreme prati izabranu zonu rasporeda.</string>
+    <string name="changelog_motion_title">Podsetnici u kalendaru</string>
+    <string name="changelog_motion_description">Izvezi događaje sa podsetnikom u vreme emitovanja ili 5, 15, 30 ili 60 minuta ranije. Obaveštenja šalje tvoja aplikacija kalendara.</string>
+    <string name="changelog_filters_title">Istraži i podeli anime</string>
+    <string name="changelog_filters_description">Pronađi povezane anime po naslovu i vrsti veze. Kopiraj sinopsis bez HTML oznaka ili podeli status, napredak i ocenu.</string>
+    <string name="changelog_states_title">Uredi istoriju obaveštenja</string>
+    <string name="changelog_states_description">Sortiraj od najnovijih ili najstarijih i označi samo filtrirana nepročitana obaveštenja. Pretraga i datum određuju izbor.</string>
+    <string name="changelog_about_title">Ugodniji meniji</string>
+    <string name="changelog_about_description">Kontrole obaveštenja se skroluju, ikonice su poravnate, a podmeniji ostaju u istom overlayu. Duži meniji su dostupni i uz veći tekst ili tastaturu.</string>
     <string name="changelog_footer">Napravljeno pažljivo od strane AnimeSchedule tima</string>
 
     <!-- Izvori za gledanje -->
