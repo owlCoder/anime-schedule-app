@@ -1,6 +1,7 @@
 package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import androidx.compose.ui.res.stringResource
@@ -99,49 +101,55 @@ fun AppSheet(
                 }
             }
         }
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .imePadding()
-                .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 18.dp),
-        ) {
-            if (!title.isNullOrBlank()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 48.dp)
-                        .padding(bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (showBackButton) {
-                        GlassIconButton(
-                            icon = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(android.R.string.cancel),
-                            onClick = onDismissRequest,
-                            modifier = Modifier.padding(end = 6.dp),
-                        )
-                    }
-                    Text(
-                        text = title,
+        val toast = LocalToast.current
+        val actionSpace = if (toast.current?.action != null)
+            (220 * (LocalDensity.current.fontScale / 1.5f).coerceAtLeast(1f)).dp else 0.dp
+        Box(Modifier.heightIn(min = actionSpace)) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .imePadding()
+                    .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 18.dp),
+            ) {
+                if (!title.isNullOrBlank()) {
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    trailingContent?.invoke()
-                    if (showCloseButton) {
-                        GlassIconButton(
-                            icon = Icons.Default.Close,
-                            contentDescription = stringResource(android.R.string.cancel),
-                            onClick = onDismissRequest,
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .padding(bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (showBackButton) {
+                            GlassIconButton(
+                                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(android.R.string.cancel),
+                                onClick = onDismissRequest,
+                                modifier = Modifier.padding(end = 6.dp),
+                            )
+                        }
+                        Text(
+                            text = title,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(end = 8.dp),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
+                        trailingContent?.invoke()
+                        if (showCloseButton) {
+                            GlassIconButton(
+                                icon = Icons.Default.Close,
+                                contentDescription = stringResource(android.R.string.cancel),
+                                onClick = onDismissRequest,
+                            )
+                        }
                     }
                 }
+                content()
             }
-            content()
+            if (toast.current?.action != null) ToastOverlay(toast, Modifier.matchParentSize().padding(horizontal = 12.dp, vertical = 18.dp), onlyActions = true)
         }
     }
 }

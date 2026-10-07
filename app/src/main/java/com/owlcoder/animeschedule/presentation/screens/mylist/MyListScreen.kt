@@ -150,10 +150,22 @@ fun MyListScreen(
     onAnimeClick: (Int) -> Unit,
     viewModel: MyListViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
+    initialTool: com.owlcoder.animeschedule.domain.model.ToolShortcut? = null,
+    onToolOpened: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var editingEntry by remember { mutableStateOf<MalListEntry?>(null) }
     var overlay by remember { mutableStateOf<ListOverlay?>(null) }
+    LaunchedEffect(initialTool) {
+        when (initialTool) {
+            com.owlcoder.animeschedule.domain.model.ToolShortcut.PLANNER -> overlay = ListOverlay.PLANNER
+            com.owlcoder.animeschedule.domain.model.ToolShortcut.HISTORY -> overlay = ListOverlay.HISTORY
+            com.owlcoder.animeschedule.domain.model.ToolShortcut.CALENDAR -> overlay = ListOverlay.CALENDAR
+            com.owlcoder.animeschedule.domain.model.ToolShortcut.FAVORITES -> { overlay = null; viewModel.showFavorites() }
+            else -> Unit
+        }
+        if (initialTool != null) onToolOpened()
+    }
     var showError by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val resources = androidx.compose.ui.platform.LocalResources.current

@@ -40,6 +40,7 @@ class UserPreferencesDataStore @Inject constructor(
         val MAL_USERNAME = stringPreferencesKey("mal_username")
         val MAL_AVATAR_URL = stringPreferencesKey("mal_avatar_url")
         val LAST_MAL_LIST_SYNC = longPreferencesKey("last_mal_list_sync_epoch_ms")
+        val LAST_MAL_SYNC_SUCCESS = longPreferencesKey("last_mal_sync_success_epoch_ms")
         val APPEARANCE_PRESETS = stringPreferencesKey("appearance_presets_v1")
         val THEME_OPTIONS = stringPreferencesKey("theme_options_v1")
         val THEME_MODE = stringPreferencesKey("theme_mode")
@@ -64,6 +65,15 @@ class UserPreferencesDataStore @Inject constructor(
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = safeData.map(::read).distinctUntilChanged()
+    val lastMalSyncSuccess: Flow<Long> = safeData.map {
+        it[Keys.LAST_MAL_SYNC_SUCCESS] ?: it[Keys.LAST_MAL_LIST_SYNC] ?: 0L
+    }.distinctUntilChanged()
+    suspend fun setLastMalSyncSuccess(epochMs: Long) {
+        dataStore.edit { it[Keys.LAST_MAL_SYNC_SUCCESS] = epochMs }
+    }
+    suspend fun expireMalSession() {
+        dataStore.edit { it[Keys.MAL_LOGGED_IN] = false }
+    }
 
     internal fun read(prefs: Preferences): UserPreferences {
         val storedLanguage = runCatching {

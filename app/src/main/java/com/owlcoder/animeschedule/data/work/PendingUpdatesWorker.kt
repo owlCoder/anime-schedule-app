@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import com.owlcoder.animeschedule.domain.repository.MalRepository
+import kotlinx.coroutines.flow.first
 
 /**
  * Flushes MAL list mutations queued while offline. Enqueued with a CONNECTED constraint the
@@ -22,8 +23,11 @@ class PendingUpdatesWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         val allFlushed = malRepository.flushPendingUpdates()
+        if (allFlushed) return Result.success()
+        val state = malRepository.syncState.first()
         return when {
-            allFlushed -> Result.success()
+            // Reauthentication and rejected values require a user action, not backoff retries.
+            !state.loggedIn || (state.pendingCount > 0 && state.pendingCount == state.rejectedCount) -> Result.failure()
             runAttemptCount < 5 -> Result.retry()
             else -> Result.failure()
         }

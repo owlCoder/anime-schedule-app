@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sync_center">Centar sinhronizacije</string>
+    <string name="sync_all_saved">Sve sačuvano</string>
+    <string name="sync_sign_in">Prijavi se za MAL sinhronizaciju</string>
+    <string name="sync_in_progress">Sinhronizujem izmene…</string>
+    <string name="sync_needs_attention">Neke izmene zahtevaju pažnju</string>
+    <string name="sync_failed">Sinhronizacija nije završena</string>
+    <string name="sync_online">Internet je povezan</string>
+    <string name="sync_offline">Bez interneta</string>
+    <string name="sync_last_success">Poslednja uspešna sinhronizacija</string>
+    <string name="sync_never">Još nema uspešne sinhronizacije</string>
+    <string name="sync_retry">Pokušaj ponovo</string>
+    <string name="sync_queue_hint">Izmene su sačuvane na ovom uređaju. Automatski se sinhronizuju kada se vrati internet. Više izmena istog animea računa se kao jedna izmena na čekanju.</string>
+    <string name="sync_saved_hint">Nema lokalnih izmena liste na čekanju. Osveži da preuzmeš izmene sa MAL-a.</string>
+    <string name="sync_session_expired">Sesija je istekla. Izmene na čekanju su sačuvane na ovom uređaju. Prijavi se ponovo na isti MAL nalog da ih pošalješ.</string>
+    <string name="sync_rejected_hint">MAL nije prihvatio izmenu na čekanju. Ona je i dalje sačuvana lokalno. Ispravi status, napredak ili ocenu animea, ili pokušaj ponovo kada rešiš problem.</string>
+    <string name="sync_retry_hint">Lokalne izmene su sačuvane. Proveri vezu i pokušaj ponovo.</string>
+    <plurals name="sync_pending"><item quantity="one">%d izmena čeka sinhronizaciju</item><item quantity="few">%d izmene čekaju sinhronizaciju</item><item quantity="other">%d izmena čeka sinhronizaciju</item></plurals>
+    <plurals name="sync_pending_offline"><item quantity="one">%d izmena čeka internet</item><item quantity="few">%d izmene čekaju internet</item><item quantity="other">%d izmena čeka internet</item></plurals>
+    <string name="logout_pending_title">Odjava uz izmene na čekanju?</string>
+    <string name="logout_pending_hint">%d izmena još nije stiglo na MAL. Odjava briše keširanu listu i izmene na čekanju ovog naloga sa uređaja. Ostani prijavljen i pokušaj sinhronizaciju ponovo da ih sačuvaš.</string>
+    <string name="undo_action">Poništi</string>
+    <string name="undo_list_change">Izmene sačuvane · %s</string>
+    <string name="undo_done">Vraćeni prethodni napredak, status i ocena</string>
+    <string name="undo_failed">Prethodne vrednosti nisu vraćene. Pokušaj „Poništi” ponovo.</string>
+    <string name="undo_unavailable">Izmena ili nalog su se u međuvremenu promenili. Prethodne vrednosti nisu vraćene.</string>
+    <string name="notification_increment">+1 odgledana epizoda</string>
+    <string name="notification_snooze">Podseti za 15 min</string>
+    <string name="notification_action_login">Prijavi se na MAL u aplikaciji da sačuvaš ovu epizodu.</string>
+    <string name="notification_action_failed">Napredak nije ažuriran. Otvori anime da proveriš njegov status.</string>
+    <string name="shortcuts_title">Brze prečice</string>
+    <string name="shortcuts_customize">Prilagodi prečice</string>
+    <string name="shortcuts_hint">Izaberi do četiri alatke za stranicu Raspored. Strelicama promeni redosled. Izmene se odmah čuvaju.</string>
+    <string name="shortcuts_up">Pomeri %s gore</string>
+    <string name="shortcuts_down">Pomeri %s dole</string>
+    <string name="shortcuts_settings_hint">Izaberi i poređaj najčešće korišćene alatke</string>
+    <string name="shortcut_planner_label">Planer</string>
+    <string name="shortcut_history_label">Istorija</string>
+    <string name="shortcut_calendar_label">Kalendar</string>
+</resources>

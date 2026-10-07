@@ -14,6 +14,7 @@ data class WatchToolsActions(
     val setEpisodeMinutes: (Int) -> Unit = {},
     val togglePin: (Int) -> Unit = {},
     val setDurationOverride: (Int, Int?) -> Unit = { _, _ -> },
+    val setShortcuts: (List<com.owlcoder.animeschedule.domain.model.ToolShortcut>) -> Unit = {},
 )
 
 val LocalWatchTools = compositionLocalOf { WatchToolsActions() }

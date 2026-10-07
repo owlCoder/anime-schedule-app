@@ -73,6 +73,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 class MainActivity : AppCompatActivity() {
 
     private val authViewModel: AuthViewModel by viewModels()
+    private val syncViewModel: com.owlcoder.animeschedule.presentation.screens.settings.SyncCenterViewModel by viewModels()
+    @Inject lateinit var malRepository: com.owlcoder.animeschedule.domain.repository.MalRepository
 
     @Inject
     lateinit var prefsDataStore: UserPreferencesDataStore
@@ -120,6 +122,7 @@ class MainActivity : AppCompatActivity() {
             val isMalConnected by authViewModel.isLoggedIn.collectAsStateWithLifecycle(initialValue = prefs.malLoggedIn)
             val malUsername by authViewModel.username.collectAsStateWithLifecycle(initialValue = prefs.malUsername)
             val scope = rememberCoroutineScope()
+            val syncState by syncViewModel.state.collectAsStateWithLifecycle()
             val watchTools by watchToolsStore.data.collectAsStateWithLifecycle(initialValue = com.owlcoder.animeschedule.domain.model.WatchTools())
             val toolsActions = com.owlcoder.animeschedule.presentation.components.WatchToolsActions(
                 data = watchTools,
@@ -131,6 +134,7 @@ class MainActivity : AppCompatActivity() {
                 setEpisodeMinutes = { minutes -> scope.launch { watchToolsStore.setEpisodeMinutes(minutes) } },
                 togglePin = { id -> scope.launch { watchToolsStore.togglePin(id) } },
                 setDurationOverride = { id, minutes -> scope.launch { watchToolsStore.setDurationOverride(id, minutes) } },
+                setShortcuts = { values -> scope.launch { watchToolsStore.setShortcuts(values) } },
             )
 
             var pendingTheme by rememberSaveable { mutableStateOf(prefs.themeMode) }
@@ -193,6 +197,7 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         val toastController = remember { ToastController() }
+                        com.owlcoder.animeschedule.presentation.components.ListUndoMessages(malRepository, toastController)
                         var isSearchFocused by rememberSaveable { mutableStateOf(false) }
                         val backStackEntry by navController.currentBackStackEntryAsState()
                         val currentRoute = backStackEntry?.destination?.route
@@ -206,6 +211,8 @@ class MainActivity : AppCompatActivity() {
                             LocalChromeHazeState provides hazeState,
                             LocalNavBarHeight provides if (showBottomBar) 84.dp else 0.dp,
                             LocalToast provides toastController,
+                            com.owlcoder.animeschedule.presentation.components.LocalSyncCenter provides
+                                com.owlcoder.animeschedule.presentation.components.SyncCenterActions(syncState, prefs.effectiveZoneId, syncViewModel::retry, { authViewModel.launchMalLogin(this@MainActivity) }),
                         ) {
                             ToastHost(controller = toastController) {
                                 Box(modifier = Modifier.fillMaxSize()) {

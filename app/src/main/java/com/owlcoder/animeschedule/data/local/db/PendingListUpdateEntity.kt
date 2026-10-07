@@ -17,5 +17,6 @@ data class PendingListUpdateEntity(
     val score: Int?,
     /** True = the entry should be deleted from the MAL list (wins over field updates). */
     val isRemoval: Boolean,
-    val queuedAtEpochMs: Long
+    val queuedAtEpochMs: Long,
+    @androidx.room.ColumnInfo(defaultValue = "0") val rejected: Boolean = false,
 )

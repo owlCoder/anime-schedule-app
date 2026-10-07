@@ -1,6 +1,8 @@
 package com.owlcoder.animeschedule
 
 import android.graphics.Bitmap
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.lifecycle.ViewModel
@@ -198,6 +200,29 @@ class OverlayEditingTest {
             assertEquals(12, saved?.episodesWatched)
             assertEquals(WatchStatus.COMPLETED, saved?.status)
         }
+    }
+
+    @Test fun shortcutsOpenTheRequestedListToolAndFavoritesFilter() {
+        val mal = FakeMal()
+        val vm = keep("list-shortcuts", MyListViewModel(mal, Auth))
+        val auth = keep("auth-shortcuts", AuthViewModel(Auth, mal))
+        var shortcut by androidx.compose.runtime.mutableStateOf<com.owlcoder.animeschedule.domain.model.ToolShortcut?>(com.owlcoder.animeschedule.domain.model.ToolShortcut.PLANNER)
+        var consumed = 0
+        compose.setContent { AnimeScheduleTheme(themeMode = ThemeMode.DARK) {
+            MyListScreen({}, vm, auth, initialTool = shortcut, onToolOpened = { consumed++; shortcut = null })
+        } }
+        compose.onNodeWithText(text(R.string.watch_planner)).assertIsDisplayed()
+        Espresso.pressBack()
+        compose.runOnIdle { shortcut = com.owlcoder.animeschedule.domain.model.ToolShortcut.HISTORY }
+        compose.onNodeWithText(text(R.string.watch_history)).assertIsDisplayed()
+        Espresso.pressBack()
+        compose.runOnIdle { shortcut = com.owlcoder.animeschedule.domain.model.ToolShortcut.CALENDAR }
+        compose.onNodeWithText(text(R.string.activity_calendar)).assertIsDisplayed()
+        Espresso.pressBack()
+        compose.runOnIdle { shortcut = com.owlcoder.animeschedule.domain.model.ToolShortcut.FAVORITES }
+        compose.waitUntil { vm.uiState.value.favoritesOnly }
+        compose.onAllNodes(isDialog()).assertCountEquals(0)
+        compose.runOnIdle { assertEquals(4, consumed) }
     }
 
     private fun screenshot(name: String) {

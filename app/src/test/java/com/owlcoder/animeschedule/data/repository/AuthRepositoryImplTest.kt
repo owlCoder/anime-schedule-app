@@ -139,4 +139,19 @@ class AuthRepositoryImplTest {
         assertEquals(LoginState.InProgress, stateDuringExchange)
         assertEquals(LoginState.Idle, repository.loginState.value)
     }
+    @Test fun `blank callback code is rejected before exchange`() = runTest {
+        repository.beginLogin()
+        assertFalse(repository.completeLogin(" ", storedState))
+        coVerify(exactly = 0) { manager.handleCallback(any(), any()) }
+    }
+    @Test fun `duplicate callback cannot start another exchange`() = runTest {
+        repository.beginLogin()
+        coEvery { manager.handleCallback(any(), any()) } coAnswers {
+            assertFalse(repository.completeLogin("code", storedState))
+            true
+        }
+        assertTrue(repository.completeLogin("code", storedState))
+        coVerify(exactly = 1) { manager.handleCallback(any(), any()) }
+    }
+
 }

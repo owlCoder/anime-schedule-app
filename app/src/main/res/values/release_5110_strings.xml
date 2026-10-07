@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sync_center">Sync center</string>
+    <string name="sync_all_saved">Everything saved</string>
+    <string name="sync_sign_in">Sign in to sync with MAL</string>
+    <string name="sync_in_progress">Syncing your changes…</string>
+    <string name="sync_needs_attention">Some changes need attention</string>
+    <string name="sync_failed">Could not complete sync</string>
+    <string name="sync_online">Internet connected</string>
+    <string name="sync_offline">Offline</string>
+    <string name="sync_last_success">Last successful sync</string>
+    <string name="sync_never">No successful sync yet</string>
+    <string name="sync_retry">Try again</string>
+    <string name="sync_queue_hint">Changes are saved on this device. They will sync automatically when internet is available. Multiple edits to one anime count as one pending change.</string>
+    <string name="sync_saved_hint">No local list changes are waiting to sync. Refresh to fetch changes made on MAL.</string>
+    <string name="sync_session_expired">Your session expired. Pending changes are kept on this device. Sign back in to the same MAL account to deliver them.</string>
+    <string name="sync_rejected_hint">MAL rejected a pending change. It is still kept locally. Correct the anime’s status, progress or score, or retry after resolving the issue.</string>
+    <string name="sync_retry_hint">Your local changes are safe. Check your connection and try again.</string>
+    <plurals name="sync_pending"><item quantity="one">%d change waiting to sync</item><item quantity="other">%d changes waiting to sync</item></plurals>
+    <plurals name="sync_pending_offline"><item quantity="one">%d change waiting for internet</item><item quantity="other">%d changes waiting for internet</item></plurals>
+    <string name="logout_pending_title">Sign out with pending changes?</string>
+    <string name="logout_pending_hint">%d changes have not reached MAL. Signing out clears this account’s cached list and pending changes from this device. Stay signed in and retry sync to keep them.</string>
+    <string name="undo_action">Undo</string>
+    <string name="undo_list_change">Saved changes · %s</string>
+    <string name="undo_done">Previous progress, status and score restored</string>
+    <string name="undo_failed">Could not restore the previous values. Try Undo again.</string>
+    <string name="undo_unavailable">The entry or account has changed. Previous values were not restored.</string>
+    <string name="notification_increment">+1 watched episode</string>
+    <string name="notification_snooze">Remind in 15 min</string>
+    <string name="notification_action_login">Sign in to MAL in the app to save this episode.</string>
+    <string name="notification_action_failed">Could not update progress. Open the anime to check its status.</string>
+    <string name="shortcuts_title">Quick shortcuts</string>
+    <string name="shortcuts_customize">Customize shortcuts</string>
+    <string name="shortcuts_hint">Choose up to four tools for the Schedule page. Use the arrows to change their order. Changes save immediately.</string>
+    <string name="shortcuts_up">Move %s up</string>
+    <string name="shortcuts_down">Move %s down</string>
+    <string name="shortcuts_settings_hint">Choose and order your most-used tools</string>
+    <string name="shortcut_planner_label">Planner</string>
+    <string name="shortcut_history_label">History</string>
+    <string name="shortcut_calendar_label">Calendar</string>
+</resources>

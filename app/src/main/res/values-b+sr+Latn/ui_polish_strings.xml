@@ -76,17 +76,17 @@
     <!-- Changelog -->
     <string name="changelog_release_date">7. oktobar 2026.</string>
     <string name="changelog_whats_new">Šta je novo</string>
-    <string name="changelog_hero_description">AMOLED crna sada obuhvata sve panele, uz trenutnu promenu u izgledu i čitljive kartice. Uključeni su i alati za pretragu, planiranje i detalje iz verzije 5.10.0.</string>
-    <string name="changelog_nav_title">Isplaniraj nedelju</string>
-    <string name="changelog_nav_description">Podeli celu filtriranu nedelju, pogledaj procenjeno vreme gledanja i pređi na sledeći dan sa emitovanjima. Procene koriste tvoja podešena trajanja epizoda.</string>
-    <string name="changelog_motion_title">Preciznija pretraga</string>
-    <string name="changelog_motion_description">Kombinuj minimalnu ocenu zajednice, raspon broja epizoda i godinu sa postojećim filterima. Izabrane opcije ostaju dostupne kada se rezultati promene.</string>
-    <string name="changelog_filters_title">Čitaj i podeli detalje</string>
-    <string name="changelog_filters_description">Pročitaj ceo sinopsis uz izbor teksta, kopiraj link animea i podeli učitani javni profil lika. Kodirani znakovi i pasusi se pravilno prikazuju.</string>
-    <string name="changelog_states_title">Status obaveštenja jednim dodirom</string>
-    <string name="changelog_states_description">Označi pojedinačno obaveštenje kao pročitano ili nepročitano bez otvaranja animea. Neuspešne izmene čuvaju zapis i dozvoljavaju ponovni pokušaj.</string>
-    <string name="changelog_about_title">Poravnati i čitljivi meniji</string>
-    <string name="changelog_about_description">Alatke detalja i rasporeda imaju poravnatu kolonu ikonica. Kontrole pretrage daju više prostora većem tekstu, a primena filtera ostaje dostupna tokom skrolovanja.</string>
+    <string name="changelog_hero_description">Pouzdanija sinhronizacija liste, poništavanje izmena, akcije obaveštenja i prilagodljive prečice. Sačuvani podaci ostaju pri nadogradnji.</string>
+    <string name="changelog_nav_title">Sinhronizacija na jednom mestu</string>
+    <string name="changelog_nav_description">Pogledaj izmene na čekanju, vezu i poslednju uspešnu sinhronizaciju. Pokušaj ponovo ili se bezbedno prijavi na isti MAL nalog.</string>
+    <string name="changelog_motion_title">Poništi slučajnu izmenu</string>
+    <string name="changelog_motion_description">Vrati prethodni broj epizoda, status i ocenu iz poruke u aplikaciji, čak i dok je editor otvoren. Novije izmene su zaštićene.</string>
+    <string name="changelog_filters_title">Tvoje alatke, tvoj redosled</string>
+    <string name="changelog_filters_description">Izaberi do četiri prečice za raspored: Planer, Nedeljni pregled, Favoriti, Istorija, Kalendar aktivnosti ili Centar sinhronizacije. Promeni redosled strelicama.</string>
+    <string name="changelog_states_title">Akcije iz obaveštenja</string>
+    <string name="changelog_states_description">Dodaj jednu odgledanu epizodu ili zatraži podsetnik za 15 minuta. Ponovljeni dodiri ne dodaju višak epizoda, a offline izmene se šalju kasnije.</string>
+    <string name="changelog_about_title">Pouzdane promene naloga</string>
+    <string name="changelog_about_description">Offline izmene ostaju vezane za nalog. Odbijene izmene su vidljive, a odjava objašnjava šta se dešava sa izmenama na čekanju.</string>
     <string name="changelog_footer">Napravljeno pažljivo od strane AnimeSchedule tima</string>
 
     <!-- Izvori za gledanje -->

@@ -25,8 +25,8 @@ android {
         minSdk = 31
         targetSdk = 36
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        versionCode = 34
-        versionName = "5.10.1"
+        versionCode = 35
+        versionName = "5.11.0"
 
         buildConfigField(
             "String",
@@ -82,6 +82,8 @@ android {
         // Production classes log through android.util.Log; unit tests should not need Robolectric.
         unitTests.isReturnDefaultValues = true
     }
+
+    sourceSets.getByName("androidTest").assets.srcDir("$projectDir/schemas")
 
     // The in-app language switcher can pick a language the device is not set to. Play's
     // per-language splits would leave that language's resources out of the install.
@@ -186,6 +188,8 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.room:room-testing:${libs.versions.room.get()}")
+    androidTestImplementation("androidx.work:work-testing:${libs.versions.workmanager.get()}")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     debugImplementation(libs.androidx.compose.ui.tooling)

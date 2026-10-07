@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Info
@@ -22,6 +23,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import kotlinx.coroutines.delay
@@ -29,21 +31,38 @@ import kotlinx.coroutines.delay
 enum class ToastTone { Info, Success, Error }
 
 @Immutable
-data class ToastData(val id: Long, val message: String, val tone: ToastTone)
+data class ToastData(val id: Long, val message: String, val tone: ToastTone, val action: ToastAction? = null)
+
+@Immutable
+data class ToastAction(val key: Long, val label: String, val onClick: () -> Unit, val onDismiss: () -> Unit = {})
 
 /** A single current message; a new notification replaces the old timeout as well as its text. */
 class ToastController {
     var current by mutableStateOf<ToastData?>(null)
         private set
     private var counter = 0L
-    fun show(message: String, tone: ToastTone = ToastTone.Info) {
-        if (message.isNotBlank()) current = ToastData(++counter, message.trim(), tone)
+    fun show(message: String, tone: ToastTone = ToastTone.Info, action: ToastAction? = null) {
+        if (message.isBlank()) return
+        // Routine success events must not replace a newly offered Undo for the same edit.
+        if (current?.action != null && tone == ToastTone.Success && action == null) return
+        val previous = current
+        current = ToastData(++counter, message.trim(), tone, action)
+        if (previous?.action?.key != action?.key) previous?.action?.onDismiss?.invoke()
     }
 
     fun success(message: String) = show(message, ToastTone.Success)
     fun error(message: String) = show(message, ToastTone.Error)
     fun dismiss() {
+        val previous = current
         current = null
+        previous?.action?.onDismiss?.invoke()
+    }
+    fun clearAction(key: Long) { if (current?.action?.key == key) current = null }
+    fun performAction(id: Long) {
+        val data = current?.takeIf { it.id == id } ?: return
+        val action = data.action ?: return
+        current = null // Consume the tap before launching async work.
+        action.onClick()
     }
 }
 
@@ -51,16 +70,24 @@ val LocalToast = compositionLocalOf { ToastController() }
 
 @Composable
 fun ToastHost(controller: ToastController, content: @Composable () -> Unit) {
+    Box(Modifier.fillMaxSize()) {
+        content()
+        ToastOverlay(controller, Modifier.fillMaxSize().imePadding().navigationBarsPadding()
+            .padding(start = 24.dp, end = 24.dp, bottom = LocalNavBarHeight.current + 16.dp))
+    }
+}
+
+@Composable
+internal fun ToastOverlay(controller: ToastController, modifier: Modifier, onlyActions: Boolean = false) {
     val motion = LocalMotionPolicy.current
     val accessibility = LocalAccessibilityManager.current
-    val navBarHeight = LocalNavBarHeight.current
-    val data = controller.current
+    val data = controller.current?.takeIf { !onlyActions || it.action != null }
     var lastShown by remember { mutableStateOf<ToastData?>(null) }
     SideEffect { if (data != null) lastShown = data }
     LaunchedEffect(data?.id) {
         if (data != null) {
             val base = maxOf(
-                if (data.tone == ToastTone.Error) 4500L else 2600L,
+                if (data.action != null) 10_000L else if (data.tone == ToastTone.Error) 4500L else 2600L,
                 (data.message.length * 45L).coerceAtMost(10_000L)
             )
             val timeout = accessibility?.calculateRecommendedTimeoutMillis(
@@ -73,13 +100,7 @@ fun ToastHost(controller: ToastController, content: @Composable () -> Unit) {
             if (controller.current?.id == data.id) controller.dismiss()
         }
     }
-    Box(Modifier.fillMaxSize()) {
-        content()
-        Box(
-            Modifier.fillMaxSize().imePadding().navigationBarsPadding()
-                .padding(start = 24.dp, end = 24.dp, bottom = navBarHeight + 16.dp),
-            contentAlignment = Alignment.BottomCenter
-        ) {
+    Box(modifier, contentAlignment = Alignment.BottomCenter) {
             AnimatedVisibility(
                 data != null,
                 enter = slideInVertically(
@@ -92,14 +113,13 @@ fun ToastHost(controller: ToastController, content: @Composable () -> Unit) {
                     motion.iosTween(IosMotion.Quick)
                 ),
             ) {
-                (data ?: lastShown)?.let { ToastCard(it, controller::dismiss) }
+                (data ?: lastShown)?.let { ToastCard(it, controller::dismiss) { controller.performAction(it.id) } }
             }
-        }
     }
 }
 
 @Composable
-private fun ToastCard(data: ToastData, onDismiss: () -> Unit) {
+private fun ToastCard(data: ToastData, onDismiss: () -> Unit, onAction: () -> Unit) {
     val dark = MaterialTheme.colorScheme.background.luminance() < .35f
     val accent = when (data.tone) {
         ToastTone.Success -> if (dark) Color(0xFF9BD6AE) else Color(0xFF256A43)
@@ -118,34 +138,41 @@ private fun ToastCard(data: ToastData, onDismiss: () -> Unit) {
         border = BorderStroke(.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f)),
         shadowElevation = 8.dp,
     ) {
-        Row(
-            Modifier.padding(start = 12.dp, end = 6.dp, top = 8.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Surface(shape = CircleShape, color = accent.copy(alpha = .12f)) {
-                Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
+        Column {
+            Row(
+                Modifier.padding(start = 12.dp, end = 6.dp, top = 8.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Surface(shape = CircleShape, color = accent.copy(alpha = .12f)) {
+                    Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
+                        Icon(
+                            icon,
+                            null,
+                            tint = accent,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                Text(
+                    data.message,
+                    modifier = Modifier.weight(1f, fill = false),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = if (data.action != null) 3 else Int.MAX_VALUE,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                IconButton(onDismiss, modifier = Modifier.size(40.dp).testTag("toast-dismiss")) {
                     Icon(
-                        icon,
-                        null,
-                        tint = accent,
-                        modifier = Modifier.size(20.dp)
+                        Icons.Default.Close,
+                        stringResource(R.string.toast_dismiss),
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
-            Text(
-                data.message,
-                modifier = Modifier.weight(1f, fill = false),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
-            )
-            IconButton(onDismiss, modifier = Modifier.size(40.dp).testTag("toast-dismiss")) {
-                Icon(
-                    Icons.Default.Close,
-                    stringResource(R.string.toast_dismiss),
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            data.action?.let { action ->
+                AppButton(action.label, onAction, Modifier.fillMaxWidth().padding(horizontal = 8.dp).testTag("toast-action"), variant = AppButtonVariant.Plain, icon = Icons.AutoMirrored.Filled.Undo)
             }
         }
     }

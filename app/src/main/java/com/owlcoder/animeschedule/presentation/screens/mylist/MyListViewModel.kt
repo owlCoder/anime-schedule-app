@@ -180,6 +180,7 @@ class MyListViewModel @Inject constructor(
     fun clearQuickFilters() { _searchQuery.value = ""; _quickFilters.value = false to false; _tagFilter.value = null; _smartFilter.value = SmartListFilter.ALL; _scoreRange.value = 0 to 10 }
     fun setTagFilter(tag: String?) { _tagFilter.value = tag }
     fun toggleFavorites() = _quickFilters.update { !it.first to it.second }
+    fun showFavorites() { clearQuickFilters(); _activeFilter.value = null; _quickFilters.value = true to false }
     fun toggleUnrated() = _quickFilters.update { it.first to !it.second }
     fun setWeeklyGoal(goal: Int) { viewModelScope.launch { toolsStore?.setWeeklyGoal(goal) } }
     fun clearActivity() { viewModelScope.launch { toolsStore?.clearActivity() } }

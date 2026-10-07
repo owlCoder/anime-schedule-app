@@ -16,8 +16,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Every request here uses a unique work name, so enqueueing is idempotent: calling it on each
- * app start, refresh or edit can never pile up duplicate jobs.
+ * Recurring jobs keep their schedule. List flushes form a durable chain so an edit arriving
+ * just after a running flush reads the queue still gets its own delivery opportunity.
  */
 @Singleton
 class WorkManagerScheduler @Inject constructor(
@@ -60,9 +60,7 @@ class WorkManagerScheduler @Inject constructor(
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .build()
 
-        // KEEP: a flush already waiting for connectivity will also pick up newly queued rows,
-        // so there is no need to reset its backoff.
-        workManager.enqueueUniqueWork(PENDING_UPDATES_WORK_NAME, ExistingWorkPolicy.KEEP, request)
+        workManager.enqueueUniqueWork(PENDING_UPDATES_WORK_NAME, ExistingWorkPolicy.APPEND_OR_REPLACE, request)
     }
 
     override fun checkAiringNotifications() {

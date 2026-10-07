@@ -40,6 +40,8 @@ import com.owlcoder.animeschedule.domain.model.MalListUpdate
 import com.owlcoder.animeschedule.domain.model.WatchStatus
 import java.io.IOException
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.async
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody.Companion.toResponseBody
 
@@ -73,6 +75,7 @@ private class FakeMalApiService : MalApiService {
     var onGetAnimeDetail: suspend (malId: Int) -> MalAnimeNode = { node(it) }
 
     val updateCalls = mutableListOf<Int>()
+    val payloads = mutableListOf<MalListUpdate>()
     val deleteCalls = mutableListOf<Int>()
 
     override suspend fun getUserAnimeList(fields: String, limit: Int, offset: Int, nsfw: Boolean) =
@@ -80,6 +83,7 @@ private class FakeMalApiService : MalApiService {
 
     override suspend fun updateListStatus(animeId: Int, status: String?, numWatchedEpisodes: Int?, score: Int?): MalListStatus {
         updateCalls += animeId
+        payloads += MalListUpdate(WatchStatus.entries.firstOrNull { it.malValue == status }, numWatchedEpisodes, score)
         return onUpdateListStatus(animeId)
     }
 
@@ -112,11 +116,14 @@ private class FakeMalListEntryDao : MalListEntryDao {
 
 private class FakePendingListUpdateDao : PendingListUpdateDao {
     val rows = linkedMapOf<Int, PendingListUpdateEntity>()
+    private val flow = MutableStateFlow<List<PendingListUpdateEntity>>(emptyList())
+    override fun observeAll() = flow
+    private fun emit() { flow.value = rows.values.toList() }
     override suspend fun getAll() = rows.values.toList()
     override suspend fun getByAnimeId(animeId: Int) = rows[animeId]
-    override suspend fun upsert(entity: PendingListUpdateEntity) { rows[entity.animeId] = entity }
-    override suspend fun deleteByAnimeId(animeId: Int) { rows.remove(animeId) }
-    override suspend fun deleteAll() { rows.clear() }
+    override suspend fun upsert(entity: PendingListUpdateEntity) { rows[entity.animeId] = entity; emit() }
+    override suspend fun deleteByAnimeId(animeId: Int) { rows.remove(animeId); emit() }
+    override suspend fun deleteAll() { rows.clear(); emit() }
 }
 
 private class FakeScheduler : WorkScheduler {
@@ -144,11 +151,12 @@ class MalRepositoryImplTest {
         scheduler = FakeScheduler()
         authManager = mockk {
             coEvery { ensureFreshToken() } just Runs
-            coEvery { refreshAccessToken() } returns MalAuthManager.RefreshResult.REFRESHED
+            coEvery { refreshAccessToken(any()) } returns MalAuthManager.RefreshResult.REFRESHED
         }
         prefs = mockk(relaxed = true) {
             coEvery { getLastMalListSyncEpochMs() } returns 0L
             every { userPreferencesFlow } returns flowOf(UserPreferences(malLoggedIn = true))
+            every { lastMalSyncSuccess } returns flowOf(123L)
         }
         detailDao = mockk {
             coEvery { getByMalId(any()) } returns null
@@ -217,19 +225,19 @@ class MalRepositoryImplTest {
     @Test
     fun `invalid refresh token logs the user out`() = runTest {
         listDao.rows[10] = entity(10)
-        coEvery { authManager.refreshAccessToken() } returns MalAuthManager.RefreshResult.INVALID
+        coEvery { authManager.refreshAccessToken(any()) } returns MalAuthManager.RefreshResult.INVALID
         api.onUpdateListStatus = { throw httpException(401) }
 
         val result = repository.updateListEntry(10, MalListUpdate(episodesWatched = 4))
 
         assertTrue(result is AppResult.Error && (result as AppResult.Error).error is AppError.Unauthorized)
-        coVerify { prefs.setMalLoggedIn(false, any(), any()) }
+        coVerify { prefs.expireMalSession() }
     }
 
     @Test
     fun `transient refresh failure does not log the user out and queues the edit`() = runTest {
         listDao.rows[10] = entity(10)
-        coEvery { authManager.refreshAccessToken() } returns MalAuthManager.RefreshResult.TRANSIENT
+        coEvery { authManager.refreshAccessToken(any()) } returns MalAuthManager.RefreshResult.TRANSIENT
         api.onUpdateListStatus = { throw httpException(401) }
 
         val result = repository.updateListEntry(10, MalListUpdate(episodesWatched = 4))
@@ -238,7 +246,7 @@ class MalRepositoryImplTest {
         // later with a fresh token) instead of being lost — and the session survives.
         assertTrue(result is AppResult.Success)
         assertEquals(4, pendingDao.rows[10]!!.numWatchedEpisodes)
-        coVerify(exactly = 0) { prefs.setMalLoggedIn(false, any(), any()) }
+        coVerify(exactly = 0) { prefs.expireMalSession() }
     }
 
     // --- offline queue ---
@@ -390,7 +398,7 @@ class MalRepositoryImplTest {
         assertTrue(result is AppResult.Success)
         assertEquals(4, pendingDao.rows[10]!!.numWatchedEpisodes)
         assertEquals(1, scheduler.flushRequests)
-        coVerify(exactly = 0) { prefs.setMalLoggedIn(false, any(), any()) }
+        coVerify(exactly = 0) { prefs.expireMalSession() }
     }
 
     @Test
@@ -405,7 +413,7 @@ class MalRepositoryImplTest {
     }
 
     @Test
-    fun `flush drops an edit the server rejects instead of retrying it forever`() = runTest {
+    fun `flush retains rejected edits visibly and does not retry them automatically`() = runTest {
         pendingDao.rows[10] = PendingListUpdateEntity(10, "watching", 99, null, isRemoval = false, queuedAtEpochMs = 1L)
         pendingDao.rows[20] = PendingListUpdateEntity(20, "watching", 5, null, isRemoval = false, queuedAtEpochMs = 2L)
         api.onUpdateListStatus = { id ->
@@ -415,9 +423,12 @@ class MalRepositoryImplTest {
 
         val flushed = repository.flushPendingUpdates()
 
-        assertTrue(flushed)
-        assertTrue("rejected edit must leave the queue", pendingDao.rows.isEmpty())
+        assertFalse(flushed)
+        assertEquals(setOf(10), pendingDao.rows.keys)
+        assertTrue(pendingDao.rows[10]!!.rejected)
         assertEquals(listOf(10, 20), api.updateCalls)
+        repository.flushPendingUpdates()
+        assertEquals("rejected payload is not sent again automatically", listOf(10, 20), api.updateCalls)
     }
 
     @Test
@@ -435,7 +446,7 @@ class MalRepositoryImplTest {
     fun `flush stops and keeps the queue when the session is dead`() = runTest {
         pendingDao.rows[10] = PendingListUpdateEntity(10, "watching", 5, null, isRemoval = false, queuedAtEpochMs = 1L)
         pendingDao.rows[20] = PendingListUpdateEntity(20, "watching", 6, null, isRemoval = false, queuedAtEpochMs = 2L)
-        coEvery { authManager.refreshAccessToken() } returns MalAuthManager.RefreshResult.INVALID
+        coEvery { authManager.refreshAccessToken(any()) } returns MalAuthManager.RefreshResult.INVALID
         api.onUpdateListStatus = { throw httpException(401) }
 
         val flushed = repository.flushPendingUpdates()
@@ -522,6 +533,103 @@ class MalRepositoryImplTest {
         api.onUpdateListStatus = { MalListStatus(status = "watching", numEpisodesWatched = 4, score = 7) }
         tracked.flushPendingUpdates()
         coVerify(exactly = 1) { tools.recordProgress(any(), any(), any(), any()) }
+    }
+
+
+    private fun echoCurrentValues() {
+        api.onUpdateListStatus = { id ->
+            val values = api.payloads.last()
+            val old = listDao.rows[id] ?: entity(id, episodes = 0, status = "plan_to_watch")
+            MalListStatus(values.status?.malValue ?: old.status, values.episodesWatched ?: old.numEpisodesWatched, values.score ?: old.score)
+        }
+    }
+
+    @Test fun `an online edit delivers queued fields too and cannot leave a stale replay`() = runTest {
+        listDao.rows[10] = entity(10, episodes = 3)
+        api.onUpdateListStatus = { throw IOException("offline") }
+        repository.updateListEntry(10, MalListUpdate(episodesWatched = 5, status = WatchStatus.ON_HOLD))
+        echoCurrentValues()
+        repository.updateListEntry(10, MalListUpdate(score = 9))
+        assertEquals(MalListUpdate(WatchStatus.ON_HOLD, 5, 9), api.payloads.last())
+        assertTrue(pendingDao.rows.isEmpty())
+        repository.flushPendingUpdates()
+        assertEquals(2, api.updateCalls.size)
+        assertEquals(5, listDao.rows[10]!!.numEpisodesWatched)
+    }
+
+    @Test fun `undo restores progress status and score together and is consumed once`() = runTest {
+        listDao.rows[10] = entity(10, episodes = 3)
+        echoCurrentValues()
+        repository.updateListEntry(10, MalListUpdate(WatchStatus.COMPLETED, 12, 9))
+        val change = repository.undoChange.value!!
+        assertTrue(repository.undoListChange(change.id) is AppResult.Success)
+        assertEquals(MalListUpdate(WatchStatus.WATCHING, 3, 7), api.payloads.last())
+        assertNull(repository.undoChange.value)
+        assertTrue(repository.undoListChange(change.id) is AppResult.Error)
+        assertEquals(2, api.updateCalls.size)
+    }
+
+    @Test fun `offline undo replaces the queued desired state rather than replaying plus one`() = runTest {
+        listDao.rows[10] = entity(10, episodes = 3)
+        api.onUpdateListStatus = { throw IOException("offline") }
+        repository.incrementEpisode(10)
+        val id = repository.undoChange.value!!.id
+        assertTrue(repository.undoListChange(id) is AppResult.Success)
+        assertEquals(3, listDao.rows[10]!!.numEpisodesWatched)
+        assertEquals(3, pendingDao.rows[10]!!.numWatchedEpisodes)
+        echoCurrentValues()
+        assertTrue(repository.flushPendingUpdates())
+        assertEquals(3, api.payloads.last().episodesWatched)
+        assertTrue(pendingDao.rows.isEmpty())
+    }
+
+    @Test fun `an old undo cannot overwrite a newer edit or a remote change`() = runTest {
+        listDao.rows[10] = entity(10)
+        echoCurrentValues()
+        repository.incrementEpisode(10)
+        val old = repository.undoChange.value!!.id
+        repository.updateListEntry(10, MalListUpdate(score = 9))
+        assertTrue(repository.undoListChange(old) is AppResult.Error)
+        val latest = repository.undoChange.value!!.id
+        listDao.rows[10] = listDao.rows[10]!!.copy(numEpisodesWatched = 8)
+        assertTrue(repository.undoListChange(latest) is AppResult.Error)
+        assertEquals(8, listDao.rows[10]!!.numEpisodesWatched)
+        assertEquals(9, listDao.rows[10]!!.score)
+        assertEquals(2, api.updateCalls.size)
+    }
+
+    @Test fun `simultaneous increments preserve both intended steps`() = runTest {
+        listDao.rows[10] = entity(10)
+        echoCurrentValues()
+        val jobs = (1..2).map { async { repository.incrementEpisode(10) } }
+        jobs.forEach { assertTrue(it.await() is AppResult.Success) }
+        assertEquals(listOf(4, 5), api.payloads.map { it.episodesWatched })
+        assertEquals(5, listDao.rows[10]!!.numEpisodesWatched)
+    }
+
+    @Test fun `sync center counts coalesced edits and preserves rejected edits for manual retry`() = runTest {
+        api.onUpdateListStatus = { throw IOException("offline") }
+        listDao.rows[10] = entity(10); listDao.rows[20] = entity(20)
+        repository.incrementEpisode(10); repository.updateListEntry(10, MalListUpdate(score = 9)); repository.incrementEpisode(20)
+        assertEquals(2, repository.syncState.first().pendingCount)
+        api.onUpdateListStatus = { throw httpException(400) }
+        assertFalse(repository.flushPendingUpdates())
+        assertEquals(2, repository.syncState.first().rejectedCount)
+        val previousCalls = api.updateCalls.size
+        repository.flushPendingUpdates()
+        assertEquals(previousCalls, api.updateCalls.size)
+        echoCurrentValues()
+        api.onGetUserAnimeList = { listResponse(10, 20) }
+        assertTrue(repository.retrySync())
+        assertEquals(0, repository.syncState.first().pendingCount)
+        assertEquals(0, repository.syncState.first().rejectedCount)
+    }
+
+    @Test fun `signed out updates cannot resurrect the list or send a patch`() = runTest {
+        every { prefs.userPreferencesFlow } returns flowOf(UserPreferences(malLoggedIn = false))
+        assertTrue(repository.updateListEntry(10, MalListUpdate(episodesWatched = 1)) is AppResult.Error)
+        assertTrue(api.updateCalls.isEmpty())
+        assertTrue(listDao.rows.isEmpty())
     }
 
 }

@@ -123,4 +123,23 @@ class WatchToolsStoreTest {
         } finally { job.cancelAndJoin() }
     }
 
+    @Test fun `shortcut order survives reopening and stays isolated by account`() = runTest {
+        val file = File(temporary.root, "shortcuts.preferences_pb")
+        var job = SupervisorJob()
+        var backing = PreferenceDataStoreFactory.create(scope = CoroutineScope(job + Dispatchers.IO)) { file }
+        var prefs = UserPreferencesDataStore(backing)
+        var tools = WatchToolsStore(backing, prefs)
+        prefs.setMalLoggedIn(true, "First")
+        val chosen = listOf(ToolShortcut.SYNC, ToolShortcut.CALENDAR, ToolShortcut.PLANNER, ToolShortcut.HISTORY)
+        tools.setShortcuts(chosen + ToolShortcut.SYNC + ToolShortcut.FAVORITES)
+        assertEquals(chosen, tools.data.first().shortcuts)
+        prefs.setMalLoggedIn(true, "Second")
+        assertEquals(DefaultToolShortcuts, tools.data.first().shortcuts)
+        prefs.setMalLoggedIn(true, "FIRST")
+        job.cancelAndJoin(); job = SupervisorJob()
+        backing = PreferenceDataStoreFactory.create(scope = CoroutineScope(job + Dispatchers.IO)) { file }
+        prefs = UserPreferencesDataStore(backing); tools = WatchToolsStore(backing, prefs)
+        try { assertEquals(chosen, tools.data.first().shortcuts) } finally { job.cancelAndJoin() }
+    }
+
 }

@@ -83,6 +83,7 @@ class WatchToolsStore @Inject constructor(
     suspend fun renameTag(old: String, replacement: String?) = edit { it.renameTag(old, replacement) }
 
     suspend fun setWeeklyGoal(goal: Int) = edit { it.copy(weeklyGoal = goal.coerceIn(0, 100)) }
+    suspend fun setShortcuts(values: List<ToolShortcut>) = edit { it.copy(shortcuts = values.normalizedShortcuts()) }
     suspend fun clearActivity() = edit { it.copy(activity = emptyList()) }
 
     suspend fun recordProgress(id: Int, title: String, before: Int, after: Int) {

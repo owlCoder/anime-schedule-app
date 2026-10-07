@@ -117,6 +117,9 @@ private enum class SettingsSheet {
     About,
     Backup,
     EpisodeLength,
+    Sync,
+    Shortcuts,
+    Logout,
 }
 
 private data class SettingsItem(
@@ -140,6 +143,7 @@ fun SettingsScreen(
     val tools = LocalWatchTools.current
     val navBarHeight = LocalNavBarHeight.current
     var activeSheet by rememberSaveable { mutableStateOf<SettingsSheet?>(null) }
+    val sync = LocalSyncCenter.current
     var query by rememberSaveable { mutableStateOf("") }
     var permissionGranted by remember { mutableStateOf(Build.VERSION.SDK_INT < 33 || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -152,6 +156,7 @@ fun SettingsScreen(
     }
     val groups = listOf(
         stringResource(R.string.settings_section_preferences) to listOf(
+            SettingsItem(Icons.Default.DashboardCustomize, stringResource(R.string.shortcuts_title), stringResource(R.string.shortcuts_settings_hint), SettingsSheet.Shortcuts, "shortcuts precice prečice tools alatke"),
             SettingsItem(Icons.Default.Palette, stringResource(R.string.settings_appearance),
                 if (uiState.themeOptions.scheduled) stringResource(R.string.scheduled_theme) else if (uiState.themeOptions.dynamicColors) stringResource(R.string.theme_dynamic) else "${themeModeLabel(uiState.themeMode)} · ${stringResource(uiState.themeOptions.palette.labelRes())}",
                 SettingsSheet.Theme, "theme tema izgled colors boje accent akcent color"),
@@ -162,6 +167,7 @@ fun SettingsScreen(
             SettingsItem(Icons.Default.Timer, stringResource(R.string.episode_length), stringResource(R.string.episode_length_value, tools.data.episodeMinutes), SettingsSheet.EpisodeLength, "duration vreme minutes minuti"),
         ),
         stringResource(R.string.settings_section_data_sources) to listOf(
+            SettingsItem(Icons.Default.CloudSync, stringResource(R.string.sync_center), syncHeadline(sync.state), SettingsSheet.Sync, "sync synchronization sinhronizacija internet pending čekanje cekanje"),
             SettingsItem(Icons.Default.PlayCircle, stringResource(R.string.settings_watch_sources), stringResource(R.string.settings_watch_sources_subtitle), SettingsSheet.WatchSources),
             SettingsItem(Icons.Default.Backup, stringResource(R.string.personal_backup), stringResource(R.string.personal_backup_subtitle), SettingsSheet.Backup, "restore export import vrati izvoz uvoz"),
             SettingsItem(Icons.Default.Storage, stringResource(R.string.settings_cache), stringResource(R.string.settings_cache_value, formatBytes(cacheSizeBytes), uiState.cacheRetentionDays), SettingsSheet.CacheRetention),
@@ -181,7 +187,13 @@ fun SettingsScreen(
             item("search") { AppSearchField(query, { query = it }, Modifier.testTag("settings-search"), stringResource(R.string.settings_search), Icons.Default.Search, onClear = { query = "" }) }
             if (search.isBlank() || "MyAnimeList ${uiState.username} ${accountSection}".contains(search, true)) item("account") {
                 SettingsSection(stringResource(R.string.settings_section_account)) {
-                    SettingsGroup { AccountRow(uiState.isLoggedIn, uiState.username, uiState.avatarUrl, loginState is LoginState.InProgress) { if (uiState.isLoggedIn) authViewModel.logout() else authViewModel.launchMalLogin(context) } }
+                    SettingsGroup { AccountRow(uiState.isLoggedIn, uiState.username, uiState.avatarUrl, loginState is LoginState.InProgress) {
+                        if (uiState.isLoggedIn) {
+                            if (sync.state.pendingCount > 0) activeSheet = SettingsSheet.Logout else authViewModel.logout()
+                        } else authViewModel.launchMalLogin(context)
+                    } }
+                    Spacer(Modifier.height(10.dp))
+                    SyncSummary(sync.state) { activeSheet = SettingsSheet.Sync }
                     (loginState as? LoginState.Failed)?.let { Text(stringResource(it.reason.messageRes()), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                 }
             }
@@ -207,6 +219,13 @@ fun SettingsScreen(
         }
     }
     when (activeSheet) {
+        SettingsSheet.Sync -> SyncCenterSheet(sync.state, sync.retry, sync.login, { activeSheet = null }, sync.zone)
+        SettingsSheet.Shortcuts -> ToolShortcutsSheet(tools.data.shortcuts, tools.setShortcuts) { activeSheet = null }
+        SettingsSheet.Logout -> AppSheet(onDismissRequest = { activeSheet = null }, title = stringResource(R.string.logout_pending_title)) {
+            Text(stringResource(R.string.logout_pending_hint, sync.state.pendingCount), style = MaterialTheme.typography.bodyMedium)
+            AppButton(stringResource(R.string.sync_retry), { activeSheet = SettingsSheet.Sync }, Modifier.fillMaxWidth().padding(top = 16.dp), icon = Icons.Default.CloudSync)
+            AppButton(stringResource(R.string.profile_logout), { activeSheet = null; authViewModel.logout() }, Modifier.fillMaxWidth().padding(top = 8.dp), variant = AppButtonVariant.Secondary, icon = Icons.AutoMirrored.Filled.ExitToApp)
+        }
         SettingsSheet.Theme, SettingsSheet.Accent -> AppearanceSheet(uiState.themeMode, uiState.accentColor, uiState.themeOptions,
             settingsViewModel::setThemeMode, settingsViewModel::setThemeOptions,
             { settingsViewModel.applyAppearancePreset(com.owlcoder.animeschedule.domain.model.AppearancePreset("Default")) }, { activeSheet = null },

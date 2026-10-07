@@ -4,6 +4,8 @@ import android.util.Log
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.flow.first
+import androidx.room.withTransaction
 import retrofit2.HttpException
 import com.owlcoder.animeschedule.BuildConfig
 import com.owlcoder.animeschedule.data.api.mal.MalApiService
@@ -24,7 +26,12 @@ class MalAuthManager @Inject constructor(
     private val tokenStore: SecureTokenStore,
     private val prefsDataStore: UserPreferencesDataStore,
     private val malListEntryDao: MalListEntryDao,
-    private val pendingListUpdateDao: PendingListUpdateDao
+    private val pendingListUpdateDao: PendingListUpdateDao,
+    private val session: MalSession = MalSession(),
+    private val notificationActionDao: com.owlcoder.animeschedule.data.local.db.NotificationActionDao? = null,
+    private val workScheduler: com.owlcoder.animeschedule.domain.repository.WorkScheduler? = null,
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context? = null,
+    private val database: com.owlcoder.animeschedule.data.local.db.AnimeScheduleDatabase? = null,
 ) {
     private val refreshMutex = Mutex()
 
@@ -44,8 +51,8 @@ class MalAuthManager @Inject constructor(
             .build()
             .toString()
 
-    suspend fun handleCallback(code: String, verifier: String): Boolean {
-        return try {
+    suspend fun handleCallback(code: String, verifier: String): Boolean = session.mutex.withLock {
+        try {
             // redirect_uri is passed pre-encoded (@Field(encoded = true)) so Retrofit does not
             // encode the "://" a second time.
             val encodedRedirect = URLEncoder.encode(BuildConfig.MAL_REDIRECT_URI, "UTF-8")
@@ -57,10 +64,15 @@ class MalAuthManager @Inject constructor(
                 redirectUri = encodedRedirect
             )
             val expiresAt = Instant.now().epochSecond + response.expiresIn
-            tokenStore.saveMalTokens(response.accessToken, response.refreshToken, expiresAt)
+            // A process restart during profile verification must not replay the previous
+            // account's queue using these newly exchanged credentials.
+            prefsDataStore.expireMalSession()
+            refreshMutex.withLock {
+                tokenStore.saveMalTokens(response.accessToken, response.refreshToken, expiresAt)
+            }
             tokenStore.clearPkceVerifier()
 
-            // The profile is cosmetic: a failure here must not undo a successful sign-in.
+            // Verify the owner before exposing a session or replaying account-scoped edits.
             val me = try {
                 malApiService.getMe()
             } catch (cancelled: CancellationException) {
@@ -69,7 +81,22 @@ class MalAuthManager @Inject constructor(
                 Log.w(TAG, "Fetching the profile after sign-in failed", e)
                 null
             }
-            prefsDataStore.setMalLoggedIn(true, me?.name ?: "", me?.picture ?: "")
+            val previous = prefsDataStore.userPreferencesFlow.first()
+            // A queued edit belongs to its original account. Without a verified profile, do not
+            // risk delivering it to a different account after signing in again.
+            if (me == null || me.name.isBlank()) {
+                tokenStore.clearMalTokens()
+                return@withLock false
+            }
+            if (!previous.malUsername.equals(me.name, true)) {
+                clearAccountCache()
+                context?.let { androidx.core.app.NotificationManagerCompat.from(it).cancelAll() }
+                prefsDataStore.setLastMalListSyncEpochMs(0)
+                prefsDataStore.setLastMalSyncSuccess(0)
+            }
+            prefsDataStore.setMalLoggedIn(true, me.name, me.picture ?: "")
+            session.changedAccount()
+            workScheduler?.scheduleFlushPendingUpdates()
             true
         } catch (cancelled: CancellationException) {
             throw cancelled
@@ -106,10 +133,10 @@ class MalAuthManager @Inject constructor(
         }
     }
 
-    suspend fun refreshAccessToken(): RefreshResult = refreshMutex.withLock {
+    suspend fun refreshAccessToken(force: Boolean = false): RefreshResult = refreshMutex.withLock {
         val refresh = tokenStore.getMalRefreshToken() ?: return@withLock RefreshResult.INVALID
         val expiresAt = tokenStore.getMalTokenExpiresAt()
-        if (expiresAt - Instant.now().epochSecond > TOKEN_REFRESH_SKEW_SECONDS) {
+        if (!force && expiresAt - Instant.now().epochSecond > TOKEN_REFRESH_SKEW_SECONDS) {
             // Another caller already refreshed the token while we were waiting for the lock.
             return@withLock RefreshResult.REFRESHED
         }
@@ -135,14 +162,25 @@ class MalAuthManager @Inject constructor(
         }
     }
 
-    suspend fun logout() {
-        tokenStore.clearMalTokens()
-        prefsDataStore.setMalLoggedIn(false, "")
+    suspend fun logout() = session.mutex.withLock {
+        session.changedAccount()
+        refreshMutex.withLock { tokenStore.clearMalTokens() }
         // Cached list rows belong to the logged-out account; without clearing them the schedule
         // home "recently changed" section and detail badges would keep showing the old user's list.
-        malListEntryDao.deleteAll()
-        pendingListUpdateDao.deleteAll()
+        clearAccountCache()
+        prefsDataStore.setMalLoggedIn(false, "")
+        context?.let { androidx.core.app.NotificationManagerCompat.from(it).cancelAll() }
         prefsDataStore.setLastMalListSyncEpochMs(0L)
+        prefsDataStore.setLastMalSyncSuccess(0L)
+    }
+
+    private suspend fun clearAccountCache() {
+        suspend fun clear() {
+            malListEntryDao.deleteAll()
+            pendingListUpdateDao.deleteAll()
+            notificationActionDao?.deleteAll()
+        }
+        if (database == null) clear() else database.withTransaction { clear() }
     }
 
     private companion object {

@@ -134,6 +134,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.presentation.components.displayName
+import com.owlcoder.animeschedule.presentation.components.ToolShortcutsSheet
+import com.owlcoder.animeschedule.presentation.components.ToolShortcutBar
+import com.owlcoder.animeschedule.presentation.components.LocalSyncCenter
 import com.owlcoder.animeschedule.presentation.components.iosSpring
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -143,6 +146,7 @@ fun ScheduleScreen(
     onAnimeClick: (Int) -> Unit,
     onInitialLoadChange: (Boolean) -> Unit = {},
     viewModel: ScheduleViewModel = hiltViewModel(),
+    onShortcut: (com.owlcoder.animeschedule.domain.model.ToolShortcut) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     CompositionLocalProvider(LocalScheduleZone provides uiState.zoneId) {
@@ -151,6 +155,7 @@ fun ScheduleScreen(
             viewModel = viewModel,
             onAnimeClick = onAnimeClick,
             onInitialLoadChange = onInitialLoadChange,
+            onShortcut = onShortcut,
         )
     }
 }
@@ -162,6 +167,7 @@ private fun ScheduleScreenContent(
     viewModel: ScheduleViewModel,
     onAnimeClick: (Int) -> Unit,
     onInitialLoadChange: (Boolean) -> Unit,
+    onShortcut: (com.owlcoder.animeschedule.domain.model.ToolShortcut) -> Unit,
 ) {
     val openOverlay by viewModel.openOverlay.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -169,6 +175,8 @@ private fun ScheduleScreenContent(
     val toast = LocalToast.current
     val scope = rememberCoroutineScope()
     val tools = LocalWatchTools.current
+    var customizeShortcuts by rememberSaveable { mutableStateOf(false) }
+    var showSync by rememberSaveable { mutableStateOf(false) }
     var calendarSnapshot by rememberSaveable { mutableStateOf("") }
     var calendarReminder by rememberSaveable { mutableStateOf(com.owlcoder.animeschedule.domain.model.CalendarReminder.NONE) }
     val exportedMessage = stringResource(R.string.schedule_agenda_exported)
@@ -277,9 +285,23 @@ private fun ScheduleScreenContent(
                     onNotifications = { viewModel.setOpenOverlay(ScheduleOverlay.Notifications) },
                     onFilter = { viewModel.setOpenOverlay(ScheduleOverlay.Filter) },
                     onAgenda = { viewModel.setOpenOverlay(ScheduleOverlay.Agenda) },
+                    onShortcut = { shortcut ->
+                        when (shortcut) {
+                            com.owlcoder.animeschedule.domain.model.ToolShortcut.WEEK_OVERVIEW -> viewModel.setOpenOverlay(ScheduleOverlay.Agenda)
+                            com.owlcoder.animeschedule.domain.model.ToolShortcut.SYNC -> showSync = true
+                            else -> onShortcut(shortcut)
+                        }
+                    },
+                    onCustomizeShortcuts = { customizeShortcuts = true },
                 )
             }
         }
+    }
+
+    if (customizeShortcuts) ToolShortcutsSheet(tools.data.shortcuts, tools.setShortcuts) { customizeShortcuts = false }
+    if (showSync) {
+        val sync = LocalSyncCenter.current
+        com.owlcoder.animeschedule.presentation.screens.settings.SyncCenterSheet(sync.state, sync.retry, sync.login, { showSync = false }, sync.zone)
     }
 
     editingEpisode?.takeIf { openOverlay !is ScheduleOverlay.SeeAll }?.malId?.let { malId ->
@@ -394,6 +416,8 @@ private fun TodayHomeContent(
     onNotifications: () -> Unit,
     onFilter: () -> Unit,
     onAgenda: () -> Unit,
+    onShortcut: (com.owlcoder.animeschedule.domain.model.ToolShortcut) -> Unit,
+    onCustomizeShortcuts: () -> Unit,
 ) {
     val today = uiState.today
     val appLocale = LocalConfiguration.current.locales[0]
@@ -450,6 +474,10 @@ private fun TodayHomeContent(
                 dates = remember(today) { (0L..6L).map(today::plusDays) },
                 onDateSelected = onDateSelected,
             )
+        }
+
+        item(key = "tool-shortcuts") {
+            ToolShortcutBar(LocalWatchTools.current.data.shortcuts, onShortcut, onCustomizeShortcuts)
         }
 
         item(key = "schedule-quick-filters") {

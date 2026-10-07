@@ -34,6 +34,7 @@ fun normalizedTags(text: String): Set<String> = text.split(',').map { it.trim().
     .filter { it.isNotEmpty() }.distinctBy { it.lowercase(Locale.ROOT) }.take(8).toSet()
 
 fun WatchTools.normalized(): WatchTools = copy(
+    shortcuts = shortcuts.normalizedShortcuts(),
     favorites = favorites.filter { it > 0 }.take(20_000).toSet(),
     notes = notes.filterKeys { it > 0 }.entries.take(20_000)
         .associate { it.key to it.value.trim().take(2000) }.filterValues { it.isNotEmpty() },

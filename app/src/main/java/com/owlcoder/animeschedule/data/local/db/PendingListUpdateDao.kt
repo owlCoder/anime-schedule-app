@@ -7,6 +7,8 @@ import androidx.room.Upsert
 @Dao
 interface PendingListUpdateDao {
     @Query("SELECT * FROM pending_list_updates ORDER BY queuedAtEpochMs ASC")
+    fun observeAll(): kotlinx.coroutines.flow.Flow<List<PendingListUpdateEntity>>
+    @Query("SELECT * FROM pending_list_updates ORDER BY queuedAtEpochMs ASC")
     suspend fun getAll(): List<PendingListUpdateEntity>
 
     @Query("SELECT * FROM pending_list_updates WHERE animeId = :animeId")

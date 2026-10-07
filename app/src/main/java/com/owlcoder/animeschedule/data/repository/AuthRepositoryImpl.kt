@@ -57,9 +57,10 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun completeLogin(code: String, state: String?): Boolean {
+        if (exchangingCode) return false
         redirectJustReceived = true
         val verifier = tokenStore.getPkceVerifier()
-        if (verifier == null || state == null || state != tokenStore.getOAuthState()) {
+        if (code.isBlank() || verifier == null || state == null || state != tokenStore.getOAuthState()) {
             tokenStore.clearPkceVerifier()
             _loginState.value = LoginState.Failed(LoginFailure.INVALID_SESSION)
             return false

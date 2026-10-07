@@ -19,6 +19,9 @@ import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Undo
+import androidx.compose.material.icons.outlined.CloudSync
+import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.ErrorOutline
@@ -62,17 +65,17 @@ private data class ReleaseNote(
 fun ChangelogBottomSheet(onDismiss: () -> Unit) {
     val notes = listOf(
         ReleaseNote(
-            Icons.Outlined.CalendarMonth,
+            Icons.Outlined.CloudSync,
             stringResource(R.string.changelog_nav_title),
             stringResource(R.string.changelog_nav_description),
         ),
         ReleaseNote(
-            Icons.Outlined.Search,
+            Icons.AutoMirrored.Outlined.Undo,
             stringResource(R.string.changelog_motion_title),
             stringResource(R.string.changelog_motion_description),
         ),
         ReleaseNote(
-            Icons.Outlined.AccountTree,
+            Icons.Outlined.Apps,
             stringResource(R.string.changelog_filters_title),
             stringResource(R.string.changelog_filters_description),
         ),

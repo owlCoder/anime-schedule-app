@@ -76,17 +76,17 @@
     <!-- Changelog -->
     <string name="changelog_release_date">October 7, 2026</string>
     <string name="changelog_whats_new">What\'s new</string>
-    <string name="changelog_hero_description">AMOLED black now extends to all overlays, with immediate updates in Appearance and readable cards. Also includes the search, planning and detail tools from 5.10.0.</string>
-    <string name="changelog_nav_title">A week you can plan</string>
-    <string name="changelog_nav_description">Share the whole filtered week, see estimated viewing time and jump to the next day with broadcasts. Personal episode durations apply to the estimates.</string>
-    <string name="changelog_motion_title">More precise search</string>
-    <string name="changelog_motion_description">Combine minimum community score, episode-count ranges and release year with existing search filters. Choices remain editable when the loaded results change.</string>
-    <string name="changelog_filters_title">Read and share details</string>
-    <string name="changelog_filters_description">Read a full, selectable synopsis, copy the anime catalog link and share a loaded character’s public profile. HTML entities and paragraph breaks display correctly.</string>
-    <string name="changelog_states_title">Notification status at a tap</string>
-    <string name="changelog_states_description">Mark one notification read or unread directly in history without opening its anime. Failed updates preserve the record and allow retry.</string>
-    <string name="changelog_about_title">Aligned, readable menus</string>
-    <string name="changelog_about_description">Detail and agenda tools have a consistent leading-icon column. Search controls give larger text more room, and Apply stays accessible while scrolling filters.</string>
+    <string name="changelog_hero_description">Safer list sync, Undo after edits, notification actions and customizable shortcuts. Your saved data is preserved when upgrading.</string>
+    <string name="changelog_nav_title">Your sync at a glance</string>
+    <string name="changelog_nav_description">See pending changes, connection status and the last successful sync. Retry delivery and safely reconnect the same MAL account.</string>
+    <string name="changelog_motion_title">Undo an accidental edit</string>
+    <string name="changelog_motion_description">Restore the previous episode count, status and score from the in-app message—even while the editor is open. Newer edits are protected.</string>
+    <string name="changelog_filters_title">Your tools, your order</string>
+    <string name="changelog_filters_description">Choose up to four shortcuts for Schedule: Planner, Week overview, Favorites, History, Activity calendar or Sync center. Reorder them with the arrows.</string>
+    <string name="changelog_states_title">Act from a notification</string>
+    <string name="changelog_states_description">Add one watched episode or request a reminder in 15 minutes. Duplicate taps cannot add extra progress, and offline actions sync later.</string>
+    <string name="changelog_about_title">Reliable account changes</string>
+    <string name="changelog_about_description">Offline edits remain tied to their account. Server rejections stay visible, and signing out explains what happens to pending changes.</string>
     <string name="changelog_footer">Made with care by the AnimeSchedule team</string>
 
     <!-- Watch sources -->

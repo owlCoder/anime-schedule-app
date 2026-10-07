@@ -1,10 +1,7 @@
 package com.owlcoder.animeschedule.data.work
 
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
-import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import android.util.Log
 import androidx.hilt.work.HiltWorker
@@ -16,8 +13,9 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
-import com.owlcoder.animeschedule.MainActivity
-import com.owlcoder.animeschedule.R
+import kotlinx.coroutines.sync.withLock
+import com.owlcoder.animeschedule.data.api.mal.auth.MalSession
+import androidx.room.withTransaction
 import com.owlcoder.animeschedule.data.local.db.AiringEpisodeDao
 import com.owlcoder.animeschedule.data.local.db.MalListEntryDao
 import com.owlcoder.animeschedule.data.local.db.NotificationDao
@@ -27,7 +25,6 @@ import com.owlcoder.animeschedule.domain.model.effectiveZoneId
 import com.owlcoder.animeschedule.domain.model.WatchStatus
 import coil3.request.allowHardware
 import coil3.toBitmap
-import androidx.core.net.toUri
 
 @HiltWorker
 class AiringNotificationWorker @AssistedInject constructor(
@@ -37,6 +34,11 @@ class AiringNotificationWorker @AssistedInject constructor(
     private val airingEpisodeDao: AiringEpisodeDao,
     private val malListEntryDao: MalListEntryDao,
     private val watchToolsStore: com.owlcoder.animeschedule.data.local.datastore.WatchToolsStore,
+    private val notificationActionsDao: com.owlcoder.animeschedule.data.local.db.NotificationActionDao,
+    private val notificationActions: NotificationActions,
+    private val poster: NotificationPoster,
+    private val database: com.owlcoder.animeschedule.data.local.db.AnimeScheduleDatabase,
+    private val session: MalSession,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) : CoroutineWorker(context, workerParams) {
 
@@ -51,8 +53,11 @@ class AiringNotificationWorker @AssistedInject constructor(
     }
 
     private suspend fun postDueNotifications() {
-        val prefs = userPreferencesDataStore.userPreferencesFlow.first()
-        if (!prefs.notificationsEnabled) return
+        notificationActions.recoverSnoozes()
+        val (ownerEpoch, prefs) = session.mutex.withLock {
+            session.epoch to userPreferencesDataStore.userPreferencesFlow.first()
+        }
+        if (!prefs.notificationsEnabled || !prefs.malLoggedIn) return
 
         val muted = watchToolsStore.data.first().mutedNotifications.keys
         val now = System.currentTimeMillis() / 1000L
@@ -68,7 +73,7 @@ class AiringNotificationWorker @AssistedInject constructor(
 
         val watchingMalIds = malListEntryDao.getAll().first()
             .filter { it.status == WatchStatus.WATCHING.malValue }
-            .mapTo(HashSet()) { it.malId }
+            .associateBy { it.malId }
         if (watchingMalIds.isEmpty()) return
 
         // The query returns episodes in airing order, so notifications are posted chronologically.
@@ -80,29 +85,41 @@ class AiringNotificationWorker @AssistedInject constructor(
             }
 
         for (episode in dueEpisodes) {
-            notificationDao.upsert(
-                NotificationEntity(
-                    id = episode.airingId,
-                    animeId = episode.animeId,
-                    title = episode.title,
-                    episode = episode.episode,
-                    coverImageUrl = episode.coverImageUrl,
-                    airingAtEpochSeconds = episode.airingAtEpochSeconds,
-                    isRead = false,
-                    createdAtEpochSeconds = now
-                )
-            )
-            if (com.owlcoder.animeschedule.domain.model.shouldPostSystemAlert(
-                episode.animeId, muted, prefs.quietHours, java.time.Instant.ofEpochSecond(now), prefs.effectiveZoneId,
-                // Doze may defer a quiet-hour broadcast until after quiet hours have ended.
-                java.time.Instant.ofEpochSecond(episode.airingAtEpochSeconds + offsetSeconds),
-            ) && NotificationManagerCompat.from(context).areNotificationsEnabled()) sendSystemNotification(
+            val row = NotificationEntity(
                 id = episode.airingId,
                 animeId = episode.animeId,
                 title = episode.title,
                 episode = episode.episode,
-                cover = episode.coverImageUrl?.let { loadBitmap(it) }
+                coverImageUrl = episode.coverImageUrl,
+                airingAtEpochSeconds = episode.airingAtEpochSeconds,
+                isRead = false,
+                createdAtEpochSeconds = now
             )
+            val shouldAlert = com.owlcoder.animeschedule.domain.model.shouldPostSystemAlert(
+                episode.animeId, muted, prefs.quietHours, java.time.Instant.ofEpochSecond(now), prefs.effectiveZoneId,
+                java.time.Instant.ofEpochSecond(episode.airingAtEpochSeconds + offsetSeconds),
+            ) && NotificationManagerCompat.from(context).areNotificationsEnabled()
+            val cover = if (shouldAlert) episode.coverImageUrl?.let { loadBitmap(it) } else null
+            session.mutex.withLock {
+                val currentPrefs = userPreferencesDataStore.userPreferencesFlow.first()
+                if (session.epoch != ownerEpoch || !currentPrefs.malLoggedIn) return@withLock
+                val entry = malListEntryDao.getByAnimeId(episode.malId ?: return@withLock)?.takeIf { it.status == WatchStatus.WATCHING.malValue } ?: return@withLock
+                val fresh = database.withTransaction {
+                    if (notificationActionsDao.get(episode.airingId)?.progressHandled == true) false
+                    else {
+                        notificationActionsDao.insert(com.owlcoder.animeschedule.data.local.db.NotificationActionEntity(episode.airingId, entry.malId))
+                        notificationDao.insertOnce(row) != -1L
+                    }
+                }
+                if (!fresh) return@withLock
+                val receipt = notificationActionsDao.get(episode.airingId) ?: return@withLock
+                if (currentPrefs.notificationsEnabled && com.owlcoder.animeschedule.domain.model.shouldPostSystemAlert(
+                    episode.animeId, watchToolsStore.data.first().mutedNotifications.keys, currentPrefs.quietHours, java.time.Instant.ofEpochSecond(now), currentPrefs.effectiveZoneId,
+                    // Doze may defer a quiet-hour broadcast until after quiet hours have ended.
+                    java.time.Instant.ofEpochSecond(episode.airingAtEpochSeconds + offsetSeconds),
+                ) && NotificationManagerCompat.from(context).areNotificationsEnabled()) poster.post(row, canIncrement = entry.totalEpisodes?.takeIf { it > 0 }?.let { entry.numEpisodesWatched < it } ?: true,
+                    cover = cover, actionToken = receipt.actionToken)
+            }
         }
     }
 
@@ -114,51 +131,6 @@ class AiringNotificationWorker @AssistedInject constructor(
             .allowHardware(false)
             .build()
         return SingletonImageLoader.get(context).execute(request).image?.toBitmap()
-    }
-
-    private fun sendSystemNotification(id: Int, animeId: Int, title: String, episode: Int, cover: Bitmap?) {
-        // Covers the runtime permission on Android 13+ and the app-level toggle on 12/12L, where
-        // POST_NOTIFICATIONS does not exist and checking it directly always reads "denied".
-        val notificationManager = NotificationManagerCompat.from(context)
-        if (!notificationManager.areNotificationsEnabled()) return
-
-        val intent = Intent(
-            Intent.ACTION_VIEW,
-            "com.owlcoder.animeschedule://detail/$animeId".toUri(),
-            context,
-            MainActivity::class.java
-        ).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
-        val pendingIntent = PendingIntent.getActivity(
-            context, id, intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle(title)
-            .setContentText(context.getString(R.string.notif_content_text, episode))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-
-        if (cover != null) {
-            builder
-                .setLargeIcon(cover)
-                .setStyle(
-                    NotificationCompat.BigPictureStyle()
-                        .bigPicture(cover)
-                        .bigLargeIcon(null as Bitmap?)
-                )
-        }
-
-        try {
-            notificationManager.notify(id, builder.build())
-        } catch (e: SecurityException) {
-            // Permission revoked between the check above and posting; the in-app list still has it.
-            Log.w(TAG, "Notification permission was revoked while posting", e)
-        }
     }
 
     companion object {

@@ -7,6 +7,9 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.owlcoder.animeschedule.domain.model.ToolShortcut
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -98,6 +101,14 @@ fun AnimeNavHost(
                 },
                 onInitialLoadChange = onScheduleInitialLoadChange,
                 viewModel = scheduleViewModel,
+                onShortcut = { shortcut ->
+                    navController.navigate(Screen.MyList.route) {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                    navController.currentBackStackEntry?.savedStateHandle?.set("tool-shortcut", shortcut)
+                },
             )
         }
         composable(Screen.Search.route) {
@@ -110,8 +121,11 @@ fun AnimeNavHost(
                 requestFocus = true,
             )
         }
-        composable(Screen.MyList.route) {
+        composable(Screen.MyList.route) { entry ->
+            val shortcut by entry.savedStateHandle.getStateFlow<ToolShortcut?>("tool-shortcut", null).collectAsStateWithLifecycle()
             MyListScreen(
+                initialTool = shortcut,
+                onToolOpened = { entry.savedStateHandle.set<ToolShortcut?>("tool-shortcut", null) },
                 onAnimeClick = { animeId ->
                     navController.openDetail(animeId)
                 },

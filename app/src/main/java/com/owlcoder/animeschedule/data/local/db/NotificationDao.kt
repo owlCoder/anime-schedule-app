@@ -8,6 +8,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NotificationDao {
+    @androidx.room.Insert(onConflict = androidx.room.OnConflictStrategy.IGNORE)
+    suspend fun insertOnce(entity: NotificationEntity): Long
+    @Query("SELECT * FROM notifications WHERE id = :id")
+    suspend fun getById(id: Int): NotificationEntity?
     @Query("SELECT * FROM notifications ORDER BY createdAtEpochSeconds DESC")
     fun getAll(): Flow<List<NotificationEntity>>
 

@@ -22,6 +22,8 @@ import kotlinx.coroutines.launch
 class AnimeScheduleApplication : Application(), Configuration.Provider, SingletonImageLoader.Factory {
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var workScheduler: WorkManagerScheduler
+    @Inject lateinit var pendingUpdates: com.owlcoder.animeschedule.data.local.db.PendingListUpdateDao
+    @Inject lateinit var notificationActions: com.owlcoder.animeschedule.data.work.NotificationActions
 
     // Lives exactly as long as the process, so it is never cancelled.
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -38,7 +40,12 @@ class AnimeScheduleApplication : Application(), Configuration.Provider, Singleto
         super.onCreate()
         createNotificationChannels()
         // Opening WorkManager's own database is real I/O; keep it off the startup path.
-        applicationScope.launch { workScheduler.schedulePeriodicWork() }
+        applicationScope.launch {
+            workScheduler.schedulePeriodicWork()
+            // Repair a process death between the local transaction and WorkManager enqueue.
+            if (pendingUpdates.getAll().isNotEmpty()) workScheduler.scheduleFlushPendingUpdates()
+            notificationActions.recoverSnoozes()
+        }
     }
 
     private fun createNotificationChannels() {

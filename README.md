@@ -110,10 +110,37 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.10.1** (version code **34**, October 7, 2026).
+Current release: **5.11.0** (version code **35**, October 7, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### New in 5.11.0
+
+- **Sync center** in Settings and as a Schedule shortcut: pending anime count, connection state,
+  last successful sync and manual retry. Rejected changes remain visible locally; reauthentication
+  verifies the account before replaying its queue. Signing out with queued changes explains their removal.
+- **Undo** progress, status and score edits for 10 seconds (longer when Android accessibility requests it),
+  including inside the editor. Undo validates the account and latest values before restoring them.
+- **System notification actions**: +1 watched episode and a 15-minute reminder. A Room transaction commits
+  progress, the offline queue and its receipt together, preventing duplicate increments after repeated
+  taps or restarts. Reminders respect current quiet hours, anime muting and notification preferences;
+  WorkManager timing may be deferred by Android battery restrictions.
+- **Custom shortcuts**: select and reorder up to four Schedule tools—Planner, Week overview, Favorites,
+  History, Activity calendar and Sync center. Choices persist per account and are included in backups.
+
+Room 8 → 10 migrates the edit queue, notifications, list and sources without resetting user data.
+OAuth callback duplication and reactive token refresh were also corrected. Background flush requests
+are chained so edits arriving at the end of a running flush still receive a delivery attempt.
+
+Validation: **209 unit tests** and **90 distinct device UI/integration cases** passed on Pixel 10 Pro
+(API 36.1), including the full 88-case regression suite and focused checks after the final changes.
+Coverage includes Room migrations, offline recovery, Undo, notification replay across a database reopen
+and account switch, and shortcut persistence/reordering. Screens were reviewed in AMOLED/dark and light
+modes, with Serbian text at 135% font scale. The signed release was installed over existing app data;
+connection-state changes and shortcut navigation were also checked in the release app.
+Debug/release builds and lint passed (0 errors). OAuth forms use a local mock server, and account/list
+flows use isolated fixture APIs and storage; live user-account sign-in was not exercised.
 
 ### Fixed in 5.10.1
 

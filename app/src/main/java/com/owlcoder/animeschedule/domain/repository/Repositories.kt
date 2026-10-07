@@ -35,6 +35,13 @@ interface AnimeDetailRepository {
 }
 
 interface MalRepository {
+    val syncState: Flow<com.owlcoder.animeschedule.domain.model.MalSyncState>
+        get() = kotlinx.coroutines.flow.flowOf(com.owlcoder.animeschedule.domain.model.MalSyncState())
+    val undoChange: Flow<com.owlcoder.animeschedule.domain.model.UndoListChange?>
+        get() = kotlinx.coroutines.flow.flowOf(null)
+    suspend fun undoListChange(id: Long): AppResult<Unit> = AppResult.Error(com.owlcoder.animeschedule.core.result.AppError.NoCache)
+    fun dismissUndo(id: Long) {}
+    suspend fun retrySync(): Boolean = refreshUserList(force = true)
     fun getUserList(): Flow<List<MalListEntry>>
     suspend fun updateListEntry(animeId: Int, update: MalListUpdate): AppResult<Unit>
     suspend fun incrementEpisode(animeId: Int): AppResult<Unit>
