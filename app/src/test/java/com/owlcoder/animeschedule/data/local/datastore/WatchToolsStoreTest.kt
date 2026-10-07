@@ -13,6 +13,30 @@ import org.junit.rules.TemporaryFolder
 
 class WatchToolsStoreTest {
     @get:Rule val temporary = TemporaryFolder()
+    @Test fun `quiet hours and anime muting survive reopening without leaking between accounts`() = runTest {
+        val file = File(temporary.root, "alerts.preferences_pb")
+        var job = SupervisorJob()
+        var backing = PreferenceDataStoreFactory.create(scope = CoroutineScope(job + Dispatchers.IO)) { file }
+        var prefs = UserPreferencesDataStore(backing)
+        var tools = WatchToolsStore(backing, prefs)
+        prefs.setMalLoggedIn(true, "First")
+        prefs.setQuietHours(QuietHours(true, 23, 7))
+        tools.setNotificationMuted(1, " Alpha ", true)
+        tools.setNotificationMuted(-1, "Invalid", true)
+        prefs.setMalLoggedIn(true, "Second")
+        assertTrue(tools.data.first().mutedNotifications.isEmpty())
+        prefs.setMalLoggedIn(true, "FIRST")
+        job.cancelAndJoin()
+        job = SupervisorJob()
+        backing = PreferenceDataStoreFactory.create(scope = CoroutineScope(job + Dispatchers.IO)) { file }
+        prefs = UserPreferencesDataStore(backing); tools = WatchToolsStore(backing, prefs)
+        try {
+            assertEquals(QuietHours(true, 23, 7), prefs.userPreferencesFlow.first().quietHours)
+            assertEquals(mapOf(1 to "Alpha"), tools.data.first().mutedNotifications)
+            tools.setNotificationMuted(1, "Alpha", false)
+            assertTrue(tools.data.first().mutedNotifications.isEmpty())
+        } finally { job.cancelAndJoin() }
+    }
     @Test fun `notes favorites goal and theme survive reopening and are isolated between accounts`() = runTest {
         val file = File(temporary.root, "watch.preferences_pb")
         var job = SupervisorJob()

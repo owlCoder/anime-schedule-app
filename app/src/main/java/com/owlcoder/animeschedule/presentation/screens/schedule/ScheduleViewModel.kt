@@ -48,16 +48,19 @@ data class ScheduleFilter(
     val onlyMyList: Boolean = false,
     val query: String = "",
     val upcomingOnly: Boolean = false,
+    val hideWatched: Boolean = false,
+    val favoritesOnly: Boolean = false,
     val genres: Set<String> = emptySet(),
     val formats: Set<String> = emptySet(),
 ) {
-    val isActive: Boolean get() = onlyMyList || query.isNotBlank() || upcomingOnly || genres.isNotEmpty() || formats.isNotEmpty()
+    val isActive: Boolean get() = onlyMyList || query.isNotBlank() || upcomingOnly || hideWatched || favoritesOnly || genres.isNotEmpty() || formats.isNotEmpty()
 }
 
 enum class ScheduleSection { TODAY, TOMORROW, WEEK }
 
 sealed interface ScheduleOverlay {
     data object None : ScheduleOverlay
+    data object Agenda : ScheduleOverlay
     data object Filter : ScheduleOverlay
     data object Notifications : ScheduleOverlay
     data object Seasonal : ScheduleOverlay
@@ -116,13 +119,21 @@ private data class Auxiliary(
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
-class ScheduleViewModel @Inject constructor(
+class ScheduleViewModel internal constructor(
     private val scheduleRepository: ScheduleRepository,
     private val settingsRepository: SettingsRepository,
     private val malRepository: MalRepository,
     notificationRepository: NotificationRepository,
     private val workScheduler: WorkScheduler,
+    favoriteIds: Flow<Set<Int>> = flowOf(emptySet()),
 ) : ViewModel() {
+    @Inject constructor(
+        scheduleRepository: ScheduleRepository, settingsRepository: SettingsRepository,
+        malRepository: MalRepository, notificationRepository: NotificationRepository,
+        workScheduler: WorkScheduler, tools: com.owlcoder.animeschedule.data.local.datastore.WatchToolsStore,
+    ) : this(scheduleRepository, settingsRepository, malRepository, notificationRepository, workScheduler,
+        tools.data.map { it.favorites }.distinctUntilChanged())
+
 
     private val _refreshStatus = MutableStateFlow(RefreshStatus())
     private val _filter = MutableStateFlow(ScheduleFilter())
@@ -179,14 +190,14 @@ class ScheduleViewModel @Inject constructor(
         }
     }
 
-    val uiState: StateFlow<ScheduleUiState> = combine(snapshot, _filter, auxiliary, filterClock) { snapshot, filter, aux, now ->
+    val uiState: StateFlow<ScheduleUiState> = combine(snapshot, _filter, auxiliary, filterClock, favoriteIds) { snapshot, filter, aux, now, favorites ->
         val byDate = snapshot.days.associateBy { it.date }
         ScheduleUiState(
             zoneId = snapshot.zoneId,
             today = snapshot.today,
-            todayEpisodes = byDate[snapshot.today]?.episodes.orEmpty().applyFilter(filter, now),
-            tomorrowEpisodes = byDate[snapshot.today.plusDays(1)]?.episodes.orEmpty().applyFilter(filter, now),
-            weekDays = snapshot.days.map { day -> day.copy(episodes = day.episodes.applyFilter(filter, now)) },
+            todayEpisodes = byDate[snapshot.today]?.episodes.orEmpty().applyFilter(filter, now, favorites),
+            tomorrowEpisodes = byDate[snapshot.today.plusDays(1)]?.episodes.orEmpty().applyFilter(filter, now, favorites),
+            weekDays = snapshot.days.map { day -> day.copy(episodes = day.episodes.applyFilter(filter, now, favorites)) },
             isLoading = aux.refresh.isRefreshing,
             isInitialLoad = aux.refresh.isRefreshing && !aux.refresh.hasLoadedOnce && snapshot.days.isEmpty(),
             // A failed refresh only matters when there is nothing cached to show instead.
@@ -210,6 +221,10 @@ class ScheduleViewModel @Inject constructor(
     fun setScheduleQuery(query: String) = _filter.update { it.copy(query = query) }
 
     fun setUpcomingOnly(enabled: Boolean) = _filter.update { it.copy(upcomingOnly = enabled) }
+
+    fun setHideWatched(enabled: Boolean) = _filter.update { it.copy(hideWatched = enabled) }
+
+    fun setFavoritesOnly(enabled: Boolean) = _filter.update { it.copy(favoritesOnly = enabled) }
 
     fun setOnlyMyList(enabled: Boolean) = _filter.update { it.copy(onlyMyList = enabled) }
 
@@ -305,13 +320,15 @@ private fun buildSnapshot(
     )
 }
 
-internal fun List<AiringEpisode>.applyFilter(filter: ScheduleFilter, nowEpochSeconds: Long): List<AiringEpisode> {
+internal fun List<AiringEpisode>.applyFilter(filter: ScheduleFilter, nowEpochSeconds: Long, favoriteIds: Set<Int> = emptySet()): List<AiringEpisode> {
     if (!filter.isActive) return this
     val query = filter.query.trim()
     return filter { episode ->
         (query.isEmpty() || episode.title.contains(query, ignoreCase = true) || episode.titleRomaji?.contains(query, ignoreCase = true) == true) &&
             (!filter.upcomingOnly || episode.airingAtEpochSeconds > nowEpochSeconds) &&
             (!filter.onlyMyList || episode.malListEntry != null) &&
+            (!filter.hideWatched || episode.malListEntry == null || episode.episode > episode.malListEntry.episodesWatched) &&
+            (!filter.favoritesOnly || (episode.malId ?: episode.malListEntry?.animeId) in favoriteIds) &&
             (filter.genres.isEmpty() || episode.genres.any { it in filter.genres }) &&
             (filter.formats.isEmpty() || episode.format in filter.formats)
     }

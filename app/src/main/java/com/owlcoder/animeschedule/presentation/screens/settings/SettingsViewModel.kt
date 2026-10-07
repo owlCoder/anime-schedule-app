@@ -44,6 +44,7 @@ data class SettingsUiState(
     val themeOptions: com.owlcoder.animeschedule.domain.model.ThemeOptions = com.owlcoder.animeschedule.domain.model.ThemeOptions(),
     val notificationsEnabled: Boolean = true,
     val notificationOffsetMinutes: Int = 0,
+    val quietHours: com.owlcoder.animeschedule.domain.model.QuietHours = com.owlcoder.animeschedule.domain.model.QuietHours(),
     val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
     val appLanguage: AppLanguage = AppLanguage.ENGLISH,
     val cacheRetentionDays: Int = CacheRetentionPolicy.DEFAULT_RETENTION_DAYS,
@@ -90,6 +91,7 @@ class SettingsViewModel @Inject constructor(
             appearancePresets = preferences.appearancePresets,
             notificationsEnabled = preferences.notificationsEnabled,
             notificationOffsetMinutes = preferences.notificationOffsetMinutes,
+            quietHours = preferences.quietHours,
             accentColor = preferences.accentColor,
             appLanguage = preferences.appLanguage,
             cacheRetentionDays = preferences.cacheRetentionDays,
@@ -127,6 +129,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setNotificationOffset(minutes: Int) {
         viewModelScope.launch { settingsRepository.setNotificationOffset(minutes) }
+    }
+
+    fun setQuietHours(value: com.owlcoder.animeschedule.domain.model.QuietHours) {
+        viewModelScope.launch { preferencesStore.setQuietHours(value) }
     }
 
     fun setAccentColor(color: AccentColor) {

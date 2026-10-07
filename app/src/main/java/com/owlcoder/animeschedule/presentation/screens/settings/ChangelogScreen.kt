@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material.icons.outlined.PersonSearch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.AutoAwesome
@@ -61,17 +64,17 @@ fun ChangelogBottomSheet(onDismiss: () -> Unit) {
             stringResource(R.string.changelog_nav_description),
         ),
         ReleaseNote(
-            Icons.Outlined.Layers,
+            Icons.Outlined.CalendarMonth,
             stringResource(R.string.changelog_motion_title),
             stringResource(R.string.changelog_motion_description),
         ),
         ReleaseNote(
-            Icons.Outlined.Tune,
+            Icons.Outlined.NotificationsOff,
             stringResource(R.string.changelog_filters_title),
             stringResource(R.string.changelog_filters_description),
         ),
         ReleaseNote(
-            Icons.Outlined.ErrorOutline,
+            Icons.Outlined.PersonSearch,
             stringResource(R.string.changelog_states_title),
             stringResource(R.string.changelog_states_description),
         ),

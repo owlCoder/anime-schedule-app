@@ -47,6 +47,7 @@ fun WatchTools.normalized(): WatchTools = copy(
     dailyGoal = dailyGoal.coerceIn(0, 50),
     durationOverrides = durationOverrides.filterKeys { it > 0 }.entries.take(20_000).associate { it.key to it.value.coerceIn(1, 180) },
     savedViews = savedViews.normalizedViews(),
+    mutedNotifications = mutedNotifications.filterKeys { it > 0 }.entries.take(20_000).associate { it.key to it.value.trim().take(500) },
 )
 
 /** Portable personal data only: no login tokens, credentials, API keys or MAL list mutations. */

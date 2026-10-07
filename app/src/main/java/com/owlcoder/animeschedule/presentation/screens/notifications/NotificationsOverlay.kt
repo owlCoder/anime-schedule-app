@@ -51,6 +51,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.presentation.screens.schedule.LocalScheduleZone
 import com.owlcoder.animeschedule.domain.model.AppNotification
+import com.owlcoder.animeschedule.domain.model.NotificationPeriod
+import com.owlcoder.animeschedule.domain.model.inPeriod
+import com.owlcoder.animeschedule.core.time.currentDateFlow
+import com.owlcoder.animeschedule.presentation.screens.discovery.DiscoveryChip
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import com.owlcoder.animeschedule.presentation.components.AppSegmentedControl
 import com.owlcoder.animeschedule.presentation.components.SegmentOption
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
@@ -82,7 +89,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.owlcoder.animeschedule.presentation.components.iosSpring
 import com.owlcoder.animeschedule.presentation.components.iosTween
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun NotificationsOverlay(
     onAnimeClick: (Int) -> Unit,
@@ -94,6 +101,7 @@ fun NotificationsOverlay(
         notifications.partition { notification -> !notification.isRead }
     }
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    var period by rememberSaveable { mutableStateOf(NotificationPeriod.ALL) }
     var query by rememberSaveable { mutableStateOf("") }
     var confirmClear by rememberSaveable { mutableStateOf(false) }
     val clearing by viewModel.clearing.collectAsStateWithLifecycle()
@@ -104,6 +112,7 @@ fun NotificationsOverlay(
     val motion = LocalMotionPolicy.current
     val appLocale = LocalConfiguration.current.locales[0]
     val zoneId = LocalScheduleZone.current
+    val today by remember(zoneId) { currentDateFlow(zoneId) }.collectAsStateWithLifecycle(initialValue = java.time.LocalDate.now(zoneId))
 
     AppSheet(
         onDismissRequest = onDismiss,
@@ -145,6 +154,20 @@ fun NotificationsOverlay(
                 onTabSelected = { selectedTab = it; confirmClear = false; focus.clearFocus(); keyboard?.hide() },
             )
 
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                NotificationPeriod.entries.chunked(2).forEach { row ->
+                    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    row.forEach { option ->
+                    DiscoveryChip(stringResource(when (option) {
+                        NotificationPeriod.ALL -> R.string.notif_period_all
+                        NotificationPeriod.TODAY -> R.string.notif_period_today
+                        NotificationPeriod.WEEK -> R.string.notif_period_week
+                        NotificationPeriod.MONTH -> R.string.notif_period_month
+                    }), Icons.Default.DateRange, period == option, { period = option; focus.clearFocus(); keyboard?.hide() }, Modifier.weight(1f).fillMaxHeight().testTag("notif-period-$option"))
+                    }
+                    }
+                }
+            }
             if (selectedTab == 1 && read.isNotEmpty()) {
                 if (confirmClear) {
                     Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface) {
@@ -180,9 +203,9 @@ fun NotificationsOverlay(
                 label = "notification-tab-content",
             ) { tab ->
                 val source = if (tab == 0) unread else read
-                val list = remember(source, query) { source.filter { it.title.contains(query.trim(), ignoreCase = true) } }
+                val list = remember(source, query, period, today, zoneId) { source.filter { it.title.contains(query.trim(), ignoreCase = true) && it.inPeriod(period, today, zoneId) } }
                 if (list.isEmpty()) {
-                    if (query.isNotBlank()) EmptyState(Icons.Default.SearchOff, stringResource(R.string.notif_search_empty), actionLabel = stringResource(R.string.search_clear_query), onAction = { query = ""; focus.clearFocus(); keyboard?.hide() }, modifier = Modifier.fillMaxSize()) else NotificationEmptyState(tab)
+                    if (query.isNotBlank()) EmptyState(Icons.Default.SearchOff, stringResource(R.string.notif_search_empty), actionLabel = stringResource(R.string.search_clear_query), onAction = { query = ""; focus.clearFocus(); keyboard?.hide() }, modifier = Modifier.fillMaxSize()) else if (period != NotificationPeriod.ALL) EmptyState(Icons.Default.DateRange, stringResource(R.string.notif_period_empty), actionLabel = stringResource(R.string.notif_period_reset), onAction = { period = NotificationPeriod.ALL }, modifier = Modifier.fillMaxSize()) else NotificationEmptyState(tab)
                 } else {
                     val groupedNotifications = remember(list, appLocale, zoneId) { groupedByDay(list, appLocale, zoneId) }
                     LazyColumn(

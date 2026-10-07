@@ -61,7 +61,11 @@ fun AppSheet(
     val scrim = Color.Black.copy(alpha = if (dark) 0.42f else 0.26f)
 
     ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = {
+            // Android Back can report dismissal after a rejected Hidden transition. Content
+            // navigation may keep the sheet visible; do not close its owner in that case.
+            if (!sheetState.isVisible) onDismissRequest()
+        },
         modifier = modifier,
         sheetState = sheetState,
         sheetGesturesEnabled = sheetGesturesEnabled,

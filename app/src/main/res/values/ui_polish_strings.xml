@@ -76,17 +76,17 @@
     <!-- Changelog -->
     <string name="changelog_release_date">October 7, 2026</string>
     <string name="changelog_whats_new">What\'s new</string>
-    <string name="changelog_hero_description">Ten new discovery tools with readable filters, flexible season controls and smoother search lists.</string>
-    <string name="changelog_nav_title">Search by list membership and format</string>
-    <string name="changelog_nav_description">Show tracked or untracked titles and combine formats from loaded results. Sort by relevance, title, community score or episode count.</string>
-    <string name="changelog_motion_title">Seasonal status, length and score filters</string>
-    <string name="changelog_motion_description">Choose airing, finished or upcoming titles, a series length and a minimum community score. Unknown metadata is excluded only when you set a limit.</string>
-    <string name="changelog_filters_title">Readable discovery lists and year navigation</string>
-    <string name="changelog_filters_description">Switch seasonal posters to a list with your progress. Previous and next season controls automatically cross year boundaries. Labels wrap at larger font sizes.</string>
-    <string name="changelog_states_title">A random pick and selective search history</string>
-    <string name="changelog_states_description">Open a random title from the filtered seasonal catalog. Remove an individual recent search without clearing your other searches.</string>
-    <string name="changelog_about_title">More reliable search and polished controls</string>
-    <string name="changelog_about_description">Search lists render items as needed. Failed pages keep current results and offer retry; old responses cannot overwrite a new query. Filter options have separate rounded surfaces.</string>
+    <string name="changelog_hero_description">Ten new schedule, notification and anime-detail tools, with polished filters and larger-font layouts.</string>
+    <string name="changelog_nav_title">A schedule tailored to your progress</string>
+    <string name="changelog_nav_description">Hide episodes you have watched or show favorites only. A seven-day overview shows broadcast counts and the busiest day.</string>
+    <string name="changelog_motion_title">Calendar export and daily agenda sharing</string>
+    <string name="changelog_motion_description">Save your filtered week as an ICS file through the document picker. Share the selected day with local airing times through Android’s share sheet.</string>
+    <string name="changelog_filters_title">Quiet hours and per-anime alert control</string>
+    <string name="changelog_filters_description">Set quiet hours in your schedule time zone or mute one anime from its detail tools. In-app history stays available; skipped system alerts are not sent later.</string>
+    <string name="changelog_states_title">Find notifications and characters faster</string>
+    <string name="changelog_states_description">Combine notification search with Today, 7-day or 30-day ranges. Search characters by name or native name and filter by role.</string>
+    <string name="changelog_about_title">Alternative titles and refined surfaces</string>
+    <string name="changelog_about_description">Copy Romaji, English or native titles. Schedule filters use aligned icon rows and wrapping chips; anime headers stay readable in light themes and with enlarged text.</string>
     <string name="changelog_footer">Made with care by the AnimeSchedule team</string>
 
     <!-- Watch sources -->

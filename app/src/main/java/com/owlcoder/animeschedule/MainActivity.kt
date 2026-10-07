@@ -125,6 +125,7 @@ class MainActivity : AppCompatActivity() {
                 data = watchTools,
                 today = java.time.LocalDate.now(prefs.effectiveZoneId),
                 toggleFavorite = { id -> scope.launch { watchToolsStore.toggleFavorite(id) } },
+                setNotificationMuted = { id, title, muted -> scope.launch { watchToolsStore.setNotificationMuted(id, title, muted) } },
                 setNote = { id, note -> scope.launch { watchToolsStore.setNote(id, note) } },
                 setTags = { id, tags -> scope.launch { watchToolsStore.setTags(id, tags) } },
                 setEpisodeMinutes = { minutes -> scope.launch { watchToolsStore.setEpisodeMinutes(minutes) } },

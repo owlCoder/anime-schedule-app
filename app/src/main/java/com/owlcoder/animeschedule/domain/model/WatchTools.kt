@@ -26,6 +26,8 @@ data class WatchTools(
     val dailyGoal: Int = 3,
     val durationOverrides: Map<Int, Int> = emptyMap(),
     val savedViews: List<SavedListView> = emptyList(),
+    /** AniList IDs; favorites and other MAL metadata use a separate ID space. */
+    val mutedNotifications: Map<Int, String> = emptyMap(),
 ) {
     fun episodesThisWeek(today: LocalDate): Int {
         val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))

@@ -213,7 +213,7 @@ fun SettingsScreen(
             uiState.appearancePresets, settingsViewModel::saveAppearancePreset, settingsViewModel::applyAppearancePreset, settingsViewModel::deleteAppearancePreset, onAccentChange = { color ->
                 settingsViewModel.applyAppearancePreset(com.owlcoder.animeschedule.domain.model.AppearancePreset("Current", uiState.themeMode, color, uiState.themeOptions.copy(palette = com.owlcoder.animeschedule.domain.model.ThemePalette.CLASSIC, dynamicColors = false)))
             })
-        SettingsSheet.Notifications -> NotificationSettingsSheet(uiState.notificationsEnabled, uiState.notificationOffsetMinutes, ::enableNotifications, settingsViewModel::setNotificationOffset, { activeSheet = null }, permissionGranted, { enableNotifications(true) })
+        SettingsSheet.Notifications -> NotificationSettingsSheet(uiState.notificationsEnabled, uiState.notificationOffsetMinutes, ::enableNotifications, settingsViewModel::setNotificationOffset, { activeSheet = null }, permissionGranted, { enableNotifications(true) }, uiState.quietHours, settingsViewModel::setQuietHours)
         SettingsSheet.Timezone -> TimezoneSheet(uiState.timezoneId, { settingsViewModel.setTimezone(it); activeSheet = null }, { activeSheet = null })
         SettingsSheet.Language -> SelectionSheet(stringResource(R.string.settings_language), listOf(AppLanguage.ENGLISH, AppLanguage.SERBIAN_LATIN), uiState.appLanguage, { languageLabel(it) }, {
             settingsViewModel.setAppLanguage(it); activeSheet = null; onRestartForLanguage(it)
@@ -439,6 +439,8 @@ internal fun NotificationSettingsSheet(
     onDismiss: () -> Unit,
     permissionGranted: Boolean = true,
     onRequestPermission: () -> Unit = {},
+    quietHours: com.owlcoder.animeschedule.domain.model.QuietHours = com.owlcoder.animeschedule.domain.model.QuietHours(),
+    onQuietChange: (com.owlcoder.animeschedule.domain.model.QuietHours) -> Unit = {},
 ) {
     val offsets = listOf(0, -5, -10, -15, -30, 10, 30, 60)
     AppSheet(
@@ -474,6 +476,7 @@ internal fun NotificationSettingsSheet(
             }
             if (enabled && !permissionGranted) AppButton(stringResource(R.string.notification_allow), onRequestPermission, Modifier.fillMaxWidth(), icon = Icons.Default.NotificationsActive)
             if (enabled) {
+                NotificationPreferencesControls(quietHours, onQuietChange)
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
                         text = stringResource(R.string.settings_notif_timing).uppercase(),

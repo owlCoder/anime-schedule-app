@@ -8,6 +8,7 @@ data class WatchToolsActions(
     val data: WatchTools = WatchTools(),
     val today: java.time.LocalDate = java.time.LocalDate.now(),
     val toggleFavorite: (Int) -> Unit = {},
+    val setNotificationMuted: (Int, String, Boolean) -> Unit = { _, _, _ -> },
     val setNote: (Int, String) -> Unit = { _, _ -> },
     val setTags: (Int, String) -> Unit = { _, _ -> },
     val setEpisodeMinutes: (Int) -> Unit = {},

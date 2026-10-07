@@ -110,10 +110,31 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.7.0** (version code **29**, October 7, 2026).
+Current release: **5.8.0** (version code **30**, October 7, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### New in 5.8.0
+
+1. Hide airing episodes at or below your tracked MAL progress.
+2. Show only local favorites in the schedule, matched by MAL ID.
+3. Inspect a seven-day overview with daily broadcast counts, unique anime and the busiest day.
+4. Export the filtered week as an RFC 5545 ICS calendar with UTC times and personal estimated durations.
+5. Share the selected day’s agenda with local airing times through Android’s share sheet.
+6. Set notification quiet hours in your schedule time zone, including overnight or whole-day windows.
+7. Mute individual anime’s system alerts from detail tools and manage them in notification settings.
+8. Filter notification history to all dates, today, seven days or thirty days alongside title search.
+9. Search the loaded character list by name/native name and filter by role before opening details.
+10. View and copy Romaji, English and native anime titles.
+
+Quiet hours and per-anime muting preserve in-app notification history. Suppressed system alerts
+are not replayed later; delayed checks also respect the intended alert time, including the offset. Muted anime are account-scoped local metadata and are included in personal
+backups; quiet hours are device preferences. Favorites use MAL IDs; muted alerts use AniList IDs.
+Character search uses characters already loaded with the detail (up to twelve from AniList),
+so opening it makes no additional catalog request. Calendar exports use currently cached, filtered broadcasts and estimated durations, include no
+reminders, and write only to the file chosen by the user. Details tools reuse one sheet, schedule
+controls wrap with large fonts, and the detail title panel maintains contrast over banner images.
 
 ### New in 5.7.0
 

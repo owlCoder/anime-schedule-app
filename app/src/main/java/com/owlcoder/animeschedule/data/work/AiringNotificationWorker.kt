@@ -23,6 +23,7 @@ import com.owlcoder.animeschedule.data.local.db.MalListEntryDao
 import com.owlcoder.animeschedule.data.local.db.NotificationDao
 import com.owlcoder.animeschedule.data.local.db.NotificationEntity
 import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
+import com.owlcoder.animeschedule.domain.model.effectiveZoneId
 import com.owlcoder.animeschedule.domain.model.WatchStatus
 import coil3.request.allowHardware
 import coil3.toBitmap
@@ -35,6 +36,7 @@ class AiringNotificationWorker @AssistedInject constructor(
     private val notificationDao: NotificationDao,
     private val airingEpisodeDao: AiringEpisodeDao,
     private val malListEntryDao: MalListEntryDao,
+    private val watchToolsStore: com.owlcoder.animeschedule.data.local.datastore.WatchToolsStore,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) : CoroutineWorker(context, workerParams) {
 
@@ -52,6 +54,7 @@ class AiringNotificationWorker @AssistedInject constructor(
         val prefs = userPreferencesDataStore.userPreferencesFlow.first()
         if (!prefs.notificationsEnabled) return
 
+        val muted = watchToolsStore.data.first().mutedNotifications.keys
         val now = System.currentTimeMillis() / 1000L
         val existingIds = notificationDao.getAllIds().toSet()
         // The first run catches up on the last day. Afterwards the window is deliberately much
@@ -89,7 +92,11 @@ class AiringNotificationWorker @AssistedInject constructor(
                     createdAtEpochSeconds = now
                 )
             )
-            sendSystemNotification(
+            if (com.owlcoder.animeschedule.domain.model.shouldPostSystemAlert(
+                episode.animeId, muted, prefs.quietHours, java.time.Instant.ofEpochSecond(now), prefs.effectiveZoneId,
+                // Doze may defer a quiet-hour broadcast until after quiet hours have ended.
+                java.time.Instant.ofEpochSecond(episode.airingAtEpochSeconds + offsetSeconds),
+            ) && NotificationManagerCompat.from(context).areNotificationsEnabled()) sendSystemNotification(
                 id = episode.airingId,
                 animeId = episode.animeId,
                 title = episode.title,

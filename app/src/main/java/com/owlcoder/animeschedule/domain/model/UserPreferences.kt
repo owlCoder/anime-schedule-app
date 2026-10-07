@@ -50,6 +50,7 @@ data class UserPreferences(
     val appearancePresets: List<AppearancePreset> = emptyList(),
     val notificationsEnabled: Boolean = true,
     val notificationOffsetMinutes: Int = 0,
+    val quietHours: QuietHours = QuietHours(),
     val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
     val onboardingDone: Boolean = false,
     val appLanguage: AppLanguage = AppLanguage.ENGLISH,

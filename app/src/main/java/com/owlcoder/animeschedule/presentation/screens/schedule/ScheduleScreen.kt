@@ -94,6 +94,23 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import com.owlcoder.animeschedule.domain.model.scheduleAgenda
+import com.owlcoder.animeschedule.domain.model.toAgendaText
+import com.owlcoder.animeschedule.domain.model.toCalendarIcs
+import com.owlcoder.animeschedule.presentation.components.LocalWatchTools
+import com.owlcoder.animeschedule.presentation.screens.discovery.DiscoveryChip
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.automirrored.filled.EventNote
+import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -147,7 +164,28 @@ private fun ScheduleScreenContent(
     onInitialLoadChange: (Boolean) -> Unit,
 ) {
     val openOverlay by viewModel.openOverlay.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val resources = androidx.compose.ui.platform.LocalResources.current
     val toast = LocalToast.current
+    val scope = rememberCoroutineScope()
+    val tools = LocalWatchTools.current
+    var calendarSnapshot by rememberSaveable { mutableStateOf("") }
+    val exportedMessage = stringResource(R.string.schedule_agenda_exported)
+    val exportError = stringResource(R.string.schedule_agenda_error)
+    val calendarExporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/calendar")) { uri ->
+        val content = calendarSnapshot
+        if (uri != null) scope.launch {
+            val saved = withContext(Dispatchers.IO) {
+                runCatching {
+                    require(content.isNotBlank())
+                    val stream = context.contentResolver.openOutputStream(uri) ?: error("No output stream")
+                    stream.bufferedWriter(Charsets.UTF_8).use { it.write(content) }
+                }.isSuccess
+            }
+            if (saved) toast.success(exportedMessage) else toast.error(exportError)
+        }
+    }
+
     val appLocale = LocalConfiguration.current.locales[0]
     val today = uiState.today
     // null follows "today", so the selection rolls over with midnight instead of sticking to a
@@ -236,6 +274,7 @@ private fun ScheduleScreenContent(
                     onSeasonal = { viewModel.setOpenOverlay(ScheduleOverlay.Seasonal) },
                     onNotifications = { viewModel.setOpenOverlay(ScheduleOverlay.Notifications) },
                     onFilter = { viewModel.setOpenOverlay(ScheduleOverlay.Filter) },
+                    onAgenda = { viewModel.setOpenOverlay(ScheduleOverlay.Agenda) },
                 )
             }
         }
@@ -254,6 +293,27 @@ private fun ScheduleScreenContent(
     }
 
     when (openOverlay) {
+        ScheduleOverlay.Agenda -> {
+            val days = remember(uiState.today, uiState.weekDays) { scheduleAgenda(uiState.today, uiState.weekDays) }
+            ScheduleAgendaSheet(days, selectedDate, onDateSelected = { date ->
+                pickedEpochDay = date.toEpochDay()
+                viewModel.setOpenOverlay(ScheduleOverlay.None)
+            }, onExport = {
+                calendarSnapshot = days.toCalendarIcs(tools.data, java.time.Instant.now()) { resources.getString(R.string.schedule_agenda_episode, it) }
+                viewModel.setOpenOverlay(ScheduleOverlay.None)
+                calendarExporter.launch("anime-schedule-${uiState.today}.ics")
+            }, onShare = {
+                val day = days.firstOrNull { it.date == selectedDate }
+                if (day != null) {
+                    val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(android.content.Intent.EXTRA_TEXT, day.toAgendaText(uiState.zoneId, appLocale) { resources.getString(R.string.schedule_agenda_episode, it) })
+                    }
+                    viewModel.setOpenOverlay(ScheduleOverlay.None)
+                    context.startActivity(android.content.Intent.createChooser(send, resources.getString(R.string.schedule_agenda_share)))
+                }
+            }, onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) })
+        }
         is ScheduleOverlay.Filter -> ScheduleFilterSheet(
             filter = uiState.filter,
             availableGenres = uiState.availableGenres,
@@ -263,6 +323,8 @@ private fun ScheduleScreenContent(
             onUpcomingChange = viewModel::setUpcomingOnly,
             onGenreToggle = viewModel::toggleGenre,
             onFormatToggle = viewModel::toggleFormat,
+            onHideWatchedChange = viewModel::setHideWatched,
+            onFavoritesChange = viewModel::setFavoritesOnly,
             onClear = viewModel::clearFilter,
             onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) },
         )
@@ -297,6 +359,7 @@ private fun ScheduleScreenContent(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TodayHomeContent(
     uiState: ScheduleUiState,
@@ -316,6 +379,7 @@ private fun TodayHomeContent(
     onSeasonal: () -> Unit,
     onNotifications: () -> Unit,
     onFilter: () -> Unit,
+    onAgenda: () -> Unit,
 ) {
     val today = uiState.today
     val appLocale = LocalConfiguration.current.locales[0]
@@ -384,34 +448,12 @@ private fun TodayHomeContent(
                     onClear = { onQueryChange("") },
                     modifier = Modifier.testTag("schedule-search"),
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    FilterChip(
-                        selected = uiState.filter.upcomingOnly,
-                        onClick = { onUpcomingChange(!uiState.filter.upcomingOnly) },
-                        label = { Text(stringResource(R.string.schedule_upcoming_only)) },
-                    )
-                    if (uiState.isLoggedIn) {
-                        FilterChip(
-                            selected = uiState.filter.onlyMyList,
-                            onClick = { onOnlyMyListChange(!uiState.filter.onlyMyList) },
-                            label = { Text(stringResource(R.string.mylist_title)) },
-                        )
-                    }
-                    Spacer(Modifier.weight(1f))
-                    if (uiState.filter.isActive) {
-                        AppButton(stringResource(R.string.filter_reset), onClearFilter, variant = AppButtonVariant.Plain, icon = Icons.Default.RestartAlt)
-                    } else {
-                        Text(
-                            text = stringResource(R.string.schedule_match_count, uiState.episodesForDate(selectedDate).size),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    DiscoveryChip(stringResource(R.string.schedule_upcoming_only), Icons.Default.Schedule, uiState.filter.upcomingOnly, { onUpcomingChange(!uiState.filter.upcomingOnly) }, multiple = true)
+                    if (uiState.isLoggedIn) DiscoveryChip(stringResource(R.string.mylist_title), Icons.Default.Bookmarks, uiState.filter.onlyMyList, { onOnlyMyListChange(!uiState.filter.onlyMyList) }, multiple = true)
+                    if (uiState.filter.isActive) AppButton(stringResource(R.string.filter_reset), onClearFilter, variant = AppButtonVariant.Plain, icon = Icons.Default.RestartAlt)
                 }
+                AppButton(stringResource(R.string.schedule_agenda), onAgenda, Modifier.fillMaxWidth().testTag("schedule-agenda"), variant = AppButtonVariant.Secondary, icon = Icons.AutoMirrored.Filled.EventNote)
             }
         }
 

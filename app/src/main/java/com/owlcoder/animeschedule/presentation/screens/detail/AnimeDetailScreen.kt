@@ -81,6 +81,7 @@ import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.PillShape
 import java.util.Locale
+import kotlinx.coroutines.launch
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -100,6 +101,8 @@ import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -120,6 +123,10 @@ fun AnimeDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val characterOverlay by viewModel.characterOverlay.collectAsStateWithLifecycle()
+    var showTools by remember { mutableStateOf(false) }
+    val clipboard = androidx.compose.ui.platform.LocalClipboard.current
+    val clipboardScope = androidx.compose.runtime.rememberCoroutineScope()
+    val titleCopied = stringResource(R.string.detail_title_copied)
     var showStatusSheet by remember { mutableStateOf(false) }
     var finaleOverrideEntry by remember { mutableStateOf<MalListEntry?>(null) }
     val context = LocalContext.current
@@ -223,6 +230,7 @@ fun AnimeDetailScreen(
                                 onEdit = { showStatusSheet = true },
                                 onIncrement = viewModel::incrementEpisode,
                             )
+                            AppButton(stringResource(R.string.detail_tools), { showTools = true }, Modifier.fillMaxWidth().testTag("detail-tools"), variant = AppButtonVariant.Secondary, icon = Icons.Default.Tune)
                             detail.malListEntry?.let { ProgressPanel(detail, it) }
                         }
                     }
@@ -316,6 +324,15 @@ fun AnimeDetailScreen(
         )
     }
 
+    uiState.detail?.takeIf { showTools }?.let { detail ->
+        DetailToolsSheet(detail, { showTools = false }, { id -> showTools = false; viewModel.openCharacter(id) }, { value ->
+            clipboardScope.launch {
+                clipboard.setClipEntry(androidx.compose.ui.platform.ClipEntry(android.content.ClipData.newPlainText("Anime title", value)))
+                toast.success(titleCopied)
+            }
+        })
+    }
+
     if (characterOverlay.isVisible) {
         CharacterOverlaySheet(state = characterOverlay, onDismiss = viewModel::dismissCharacterOverlay)
     }
@@ -328,13 +345,14 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit, onShare: () -> U
     var revealed by remember(detail.animeId) { mutableStateOf(false) }
     LaunchedEffect(detail.animeId) { revealed = true }
     val metadata = listOfNotNull(
-        detail.format?.toDisplayFormat(),
+        com.owlcoder.animeschedule.presentation.screens.discovery.discoveryFormatLabel(detail.format),
         detail.seasonYear?.toString(),
         detail.episodes?.let { "$it ep" },
         (detail.averageScore ?: detail.meanScore)?.let { "★ ${formatCommunityScore(it)}" },
     )
 
-    Box(modifier = Modifier.fillMaxWidth().height(280.dp)) {
+    val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale.coerceAtLeast(1f)
+    Box(modifier = Modifier.fillMaxWidth().height(280.dp + (140 * (fontScale - 1)).dp)) {
         AsyncImage(
             model = detail.bannerImageUrl ?: detail.coverImageUrl,
             contentDescription = null,
@@ -387,8 +405,11 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit, onShare: () -> U
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.Bottom,
+                    .padding(horizontal = 12.dp, vertical = 12.dp)
+                    .clip(MaterialTheme.shapes.large)
+                    .background(Color.Black.copy(alpha = 0.68f))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(11.dp),
             ) {
                 MediaThumbnail.Large(
@@ -428,7 +449,7 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit, onShare: () -> U
                             text = metadata.joinToString(" · "),
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White.copy(alpha = 0.92f),
-                            maxLines = 1,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }
@@ -787,15 +808,7 @@ private fun formatCommunityScore(score: Int): String {
     return String.format(Locale.ROOT, "%.1f", normalized)
 }
 
-private fun String.toDisplayFormat(): String = when (this) {
-    "TV_SHORT" -> "TV Short"
-    "MOVIE" -> "Movie"
-    "SPECIAL" -> "Special"
-    "MUSIC" -> "Music"
-    else -> lowercase()
-        .replace('_', ' ')
-        .replaceFirstChar { it.titlecase() }
-}
+
 
 @Composable
 private fun relationTypeLabel(type: String?): String? = when (type) {
@@ -903,7 +916,7 @@ private fun CharacterCard(character: Character, onClick: () -> Unit) {
         )
         character.role?.takeIf { it.isNotBlank() }?.let {
             Text(
-                text = it,
+                text = com.owlcoder.animeschedule.domain.model.CharacterRole.entries.firstOrNull { role -> role.name.equals(it, true) }?.let { role -> characterRoleLabel(role) } ?: it,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,

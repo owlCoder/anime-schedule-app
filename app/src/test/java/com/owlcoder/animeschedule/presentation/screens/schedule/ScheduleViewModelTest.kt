@@ -122,6 +122,21 @@ class ScheduleViewModelTest {
         return vm
     }
 
+    @Test fun `favorite schedule results update immediately when local favorites change`() = runTest {
+        val repo = FakeScheduleRepository().apply { days = { today -> listOf(ScheduleDay(today, listOf(episode(1), episode(2)))) } }
+        val favorites = MutableStateFlow(setOf(1))
+        val vm = ScheduleViewModel(repo, FakeSettings(), FakeMal(), FakeNotifications, FakeWork(), favorites)
+        backgroundScope.launch { vm.uiState.collect {} }
+        vm.setFavoritesOnly(true); runCurrent()
+        assertEquals(listOf(1), vm.uiState.value.todayEpisodes.map { it.airingId })
+        favorites.value = setOf(2); runCurrent()
+        assertEquals(listOf(2), vm.uiState.value.todayEpisodes.map { it.airingId })
+        favorites.value = emptySet(); runCurrent()
+        assertTrue(vm.uiState.value.todayEpisodes.isEmpty())
+        vm.clearFilter(); runCurrent()
+        assertEquals(2, vm.uiState.value.todayEpisodes.size)
+    }
+
     @Test
     fun `today and tomorrow are taken from the week by the zone's date and dropped shows are hidden`() = runTest {
         val repo = FakeScheduleRepository().apply {

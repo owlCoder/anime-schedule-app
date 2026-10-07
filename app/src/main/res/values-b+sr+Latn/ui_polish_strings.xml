@@ -76,17 +76,17 @@
     <!-- Changelog -->
     <string name="changelog_release_date">7. oktobar 2026.</string>
     <string name="changelog_whats_new">Šta je novo</string>
-    <string name="changelog_hero_description">Deset novih alata za otkrivanje animea, uz pregledne filtere, fleksibilne kontrole sezone i bržu listu pretrage.</string>
-    <string name="changelog_nav_title">Pretraga po listi i formatu</string>
-    <string name="changelog_nav_description">Prikaži naslove sa svoje liste ili van nje i kombinuj formate učitanih rezultata. Sortiraj po relevantnosti, naslovu, oceni zajednice ili broju epizoda.</string>
-    <string name="changelog_motion_title">Sezonski filteri statusa, dužine i ocene</string>
-    <string name="changelog_motion_description">Izaberi naslove koji se emituju, završene ili predstojeće, dužinu serije i najmanju ocenu zajednice. Nepoznati podaci se izostavljaju samo uz izabrano ograničenje.</string>
-    <string name="changelog_filters_title">Pregledna lista i promena godine</string>
-    <string name="changelog_filters_description">Zameni sezonske postere listom sa svojim napretkom. Prethodna i sledeća sezona automatski prelaze u drugu godinu. Oznake se prelamaju uz veći font.</string>
-    <string name="changelog_states_title">Nasumičan izbor i istorija pretrage</string>
-    <string name="changelog_states_description">Otvori nasumičan naslov iz filtriranog sezonskog kataloga. Obriši pojedinačnu raniju pretragu uz čuvanje ostalih.</string>
-    <string name="changelog_about_title">Pouzdanija pretraga i doterane kontrole</string>
-    <string name="changelog_about_description">Lista pretrage prikazuje stavke po potrebi. Neuspešna stranica čuva rezultate i nudi novi pokušaj; stari odgovori ne mogu prepisati novi upit. Filteri imaju odvojene zaobljene površine.</string>
+    <string name="changelog_hero_description">Deset novih alata za raspored, obaveštenja i detalje animea, uz doterane filtere i prikaz sa većim fontom.</string>
+    <string name="changelog_nav_title">Raspored prema tvom napretku</string>
+    <string name="changelog_nav_description">Sakrij već odgledane epizode ili prikaži samo omiljene. Pregled sedam dana prikazuje broj emitovanja i najaktivniji dan.</string>
+    <string name="changelog_motion_title">Izvoz kalendara i deljenje dnevnog rasporeda</string>
+    <string name="changelog_motion_description">Sačuvaj filtriranu nedelju kao ICS fajl kroz birač dokumenata. Podeli izabrani dan sa lokalnim vremenima emitovanja kroz Android meni.</string>
+    <string name="changelog_filters_title">Tihi sati i kontrola pojedinačnih animea</string>
+    <string name="changelog_filters_description">Podesi tihe sate u vremenskoj zoni rasporeda ili utišaj anime kroz njegove alate. Istorija u aplikaciji ostaje; propuštena sistemska obaveštenja se ne šalju kasnije.</string>
+    <string name="changelog_states_title">Brže pronađi obaveštenja i likove</string>
+    <string name="changelog_states_description">Kombinuj pretragu obaveštenja sa današnjim danom, 7 ili 30 dana. Pronađi likove po imenu ili izvornom imenu i filtriraj uloge.</string>
+    <string name="changelog_about_title">Alternativni naslovi i doteran izgled</string>
+    <string name="changelog_about_description">Kopiraj Romaji, engleski ili izvorni naslov. Filteri rasporeda imaju poravnate ikonice i prilagodljive kontrole; zaglavlja animea su čitljiva u svetlim temama i sa većim tekstom.</string>
     <string name="changelog_footer">Napravljeno pažljivo od strane AnimeSchedule tima</string>
 
     <!-- Izvori za gledanje -->

@@ -50,6 +50,10 @@ class WatchToolsStore @Inject constructor(
         it.copy(favorites = if (id in it.favorites) it.favorites - id else it.favorites + id)
     }
 
+    suspend fun setNotificationMuted(anilistId: Int, title: String, muted: Boolean) = edit {
+        if (anilistId <= 0) it else it.copy(mutedNotifications = if (muted) it.mutedNotifications + (anilistId to title.trim().take(500)) else it.mutedNotifications - anilistId)
+    }
+
     suspend fun setNote(id: Int, note: String) = edit {
         val trimmed = note.trim().take(2000)
         it.copy(notes = if (trimmed.isBlank()) it.notes - id else it.notes + (id to trimmed))

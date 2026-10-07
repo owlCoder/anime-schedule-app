@@ -16,6 +16,7 @@ import com.owlcoder.animeschedule.domain.model.ThemeOptions
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 import com.owlcoder.animeschedule.domain.model.ThemeMode
+import com.owlcoder.animeschedule.domain.model.QuietHours
 import com.owlcoder.animeschedule.domain.model.UserPreferences
 import kotlinx.coroutines.flow.Flow
 import java.io.IOException
@@ -43,6 +44,7 @@ class UserPreferencesDataStore @Inject constructor(
         val THEME_OPTIONS = stringPreferencesKey("theme_options_v1")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
+        val QUIET_HOURS = stringPreferencesKey("notification_quiet_hours_v1")
         val NOTIFICATION_OFFSET = intPreferencesKey("notification_offset_minutes")
         val ACCENT_COLOR = stringPreferencesKey("accent_color")
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
@@ -82,6 +84,7 @@ class UserPreferencesDataStore @Inject constructor(
             themeMode = runCatching { ThemeMode.valueOf(prefs[Keys.THEME_MODE] ?: "") }.getOrDefault(ThemeMode.SYSTEM),
             notificationsEnabled = prefs[Keys.NOTIFICATIONS_ENABLED] ?: true,
             notificationOffsetMinutes = prefs[Keys.NOTIFICATION_OFFSET] ?: 0,
+            quietHours = runCatching { json.decodeFromString<QuietHours>(prefs[Keys.QUIET_HOURS] ?: "{}").normalized() }.getOrDefault(QuietHours()),
             accentColor = runCatching { AccentColor.valueOf(prefs[Keys.ACCENT_COLOR] ?: "") }.getOrDefault(AccentColor.TELEGRAM_BLUE),
             onboardingDone = prefs[Keys.ONBOARDING_DONE] ?: false,
             appLanguage = appLanguage,
@@ -151,6 +154,10 @@ class UserPreferencesDataStore @Inject constructor(
 
     suspend fun setNotificationOffset(minutes: Int) {
         dataStore.edit { it[Keys.NOTIFICATION_OFFSET] = minutes }
+    }
+
+    suspend fun setQuietHours(value: QuietHours) {
+        dataStore.edit { it[Keys.QUIET_HOURS] = Json.encodeToString(value.normalized()) }
     }
 
     suspend fun setAccentColor(color: AccentColor) {
