@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.NotificationsOff
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.PersonSearch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ViewList
@@ -59,17 +60,17 @@ private data class ReleaseNote(
 fun ChangelogBottomSheet(onDismiss: () -> Unit) {
     val notes = listOf(
         ReleaseNote(
-            Icons.AutoMirrored.Outlined.ViewList,
+            Icons.Outlined.CalendarMonth,
             stringResource(R.string.changelog_nav_title),
             stringResource(R.string.changelog_nav_description),
         ),
         ReleaseNote(
-            Icons.Outlined.CalendarMonth,
+            Icons.Outlined.Search,
             stringResource(R.string.changelog_motion_title),
             stringResource(R.string.changelog_motion_description),
         ),
         ReleaseNote(
-            Icons.Outlined.NotificationsOff,
+            Icons.Outlined.Tune,
             stringResource(R.string.changelog_filters_title),
             stringResource(R.string.changelog_filters_description),
         ),

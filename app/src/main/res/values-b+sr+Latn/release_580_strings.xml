@@ -23,6 +23,7 @@
     <string name="quiet_hours_later">Kasnije: %s</string>
     <string name="notifications_muted">Utišani anime</string>
     <string name="notifications_muted_hint">Utišaj anime kroz alate na stranici detalja. Istorija u aplikaciji ostaje dostupna.</string>
+    <string name="notifications_muted_empty">Nijedan anime nije utišan.</string>
     <string name="notifications_unmute">Uključi obaveštenja za %s</string>
     <string name="notifications_mute">Utišaj sistemska obaveštenja</string>
     <string name="notifications_mute_hint">Samo za ovaj anime; istorija u aplikaciji ostaje dostupna.</string>

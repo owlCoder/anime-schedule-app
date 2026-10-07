@@ -59,6 +59,20 @@ class SearchViewModelTest {
         mal.entries.value = listOf(MalListEntry(2, "Title 2", status = WatchStatus.WATCHING, episodesWatched = 0, score = 0, totalEpisodes = 12)); runCurrent()
         assertEquals(listOf(2), vm.uiState.value.results.map { it.anilistId }); assertEquals(2, vm.uiState.value.loadedCount); assertEquals(1, calls)
     }
+    @Test fun `surrounding whitespace edits keep results and do not refetch`() = runTest {
+        val repo = FakeSearch()
+        val queries = mutableListOf<String>()
+        repo.search = { query, _ -> queries += query; AppResult.Success(SearchPage(listOf(item(1)), true)) }
+        val vm = SearchViewModel(repo, FakeMal()); observe(vm)
+        vm.setQuery("  Title "); advanceUntilIdle()
+        vm.setQuery("Title  "); advanceUntilIdle()
+        assertEquals(listOf("Title"), queries)
+        assertEquals("Title", vm.uiState.value.query)
+        assertEquals(listOf(1), vm.uiState.value.results.map { it.anilistId })
+        assertFalse(vm.uiState.value.isLoading)
+        assertTrue(vm.uiState.value.hasNextPage)
+    }
+
     @Test fun `deleting one recent search preserves other history`() = runTest {
         val repo = FakeSearch(); val vm = SearchViewModel(repo, FakeMal())
         vm.removeRecentSearch("Alpha"); advanceUntilIdle(); assertEquals(listOf("Beta"), repo.recentSearches.value)

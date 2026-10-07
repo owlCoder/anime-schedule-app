@@ -28,11 +28,14 @@ internal fun DetailToolsSheet(detail: AnimeDetail, onDismiss: () -> Unit, onChar
     var page by rememberSaveable(detail.animeId) { mutableStateOf(DetailToolPage.MENU) }
     var query by rememberSaveable(detail.animeId) { mutableStateOf("") }
     var role by rememberSaveable(detail.animeId) { mutableStateOf(CharacterRole.ALL) }
+    fun navigate(target: DetailToolPage) {
+        page = target
+    }
     val currentPage by rememberUpdatedState(page)
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { target ->
         // Return from child pages on Back or a scrim tap without hiding their shared sheet.
         if (target == SheetValue.Hidden && currentPage != DetailToolPage.MENU) {
-            page = DetailToolPage.MENU
+            navigate(DetailToolPage.MENU)
             false
         } else true
     })
@@ -41,11 +44,17 @@ internal fun DetailToolsSheet(detail: AnimeDetail, onDismiss: () -> Unit, onChar
         DetailToolPage.TITLES -> R.string.detail_alternative_titles
         DetailToolPage.CHARACTERS -> R.string.detail_character_finder
     })
-    AppSheet(onDismissRequest = { if (page == DetailToolPage.MENU) onDismiss() else page = DetailToolPage.MENU }, title = title, sheetState = sheetState) {
+    AppSheet(onDismissRequest = {
+        if (page == DetailToolPage.MENU) onDismiss() else navigate(DetailToolPage.MENU)
+    }, title = title, sheetState = sheetState) {
+        // The sheet has its own focus owner. Clear its input when navigating between pages.
+        val focus = androidx.compose.ui.platform.LocalFocusManager.current
+        val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+        LaunchedEffect(page) { focus.clearFocus(force = true); keyboard?.hide() }
         when (page) {
             DetailToolPage.MENU -> Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                AppButton(stringResource(R.string.detail_alternative_titles), { page = DetailToolPage.TITLES }, Modifier.fillMaxWidth().testTag("detail-titles"), variant = AppButtonVariant.Secondary, icon = Icons.Default.Translate)
-                AppButton(stringResource(R.string.detail_character_finder), { page = DetailToolPage.CHARACTERS }, Modifier.fillMaxWidth().testTag("detail-character-finder"), variant = AppButtonVariant.Secondary, enabled = detail.characters.isNotEmpty(), icon = Icons.Default.PersonSearch)
+                AppButton(stringResource(R.string.detail_alternative_titles), { navigate(DetailToolPage.TITLES) }, Modifier.fillMaxWidth().testTag("detail-titles"), variant = AppButtonVariant.Secondary, icon = Icons.Default.Translate)
+                AppButton(stringResource(R.string.detail_character_finder), { navigate(DetailToolPage.CHARACTERS) }, Modifier.fillMaxWidth().testTag("detail-character-finder"), variant = AppButtonVariant.Secondary, enabled = detail.characters.isNotEmpty(), icon = Icons.Default.PersonSearch)
                 val tools = LocalWatchTools.current
                 if (detail.animeId > 0) {
                     val muted = detail.animeId in tools.data.mutedNotifications
@@ -69,8 +78,6 @@ internal fun DetailToolsSheet(detail: AnimeDetail, onDismiss: () -> Unit, onChar
                 }
             }
             DetailToolPage.CHARACTERS -> {
-                val focus = androidx.compose.ui.platform.LocalFocusManager.current
-                val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
                 Column(Modifier.heightIn(max = 580.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(stringResource(R.string.detail_characters_loaded, detail.characters.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp))
                     AppSearchField(query, { query = it }, Modifier.testTag("character-search"), stringResource(R.string.detail_character_search), Icons.Default.PersonSearch, onClear = { query = "" })
@@ -83,7 +90,11 @@ internal fun DetailToolsSheet(detail: AnimeDetail, onDismiss: () -> Unit, onChar
                     LazyColumn(Modifier.weight(1f, fill = false).fillMaxWidth().testTag("character-results"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (matches.isEmpty()) item { EmptyState(Icons.Default.PersonSearch, stringResource(R.string.detail_character_empty), actionLabel = stringResource(R.string.filter_reset), onAction = { query = ""; role = CharacterRole.ALL; focus.clearFocus(); keyboard?.hide() }) }
                         items(matches, key = { it.id }) { character ->
-                            Surface(Modifier.fillMaxWidth().clickable(role = Role.Button) { onCharacter(character.id) }.testTag("finder-character-${character.id}"), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface) {
+                            Surface(Modifier.fillMaxWidth().clickable(role = Role.Button) {
+                                focus.clearFocus(force = true)
+                                keyboard?.hide()
+                                onCharacter(character.id)
+                            }.testTag("finder-character-${character.id}"), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface) {
                                 Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                     MediaThumbnail.Small(character.imageUrl, null, Modifier.size(44.dp, 60.dp))
                                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {

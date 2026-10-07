@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -30,10 +31,14 @@ internal fun NotificationPreferencesControls(quiet: QuietHours, onQuietChange: (
             if (quiet.startHour == quiet.endHour) Text(stringResource(R.string.quiet_hours_all_day), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp))
         }
         val tools = LocalWatchTools.current
+        val muted = remember(tools.data.mutedNotifications) { tools.data.mutedNotifications.entries.sortedBy { it.value.lowercase(Locale.ROOT) } }
         Text(stringResource(R.string.notifications_muted), style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(start = 4.dp, top = 8.dp))
         Text(stringResource(R.string.notifications_muted_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp))
-        if (tools.data.mutedNotifications.isNotEmpty()) LazyColumn(Modifier.heightIn(max = 220.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(tools.data.mutedNotifications.entries.sortedBy { it.value }, key = { it.key }) { (id, name) ->
+        if (tools.data.mutedNotifications.isEmpty()) {
+            Text(stringResource(R.string.notifications_muted_empty), style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp).testTag("muted-anime-empty"))
+        } else LazyColumn(Modifier.heightIn(max = 220.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(muted, key = { it.key }) { (id, name) ->
                 val title = name.ifBlank { "Anime #$id" }
                 AppButton(stringResource(R.string.notifications_unmute, title), { tools.setNotificationMuted(id, title, false) },
                     Modifier.fillMaxWidth().testTag("unmute-$id"), variant = AppButtonVariant.Secondary, icon = Icons.Default.NotificationsActive)

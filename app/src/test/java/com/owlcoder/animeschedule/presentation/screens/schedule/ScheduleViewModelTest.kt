@@ -122,6 +122,27 @@ class ScheduleViewModelTest {
         return vm
     }
 
+    @Test fun `badge changes reuse filtered week and day lists`() = runTest {
+        val repo = FakeScheduleRepository().apply {
+            days = { today -> listOf(ScheduleDay(today, listOf(episode(1), episode(2)))) }
+        }
+        val unread = MutableStateFlow(0)
+        val notifications = object : NotificationRepository by FakeNotifications {
+            override fun getUnreadCount() = unread
+        }
+        val vm = ScheduleViewModel(repo, FakeSettings(), FakeMal(), notifications, FakeWork())
+        backgroundScope.launch { vm.uiState.collect {} }
+        vm.setScheduleQuery("Show 1"); runCurrent()
+        val before = vm.uiState.value
+        assertEquals(listOf(1), before.todayEpisodes.map { it.airingId })
+        org.junit.Assert.assertSame(before.weekDays.first().episodes, before.todayEpisodes)
+        unread.value = 3; runCurrent()
+        val after = vm.uiState.value
+        assertEquals(3, after.unreadNotificationCount)
+        org.junit.Assert.assertSame(before.weekDays, after.weekDays)
+        org.junit.Assert.assertSame(before.todayEpisodes, after.todayEpisodes)
+    }
+
     @Test fun `favorite schedule results update immediately when local favorites change`() = runTest {
         val repo = FakeScheduleRepository().apply { days = { today -> listOf(ScheduleDay(today, listOf(episode(1), episode(2)))) } }
         val favorites = MutableStateFlow(setOf(1))

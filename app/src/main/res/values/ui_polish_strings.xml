@@ -77,16 +77,16 @@
     <string name="changelog_release_date">October 7, 2026</string>
     <string name="changelog_whats_new">What\'s new</string>
     <string name="changelog_hero_description">Ten new schedule, notification and anime-detail tools, with polished filters and larger-font layouts.</string>
-    <string name="changelog_nav_title">A schedule tailored to your progress</string>
-    <string name="changelog_nav_description">Hide episodes you have watched or show favorites only. A seven-day overview shows broadcast counts and the busiest day.</string>
-    <string name="changelog_motion_title">Calendar export and daily agenda sharing</string>
-    <string name="changelog_motion_description">Save your filtered week as an ICS file through the document picker. Share the selected day with local airing times through Android’s share sheet.</string>
-    <string name="changelog_filters_title">Quiet hours and per-anime alert control</string>
-    <string name="changelog_filters_description">Set quiet hours in your schedule time zone or mute one anime from its detail tools. In-app history stays available; skipped system alerts are not sent later.</string>
-    <string name="changelog_states_title">Find notifications and characters faster</string>
-    <string name="changelog_states_description">Combine notification search with Today, 7-day or 30-day ranges. Search characters by name or native name and filter by role.</string>
-    <string name="changelog_about_title">Alternative titles and refined surfaces</string>
-    <string name="changelog_about_description">Copy Romaji, English or native titles. Schedule filters use aligned icon rows and wrapping chips; anime headers stay readable in light themes and with enlarged text.</string>
+    <string name="changelog_nav_title">Schedule that stays current</string>
+    <string name="changelog_nav_description">The featured broadcast updates while the dashboard is open. Day and week views reuse one filtered schedule; badges and edit state no longer repeat that work.</string>
+    <string name="changelog_motion_title">Smoother search</string>
+    <string name="changelog_motion_description">Whitespace edits preserve results and avoid extra catalog requests. Search inputs focus across their whole surface and dismiss the keyboard after submission.</string>
+    <string name="changelog_filters_title">Readable controls at every text size</string>
+    <string name="changelog_filters_description">Headers give titles and actions separate space with enlarged text or narrow screens. Compact icons now have full 48 dp touch targets.</string>
+    <string name="changelog_states_title">Reliable character overlays</string>
+    <string name="changelog_states_description">Reopened character details use a small session cache. Failed loads offer retry; late responses cannot replace another character or reopen a dismissed overlay.</string>
+    <string name="changelog_about_title">Consistent feedback and navigation</string>
+    <string name="changelog_about_description">Character sheets use the shared loading and error designs. Page changes close the keyboard, and notification settings show when no anime are muted.</string>
     <string name="changelog_footer">Made with care by the AnimeSchedule team</string>
 
     <!-- Watch sources -->

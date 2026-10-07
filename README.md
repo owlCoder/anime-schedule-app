@@ -110,10 +110,20 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.8.0** (version code **30**, October 7, 2026).
+Current release: **5.8.1** (version code **31**, October 7, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### Refined in 5.8.1
+
+- Refresh the dashboard selection on minute boundaries while visible, so featured and upcoming broadcasts follow time without reopening the screen.
+- Filter each schedule day once and reuse it for day/week views; unrelated badges and edit state do not rerun the filters.
+- Preserve search results when only surrounding whitespace changes, avoiding a duplicate request.
+- Give search fields a full focus surface and a persistent accessible label, and dismiss the keyboard after submission.
+- Stack title/actions on narrow screens or with larger text; give compact icon controls 48 dp touch targets.
+- Cache up to twenty character details in each detail screen session, with retry after failure and guards against late responses after dismissal or selection changes.
+- Use the shared character loading/error states, dismiss the keyboard on tool-page changes, and explicitly show an empty muted-anime list.
 
 ### New in 5.8.0
 

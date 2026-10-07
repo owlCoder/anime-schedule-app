@@ -3,6 +3,7 @@ package com.owlcoder.animeschedule.presentation.components
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -20,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
@@ -56,44 +58,39 @@ fun AppLargeHeader(
     subtitle: String? = null,
     trailingContent: @Composable (() -> Unit)? = null,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = if (subtitle.isNullOrBlank()) 46.dp else 58.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .widthIn(min = 104.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp),
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (!subtitle.isNullOrBlank()) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+    val fontScale = LocalDensity.current.fontScale
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val stacked = trailingContent != null && (maxWidth < 360.dp || fontScale > 1.2f)
+        if (stacked) {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LargeHeaderText(title, subtitle, Modifier.fillMaxWidth(), maxLines = 2)
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                    trailingContent?.invoke()
+                }
             }
-        }
-        if (trailingContent != null) {
-            Box(
-                modifier = Modifier.wrapContentWidth(),
-                contentAlignment = Alignment.CenterEnd,
+        } else {
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = if (subtitle.isNullOrBlank()) 46.dp else 58.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                trailingContent()
+                LargeHeaderText(title, subtitle, Modifier.weight(1f), maxLines = 1)
+                if (trailingContent != null) Box(Modifier.wrapContentWidth(), contentAlignment = Alignment.CenterEnd) {
+                    trailingContent()
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun LargeHeaderText(title: String, subtitle: String?, modifier: Modifier, maxLines: Int) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(0.dp)) {
+        Text(title, color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.SemiBold,
+            maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        if (!subtitle.isNullOrBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -150,7 +147,7 @@ fun GlassToolbarGroup(
     Box(
         modifier = modifier
             .wrapContentWidth()
-            .height(44.dp)
+            .height(48.dp)
             .shadow(
                 elevation = 7.dp,
                 shape = PillShape,
@@ -204,7 +201,7 @@ fun GlassToolbarButton(
     val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
-            .size(44.dp)
+            .size(48.dp)
             .clip(CircleShape)
             .iosPressScale(interactionSource, pressedScale = 0.92f)
             .clickable(

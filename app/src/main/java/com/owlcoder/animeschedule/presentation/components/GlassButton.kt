@@ -220,7 +220,7 @@ fun GlassButton(
     }
 }
 
-/** 36dp iOS icon control nested inside a 44dp accessibility target. */
+/** The compact visual sits inside a full 48dp Android touch target. */
 @Composable
 fun GlassIconButton(
     icon: ImageVector,
@@ -235,7 +235,7 @@ fun GlassIconButton(
     Box(
         modifier = modifier
             .iosPressScale(interactionSource, pressedScale = 0.94f)
-            .sizeIn(minWidth = 44.dp, minHeight = 44.dp)
+            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,

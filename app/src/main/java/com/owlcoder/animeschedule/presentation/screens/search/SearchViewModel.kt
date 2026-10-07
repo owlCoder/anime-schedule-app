@@ -86,13 +86,15 @@ class SearchViewModel @Inject constructor(
     }
 
     fun setQuery(query: String) {
-        if (_query.value == query) return
+        val normalized = query.trim()
+        // Whitespace edits should not discard useful results or restart a catalog request.
+        if (_query.value == normalized) return
         // Invalidate in-flight responses immediately, including the debounce window.
         generation++
         searchJob?.cancel()
         loadMoreJob?.cancel()
-        _query.value = query
-        _search.value = SearchUiState(query = query.trim(), isLoading = query.trim().length >= MIN_QUERY_LENGTH)
+        _query.value = normalized
+        _search.value = SearchUiState(query = normalized, isLoading = normalized.length >= MIN_QUERY_LENGTH)
     }
     fun setTracking(value: TrackingFilter) = _filter.update { it.copy(tracking = value) }
     fun toggleFormat(value: String) = _filter.update { it.copy(formats = if (value in it.formats) it.formats - value else it.formats + value) }

@@ -88,7 +88,6 @@ import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
 import com.owlcoder.animeschedule.presentation.screens.notifications.NotificationsOverlay
 import com.owlcoder.animeschedule.presentation.screens.seasonal.SeasonalOverlay
-import java.time.Clock
 import java.time.LocalDate
 import java.time.Instant
 import java.time.ZoneId
@@ -191,7 +190,8 @@ private fun ScheduleScreenContent(
     // null follows "today", so the selection rolls over with midnight instead of sticking to a
     // date that has become yesterday.
     var pickedEpochDay by rememberSaveable { mutableStateOf<Long?>(null) }
-    val selectedDate = pickedEpochDay?.let(LocalDate::ofEpochDay)?.takeIf { it >= today } ?: today
+    val selectedDate = pickedEpochDay?.let(LocalDate::ofEpochDay)
+        ?.takeIf { it in today..today.plusDays(6) } ?: today
     var editingEpisode by remember { mutableStateOf<AiringEpisode?>(null) }
     var lastIncrementedEpisode by remember { mutableStateOf<AiringEpisode?>(null) }
 
@@ -513,11 +513,18 @@ private fun ScheduleDayContent(
     val today = uiState.today
     val appLocale = LocalConfiguration.current.locales[0]
     val motion = LocalMotionPolicy.current
-    val selectedEpisodes = uiState.episodesForDate(selectedDate).sortedBy { it.airingAtEpochSeconds }
+    val dayEpisodes = uiState.episodesForDate(selectedDate)
+    val selectedEpisodes = remember(dayEpisodes) { dayEpisodes.sortedBy { it.airingAtEpochSeconds } }
     val isToday = selectedDate == today
-    val todaySelection = if (isToday) {
-        DashboardScheduleSelector.select(selectedEpisodes, Clock.systemUTC())
-    } else null
+    // Countdown children only update their own text. The dashboard selection also needs a
+    // lifecycle-aware clock so an aired/next card changes while this screen stays open.
+    val now by remember(isToday) {
+        if (isToday) com.owlcoder.animeschedule.core.time.currentMinuteFlow()
+        else kotlinx.coroutines.flow.flowOf(java.time.Instant.EPOCH)
+    }.collectAsStateWithLifecycle(initialValue = java.time.Instant.now())
+    val todaySelection = remember(isToday, selectedEpisodes, now) {
+        if (isToday) DashboardScheduleSelector.select(selectedEpisodes, now) else null
+    }
     val featured = todaySelection?.featured ?: selectedEpisodes.firstOrNull()
     val listEpisodes = todaySelection?.upcoming ?: selectedEpisodes.drop(1).take(5)
     val hasSchedule = selectedEpisodes.isNotEmpty()

@@ -43,7 +43,8 @@ data class CharacterOverlayState(
     val isVisible: Boolean = false,
     val isLoading: Boolean = false,
     val detail: CharacterDetail? = null,
-    val errorRes: Int? = null
+    val errorRes: Int? = null,
+    val characterId: Int? = null,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -142,23 +143,43 @@ class DetailViewModel @Inject constructor(
     }
 
     private var characterLoadJob: Job? = null
+    private var characterGeneration = 0
+    private val characterCache = java.util.LinkedHashMap<Int, CharacterDetail>(16, 0.75f, true)
     private val _characterOverlay = MutableStateFlow(CharacterOverlayState())
     val characterOverlay: StateFlow<CharacterOverlayState> = _characterOverlay.asStateFlow()
 
     fun openCharacter(characterId: Int) {
+        if (_characterOverlay.value.let { it.isVisible && it.isLoading && it.characterId == characterId }) return
+        val generation = ++characterGeneration
         characterLoadJob?.cancel()
-        _characterOverlay.value = CharacterOverlayState(isVisible = true, isLoading = true)
+        characterCache[characterId]?.let { cached ->
+            _characterOverlay.value = CharacterOverlayState(isVisible = true, detail = cached, characterId = characterId)
+            return
+        }
+        _characterOverlay.value = CharacterOverlayState(isVisible = true, isLoading = true, characterId = characterId)
         characterLoadJob = viewModelScope.launch {
-            when (val result = animeDetailRepository.getCharacterDetail(characterId)) {
-                is AppResult.Success -> _characterOverlay.value =
-                    CharacterOverlayState(isVisible = true, detail = result.data)
+            val result = animeDetailRepository.getCharacterDetail(characterId)
+            // A provider may finish after cancellation; it must not reopen a dismissed sheet
+            // or replace the character the user has subsequently chosen.
+            if (generation != characterGeneration) return@launch
+            when (result) {
+                is AppResult.Success -> {
+                    characterCache[characterId] = result.data
+                    if (characterCache.size > 20) characterCache.remove(characterCache.keys.first())
+                    _characterOverlay.value = CharacterOverlayState(isVisible = true, detail = result.data, characterId = characterId)
+                }
                 is AppResult.Error -> _characterOverlay.value =
-                    CharacterOverlayState(isVisible = true, errorRes = R.string.error_load_details)
+                    CharacterOverlayState(isVisible = true, errorRes = R.string.error_load_details, characterId = characterId)
             }
         }
     }
 
+    fun retryCharacter() {
+        _characterOverlay.value.characterId?.let(::openCharacter)
+    }
+
     fun dismissCharacterOverlay() {
+        characterGeneration++
         characterLoadJob?.cancel()
         _characterOverlay.value = CharacterOverlayState()
     }

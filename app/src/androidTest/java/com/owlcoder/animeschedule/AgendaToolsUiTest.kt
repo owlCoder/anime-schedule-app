@@ -241,9 +241,14 @@ class AgendaToolsUiTest {
         compose.onNodeWithText("Gamma Old").assertIsDisplayed()
     }
     @Test fun detailHeaderAndToolsRemainReadableInLightTheme() {
+        var characterRequests = 0
         val repo = object : AnimeDetailRepository {
             override fun getAnimeDetail(animeId: Int) = flowOf(AppResult.Success(detail))
-            override suspend fun getCharacterDetail(characterId: Int) = AppResult.Success(CharacterDetail(characterId, "Alpha", null, null, "Character description"))
+            override suspend fun getCharacterDetail(characterId: Int): AppResult<CharacterDetail> {
+                characterRequests++
+                return if (characterRequests == 1) AppResult.Error(AppError.NoCache)
+                else AppResult.Success(CharacterDetail(characterId, "Alpha", null, null, "Character description"))
+            }
         }
         val sources = object : WatchSourceRepository {
             override fun getAll() = flowOf(emptyList<WatchSource>())
@@ -275,7 +280,16 @@ class AgendaToolsUiTest {
         compose.onNodeWithTag("detail-character-finder").performClick()
         compose.onNodeWithTag("finder-character-1").performClick()
         compose.onAllNodes(isDialog()).assertCountEquals(1)
+        compose.onNodeWithText(text(R.string.common_retry)).assertIsDisplayed()
+        screenshot("character-error")
+        compose.onNodeWithText(text(R.string.common_retry)).performClick()
         compose.onNodeWithText("Character description").assertIsDisplayed()
         screenshot("character-detail")
+        compose.onNodeWithContentDescription(text(android.R.string.cancel)).performClick()
+        compose.onNodeWithTag("detail-tools").performClick()
+        compose.onNodeWithTag("detail-character-finder").performClick()
+        compose.onNodeWithTag("finder-character-1").performClick()
+        compose.onNodeWithText("Character description").assertIsDisplayed()
+        assertEquals(2, characterRequests)
     }
 }

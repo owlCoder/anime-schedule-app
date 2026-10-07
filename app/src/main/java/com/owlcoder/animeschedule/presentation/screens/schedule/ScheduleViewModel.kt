@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.core.result.AppResult
 import com.owlcoder.animeschedule.core.time.currentDateFlow
+import com.owlcoder.animeschedule.core.time.currentMinuteFlow
 import com.owlcoder.animeschedule.domain.model.AiringEpisode
 import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
@@ -38,8 +39,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import com.owlcoder.animeschedule.domain.model.effectiveZoneId
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -108,6 +107,12 @@ private data class RefreshStatus(
     val isRefreshing: Boolean = true,
     val hasLoadedOnce: Boolean = false,
     val failed: Boolean = false,
+)
+
+private data class FilteredSchedule(
+    val snapshot: ScheduleSnapshot,
+    val filter: ScheduleFilter,
+    val days: List<ScheduleDay>,
 )
 
 private data class Auxiliary(
@@ -182,22 +187,26 @@ class ScheduleViewModel internal constructor(
 
     // Run the time filter only while it is enabled and the screen is subscribed.
     private val filterClock = _filter.map { it.upcomingOnly }.distinctUntilChanged().flatMapLatest { enabled ->
-        if (!enabled) flowOf(0L) else flow {
-            while (true) {
-                emit(Instant.now().epochSecond)
-                delay(60_000L)
-            }
-        }
+        if (!enabled) flowOf(0L) else currentMinuteFlow().map { it.epochSecond }
     }
 
-    val uiState: StateFlow<ScheduleUiState> = combine(snapshot, _filter, auxiliary, filterClock, favoriteIds) { snapshot, filter, aux, now, favorites ->
-        val byDate = snapshot.days.associateBy { it.date }
+    // Filter each day once. Notification badges and edit/refresh state must not re-filter
+    // the whole week, and today/tomorrow reuse the same lists as the weekly overview.
+    private val filteredSchedule = combine(snapshot, _filter, filterClock, favoriteIds) { snapshot, filter, now, favorites ->
+        FilteredSchedule(snapshot, filter, snapshot.days.map { day ->
+            day.copy(episodes = day.episodes.applyFilter(filter, now, favorites))
+        })
+    }
+
+    val uiState: StateFlow<ScheduleUiState> = combine(filteredSchedule, auxiliary) { filtered, aux ->
+        val snapshot = filtered.snapshot
+        val byDate = filtered.days.associateBy { it.date }
         ScheduleUiState(
             zoneId = snapshot.zoneId,
             today = snapshot.today,
-            todayEpisodes = byDate[snapshot.today]?.episodes.orEmpty().applyFilter(filter, now, favorites),
-            tomorrowEpisodes = byDate[snapshot.today.plusDays(1)]?.episodes.orEmpty().applyFilter(filter, now, favorites),
-            weekDays = snapshot.days.map { day -> day.copy(episodes = day.episodes.applyFilter(filter, now, favorites)) },
+            todayEpisodes = byDate[snapshot.today]?.episodes.orEmpty(),
+            tomorrowEpisodes = byDate[snapshot.today.plusDays(1)]?.episodes.orEmpty(),
+            weekDays = filtered.days,
             isLoading = aux.refresh.isRefreshing,
             isInitialLoad = aux.refresh.isRefreshing && !aux.refresh.hasLoadedOnce && snapshot.days.isEmpty(),
             // A failed refresh only matters when there is nothing cached to show instead.
@@ -205,7 +214,7 @@ class ScheduleViewModel internal constructor(
                 aux.refresh.failed && snapshot.days.isEmpty()
             },
             isLoggedIn = snapshot.isLoggedIn,
-            filter = filter,
+            filter = filtered.filter,
             availableGenres = snapshot.availableGenres,
             availableFormats = snapshot.availableFormats,
             pendingIncrementIds = aux.pendingIncrementIds,

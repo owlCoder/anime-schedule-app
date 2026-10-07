@@ -334,7 +334,7 @@ fun AnimeDetailScreen(
     }
 
     if (characterOverlay.isVisible) {
-        CharacterOverlaySheet(state = characterOverlay, onDismiss = viewModel::dismissCharacterOverlay)
+        CharacterOverlaySheet(state = characterOverlay, onDismiss = viewModel::dismissCharacterOverlay, onRetry = viewModel::retryCharacter)
     }
 }
 
@@ -739,7 +739,7 @@ private fun DetailLoadingState(modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CharacterOverlaySheet(state: CharacterOverlayState, onDismiss: () -> Unit) {
+private fun CharacterOverlaySheet(state: CharacterOverlayState, onDismiss: () -> Unit, onRetry: () -> Unit) {
     AppSheet(
         onDismissRequest = onDismiss,
         title = state.detail?.name ?: stringResource(R.string.detail_characters),
@@ -753,11 +753,12 @@ private fun CharacterOverlaySheet(state: CharacterOverlayState, onDismiss: () ->
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             when {
-                state.isLoading -> Box(
-                    Modifier.fillMaxWidth().padding(vertical = 48.dp),
-                    contentAlignment = Alignment.Center,
-                ) { CircularProgressIndicator() }
-                state.errorRes != null -> ErrorBanner(stringResource(state.errorRes))
+                state.isLoading -> AppLoadingState(label = stringResource(R.string.common_loading_details))
+                state.errorRes != null -> AppErrorState(
+                    title = stringResource(state.errorRes),
+                    retryLabel = stringResource(R.string.common_retry),
+                    onRetry = onRetry,
+                )
                 state.detail != null -> {
                     val detail = state.detail
                     InsetListRow(
