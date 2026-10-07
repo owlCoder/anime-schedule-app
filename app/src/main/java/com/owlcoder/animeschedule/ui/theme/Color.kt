@@ -12,7 +12,7 @@ val AppLightGrouped = Color(0xFFFFFFFF)
 val AppLightElevated = Color(0xFFFBFCFF)
 val AppLightSecondary = Color(0xFFE7EAF2)
 
-// Dark hierarchy; the AMOLED option overrides the page canvas with pure black.
+// Dark hierarchy; AMOLED uses pure black page and sheet canvases, retaining contrast for cards.
 val AppDarkBackground = Color(0xFF101116)
 val AppDarkGrouped = Color(0xFF18191F)
 val AppDarkElevated = Color(0xFF24252C)

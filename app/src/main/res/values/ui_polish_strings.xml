@@ -76,7 +76,7 @@
     <!-- Changelog -->
     <string name="changelog_release_date">October 7, 2026</string>
     <string name="changelog_whats_new">What\'s new</string>
-    <string name="changelog_hero_description">Ten new search, weekly-planning and detail tools, with aligned menus and clearer notification actions.</string>
+    <string name="changelog_hero_description">AMOLED black now extends to all overlays, with immediate updates in Appearance and readable cards. Also includes the search, planning and detail tools from 5.10.0.</string>
     <string name="changelog_nav_title">A week you can plan</string>
     <string name="changelog_nav_description">Share the whole filtered week, see estimated viewing time and jump to the next day with broadcasts. Personal episode durations apply to the estimates.</string>
     <string name="changelog_motion_title">More precise search</string>

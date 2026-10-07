@@ -110,10 +110,21 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.10.0** (version code **33**, October 7, 2026).
+Current release: **5.10.1** (version code **34**, October 7, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### Fixed in 5.10.1
+
+AMOLED black now applies to every shared overlay canvas, including Appearance, settings pickers,
+notifications and anime editing. It updates immediately in an open sheet, follows system/scheduled
+dark mode and dynamic colors, and preserves card/control contrast. Light mode retains its light surfaces.
+
+Validation: **194 unit tests** and **9 focused UI tests** passed on Pixel 10 Pro (API 36.1),
+including pixel-color checks, live theme changes, rounded settings lists and consecutive anime edits.
+Appearance and editor screenshots also cover Serbian text at 135% font scale. Debug/release builds
+and lint passed (0 errors); the signed release retains the existing certificate and app data.
 
 ### New in 5.10.0
 

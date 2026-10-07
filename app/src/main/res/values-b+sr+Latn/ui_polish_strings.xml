@@ -76,7 +76,7 @@
     <!-- Changelog -->
     <string name="changelog_release_date">7. oktobar 2026.</string>
     <string name="changelog_whats_new">Šta je novo</string>
-    <string name="changelog_hero_description">Deset novih alata za pretragu, nedeljni raspored i detalje, uz poravnate menije i jasnije akcije obaveštenja.</string>
+    <string name="changelog_hero_description">AMOLED crna sada obuhvata sve panele, uz trenutnu promenu u izgledu i čitljive kartice. Uključeni su i alati za pretragu, planiranje i detalje iz verzije 5.10.0.</string>
     <string name="changelog_nav_title">Isplaniraj nedelju</string>
     <string name="changelog_nav_description">Podeli celu filtriranu nedelju, pogledaj procenjeno vreme gledanja i pređi na sledeći dan sa emitovanjima. Procene koriste tvoja podešena trajanja epizoda.</string>
     <string name="changelog_motion_title">Preciznija pretraga</string>

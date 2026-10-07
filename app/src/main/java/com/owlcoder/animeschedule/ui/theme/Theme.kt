@@ -44,6 +44,9 @@ val AnimeScheduleShapes = Shapes().copy(
 
 val LocalCompactLayout = compositionLocalOf { false }
 
+/** Resolved mode, including system/scheduled themes and dynamic colors. Cards retain their tone. */
+val LocalAmoledDark = compositionLocalOf { false }
+
 val PillShape = RoundedCornerShape(percent = 50)
 
 fun accentPrimary(accent: AccentColor, dark: Boolean = false): Color = when (accent) {
@@ -234,7 +237,10 @@ fun AnimeScheduleTheme(
         typography = Typography,
         shapes = AnimeScheduleShapes,
     ) {
-        CompositionLocalProvider(LocalCompactLayout provides options.compactLayout) {
+        CompositionLocalProvider(
+            LocalCompactLayout provides options.compactLayout,
+            LocalAmoledDark provides (darkTheme && options.amoled),
+        ) {
             ProvideMotionPolicy(policy = MotionPolicy(systemMotion.reduceMotion || options.reduceMotion), content = content)
         }
     }

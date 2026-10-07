@@ -51,7 +51,7 @@
     <string name="theme_dynamic">Boje Android pozadine</string>
     <string name="theme_dynamic_hint">Koristi sistemsku paletu umesto teme ili akcenta.</string>
     <string name="theme_amoled">AMOLED crna</string>
-    <string name="theme_amoled_hint">Potpuno crna pozadina u tamnom režimu.</string>
+    <string name="theme_amoled_hint">Potpuno crna pozadina stranica i panela u tamnom režimu.</string>
     <string name="theme_contrast">Veći kontrast</string>
     <string name="theme_contrast_hint">Jasniji sekundarni tekst i ivice kontrola.</string>
     <string name="theme_motion">Smanji animacije</string>

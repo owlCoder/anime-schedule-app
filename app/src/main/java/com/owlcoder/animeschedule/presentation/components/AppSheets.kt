@@ -24,7 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.owlcoder.animeschedule.ui.theme.GlassTokens
-import androidx.compose.foundation.background
+import com.owlcoder.animeschedule.ui.theme.LocalAmoledDark
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
@@ -57,7 +57,7 @@ fun AppSheet(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    val container = MaterialTheme.colorScheme.surfaceContainerHigh
+    val container = if (LocalAmoledDark.current) Color.Black else MaterialTheme.colorScheme.surfaceContainerHigh
     val scrim = Color.Black.copy(alpha = if (dark) 0.42f else 0.26f)
 
     ModalBottomSheet(

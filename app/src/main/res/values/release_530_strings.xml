@@ -51,7 +51,7 @@
     <string name="theme_dynamic">Android wallpaper colors</string>
     <string name="theme_dynamic_hint">Use the system palette instead of a preset or accent.</string>
     <string name="theme_amoled">AMOLED black</string>
-    <string name="theme_amoled_hint">Pure black page background in dark mode.</string>
+    <string name="theme_amoled_hint">Pure black page and overlay backgrounds in dark mode.</string>
     <string name="theme_contrast">Higher contrast</string>
     <string name="theme_contrast_hint">Stronger secondary text and control outlines.</string>
     <string name="theme_motion">Reduce animations</string>
