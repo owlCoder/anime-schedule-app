@@ -234,8 +234,6 @@ private fun ReleaseNoteRow(note: ReleaseNote) {
                 text = note.description,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
             )
         }
     }
