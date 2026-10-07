@@ -5,7 +5,7 @@
     <string name="schedule_favorites_only">Samo omiljeni</string>
     <string name="schedule_favorites_hint">Anime označeni kao omiljeni u tvojoj listi.</string>
     <string name="schedule_agenda">Nedeljni pregled</string>
-    <string name="schedule_agenda_hint">Brojevi, deljenje i izvoz kalendara prate trenutne filtere. Trajanje događaja koristi tvoju procenu trajanja epizode.</string>
+    <string name="schedule_agenda_hint">Brojevi, deljenje i izvoz kalendara prate trenutne filtere.</string>
     <string name="schedule_agenda_total">Emitovanja: %1$d · Anime: %2$d</string>
     <string name="schedule_agenda_busiest">Najviše emitovanja: %1$s · %2$s</string>
     <string name="schedule_agenda_export">Izvezi 7 dana u kalendar</string>

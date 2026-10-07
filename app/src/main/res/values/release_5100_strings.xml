@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_year">Release year</string>
+    <string name="search_year_any">Any year</string>
+    <string name="search_numeric_hint">These filters use loaded results. Unknown scores, episode counts or years are excluded only when constrained.</string>
+    <string name="search_score_floor">At least %1$d/10</string>
+    <string name="agenda_share_week">Share this week</string>
+    <string name="agenda_next_day">Next day with broadcasts</string>
+    <string name="agenda_estimate">Estimated watch time · %1$s</string>
+    <string name="agenda_day_summary">%1$s · %2$s of viewing</string>
+    <string name="agenda_minutes">%1$d min</string>
+    <string name="agenda_hours_minutes">%1$d h %2$d min</string>
+    <string name="agenda_estimate_hint">For these broadcasts, using your episode length and per-anime overrides.</string>
+    <string name="detail_read_synopsis">Read synopsis</string>
+    <string name="detail_synopsis_reader">Synopsis</string>
+    <string name="detail_copy_link">Copy anime link</string>
+    <string name="detail_link_copied">Anime link copied</string>
+    <string name="detail_character_share">Share character</string>
+    <string name="notif_mark_read">Mark as read</string>
+    <string name="notif_mark_unread">Mark as unread</string>
+</resources>

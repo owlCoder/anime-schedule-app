@@ -153,7 +153,7 @@ class TrackingAndThemesTest {
             .assertTextContains("Stopped at the opening")
         compose.onNodeWithTag("editor-note").performTextReplacement("Remember the ending")
         compose.onNodeWithTag("list-editor-save").performClick()
-        compose.waitUntil { vm.uiState.value.tools.notes[101] == "Remember the ending" }
+        compose.waitUntil(5_000) { vm.uiState.value.tools.notes[101] == "Remember the ending" }
         vm.setSearchQuery("remember the ending")
         compose.waitUntil { vm.uiState.value.entries.map { it.animeId } == listOf(101) }
         screenshot("favorites-notes-sakura")

@@ -104,6 +104,9 @@ interface NotificationRepository {
     fun getAll(): Flow<List<AppNotification>>
     fun getUnreadCount(): Flow<Int>
     suspend fun markRead(id: Int)
+    suspend fun setRead(id: Int, read: Boolean) {
+        if (read) markRead(id) else throw UnsupportedOperationException("Unread status is unsupported by this provider")
+    }
     suspend fun markRead(ids: List<Int>) { ids.distinct().forEach { markRead(it) } }
     suspend fun markAllRead()
     suspend fun deleteRead(): Int

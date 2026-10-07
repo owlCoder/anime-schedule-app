@@ -5,7 +5,7 @@
     <string name="schedule_favorites_only">Favorites only</string>
     <string name="schedule_favorites_hint">Anime marked as a favorite in your list.</string>
     <string name="schedule_agenda">Weekly overview</string>
-    <string name="schedule_agenda_hint">Counts, sharing and calendar export follow your current filters. Event duration uses your personal episode estimate.</string>
+    <string name="schedule_agenda_hint">Counts, sharing and calendar export follow your current filters.</string>
     <string name="schedule_agenda_total">Broadcasts: %1$d · Anime: %2$d</string>
     <string name="schedule_agenda_busiest">Busiest day: %1$s · %2$s</string>
     <string name="schedule_agenda_export">Export 7 days to calendar</string>

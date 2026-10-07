@@ -52,6 +52,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import com.owlcoder.animeschedule.domain.model.shareText
+import com.owlcoder.animeschedule.domain.model.CharacterDetail
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AnimeDetail
 import com.owlcoder.animeschedule.domain.model.isWebUrl
@@ -128,6 +130,9 @@ fun AnimeDetailScreen(
     val clipboardScope = androidx.compose.runtime.rememberCoroutineScope()
     val titleCopied = stringResource(R.string.detail_title_copied)
     val synopsisCopied = stringResource(R.string.detail_synopsis_copied)
+    val linkCopied = stringResource(R.string.detail_link_copied)
+    val characterShareLabel = stringResource(R.string.detail_character_share)
+    val decodedSynopsis = rememberDescription(uiState.detail?.description)
     val progressShareLabel = stringResource(R.string.detail_share_progress)
     var showStatusSheet by remember { mutableStateOf(false) }
     var finaleOverrideEntry by remember { mutableStateOf<MalListEntry?>(null) }
@@ -260,10 +265,7 @@ fun AnimeDetailScreen(
                         }
                     }
 
-                    detail.description
-                        ?.replace(Regex("<[^>]*>"), "")
-                        ?.takeIf { it.isNotBlank() }
-                        ?.let { synopsis ->
+                    decodedSynopsis.takeIf { it.isNotBlank() }?.let { synopsis ->
                             item(key = "synopsis", contentType = "section") {
                                 SynopsisSection(synopsis)
                             }
@@ -337,6 +339,11 @@ fun AnimeDetailScreen(
                 clipboard.setClipEntry(androidx.compose.ui.platform.ClipEntry(android.content.ClipData.newPlainText("Anime synopsis", value)))
                 toast.success(synopsisCopied)
             }
+        }, onCopyLink = { value ->
+            clipboardScope.launch {
+                clipboard.setClipEntry(androidx.compose.ui.platform.ClipEntry(android.content.ClipData.newPlainText("Anime link", value)))
+                toast.success(linkCopied)
+            }
         }, onShareProgress = { value ->
             val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                 type = "text/plain"
@@ -347,7 +354,13 @@ fun AnimeDetailScreen(
     }
 
     if (characterOverlay.isVisible) {
-        CharacterOverlaySheet(state = characterOverlay, onDismiss = viewModel::dismissCharacterOverlay, onRetry = viewModel::retryCharacter)
+        CharacterOverlaySheet(state = characterOverlay, onDismiss = viewModel::dismissCharacterOverlay, onRetry = viewModel::retryCharacter, onShare = { character ->
+            val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(android.content.Intent.EXTRA_TEXT, character.shareText())
+            }
+            context.startActivity(android.content.Intent.createChooser(send, characterShareLabel))
+        })
     }
 }
 
@@ -752,10 +765,15 @@ private fun DetailLoadingState(modifier: Modifier = Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CharacterOverlaySheet(state: CharacterOverlayState, onDismiss: () -> Unit, onRetry: () -> Unit) {
+internal fun CharacterOverlaySheet(state: CharacterOverlayState, onDismiss: () -> Unit, onRetry: () -> Unit, onShare: (CharacterDetail) -> Unit = {}) {
     AppSheet(
         onDismissRequest = onDismiss,
         title = state.detail?.name ?: stringResource(R.string.detail_characters),
+        trailingContent = {
+            state.detail?.takeIf { !state.isLoading && state.errorRes == null }?.let { character ->
+                GlassIconButton(Icons.Default.Share, stringResource(R.string.detail_character_share), { onShare(character) }, Modifier.testTag("character-share"))
+            }
+        },
     ) {
         Column(
             modifier = Modifier
@@ -787,10 +805,7 @@ private fun CharacterOverlaySheet(state: CharacterOverlayState, onDismiss: () ->
                             }
                         },
                     )
-                    detail.description
-                        ?.replace(Regex("<[^>]*>"), "")
-                        ?.takeIf { it.isNotBlank() }
-                        ?.let {
+                    rememberDescription(detail.description).takeIf { it.isNotBlank() }?.let {
                             InsetGroup {
                                 Text(
                                     text = it,

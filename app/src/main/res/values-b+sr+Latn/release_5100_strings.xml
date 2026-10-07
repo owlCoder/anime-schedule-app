@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_year">Godina izlaska</string>
+    <string name="search_year_any">Bilo koja godina</string>
+    <string name="search_numeric_hint">Filteri koriste učitane rezultate. Nepoznata ocena, broj epizoda ili godina se izostavljaju samo kada je taj filter aktivan.</string>
+    <string name="search_score_floor">Najmanje %1$d/10</string>
+    <string name="agenda_share_week">Podeli ovu nedelju</string>
+    <string name="agenda_next_day">Sledeći dan sa emitovanjima</string>
+    <string name="agenda_estimate">Procenjeno vreme gledanja · %1$s</string>
+    <string name="agenda_day_summary">%1$s · %2$s gledanja</string>
+    <string name="agenda_minutes">%1$d min</string>
+    <string name="agenda_hours_minutes">%1$d h %2$d min</string>
+    <string name="agenda_estimate_hint">Za ova emitovanja, prema podešenom trajanju epizode i pojedinačnim procenama.</string>
+    <string name="detail_read_synopsis">Pročitaj sinopsis</string>
+    <string name="detail_synopsis_reader">Sinopsis</string>
+    <string name="detail_copy_link">Kopiraj link animea</string>
+    <string name="detail_link_copied">Link animea je kopiran</string>
+    <string name="detail_character_share">Podeli lika</string>
+    <string name="notif_mark_read">Označi kao pročitano</string>
+    <string name="notif_mark_unread">Označi kao nepročitano</string>
+</resources>

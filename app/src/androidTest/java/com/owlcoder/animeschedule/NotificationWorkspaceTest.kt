@@ -38,6 +38,10 @@ class NotificationWorkspaceTest {
         override fun getAll() = rows
         override fun getUnreadCount() = rows.map { items -> items.count { !it.isRead } }
         override suspend fun markRead(id: Int) { rows.value = rows.value.map { if (it.id == id) it.copy(isRead = true) else it } }
+        override suspend fun setRead(id: Int, read: Boolean) {
+            if (fail) error("Storage unavailable")
+            rows.value=rows.value.map { if(it.id==id) it.copy(isRead=read) else it }
+        }
         override suspend fun markAllRead() { rows.value = rows.value.map { it.copy(isRead = true) } }
         override suspend fun deleteRead(): Int {
             deletes++
@@ -62,7 +66,7 @@ class NotificationWorkspaceTest {
     private fun screenshot(name: String) {
         compose.waitForIdle(); instrumentation.uiAutomation.waitForIdle(400, 5000)
         val bitmap = instrumentation.uiAutomation.takeScreenshot()
-        File(instrumentation.targetContext.getExternalFilesDir(null), "qa-550-$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG,100,it) }
+        File(instrumentation.targetContext.getExternalFilesDir(null), "qa-5100-$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG,100,it) }
         bitmap.recycle()
     }
 
@@ -174,6 +178,47 @@ class NotificationWorkspaceTest {
         compose.onNodeWithTag("notif-tools").performClick()
         compose.onNodeWithTag("notif-sort-NEWEST").assertIsDisplayed()
         compose.onNodeWithTag("notif-mark-visible").assertIsDisplayed()
+    }
+
+    @Test fun singleReadToggleMovesBetweenTabsWithoutOpeningAnime() {
+        val repo=Repository();var opened=0
+        val vm=NotificationsViewModel(repo).also { models.put("notifications",it) }
+        compose.setContent { AnimeScheduleTheme(themeMode=ThemeMode.DARK,options=ThemeOptions(palette=ThemePalette.OCEAN)) { NotificationsOverlay({opened=it},{},vm) } }
+        compose.waitUntil(5000){vm.notifications.value.size==4}
+        compose.onNodeWithTag("notif-toggle-1").performClick()
+        compose.waitUntil(5000){repo.rows.value.first { it.id==1 }.isRead}
+        assertEquals(0,opened);assertFalse(repo.rows.value.first { it.id==2 }.isRead)
+        readTab()
+        compose.onNodeWithTag("notif-history").performScrollToNode(hasTestTag("notif-toggle-1"))
+        compose.onNodeWithTag("notif-toggle-1").performClick()
+        compose.waitUntil(5000){!repo.rows.value.first { it.id==1 }.isRead}
+        assertEquals(0,opened)
+        screenshot("single-notification-status")
+    }
+    @Test fun singleReadFailureRetainsNotificationAndRetryWorks() {
+        val repo=Repository().apply { fail=true };show(repo)
+        compose.onNodeWithTag("notif-toggle-1").performClick()
+        compose.onNodeWithText(text(R.string.notif_mark_failed)).assertIsDisplayed()
+        assertFalse(repo.rows.value.first { it.id==1 }.isRead)
+        repo.fail=false
+        compose.onNodeWithTag("notif-history").performScrollToNode(hasTestTag("notif-toggle-1"))
+        compose.onNodeWithTag("notif-toggle-1").performClick()
+        compose.waitUntil(5000){repo.rows.value.first { it.id==1 }.isRead}
+        compose.onNodeWithText(text(R.string.notif_mark_failed)).assertDoesNotExist()
+    }
+    @Test fun databaseReadTogglePreservesOtherRecordsAndCreationTimes() = runBlocking {
+        val db=Room.inMemoryDatabaseBuilder(instrumentation.targetContext,AnimeScheduleDatabase::class.java).build()
+        try {
+            val dao=db.notificationDao()
+            dao.upsert(NotificationEntity(1,101,"Alpha",1,null,100,true,200))
+            dao.upsert(NotificationEntity(2,102,"Beta",1,null,101,false,201))
+            dao.setRead(1,false)
+            assertEquals(2,dao.getUnreadCount().first())
+            val alpha=dao.getAll().first().first { it.id==1 }
+            assertEquals(200L,alpha.createdAtEpochSeconds);assertEquals(100L,alpha.airingAtEpochSeconds)
+            dao.setRead(1,true);assertEquals(1,dao.getUnreadCount().first())
+            assertFalse(dao.getAll().first().first { it.id==2 }.isRead)
+        } finally { db.close() }
     }
 
 }

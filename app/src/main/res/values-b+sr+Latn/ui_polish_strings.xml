@@ -76,17 +76,17 @@
     <!-- Changelog -->
     <string name="changelog_release_date">7. oktobar 2026.</string>
     <string name="changelog_whats_new">Šta je novo</string>
-    <string name="changelog_hero_description">Deset novih alata za lični raspored, izvoz u kalendar i istoriju obaveštenja.</string>
-    <string name="changelog_nav_title">Izaberi šta se emituje</string>
-    <string name="changelog_nav_description">Kombinuj premijere, status emitovanja, minimalnu ocenu zajednice i deo dana. Vreme prati izabranu zonu rasporeda.</string>
-    <string name="changelog_motion_title">Podsetnici u kalendaru</string>
-    <string name="changelog_motion_description">Izvezi događaje sa podsetnikom u vreme emitovanja ili 5, 15, 30 ili 60 minuta ranije. Obaveštenja šalje tvoja aplikacija kalendara.</string>
-    <string name="changelog_filters_title">Istraži i podeli anime</string>
-    <string name="changelog_filters_description">Pronađi povezane anime po naslovu i vrsti veze. Kopiraj sinopsis bez HTML oznaka ili podeli status, napredak i ocenu.</string>
-    <string name="changelog_states_title">Uredi istoriju obaveštenja</string>
-    <string name="changelog_states_description">Sortiraj od najnovijih ili najstarijih i označi samo filtrirana nepročitana obaveštenja. Pretraga i datum određuju izbor.</string>
-    <string name="changelog_about_title">Ugodniji meniji</string>
-    <string name="changelog_about_description">Kontrole obaveštenja se skroluju, ikonice su poravnate, a podmeniji ostaju u istom overlayu. Duži meniji su dostupni i uz veći tekst ili tastaturu.</string>
+    <string name="changelog_hero_description">Deset novih alata za pretragu, nedeljni raspored i detalje, uz poravnate menije i jasnije akcije obaveštenja.</string>
+    <string name="changelog_nav_title">Isplaniraj nedelju</string>
+    <string name="changelog_nav_description">Podeli celu filtriranu nedelju, pogledaj procenjeno vreme gledanja i pređi na sledeći dan sa emitovanjima. Procene koriste tvoja podešena trajanja epizoda.</string>
+    <string name="changelog_motion_title">Preciznija pretraga</string>
+    <string name="changelog_motion_description">Kombinuj minimalnu ocenu zajednice, raspon broja epizoda i godinu sa postojećim filterima. Izabrane opcije ostaju dostupne kada se rezultati promene.</string>
+    <string name="changelog_filters_title">Čitaj i podeli detalje</string>
+    <string name="changelog_filters_description">Pročitaj ceo sinopsis uz izbor teksta, kopiraj link animea i podeli učitani javni profil lika. Kodirani znakovi i pasusi se pravilno prikazuju.</string>
+    <string name="changelog_states_title">Status obaveštenja jednim dodirom</string>
+    <string name="changelog_states_description">Označi pojedinačno obaveštenje kao pročitano ili nepročitano bez otvaranja animea. Neuspešne izmene čuvaju zapis i dozvoljavaju ponovni pokušaj.</string>
+    <string name="changelog_about_title">Poravnati i čitljivi meniji</string>
+    <string name="changelog_about_description">Alatke detalja i rasporeda imaju poravnatu kolonu ikonica. Kontrole pretrage daju više prostora većem tekstu, a primena filtera ostaje dostupna tokom skrolovanja.</string>
     <string name="changelog_footer">Napravljeno pažljivo od strane AnimeSchedule tima</string>
 
     <!-- Izvori za gledanje -->

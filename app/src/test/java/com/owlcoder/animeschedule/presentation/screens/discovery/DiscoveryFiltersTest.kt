@@ -8,14 +8,14 @@ import org.junit.Test
 class DiscoveryFiltersTest {
     private val results = listOf(
         AnimeSearchResult(1, 101, "beta", null, null, "TV", "2025", 80.0, 12, MalListEntry(101, "beta", status = WatchStatus.WATCHING, episodesWatched = 4, score = 8, totalEpisodes = 12)),
-        AnimeSearchResult(2, 102, "Alpha", null, null, "MOVIE", null, 9.0, 1, null),
+        AnimeSearchResult(2, 102, "Alpha", null, null, "MOVIE", null, 90.0, 1, null),
         AnimeSearchResult(3, null, "Unknown", null, null, null, null, null, null, null),
     )
     @Test fun `tracking and format combine without treating absent MAL id as tracked`() {
         assertEquals(listOf(1), results.discover(SearchFilter(TrackingFilter.TRACKED, setOf("TV"))).map { it.anilistId })
         assertEquals(listOf(2, 3), results.discover(SearchFilter(TrackingFilter.UNTRACKED)).map { it.anilistId })
     }
-    @Test fun `score sorting normalizes both score scales and puts unknown last`() {
+    @Test fun `score sorting uses the catalog scale and puts unknown last`() {
         assertEquals(listOf(2, 1, 3), results.discover(SearchFilter(sort = SearchSort.SCORE)).map { it.anilistId })
     }
     @Test fun `shortest sorting puts missing and zero episode totals last`() {

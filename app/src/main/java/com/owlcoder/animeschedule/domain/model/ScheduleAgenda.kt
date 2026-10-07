@@ -11,6 +11,19 @@ enum class CalendarReminder(val minutes: Int?) {
     NONE(null), AT_START(0), FIVE(5), FIFTEEN(15), THIRTY(30), HOUR(60)
 }
 
+/** Each distinct broadcast is one episode, irrespective of the title's total episode count. */
+fun ScheduleDay.estimatedWatchMinutes(tools: WatchTools): Long = episodes.distinctBy { it.airingId }.sumOf { it.durationMinutes(tools).toLong() }
+fun List<ScheduleDay>.estimatedWatchMinutes(tools: WatchTools): Long = flatMap { it.episodes }.distinctBy { it.airingId }.sumOf { it.durationMinutes(tools).toLong() }
+
+private fun AiringEpisode.durationMinutes(tools: WatchTools): Int =
+    (tools.durationOverrides[malId ?: malListEntry?.animeId] ?: tools.episodeMinutes).coerceIn(1, 180)
+
+fun List<ScheduleDay>.nextBroadcastDay(after: LocalDate): LocalDate? =
+    asSequence().filter { it.date.isAfter(after) && it.episodes.isNotEmpty() }.minByOrNull { it.date }?.date
+
+fun List<ScheduleDay>.toWeekAgendaText(zone: ZoneId, locale: Locale, episodeLabel: (Int) -> String): String =
+    filter { it.episodes.isNotEmpty() }.sortedBy { it.date }.joinToString("\n\n") { it.toAgendaText(zone, locale, episodeLabel) }
+
 /** Includes empty days, so both the overview and export cover the same seven local dates. */
 fun scheduleAgenda(today: LocalDate, days: List<ScheduleDay>): List<ScheduleDay> {
     val byDate = days.associateBy { it.date }
@@ -40,7 +53,7 @@ fun List<ScheduleDay>.toCalendarIcs(tools: WatchTools, generatedAt: Instant, rem
     val lines = mutableListOf("BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Anime Schedule//Agenda//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH")
     flatMap { it.episodes }.distinctBy { it.airingId }.sortedBy { it.airingAtEpochSeconds }.forEach { episode ->
         val start = Instant.ofEpochSecond(episode.airingAtEpochSeconds)
-        val minutes = (tools.durationOverrides[episode.malId] ?: tools.episodeMinutes).coerceIn(1, 180)
+        val minutes = episode.durationMinutes(tools)
         lines += listOf("BEGIN:VEVENT", "UID:${episode.airingId}@anime-schedule.local", "DTSTAMP:${utc.format(generatedAt)}",
             "DTSTART:${utc.format(start)}", "DTEND:${utc.format(start.plusSeconds(minutes * 60L))}",
             "SUMMARY:${icalEscape(episode.title + " · " + episodeLabel(episode.episode))}")

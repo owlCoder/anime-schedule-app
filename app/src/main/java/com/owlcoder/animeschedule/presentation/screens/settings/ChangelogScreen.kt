@@ -67,7 +67,7 @@ fun ChangelogBottomSheet(onDismiss: () -> Unit) {
             stringResource(R.string.changelog_nav_description),
         ),
         ReleaseNote(
-            Icons.Outlined.Alarm,
+            Icons.Outlined.Search,
             stringResource(R.string.changelog_motion_title),
             stringResource(R.string.changelog_motion_description),
         ),

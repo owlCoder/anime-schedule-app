@@ -242,10 +242,20 @@ fun SearchScreen(
 
         Spacer(Modifier.height(if (isFocused) 10.dp else 12.dp))
         if (query.trim().length >= 2) {
-            Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AppButton(stringResource(R.string.discovery_search_filters), { clearFocusAndKeyboard(); showFilters = true }, variant = AppButtonVariant.Secondary, icon = Icons.Default.Tune, modifier = Modifier.testTag("search-filters"))
-                Text(stringResource(R.string.discovery_result_count, uiState.results.size, uiState.loadedCount), Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (uiState.filter.isActive) GlassIconButton(Icons.Default.RestartAlt, stringResource(R.string.seasonal_filter_reset), viewModel::clearFilter)
+            androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+                if (maxWidth < 360.dp || androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.15f) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        AppButton(stringResource(R.string.discovery_search_filters), { clearFocusAndKeyboard(); showFilters = true }, variant = AppButtonVariant.Secondary, icon = Icons.Default.Tune, modifier = Modifier.fillMaxWidth().testTag("search-filters"))
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Text(stringResource(R.string.discovery_result_count, uiState.results.size, uiState.loadedCount), Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            if (uiState.filter.isActive) GlassIconButton(Icons.Default.RestartAlt, stringResource(R.string.seasonal_filter_reset), viewModel::clearFilter)
+                        }
+                    }
+                } else Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AppButton(stringResource(R.string.discovery_search_filters), { clearFocusAndKeyboard(); showFilters = true }, variant = AppButtonVariant.Secondary, icon = Icons.Default.Tune, modifier = Modifier.testTag("search-filters"))
+                    Text(stringResource(R.string.discovery_result_count, uiState.results.size, uiState.loadedCount), Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (uiState.filter.isActive) GlassIconButton(Icons.Default.RestartAlt, stringResource(R.string.seasonal_filter_reset), viewModel::clearFilter)
+                }
             }
         }
         SearchContent(
@@ -277,7 +287,8 @@ fun SearchScreen(
         )
     }
 
-    if (showFilters) SearchFilterSheet(uiState.filter, uiState.availableFormats, viewModel::setTracking, viewModel::toggleFormat, viewModel::setSort, viewModel::clearFilter, { showFilters = false })
+    if (showFilters) SearchFilterSheet(uiState.filter, uiState.availableFormats, viewModel::setTracking, viewModel::toggleFormat, viewModel::setSort, viewModel::clearFilter, { showFilters = false },
+        uiState.availableYears, viewModel::setMinimumScore, viewModel::setLength, viewModel::setYear)
 
     editingResult?.let { result ->
         result.malId?.let { malId ->

@@ -41,6 +41,7 @@ import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
 import com.owlcoder.animeschedule.presentation.components.iosPressScale
 import java.util.Locale
 import com.owlcoder.animeschedule.presentation.screens.discovery.discoveryFormatLabel
+import com.owlcoder.animeschedule.presentation.screens.discovery.communityScore
 import com.owlcoder.animeschedule.presentation.components.displayName
 
 @Composable
@@ -60,7 +61,7 @@ fun SearchResultCard(
         result.year,
         result.totalEpisodes?.let { "$it ep" },
     ).joinToString(" · ")
-    val score = result.meanScore?.let(::formatScore)
+    val score = result.communityScore()?.let { String.format(Locale.ROOT, "%.1f", it) }
     val cardInteraction = remember { MutableInteractionSource() }
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -226,11 +227,6 @@ private fun SearchListAction(
             }
         }
     }
-}
-
-private fun formatScore(rawScore: Double): String {
-    val normalized = if (rawScore > 10.0) rawScore / 10.0 else rawScore
-    return String.format(Locale.ROOT, "%.1f", normalized)
 }
 
 private fun String.toDisplayTitle(): String {

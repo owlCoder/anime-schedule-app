@@ -28,6 +28,7 @@ fun AppChoiceRow(
     subtitle: String? = null,
     iconTint: Color = MaterialTheme.colorScheme.primary,
     selectionRole: Role = Role.RadioButton,
+    iconBadge: Boolean = false,
 ) {
     val interaction = if (selectionRole == Role.Checkbox) Modifier.toggleable(selected, role = selectionRole, onValueChange = { onClick() }) else Modifier.selectable(selected, role = selectionRole, onClick = onClick)
     Surface(modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).then(interaction),
@@ -37,7 +38,14 @@ fun AppChoiceRow(
             if (selected) MaterialTheme.colorScheme.primary.copy(alpha = .5f) else MaterialTheme.colorScheme.outlineVariant)) {
         Row(Modifier.heightIn(min = 56.dp).padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(icon, null, Modifier.size(22.dp), tint = iconTint)
+            if (iconBadge) {
+                Surface(Modifier.size(36.dp), shape = MaterialTheme.shapes.medium,
+                    color = iconTint.copy(alpha = .10f)) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(icon, null, Modifier.size(20.dp), tint = iconTint)
+                    }
+                }
+            } else Icon(icon, null, Modifier.size(22.dp), tint = iconTint)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(label, style = MaterialTheme.typography.bodyMedium, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium)
                 if (!subtitle.isNullOrBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

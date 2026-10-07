@@ -37,6 +37,7 @@ data class SearchUiState(
     val filter: SearchFilter = SearchFilter(),
     val loadedCount: Int = 0,
     val availableFormats: List<String> = emptyList(),
+    val availableYears: List<Int> = emptyList(),
     val loadMoreError: Boolean = false
 )
 
@@ -75,7 +76,8 @@ class SearchViewModel @Inject constructor(
                 if (fresh != r.userListEntry) r.copy(userListEntry = fresh) else r
             }
             state.copy(results = live.discover(filter), filter = filter, loadedCount = live.size,
-                availableFormats = live.mapNotNull { it.type?.uppercase(java.util.Locale.ROOT) }.distinct().sorted())
+                availableFormats = live.mapNotNull { it.type?.uppercase(java.util.Locale.ROOT) }.distinct().sorted(),
+                availableYears = live.mapNotNull { it.year?.trim()?.toIntOrNull()?.takeIf { year -> year > 0 } }.distinct().sortedDescending())
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SearchUiState())
 
@@ -99,6 +101,9 @@ class SearchViewModel @Inject constructor(
     fun setTracking(value: TrackingFilter) = _filter.update { it.copy(tracking = value) }
     fun toggleFormat(value: String) = _filter.update { it.copy(formats = if (value in it.formats) it.formats - value else it.formats + value) }
     fun setSort(value: SearchSort) = _filter.update { it.copy(sort = value) }
+    fun setMinimumScore(value: Int) = _filter.update { it.copy(minimumScore = value.coerceIn(0, 10)) }
+    fun setLength(value: EpisodeLength) = _filter.update { it.copy(length = value) }
+    fun setYear(value: Int?) = _filter.update { it.copy(year = value?.takeIf { year -> year > 0 }) }
     fun clearFilter() { _filter.value = SearchFilter() }
     fun removeRecentSearch(query: String) { viewModelScope.launch { searchRepository.removeRecentSearch(query) } }
 

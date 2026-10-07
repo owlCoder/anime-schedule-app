@@ -16,10 +16,12 @@ class NotificationsViewModelTest {
         var calls = 0
         var ids = emptyList<Int>()
         var fail = false
+        var changed: Pair<Int,Boolean>? = null
         var gate: CompletableDeferred<Unit>? = null
         override fun getAll() = flowOf(emptyList<AppNotification>())
         override fun getUnreadCount() = flowOf(0)
         override suspend fun markRead(id: Int) = Unit
+        override suspend fun setRead(id: Int, read: Boolean) { calls++; gate?.await(); if (fail) error("Storage"); changed = id to read }
         override suspend fun markRead(ids: List<Int>) { calls++; this.ids = ids; gate?.await(); if (fail) error("Storage") }
         override suspend fun markAllRead() { calls++; gate?.await() }
         override suspend fun deleteRead() = 0
@@ -41,4 +43,12 @@ class NotificationsViewModelTest {
         val repo = Repository(); val vm = NotificationsViewModel(repo)
         vm.markVisibleRead(emptyList()); runCurrent(); assertEquals(0,repo.calls); assertFalse(vm.marking.value)
     }
+    @Test fun `single read status is guarded and failure allows retry without inventing state`() = runTest {
+        val repo=Repository().apply { fail=true };val vm=NotificationsViewModel(repo)
+        vm.setRead(7,false);runCurrent();assertTrue(vm.markError.value);assertNull(repo.changed)
+        repo.fail=false;repo.gate=CompletableDeferred();vm.setRead(7,false);vm.setRead(8,true);runCurrent()
+        assertTrue(vm.marking.value);assertEquals(2,repo.calls)
+        repo.gate!!.complete(Unit);runCurrent();assertEquals(7 to false,repo.changed);assertFalse(vm.markError.value)
+    }
+
 }

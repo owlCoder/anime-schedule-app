@@ -49,7 +49,7 @@ class AgendaToolsUiTest {
         if (composeIdle) compose.waitForIdle()
         instrumentation.uiAutomation.waitForIdle(400, 5000)
         val bitmap = instrumentation.uiAutomation.takeScreenshot()
-        File(instrumentation.targetContext.getExternalFilesDir(null), "qa-580-$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }; bitmap.recycle()
+        File(instrumentation.targetContext.getExternalFilesDir(null), "qa-5100-$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }; bitmap.recycle()
     }
     private val entry = MalListEntry(101, "Alpha Adventure", status = WatchStatus.WATCHING, episodesWatched = 4, score = 8, totalEpisodes = 12)
     private fun episode(id: Int, date: LocalDate = today) = AiringEpisode(id, id, 100 + id, 5,
@@ -141,7 +141,7 @@ class AgendaToolsUiTest {
         val automation = instrumentation.uiAutomation
         compose.waitUntil(10_000) { automation.rootInActiveWindow?.packageName?.toString()?.contains("documentsui") == true }
         fun descendants(root: AccessibilityNodeInfo): Sequence<AccessibilityNodeInfo> = sequence { yield(root); for (i in 0 until root.childCount) root.getChild(i)?.let { yieldAll(descendants(it)) } }
-        val name = "qa590-${System.nanoTime() % 1_000_000}.ics"
+        val name = "qa5100-${System.nanoTime() % 1_000_000}.ics"
         val input = descendants(automation.rootInActiveWindow).first { it.isEditable }
         assertTrue(input.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply { putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, name) }))
         screenshot("calendar-picker", false)
@@ -194,6 +194,7 @@ class AgendaToolsUiTest {
         show(true) { CompositionLocalProvider(LocalWatchTools provides WatchToolsActions(data = tools, setNotificationMuted = { id, name, muted -> tools = tools.copy(mutedNotifications = if (muted) tools.mutedNotifications + (id to name) else tools.mutedNotifications - id) })) {
             if (settingsPage) NotificationSettingsSheet(true, 0, {}, {}, {}) else DetailToolsSheet(detail, {}, {}, {})
         } }
+        compose.onNodeWithTag("detail-tools-menu").performScrollToNode(hasTestTag("detail-mute"))
         compose.onNodeWithTag("detail-mute").performClick().assertIsOn()
         assertTrue(1 in tools.mutedNotifications)
         screenshot("detail-tools-muted")
@@ -265,13 +266,19 @@ class AgendaToolsUiTest {
         compose.onNodeWithText(detail.titleRomaji!!).assertIsDisplayed()
         screenshot("detail-light-header")
         compose.onNodeWithTag("detail-tools").performClick()
+        compose.onNodeWithTag("detail-tools-menu").performScrollToNode(hasTestTag("detail-copy-synopsis"))
         compose.onNodeWithTag("detail-copy-synopsis").performClick()
         val synopsisClipboard = instrumentation.targetContext.getSystemService(android.content.ClipboardManager::class.java)
         compose.waitUntil(5000) { synopsisClipboard.primaryClip?.getItemAt(0)?.text?.toString() == detail.description!!.trim() }
+        compose.onNodeWithTag("detail-tools-menu").performScrollToNode(hasTestTag("detail-share-progress"))
         compose.onNodeWithTag("detail-share-progress").performClick()
         compose.waitUntil(10000) { instrumentation.uiAutomation.rootInActiveWindow?.packageName?.toString()?.contains("intentresolver") == true }
         android.os.ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand("input keyevent 4")).use { it.readBytes() }
         compose.waitUntil(10000) { instrumentation.uiAutomation.rootInActiveWindow?.packageName?.toString() == instrumentation.targetContext.packageName }
+        compose.onNodeWithTag("detail-tools-menu").performScrollToNode(hasTestTag("detail-copy-link"))
+        compose.onNodeWithTag("detail-copy-link").performClick()
+        compose.waitUntil(5000) { synopsisClipboard.primaryClip?.getItemAt(0)?.text?.toString() == "https://anilist.co/anime/1" }
+        compose.onNodeWithTag("detail-tools-menu").performScrollToNode(hasTestTag("detail-titles"))
         compose.onNodeWithTag("detail-titles").performClick()
         compose.onNodeWithTag("copy-title-${R.string.detail_title_romaji}").performClick()
         val clipboard = instrumentation.targetContext.getSystemService(android.content.ClipboardManager::class.java)
@@ -294,6 +301,11 @@ class AgendaToolsUiTest {
         compose.onNodeWithText(text(R.string.common_retry)).performClick()
         compose.onNodeWithText("Character description").assertIsDisplayed()
         screenshot("character-detail")
+        compose.onNodeWithTag("character-share").performClick()
+        compose.waitUntil(10000) { instrumentation.uiAutomation.rootInActiveWindow?.packageName?.toString()?.contains("intentresolver") == true }
+        screenshot("character-native-share", false)
+        android.os.ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand("input keyevent 4")).use { it.readBytes() }
+        compose.waitUntil(10000) { instrumentation.uiAutomation.rootInActiveWindow?.packageName?.toString() == instrumentation.targetContext.packageName }
         compose.onNodeWithContentDescription(text(android.R.string.cancel)).performClick()
         compose.onNodeWithTag("detail-tools").performClick()
         compose.onNodeWithTag("detail-character-finder").performClick()
@@ -344,7 +356,10 @@ class AgendaToolsUiTest {
         compose.onNodeWithTag("finder-related-3").assertDoesNotExist(); compose.onNodeWithTag("finder-related-4").assertDoesNotExist()
         screenshot("related-finder")
         compose.onNodeWithTag("finder-related-2").performClick(); assertEquals(2,picked)
+        // Native IME dismissal finishes after Compose becomes idle; Back must reach the sheet.
+        instrumentation.uiAutomation.waitForIdle(400, 5000)
         Espresso.pressBack(); compose.waitForIdle()
+        screenshot("related-after-back")
         compose.onNodeWithTag("detail-related-finder").assertIsDisplayed()
         compose.onAllNodes(isDialog()).assertCountEquals(1)
     }
@@ -352,11 +367,66 @@ class AgendaToolsUiTest {
         var copied = ""; var shared = ""
         show { DetailToolsSheet(detail.copy(description = "<b>Alpha</b> &amp; Beta<br>Next"), {}, {}, {},
             onCopySynopsis = { copied = it }, onShareProgress = { shared = it }) }
+        compose.onNodeWithTag("detail-tools-menu").performScrollToNode(hasTestTag("detail-copy-synopsis"))
         compose.onNodeWithTag("detail-copy-synopsis").performClick()
         assertEquals("Alpha & Beta\nNext",copied)
+        compose.onNodeWithTag("detail-tools-menu").performScrollToNode(hasTestTag("detail-share-progress"))
         compose.onNodeWithTag("detail-share-progress").performClick()
         assertTrue(shared.contains("4/12")); assertTrue(shared.contains("8/10")); assertTrue(shared.contains("https://myanimelist.net/anime/101"))
         screenshot("expanded-detail-tools")
+    }
+
+    @Test fun agendaEstimateUsesPersonalDurationsAndNextDaySkipsEmptyDates() {
+        var selected by mutableStateOf(today)
+        val tools = WatchTools(episodeMinutes = 24, durationOverrides = mapOf(101 to 48))
+        show(true) { CompositionLocalProvider(LocalWatchTools provides WatchToolsActions(data = tools)) {
+            ScheduleAgendaSheet(days, selected, { selected = it }, {}, {}, {})
+        } }
+        compose.onNodeWithTag("agenda-estimate").assertTextContains("1 h 36 min", substring = true)
+        compose.onNodeWithTag("agenda-days").performScrollToNode(hasTestTag("agenda-next-day"))
+        compose.onNodeWithTag("agenda-next-day").performClick()
+        assertEquals(today.plusDays(1),selected)
+        compose.onNodeWithTag("agenda-next-day").assertIsNotEnabled()
+        screenshot("weekly-time-and-next-day")
+    }
+    @Test fun weeklySharingOpensNativeChooserEvenForAnEmptySelectedDay() {
+        val vm = scheduleVm(); vm.setOpenOverlay(ScheduleOverlay.Agenda)
+        show { ScheduleScreen({}, viewModel = vm) }
+        compose.waitUntil(5000) { vm.uiState.value.weekDays.isNotEmpty() }
+        compose.onNodeWithTag("agenda-days").performScrollToNode(hasTestTag("agenda-day-${today.plusDays(6)}"))
+        compose.onNodeWithTag("agenda-day-${today.plusDays(6)}").performClick()
+        compose.onNodeWithTag("schedule-agenda").performClick()
+        compose.onNodeWithTag("agenda-share").assertIsNotEnabled()
+        compose.onNodeWithTag("agenda-days").performScrollToNode(hasTestTag("agenda-share-week"))
+        compose.onNodeWithTag("agenda-share-week").performClick()
+        compose.waitUntil(10000) { instrumentation.uiAutomation.rootInActiveWindow?.packageName?.toString()?.contains("intentresolver") == true }
+        screenshot("weekly-native-share", false)
+        android.os.ParcelFileDescriptor.AutoCloseInputStream(instrumentation.uiAutomation.executeShellCommand("input keyevent 4")).use { it.readBytes() }
+        compose.waitUntil(10000) { instrumentation.uiAutomation.rootInActiveWindow?.packageName?.toString() == instrumentation.targetContext.packageName }
+        assertEquals(ScheduleOverlay.None,vm.openOverlay.value)
+    }
+    @Test fun synopsisReaderPreservesTextAndCopyLinkUsesCanonicalCatalogId() {
+        var copied = "";var dismissed = false
+        val description = "<p>Alpha &amp; Beta</p><p>" + "Long description. ".repeat(120) + "The end.</p>"
+        show { DetailToolsSheet(detail.copy(description = description), { dismissed = true }, {}, {}, onCopyLink = { copied = it }) }
+        compose.onNodeWithTag("detail-read-synopsis").performClick()
+        compose.onNodeWithTag("synopsis-text").assertTextContains("Alpha & Beta",substring=true)
+        compose.onNodeWithTag("synopsis-text").assertTextContains("The end.",substring=true)
+        compose.onNodeWithTag("synopsis-reader").performTouchInput { swipeUp() }
+        screenshot("synopsis-reader")
+        Espresso.pressBack();compose.waitForIdle();assertFalse(dismissed)
+        compose.onAllNodes(isDialog()).assertCountEquals(1)
+        compose.onNodeWithTag("detail-tools-menu").performScrollToNode(hasTestTag("detail-copy-link"))
+        compose.onNodeWithTag("detail-copy-link").performClick();assertEquals("https://anilist.co/anime/1",copied)
+        screenshot("aligned-detail-actions")
+    }
+    @Test fun characterSharingUsesTheLoadedPublicProfile() {
+        var shared = ""
+        show(true) { CharacterOverlaySheet(CharacterOverlayState(isVisible=true,detail=CharacterDetail(7,"Alpha","アルファ",null,"<b>Alpha</b> &amp; Beta")), {}, {}, { shared = it.shareText() }) }
+        compose.onNodeWithText("Alpha & Beta").assertIsDisplayed()
+        compose.onNodeWithTag("character-share").performClick()
+        assertEquals("Alpha\nアルファ\nhttps://anilist.co/character/7",shared)
+        screenshot("character-profile-share")
     }
 
 }

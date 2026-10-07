@@ -18,13 +18,19 @@ data class SearchFilter(
     val tracking: TrackingFilter = TrackingFilter.ALL,
     val formats: Set<String> = emptySet(),
     val sort: SearchSort = SearchSort.RELEVANCE,
+    val minimumScore: Int = 0,
+    val length: EpisodeLength = EpisodeLength.ANY,
+    val year: Int? = null,
 ) {
-    val isActive get() = tracking != TrackingFilter.ALL || formats.isNotEmpty() || sort != SearchSort.RELEVANCE
+    val isActive get() = tracking != TrackingFilter.ALL || formats.isNotEmpty() || sort != SearchSort.RELEVANCE || minimumScore > 0 || length != EpisodeLength.ANY || year != null
 }
-internal fun AnimeSearchResult.communityScore(): Double? = meanScore?.takeIf { it > 0.0 }?.let { if (it > 10) it / 10 else it }
+internal fun AnimeSearchResult.communityScore(): Double? = meanScore?.takeIf { it > 0.0 && it <= 100.0 }?.div(10.0)
 internal fun List<AnimeSearchResult>.discover(filter: SearchFilter): List<AnimeSearchResult> {
     val result = filter { item ->
         (filter.formats.isEmpty() || item.type?.uppercase(Locale.ROOT) in filter.formats) &&
+            (filter.minimumScore <= 0 || item.communityScore()?.let { it >= filter.minimumScore } == true) &&
+            filter.length.matches(item.totalEpisodes) &&
+            (filter.year == null || item.year?.trim()?.toIntOrNull() == filter.year) &&
             when (filter.tracking) {
                 TrackingFilter.ALL -> true
                 TrackingFilter.TRACKED -> item.userListEntry != null

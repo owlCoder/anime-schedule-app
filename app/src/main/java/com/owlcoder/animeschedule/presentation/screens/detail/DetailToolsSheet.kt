@@ -20,12 +20,12 @@ import com.owlcoder.animeschedule.domain.model.*
 import com.owlcoder.animeschedule.presentation.components.*
 import com.owlcoder.animeschedule.presentation.screens.discovery.DiscoveryChip
 
-private enum class DetailToolPage { MENU, TITLES, CHARACTERS, RELATIONS }
+private enum class DetailToolPage { MENU, TITLES, CHARACTERS, RELATIONS, SYNOPSIS }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 internal fun DetailToolsSheet(detail: AnimeDetail, onDismiss: () -> Unit, onCharacter: (Int) -> Unit, onCopy: (String) -> Unit,
-    onRelated: (Int) -> Unit = {}, onCopySynopsis: (String) -> Unit = onCopy, onShareProgress: (String) -> Unit = {}) {
+    onRelated: (Int) -> Unit = {}, onCopySynopsis: (String) -> Unit = onCopy, onShareProgress: (String) -> Unit = {}, onCopyLink: (String) -> Unit = onCopy) {
     var page by rememberSaveable(detail.animeId) { mutableStateOf(DetailToolPage.MENU) }
     var query by rememberSaveable(detail.animeId) { mutableStateOf("") }
     var role by rememberSaveable(detail.animeId) { mutableStateOf(CharacterRole.ALL) }
@@ -36,9 +36,8 @@ internal fun DetailToolsSheet(detail: AnimeDetail, onDismiss: () -> Unit, onChar
         detail.relations.mapNotNull { it.relationType?.takeIf(String::isNotBlank) }.distinct().sorted()
             .filter { detail.relations.findRelatedAnime(relationType = it).isNotEmpty() }
     }
-    val synopsis = remember(detail.description) {
-        androidx.core.text.HtmlCompat.fromHtml(detail.description.orEmpty(), androidx.core.text.HtmlCompat.FROM_HTML_MODE_LEGACY).toString().trim()
-    }
+    val synopsis = rememberDescription(detail.description)
+    val catalogLink = remember(detail.animeId, detail.malId, detail.malListEntry?.animeId) { detail.catalogLink() }
     val entry = detail.malListEntry
     val progressText = entry?.let {
         listOf(detail.titleRomaji ?: detail.titleEnglish.orEmpty(), it.status.displayName(),
@@ -62,41 +61,42 @@ internal fun DetailToolsSheet(detail: AnimeDetail, onDismiss: () -> Unit, onChar
         DetailToolPage.TITLES -> R.string.detail_alternative_titles
         DetailToolPage.CHARACTERS -> R.string.detail_character_finder
         DetailToolPage.RELATIONS -> R.string.detail_related_finder
+        DetailToolPage.SYNOPSIS -> R.string.detail_synopsis_reader
     })
     AppSheet(onDismissRequest = {
         if (page == DetailToolPage.MENU) onDismiss() else navigate(DetailToolPage.MENU)
-    }, title = title, sheetState = sheetState) {
+    }, title = title, sheetState = sheetState, trailingContent = {
+        if (page == DetailToolPage.SYNOPSIS) GlassIconButton(Icons.Default.ContentCopy, stringResource(R.string.detail_copy_synopsis), { onCopySynopsis(synopsis) })
+    }) {
         // The sheet has its own focus owner. Clear its input when navigating between pages.
         val focus = androidx.compose.ui.platform.LocalFocusManager.current
         val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
         LaunchedEffect(page) { focus.clearFocus(force = true); keyboard?.hide() }
         when (page) {
-            DetailToolPage.MENU -> LazyColumn(Modifier.heightIn(max = 580.dp), verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 8.dp)) {
-                item {
-                    AppButton(stringResource(R.string.detail_alternative_titles), { navigate(DetailToolPage.TITLES) }, Modifier.fillMaxWidth().testTag("detail-titles"), variant = AppButtonVariant.Secondary, icon = Icons.Default.Translate)
-                }
-                item {
-                    AppButton(stringResource(R.string.detail_character_finder), { navigate(DetailToolPage.CHARACTERS) }, Modifier.fillMaxWidth().testTag("detail-character-finder"), variant = AppButtonVariant.Secondary, enabled = detail.characters.isNotEmpty(), icon = Icons.Default.PersonSearch)
-                }
-                item { AppButton(stringResource(R.string.detail_related_finder), { navigate(DetailToolPage.RELATIONS) }, Modifier.fillMaxWidth().testTag("detail-related-finder"),
-                    enabled = related.isNotEmpty(), variant = AppButtonVariant.Secondary, icon = Icons.Default.AccountTree) }
-                item { AppButton(stringResource(R.string.detail_copy_synopsis), { onCopySynopsis(synopsis) }, Modifier.fillMaxWidth().testTag("detail-copy-synopsis"),
-                    enabled = synopsis.isNotBlank(), variant = AppButtonVariant.Secondary, icon = Icons.Default.ContentCopy) }
-                item {
-                    AppButton(stringResource(R.string.detail_share_progress), { progressText?.let(onShareProgress) }, Modifier.fillMaxWidth().testTag("detail-share-progress"),
-                        enabled = entry != null, variant = AppButtonVariant.Secondary, icon = Icons.Default.Share)
-                    if (entry == null) Text(stringResource(R.string.detail_progress_hint), style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp))
-                }
+            DetailToolPage.MENU -> LazyColumn(Modifier.heightIn(max = 580.dp).testTag("detail-tools-menu"), verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 8.dp)) {
+                item { AppActionRow(stringResource(R.string.detail_alternative_titles), Icons.Default.Translate, { navigate(DetailToolPage.TITLES) }, Modifier.testTag("detail-titles")) }
+                item { AppActionRow(stringResource(R.string.detail_character_finder), Icons.Default.PersonSearch, { navigate(DetailToolPage.CHARACTERS) }, Modifier.testTag("detail-character-finder"), enabled = detail.characters.isNotEmpty()) }
+                item { AppActionRow(stringResource(R.string.detail_related_finder), Icons.Default.AccountTree, { navigate(DetailToolPage.RELATIONS) }, Modifier.testTag("detail-related-finder"), enabled = related.isNotEmpty()) }
+                item { AppActionRow(stringResource(R.string.detail_read_synopsis), Icons.Default.MenuBook, { navigate(DetailToolPage.SYNOPSIS) }, Modifier.testTag("detail-read-synopsis"), enabled = synopsis.isNotBlank()) }
+                item { AppActionRow(stringResource(R.string.detail_copy_synopsis), Icons.Default.ContentCopy, { onCopySynopsis(synopsis) }, Modifier.testTag("detail-copy-synopsis"), enabled = synopsis.isNotBlank(), showChevron = false) }
+                item { AppActionRow(stringResource(R.string.detail_copy_link), Icons.Default.Link, { catalogLink?.let(onCopyLink) }, Modifier.testTag("detail-copy-link"), enabled = catalogLink != null, showChevron = false) }
+                item { AppActionRow(stringResource(R.string.detail_share_progress), Icons.Default.Share, { progressText?.let(onShareProgress) }, Modifier.testTag("detail-share-progress"), enabled = entry != null,
+                    subtitle = if (entry == null) stringResource(R.string.detail_progress_hint) else null, showChevron = false) }
                 item {
                     val tools = LocalWatchTools.current
                     if (detail.animeId > 0) {
                         val muted = detail.animeId in tools.data.mutedNotifications
                         AppChoiceRow(stringResource(R.string.notifications_mute), Icons.Default.NotificationsOff, muted,
                             { tools.setNotificationMuted(detail.animeId, detail.titleRomaji ?: detail.titleEnglish.orEmpty(), !muted) },
-                            Modifier.testTag("detail-mute"), subtitle = stringResource(R.string.notifications_mute_hint), selectionRole = Role.Checkbox)
+                            Modifier.testTag("detail-mute"), subtitle = stringResource(R.string.notifications_mute_hint), selectionRole = Role.Checkbox, iconBadge = true)
                     } else Text(stringResource(R.string.notifications_mute_unavailable), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+            }
+            DetailToolPage.SYNOPSIS -> LazyColumn(Modifier.heightIn(max = 580.dp).fillMaxWidth().testTag("synopsis-reader")) {
+                item { androidx.compose.foundation.text.selection.SelectionContainer {
+                    Text(synopsis, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp).testTag("synopsis-text"))
+                } }
             }
             DetailToolPage.RELATIONS -> {
                 val matches = remember(detail.relations, relatedQuery, relation) { detail.relations.findRelatedAnime(relatedQuery, relation) }

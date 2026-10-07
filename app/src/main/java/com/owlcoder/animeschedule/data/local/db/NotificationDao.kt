@@ -20,6 +20,9 @@ interface NotificationDao {
     @Query("UPDATE notifications SET isRead = 1 WHERE id = :id")
     suspend fun markRead(id: Int)
 
+    @Query("UPDATE notifications SET isRead = :read WHERE id = :id")
+    suspend fun setRead(id: Int, read: Boolean)
+
     @Query("UPDATE notifications SET isRead = 1 WHERE id IN (:ids)")
     suspend fun markReadIds(ids: List<Int>)
 

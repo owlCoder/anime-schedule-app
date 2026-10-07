@@ -122,6 +122,7 @@ data class AnimeSearchResult(
     val coverImageUrl: String?,
     val type: String?,
     val year: String?,
+    /** Catalog providers and the offline cache use the 0–100 scale. */
     val meanScore: Double?,
     val totalEpisodes: Int?,
     val userListEntry: MalListEntry?

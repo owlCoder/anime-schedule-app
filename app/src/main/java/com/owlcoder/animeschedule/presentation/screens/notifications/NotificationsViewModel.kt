@@ -38,6 +38,8 @@ class NotificationsViewModel @Inject constructor(
         mark { notificationRepository.markAllRead() }
     }
 
+    fun setRead(id: Int, read: Boolean) = mark { notificationRepository.setRead(id, read) }
+
     fun markVisibleRead(ids: List<Int>) {
         if (ids.isEmpty()) return
         val snapshot = ids.distinct()

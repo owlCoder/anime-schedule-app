@@ -101,6 +101,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import com.owlcoder.animeschedule.domain.model.scheduleAgenda
 import com.owlcoder.animeschedule.domain.model.toAgendaText
+import com.owlcoder.animeschedule.domain.model.toWeekAgendaText
 import com.owlcoder.animeschedule.domain.model.toCalendarIcs
 import com.owlcoder.animeschedule.presentation.components.LocalWatchTools
 import com.owlcoder.animeschedule.presentation.screens.discovery.DiscoveryChip
@@ -314,7 +315,14 @@ private fun ScheduleScreenContent(
                     context.startActivity(android.content.Intent.createChooser(send, resources.getString(R.string.schedule_agenda_share)))
                 }
             }, onDismiss = { viewModel.setOpenOverlay(ScheduleOverlay.None) },
-                reminder = calendarReminder, onReminderChange = { calendarReminder = it })
+                reminder = calendarReminder, onReminderChange = { calendarReminder = it }, onShareWeek = {
+                    val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(android.content.Intent.EXTRA_TEXT, days.toWeekAgendaText(uiState.zoneId, appLocale) { resources.getString(R.string.schedule_agenda_episode, it) })
+                    }
+                    viewModel.setOpenOverlay(ScheduleOverlay.None)
+                    context.startActivity(android.content.Intent.createChooser(send, resources.getString(R.string.agenda_share_week)))
+                })
         }
         is ScheduleOverlay.Filter -> ScheduleFilterSheet(
             filter = uiState.filter,

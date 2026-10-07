@@ -110,10 +110,47 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.9.0** (version code **32**, October 7, 2026).
+Current release: **5.10.0** (version code **33**, October 7, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### New in 5.10.0
+
+1. Filter loaded search results by minimum community score.
+2. Filter search results to short, standard or long episode counts.
+3. Pick a release year from loaded search results, alongside tracking, format and sorting.
+4. Share the complete filtered week as text through Android’s share sheet.
+5. Jump to the next schedule day containing broadcasts, skipping empty dates.
+6. See estimated viewing time for each day and the week using personal episode-duration overrides.
+7. Read the complete synopsis in a scrollable, selectable reader within the detail-tools sheet.
+8. Copy a canonical anime catalog link, with correct AniList/MAL ID handling.
+9. Share a loaded character’s names and public catalog link.
+10. Mark an individual notification read or unread without opening its anime.
+
+Detail and agenda actions share aligned icon/text rows, and search controls adapt to enlarged text.
+The filter sheet keeps Apply visible while its contents scroll. Active year/format choices remain
+editable when a new query has different metadata. Numeric filters exclude unknown metadata only
+when constrained; they operate on loaded pages and trigger no extra catalog requests.
+Search score display, sorting and filtering share the catalog's 0–100 scale, so low scores
+are no longer mistaken for high ratings on the 0–10 display scale.
+
+Estimated viewing time counts one episode per distinct broadcast and follows your duration settings,
+including MAL-specific overrides. Weekly sharing includes nonempty days in chronological order.
+Descriptions decode HTML entities and paragraph breaks once per value across the detail preview,
+reader, clipboard and character sheets. Copy/share tools use canonical public links.
+
+Notification status changes use a guarded database update. Failed changes preserve history and
+show an error with the action available for retry; marking unread never resends a system alert.
+
+Validation on Pixel 10 Pro (Android API 36.1): **194 unit tests** and **72 distinct instrumentation
+cases** passed across the full regression run and 18 final targeted reruns. Two native IME/local-store
+timing checks were stabilized before the final rerun. **13 of these UI cases also passed at 130% system
+font scale**, covering the new tools, long menus and notification history. Screenshots were reviewed
+in light and dark themes. Debug/release builds and Android lint passed (0 lint errors); the release
+APK uses the existing signing certificate and was installed over the previous version without
+clearing app data. Native share/picker checks use local fixtures and do not send content or edit a
+live MAL account.
 
 ### New in 5.9.0
 

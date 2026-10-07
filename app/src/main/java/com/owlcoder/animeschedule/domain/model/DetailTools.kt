@@ -4,6 +4,16 @@ import java.util.Locale
 
 private val excludedRelations = setOf("CHARACTER", "CONTAINS", "OTHER")
 
+fun AnimeDetail.catalogLink(): String? = when {
+    animeId > 0 -> "https://anilist.co/anime/$animeId"
+    malId != null && malId > 0 -> "https://myanimelist.net/anime/$malId"
+    malListEntry?.animeId?.let { it > 0 } == true -> "https://myanimelist.net/anime/${malListEntry.animeId}"
+    else -> null
+}
+
+fun CharacterDetail.shareText(): String = listOfNotNull(name, nativeName?.takeIf { it.isNotBlank() && it != name },
+    "https://anilist.co/character/$id".takeIf { id > 0 }).joinToString("\n")
+
 enum class CharacterRole { ALL, MAIN, SUPPORTING, BACKGROUND }
 fun List<Character>.findCharacters(query: String, role: CharacterRole): List<Character> {
     val search = query.trim()

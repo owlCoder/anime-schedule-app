@@ -110,6 +110,7 @@ fun NotificationsOverlay(onAnimeClick: (Int) -> Unit, onDismiss: () -> Unit,
                     } else AppButton(stringResource(R.string.notif_clear_read), { finishInput(); confirmClear = true }, Modifier.fillMaxWidth().testTag("notif-clear-read"), enabled = !clearing, variant = AppButtonVariant.Plain, icon = Icons.Default.DeleteOutline)
                 }
                 if (clearError) item("error") { Text(stringResource(R.string.notif_clear_failed), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                if (markError) item("mark-error") { Text(stringResource(R.string.notif_mark_failed), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                 if (visible.isEmpty()) item("empty") {
                     val emptyModifier = Modifier.fillMaxWidth().heightIn(min = 200.dp)
                     when {
@@ -122,7 +123,7 @@ fun NotificationsOverlay(onAnimeClick: (Int) -> Unit, onDismiss: () -> Unit,
                     item("day-${date.toEpochDay()}") { Text(date.format(formatter), Modifier.padding(horizontal = 8.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold) }
                     items(rows, key = { "notification-${it.id}" }) { notification -> NotificationCard(notification, onClick = {
                         viewModel.markRead(notification.id); onDismiss(); onAnimeClick(notification.animeId)
-                    }) }
+                    }, onReadChange = { read -> viewModel.setRead(notification.id, read) }, readActionEnabled = !marking) }
                 }
             }
         }

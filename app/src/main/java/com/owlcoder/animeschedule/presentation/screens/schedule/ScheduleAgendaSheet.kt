@@ -15,8 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
-import com.owlcoder.animeschedule.domain.model.ScheduleDay
-import com.owlcoder.animeschedule.domain.model.CalendarReminder
+import com.owlcoder.animeschedule.domain.model.*
 import com.owlcoder.animeschedule.presentation.components.*
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -25,11 +24,15 @@ import java.time.format.DateTimeFormatter
 @Composable
 internal fun ScheduleAgendaSheet(days: List<ScheduleDay>, selectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit, onExport: () -> Unit, onShare: () -> Unit, onDismiss: () -> Unit,
-    reminder: CalendarReminder = CalendarReminder.NONE, onReminderChange: (CalendarReminder) -> Unit = {}) {
+    reminder: CalendarReminder = CalendarReminder.NONE, onReminderChange: (CalendarReminder) -> Unit = {},
+    onShareWeek: () -> Unit = {}) {
     val locale = LocalConfiguration.current.locales[0]
     val episodes = remember(days) { days.flatMap { it.episodes } }
     val busiest = remember(days) { days.maxByOrNull { it.episodes.size }?.takeIf { it.episodes.isNotEmpty() } }
     val dateFormat = remember(locale) { DateTimeFormatter.ofPattern("EEE, d MMM", locale) }
+    val tools = LocalWatchTools.current.data
+    val totalMinutes = remember(days, tools.episodeMinutes, tools.durationOverrides) { days.estimatedWatchMinutes(tools) }
+    val nextDay = remember(days, selectedDate) { days.nextBroadcastDay(selectedDate) }
     var showReminders by rememberSaveable { mutableStateOf(false) }
     val currentPage by rememberUpdatedState(showReminders)
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = {
@@ -52,16 +55,21 @@ internal fun ScheduleAgendaSheet(days: List<ScheduleDay>, selectedDate: LocalDat
                                 Text(stringResource(R.string.schedule_agenda_total, episodes.size, episodes.map { it.animeId }.distinct().size), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.testTag("agenda-total"))
                                 busiest?.let { Text(stringResource(R.string.schedule_agenda_busiest, it.date.format(dateFormat), broadcastLabel(it.episodes.size)), style = MaterialTheme.typography.bodySmall) }
                                 Text(stringResource(R.string.schedule_agenda_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                Text(stringResource(R.string.agenda_estimate, estimatedTimeLabel(totalMinutes)), style = MaterialTheme.typography.titleSmall, modifier = Modifier.testTag("agenda-estimate"))
+                                Text(stringResource(R.string.agenda_estimate_hint), style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
                     if (episodes.isEmpty()) item { Text(stringResource(R.string.schedule_agenda_empty), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(4.dp)) }
-                    item { AppButton(stringResource(R.string.calendar_reminder) + " · " + calendarReminderLabel(reminder), { showReminders = true },
-                        Modifier.fillMaxWidth().testTag("agenda-reminder"), variant = AppButtonVariant.Secondary, icon = Icons.Default.Alarm) }
+                    item { AppActionRow(stringResource(R.string.calendar_reminder), Icons.Default.Alarm, { showReminders = true },
+                        Modifier.testTag("agenda-reminder"), subtitle = calendarReminderLabel(reminder)) }
+                    item { AppActionRow(stringResource(R.string.agenda_next_day), Icons.Default.SkipNext, { nextDay?.let(onDateSelected) },
+                        Modifier.testTag("agenda-next-day"), enabled = nextDay != null, subtitle = nextDay?.format(dateFormat)) }
+                    item { AppActionRow(stringResource(R.string.agenda_share_week), Icons.Default.DateRange, onShareWeek, Modifier.testTag("agenda-share-week"), enabled = episodes.isNotEmpty(), showChevron = false) }
                     items(days, key = { it.date.toEpochDay() }) { day ->
                         AppChoiceRow(day.date.format(dateFormat), Icons.Default.CalendarToday, day.date == selectedDate,
                             { onDateSelected(day.date) }, Modifier.testTag("agenda-day-${day.date}"),
-                            subtitle = broadcastLabel(day.episodes.size))
+                            subtitle = stringResource(R.string.agenda_day_summary, broadcastLabel(day.episodes.size), estimatedTimeLabel(day.estimatedWatchMinutes(tools))), iconBadge = true)
                     }
                 }
                 AppButton(stringResource(R.string.schedule_agenda_share), onShare, Modifier.fillMaxWidth().testTag("agenda-share"),
@@ -71,6 +79,10 @@ internal fun ScheduleAgendaSheet(days: List<ScheduleDay>, selectedDate: LocalDat
         }
     }
 }
+
+@Composable
+private fun estimatedTimeLabel(minutes: Long): String = if (minutes < 60) stringResource(R.string.agenda_minutes, minutes)
+    else stringResource(R.string.agenda_hours_minutes, minutes / 60, minutes % 60)
 
 @Composable
 private fun calendarReminderLabel(reminder: CalendarReminder): String = when (reminder) {

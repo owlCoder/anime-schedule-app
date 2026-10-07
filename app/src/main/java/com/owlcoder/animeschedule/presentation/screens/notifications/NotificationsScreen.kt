@@ -17,6 +17,11 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.platform.testTag
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MarkEmailRead
+import androidx.compose.material.icons.filled.MarkEmailUnread
+import com.owlcoder.animeschedule.presentation.components.GlassIconButton
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 
@@ -25,6 +30,8 @@ import androidx.compose.ui.unit.dp
 internal fun NotificationCard(
     notification: AppNotification,
     onClick: () -> Unit,
+    onReadChange: ((Boolean) -> Unit)? = null,
+    readActionEnabled: Boolean = true,
 ) {
     val isUnread = !notification.isRead
 
@@ -42,7 +49,11 @@ internal fun NotificationCard(
                 )
             },
             trailingContent = {
-                if (isUnread) {
+                if (onReadChange != null) {
+                    GlassIconButton(if (isUnread) Icons.Default.MarkEmailRead else Icons.Default.MarkEmailUnread,
+                        stringResource(if (isUnread) R.string.notif_mark_read else R.string.notif_mark_unread),
+                        { onReadChange(!notification.isRead) }, Modifier.testTag("notif-toggle-${notification.id}"), enabled = readActionEnabled)
+                } else if (isUnread) {
                     Box(
                         modifier = Modifier
                             .size(8.dp)

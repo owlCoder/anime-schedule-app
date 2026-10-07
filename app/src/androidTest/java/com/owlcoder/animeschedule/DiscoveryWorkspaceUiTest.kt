@@ -37,7 +37,7 @@ class DiscoveryWorkspaceUiTest {
     private fun screenshot(name: String) {
         compose.waitForIdle(); instrumentation.uiAutomation.waitForIdle(400, 5000)
         val bitmap = instrumentation.uiAutomation.takeScreenshot()
-        File(instrumentation.targetContext.getExternalFilesDir(null), "qa-570-$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }; bitmap.recycle()
+        File(instrumentation.targetContext.getExternalFilesDir(null), "qa-5100-$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }; bitmap.recycle()
     }
     private val malEntry = MalListEntry(101, "Alpha Adventure", status = WatchStatus.WATCHING, episodesWatched = 4, score = 8, totalEpisodes = 12)
     private val searchItems = listOf(
@@ -167,4 +167,42 @@ class DiscoveryWorkspaceUiTest {
         compose.onNodeWithText(text(R.string.seasonal_empty_title)).assertIsDisplayed()
         screenshot("season-empty")
     }
+    @Test fun numericSearchFiltersCombineOnLiveLoadedResultsAndReset() {
+        lateinit var vm: SearchViewModel
+        val repo=object:SearchRepository {
+            override val recentSearches=flowOf(emptyList<String>())
+            override suspend fun searchAnime(query:String,page:Int)=AppResult.Success(SearchPage(searchItems,false))
+            override suspend fun saveRecentSearch(query:String)=Unit
+            override suspend fun clearRecentSearches()=Unit
+            override suspend fun removeRecentSearch(query:String)=Unit
+        }
+        instrumentation.runOnMainSync { vm=SearchViewModel(repo,mal);store.put("search",vm) }
+        show(true) { SearchScreen({},viewModel=vm) }
+        val field=compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("anime-search-field")))
+        field.performTextInput("anime");field.performImeAction()
+        compose.waitUntil(5000){vm.uiState.value.loadedCount==3}
+        compose.onNodeWithTag("search-filters").performClick()
+        fun pick(tag:String){compose.onNodeWithTag("search-filter-list").performScrollToNode(hasTestTag(tag));compose.onNodeWithTag(tag).performClick()}
+        pick("search-score-8");pick("search-length-SHORT");pick("search-year-2025")
+        compose.onNodeWithTag("search-year-2025").assertIsSelected()
+        screenshot("search-numeric-filters")
+        compose.onNodeWithText(text(R.string.seasonal_filter_apply)).performClick()
+        compose.waitUntil(5000){vm.uiState.value.results.size==1}
+        compose.onNodeWithText("Alpha Adventure").assertIsDisplayed()
+        compose.onNodeWithText("Gamma Unknown").assertDoesNotExist()
+        compose.onNodeWithTag("search-filters").performClick()
+        compose.onNodeWithText(text(R.string.seasonal_filter_reset)).performClick()
+        compose.onNodeWithText(text(R.string.seasonal_filter_apply)).performClick()
+        compose.waitUntil(5000){vm.uiState.value.results.size==3}
+    }
+    @Test fun selectedYearAndFormatRemainEditableWhenNextQueryHasDifferentMetadata() {
+        var filter by mutableStateOf(SearchFilter(formats=setOf("OVA"),year=1995))
+        show { SearchFilterSheet(filter,listOf("TV"),{}, { filter=filter.copy(formats=filter.formats-it) },{}, {}, {}, years=listOf(2026),onYear={filter=filter.copy(year=it)}) }
+        compose.onNodeWithTag("search-filter-list").performScrollToNode(hasTestTag("search-year-1995"))
+        compose.onNodeWithTag("search-year-1995").assertIsSelected()
+        compose.onNodeWithTag("search-year-ALL").performClick();assertNull(filter.year)
+        compose.onNodeWithTag("search-filter-list").performScrollToNode(hasTestTag("search-format-OVA"))
+        compose.onNodeWithTag("search-format-OVA").performClick();assertTrue(filter.formats.isEmpty())
+    }
+
 }
