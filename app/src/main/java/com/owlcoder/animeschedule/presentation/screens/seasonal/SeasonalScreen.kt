@@ -37,13 +37,20 @@ private fun AnimeSeason.icon(): ImageVector = when (this) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun SeasonTabRow(currentSeason: AnimeSeason, currentYear: Int, onSelect: (AnimeSeason, Int) -> Unit, modifier: Modifier = Modifier) {
-    val columns = if (LocalDensity.current.fontScale > 1.15f) 2 else 4
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        AnimeSeason.entries.chunked(columns).forEach { seasons ->
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                seasons.forEach { season ->
-                    DiscoveryChip(stringResource(season.labelRes()), season.icon(), season == currentSeason,
-                        { onSelect(season, currentYear) }, Modifier.weight(1f).testTag("season-${season.name}"))
+    val fontScale = LocalDensity.current.fontScale
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val columns = when {
+            maxWidth < 280.dp || fontScale > 1.6f -> 1
+            maxWidth >= 480.dp && fontScale <= 1.15f -> 4
+            else -> 2
+        }
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            AnimeSeason.entries.chunked(columns).forEach { seasons ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    seasons.forEach { season ->
+                        DiscoveryChip(stringResource(season.labelRes()), season.icon(), season == currentSeason,
+                            { onSelect(season, currentYear) }, Modifier.weight(1f).testTag("season-${season.name}"))
+                    }
                 }
             }
         }

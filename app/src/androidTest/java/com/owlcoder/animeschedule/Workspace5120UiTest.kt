@@ -3,6 +3,7 @@ package com.owlcoder.animeschedule
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.ParcelFileDescriptor
+import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.*
 import androidx.compose.ui.test.*
@@ -44,9 +45,11 @@ class Workspace5120UiTest {
     private fun show(dark: Boolean = true, large: Boolean = false, content: @Composable () -> Unit) {
         compose.setContent {
             val context = LocalContext.current; val density = LocalDensity.current
+            val activityResults = requireNotNull(LocalActivityResultRegistryOwner.current)
             val config = Configuration(LocalConfiguration.current).apply { if (large) setLocale(Locale.forLanguageTag("sr-Latn")) }
             val localized = context.createConfigurationContext(config)
-            CompositionLocalProvider(LocalContext provides (if (large) localized else context), LocalConfiguration provides config, LocalResources provides localized.resources,
+            CompositionLocalProvider(LocalActivityResultRegistryOwner provides activityResults,
+                LocalContext provides (if (large) localized else context), LocalConfiguration provides config, LocalResources provides localized.resources,
                 LocalDensity provides Density(density.density, if (large) 1.35f else 1f)) {
                 AnimeScheduleTheme(themeMode = if (dark) ThemeMode.DARK else ThemeMode.LIGHT, options = ThemeOptions(amoled = dark, palette = ThemePalette.SAKURA), content = content)
             }
@@ -182,7 +185,7 @@ class Workspace5120UiTest {
             compose.onNodeWithText(resources.getString(R.string.settings_changelog)).performClick()
             search.assertIsNotFocused()
             compose.onAllNodes(isDialog()).assertCountEquals(1)
-            compose.onNode(hasText(resources.getString(R.string.changelog_5120_title)) and hasAnyAncestor(isDialog())).assertIsDisplayed()
+            compose.onNode(hasText(resources.getString(R.string.changelog_5121_title)) and hasAnyAncestor(isDialog())).assertIsDisplayed()
             screenshot("settings-search-changelog-large-light")
             compose.onNode(hasContentDescription(resources.getString(android.R.string.cancel)) and hasAnyAncestor(isDialog())).performClick()
             compose.onAllNodes(isDialog()).assertCountEquals(0)

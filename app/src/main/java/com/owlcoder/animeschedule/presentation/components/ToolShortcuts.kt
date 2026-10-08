@@ -11,11 +11,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.*
@@ -47,18 +49,34 @@ private fun ToolShortcut.shortLabelRes(): Int = when (this) {
 
 @Composable
 fun ToolShortcutBar(values: List<ToolShortcut>, onOpen: (ToolShortcut) -> Unit, onCustomize: () -> Unit) {
-    Column(Modifier.fillMaxWidth().testTag("tool-shortcuts"), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.shortcuts_title), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            GlassIconButton(Icons.Default.Tune, stringResource(R.string.shortcuts_customize), onCustomize, Modifier.testTag("shortcut-customize"))
-        }
-        values.normalizedShortcuts().chunked(2).forEach { pair ->
-            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                pair.forEach { value ->
-                    val fullLabel = stringResource(value.labelRes())
-                    AppButton(stringResource(value.shortLabelRes()), { onOpen(value) },
-                        Modifier.weight(1f).fillMaxHeight().testTag("shortcut-${value.name}").semantics { contentDescription = fullLabel },
-                        variant = AppButtonVariant.Secondary, icon = value.icon())
+    val selected = values.normalizedShortcuts()
+    val fontScale = LocalDensity.current.fontScale
+    BoxWithConstraints(Modifier.fillMaxWidth().testTag("tool-shortcuts")) {
+        val columns = if (selected.size == 3 && maxWidth >= 320.dp && fontScale <= 1.2f) 3 else 2
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.shortcuts_title), Modifier.weight(1f), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                IconButton(onCustomize, Modifier.size(40.dp).testTag("shortcut-customize")) {
+                    Icon(Icons.Default.Tune, stringResource(R.string.shortcuts_customize), Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            selected.chunked(columns).forEach { pair ->
+                Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    pair.forEach { value ->
+                        val fullLabel = stringResource(value.labelRes())
+                        Surface(onClick = { onOpen(value) },
+                            modifier = Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.dp).testTag("shortcut-${value.name}").semantics { contentDescription = fullLabel },
+                            shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow,
+                            border = BorderStroke(.5.dp, MaterialTheme.colorScheme.outlineVariant)) {
+                            Row(Modifier.padding(horizontal = 8.dp, vertical = 10.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                                Icon(value.icon(), null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                                Spacer(Modifier.width(6.dp))
+                                Text(stringResource(value.shortLabelRes()), Modifier.weight(1f, fill = false), style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                    }
+                    if (selected.size > 1) repeat(columns - pair.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }

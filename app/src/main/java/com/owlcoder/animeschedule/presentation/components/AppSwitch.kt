@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.foundation.background
@@ -32,6 +33,7 @@ fun AppSwitch(
 ) {
     val motion = LocalMotionPolicy.current
     val interactionSource = remember { MutableInteractionSource() }
+    val dark = MaterialTheme.colorScheme.background.luminance() < .35f
     val trackColor by animateColorAsState(
         targetValue = when {
             !enabled -> MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.46f)
@@ -47,7 +49,13 @@ fun AppSwitch(
         label = "switch-thumb",
     )
     val thumbColor by animateColorAsState(
-        targetValue = if (enabled) Color.White else Color.White.copy(alpha = 0.76f),
+        targetValue = when {
+            dark && !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .5f)
+            dark && checked -> MaterialTheme.colorScheme.background
+            dark -> MaterialTheme.colorScheme.onSurfaceVariant
+            enabled -> Color.White
+            else -> Color.White.copy(alpha = .76f)
+        },
         animationSpec = motion.iosTween(IosMotion.Quick),
         label = "switch-thumb-color",
     )

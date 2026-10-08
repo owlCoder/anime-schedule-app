@@ -84,6 +84,20 @@ class SyncAndShortcutsUiTest {
         compose.onNodeWithText(reset).performScrollTo().performClick()
         compose.runOnIdle { assertEquals(DefaultToolShortcuts, selected) }
     }
+    @Test fun threeShortcutsUseEqualWidthsWithLargeSerbianText() {
+        compose.setContent { SerbianLarge { AnimeScheduleTheme(themeMode = ThemeMode.DARK) {
+            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().padding(16.dp)) {
+                ToolShortcutBar(DefaultToolShortcuts, {}, {})
+            }
+        } } }
+        val bounds = DefaultToolShortcuts.map { compose.onNodeWithTag("shortcut-${it.name}").assertIsDisplayed().fetchSemanticsNode().boundsInRoot }
+        bounds.forEach { assertEquals(bounds.first().width, it.width, 1f) }
+        assertEquals(bounds.first().left, bounds.last().left, 1f)
+        assertTrue(bounds.last().top >= bounds.first().bottom)
+        compose.onNodeWithTag("shortcut-customize").assertIsDisplayed()
+        screenshot("shortcuts-three-serbian-large")
+    }
+
     @Test fun customizeStaysVisibleBesideFourLongShortcutLabels() {
         var customized = 0
         compose.setContent { SerbianLarge { AnimeScheduleTheme(themeMode = ThemeMode.DARK) {

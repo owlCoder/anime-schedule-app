@@ -38,8 +38,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 
 /**
- * Stable modal content surface. Scrim-based depth avoids native window blur and its
- * compositor cost and lifecycle problems when a sheet changes content.
+ * Stable modal content surface. The Activity backdrop host owns blur separately from the dialog,
+ * so content switches reuse the same effect and disposal always releases it.
  *
  * Sheet drag gestures are disabled by default because nested scrollable content otherwise hands
  * its remaining drag to ModalBottomSheet at the top/bottom boundary. That makes a fully expanded
@@ -64,6 +64,11 @@ fun AppSheet(
     val scrim = Color.Black.copy(alpha = if (dark) 0.42f else 0.26f)
     val toast = LocalToast.current
     val sheetKey = remember { Any() }
+    val backdrop = LocalSheetBackdrop.current
+    DisposableEffect(backdrop, sheetKey) {
+        backdrop?.attach(sheetKey)
+        onDispose { backdrop?.detach(sheetKey) }
+    }
     DisposableEffect(toast, sheetKey) {
         toast.attachSheet(sheetKey)
         onDispose { toast.detachSheet(sheetKey) }

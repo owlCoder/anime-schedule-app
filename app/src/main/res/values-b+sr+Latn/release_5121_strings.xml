@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_search_hint">Pretraži raspored</string>
+    <string name="changelog_5121_title">Pregledniji početni ekran</string>
+    <string name="changelog_5121_home_title">Raspored početnog ekrana</string>
+    <string name="changelog_5121_home">Poravnate komande u zaglavlju, grupisani datumi i kompaktnije prečice iste širine ostavljaju više prostora za anime. Brzi filteri se prikazuju kada su aktivni; sve opcije su dostupne u Filterima.</string>
+    <string name="changelog_5121_blur_title">Pozadina overlaya</string>
+    <string name="changelog_5121_blur">Vraćeno je zamućenje pozadine iza svih zajedničkih overlaya. Sadržaj ostaje oštar, a zatvaranje poslednjeg overlaya vraća jasan ekran.</string>
+    <string name="changelog_5121_season_title">Pregled sezona</string>
+    <string name="changelog_5121_season">Čitljivi nazivi sezona, veći posteri i kontrole koje se pomeraju zajedno sa sadržajem ostavljaju više prostora za anime. Nova TV ikonica otvara pregled sezone sa početnog ekrana.</string>
+    <string name="changelog_5121_controls_title">Ujednačene kontrole</string>
+    <string name="changelog_5121_controls">Polja pretrage prate boje okolnih površina. Kružići switcheva prilagođeni su tamnoj i AMOLED temi, a blur se uklanja bez dodatne animacije posle zatvaranja overlaya.</string>
+</resources>

@@ -82,7 +82,14 @@ class NotificationWorkspaceTest {
         compose.onNodeWithText("Gamma Sunset").assertDoesNotExist()
         search().performTextReplacement("missing")
         compose.onNodeWithText(text(R.string.notif_search_empty)).assertIsDisplayed()
-        compose.onNodeWithText(text(R.string.search_clear_query)).performClick()
+        search().performImeAction()
+        compose.onNodeWithText(text(R.string.search_clear_query)).performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithTag("notif-history").performScrollToNode(hasTestTag("notification-search"))
+        search().assert(SemanticsMatcher.expectValue(
+            androidx.compose.ui.semantics.SemanticsProperties.EditableText,
+            androidx.compose.ui.text.AnnotatedString(""),
+        ))
+        compose.onNodeWithTag("notif-history").performScrollToNode(hasText("Gamma Sunset", substring = true))
         compose.onNodeWithText("Gamma Sunset").assertIsDisplayed()
         screenshot("notifications-read")
     }

@@ -41,7 +41,7 @@
     <string name="shortcut_planner_label">Planner</string>
     <string name="shortcut_history_label">History</string>
     <string name="shortcut_calendar_label">Calendar</string>
-    <string name="shortcut_week_label">Week overview</string>
+    <string name="shortcut_week_label">Week</string>
     <string name="shortcut_sync_label">Sync</string>
     <string name="shortcuts_selected">%d / 4 selected</string>
 </resources>

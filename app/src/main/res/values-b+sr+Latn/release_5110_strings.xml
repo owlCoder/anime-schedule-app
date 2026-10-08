@@ -42,7 +42,7 @@
     <string name="shortcut_planner_label">Planer</string>
     <string name="shortcut_history_label">Istorija</string>
     <string name="shortcut_calendar_label">Kalendar</string>
-    <string name="shortcut_week_label">Pregled nedelje</string>
+    <string name="shortcut_week_label">Nedelja</string>
     <string name="shortcut_sync_label">Sinhronizacija</string>
     <string name="shortcuts_selected">%d / 4 izabrano</string>
 </resources>

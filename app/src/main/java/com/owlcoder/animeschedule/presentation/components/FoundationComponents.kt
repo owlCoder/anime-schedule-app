@@ -53,7 +53,7 @@ fun AppSearchField(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 48.dp)
-                .background(appMaterialColor(AppMaterial.Interactive), shape)
+                .background(MaterialTheme.colorScheme.surfaceContainerLow, shape)
                 .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
                 .semantics { contentDescription = placeholder }
                 .padding(start = 11.dp, end = 2.dp, top = 2.dp, bottom = 2.dp),

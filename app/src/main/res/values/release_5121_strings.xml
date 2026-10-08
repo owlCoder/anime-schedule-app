@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_search_hint">Search this schedule</string>
+    <string name="changelog_5121_title">A clearer home screen</string>
+    <string name="changelog_5121_home_title">Home layout</string>
+    <string name="changelog_5121_home">Aligned header actions, grouped dates and compact, equal-width shortcuts leave more space for anime. Quick filters appear when active; all options remain in Filters.</string>
+    <string name="changelog_5121_blur_title">Overlay backdrop</string>
+    <string name="changelog_5121_blur">Background blur returns behind every shared overlay. Sheets stay sharp, and closing the last overlay restores a clear screen.</string>
+    <string name="changelog_5121_season_title">Season browsing</string>
+    <string name="changelog_5121_season">Readable season controls, larger posters and a scrolling toolbar give anime more room. A TV icon opens the season browser from Home.</string>
+    <string name="changelog_5121_controls_title">Consistent controls</string>
+    <string name="changelog_5121_controls">Search fields match the surrounding surfaces. Switch thumbs follow dark and AMOLED themes, and backdrop blur clears without an extra fade after dismissal.</string>
+</resources>

@@ -9,6 +9,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
@@ -31,6 +33,38 @@ import org.junit.Test
 class PolishRegressionUiTest {
     @get:Rule val compose = createComposeRule()
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
+
+    @Test fun switchThumbAdaptsToDarkAndLightWhileKeepingToggleSemantics() {
+        var mode by mutableStateOf(ThemeMode.DARK)
+        var amoled by mutableStateOf(true)
+        var checked by mutableStateOf(false)
+        var enabled by mutableStateOf(true)
+        compose.setContent {
+            AnimeScheduleTheme(themeMode = mode, accentColor = AccentColor.GREEN, options = ThemeOptions(amoled = amoled)) {
+                Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().padding(18.dp)) {
+                    AppSwitch(checked, { checked = it }, Modifier.testTag("polish-switch"), enabled = enabled)
+                }
+            }
+        }
+        val node = compose.onNodeWithTag("polish-switch")
+        fun thumbLuminance(): Float {
+            val pixels = node.captureToImage().toPixelMap()
+            return pixels[(pixels.width * if (checked) .68f else .32f).toInt(), pixels.height / 2].luminance()
+        }
+        for (oled in listOf(true, false)) {
+            compose.runOnIdle { amoled = oled; checked = false }
+            node.assertIsOff().assertIsEnabled()
+            assertTrue("Dark inactive thumb is softer than white", thumbLuminance() < .7f)
+            node.performClick().assertIsOn()
+            assertTrue("Dark active thumb follows the canvas", thumbLuminance() < .1f)
+        }
+        screenshot("switch-dark")
+        compose.runOnIdle { mode = ThemeMode.LIGHT }
+        assertTrue("Light theme retains the light thumb", thumbLuminance() > .9f)
+        compose.runOnIdle { enabled = false }
+        node.assertIsNotEnabled().performClick().assertIsOn()
+        assertTrue(checked)
+    }
 
     @Test fun searchIconAndPaddingFocusInputAndSubmitClearsFocus() {
         var value by mutableStateOf("")

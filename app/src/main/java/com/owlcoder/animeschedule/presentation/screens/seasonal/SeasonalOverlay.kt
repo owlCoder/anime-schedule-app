@@ -1,79 +1,45 @@
 package com.owlcoder.animeschedule.presentation.screens.seasonal
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.ui.platform.testTag
-import com.owlcoder.animeschedule.presentation.components.AppButton
-import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
-import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
-import com.owlcoder.animeschedule.presentation.screens.search.SearchResultCard
-import java.time.LocalDate
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material3.Icon
-import androidx.compose.material3.FilterChip
-import com.owlcoder.animeschedule.presentation.components.AppSearchField
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.owlcoder.animeschedule.R
-import com.owlcoder.animeschedule.presentation.components.AppErrorState
-import com.owlcoder.animeschedule.presentation.components.AppInlineHeader
-import com.owlcoder.animeschedule.presentation.components.AppLoadingState
-import com.owlcoder.animeschedule.presentation.components.AppSheet
-import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
-import com.owlcoder.animeschedule.presentation.components.EmptyState
-import com.owlcoder.animeschedule.presentation.components.GlassToolbarButton
-import com.owlcoder.animeschedule.presentation.components.GlassToolbarGroup
-import com.owlcoder.animeschedule.presentation.components.IosMotion
-import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.owlcoder.animeschedule.presentation.components.iosTween
-
-private enum class SeasonalContentMode { Loading, Error, Empty, Grid }
+import com.owlcoder.animeschedule.R
+import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
+import com.owlcoder.animeschedule.presentation.components.*
+import com.owlcoder.animeschedule.presentation.screens.discovery.DiscoveryChip
+import com.owlcoder.animeschedule.presentation.screens.search.SearchResultCard
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,184 +49,82 @@ fun SeasonalOverlay(
     viewModel: SeasonalViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val motion = LocalMotionPolicy.current
     var showFilterSheet by remember { mutableStateOf(false) }
+    val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val leaveSearch = { focus.clearFocus(); keyboard?.hide(); Unit }
 
     AppSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        showCloseButton = false,
+        title = stringResource(R.string.seasonal_title),
+        trailingContent = {
+            GlassToolbarGroup {
+                GlassToolbarButton(
+                    icon = if (uiState.listLayout) Icons.Default.GridView else Icons.AutoMirrored.Filled.ViewList,
+                    contentDescription = stringResource(if (uiState.listLayout) R.string.discovery_grid else R.string.discovery_list),
+                    onClick = { leaveSearch(); viewModel.toggleLayout() },
+                    modifier = Modifier.testTag("season-layout"),
+                )
+                GlassToolbarButton(
+                    icon = Icons.Outlined.Tune,
+                    contentDescription = stringResource(R.string.seasonal_filter_title),
+                    onClick = { leaveSearch(); showFilterSheet = true },
+                    selected = uiState.filter.isActive,
+                )
+            }
+        },
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.82f),
-        ) {
-            AppInlineHeader(
-                title = "${stringResource(uiState.season.labelRes())} ${uiState.year}",
-                modifier = Modifier.padding(bottom = 2.dp),
-                onBack = onDismiss,
-                backContentDescription = stringResource(R.string.common_cancel),
-                trailingContent = {
-                    GlassToolbarGroup {
-                        GlassToolbarButton(
-                            icon = if (uiState.listLayout) Icons.Default.GridView else Icons.AutoMirrored.Filled.ViewList,
-                            contentDescription = stringResource(if (uiState.listLayout) R.string.discovery_grid else R.string.discovery_list),
-                            onClick = viewModel::toggleLayout,
-                            modifier = Modifier.testTag("season-layout"),
-                        )
-                        GlassToolbarButton(
-                            icon = Icons.Outlined.Tune,
-                            contentDescription = stringResource(R.string.seasonal_filter_title),
-                            onClick = { showFilterSheet = true },
-                            selected = uiState.filter.isActive,
-                        )
-                    }
-                },
-            )
-
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                GlassToolbarButton(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.discovery_previous_season), { viewModel.moveSeason(-1) }, Modifier.testTag("season-previous"), enabled = uiState.year > 1940 || uiState.season.ordinal > 0)
-                Text(uiState.year.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                GlassToolbarButton(Icons.AutoMirrored.Filled.ArrowForward, stringResource(R.string.discovery_next_season), { viewModel.moveSeason(1) }, Modifier.testTag("season-next"), enabled = uiState.year < LocalDate.now().year + 2 || uiState.season.ordinal < 3)
-            }
-            SeasonTabRow(
-                currentSeason = uiState.season,
-                currentYear = uiState.year,
-                onSelect = { season, year -> viewModel.setSeason(season, year) },
-                modifier = Modifier.padding(top = 4.dp, bottom = 3.dp),
-            )
-
-            AppSearchField(
-                value = uiState.filter.query, onValueChange = viewModel::setQuery,
-                placeholder = stringResource(R.string.seasonal_search), leadingIcon = Icons.Default.Search,
-                onClear = { viewModel.setQuery("") }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-            )
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                FilterChip(selected = uiState.filter.hideTracked, onClick = viewModel::toggleHideTracked,
-                    label = { Text(stringResource(R.string.seasonal_hide_tracked)) }, leadingIcon = { Icon(Icons.Default.VisibilityOff, null, Modifier.size(18.dp)) }, modifier = Modifier.weight(1f))
-                GlassToolbarButton(Icons.Default.Shuffle, stringResource(R.string.discovery_random_hint), { viewModel.randomAnime()?.let { onAnimeClick(it.anilistId) } }, Modifier.testTag("season-random"), enabled = !uiState.isLoading && uiState.errorRes == null && uiState.filteredItems.isNotEmpty())
-                if (uiState.filter.isActive) GlassToolbarButton(Icons.Default.RestartAlt, stringResource(R.string.seasonal_filter_reset), viewModel::clearFilter)
-            }
-
-            if (!uiState.isLoading && uiState.errorRes == null) {
-                val countLabel = if (uiState.filter.isActive) {
-                    stringResource(
-                        R.string.seasonal_filtered_results_count,
-                        uiState.filteredItems.size,
-                        uiState.allItems.size,
-                    )
+        // Keep search in a stable lazy item as loading/filter results change. Scrolling the
+        // controls with the results also leaves room for posters on compact and enlarged UIs.
+        val contentModifier = Modifier.fillMaxWidth().fillMaxHeight(.88f)
+        if (uiState.listLayout) {
+            LazyColumn(
+                modifier = contentModifier.testTag("season-results-list"),
+                contentPadding = PaddingValues(bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                item(key = "season-controls", contentType = "controls") {
+                    SeasonalControls(uiState, viewModel, onAnimeClick)
+                }
+                if (uiState.isLoading || uiState.errorRes != null || uiState.filteredItems.isEmpty()) {
+                    item(key = "season-state") { SeasonalResultState(uiState, viewModel) }
                 } else {
-                    stringResource(R.string.seasonal_results_count, uiState.filteredItems.size)
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 5.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(
-                        text = countLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = stringResource(uiState.filter.sortOrder.labelRes),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Medium,
-                        color = if (uiState.filter.isActive) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
-                    )
-                }
-            }
-
-            val mode = when {
-                uiState.isLoading -> SeasonalContentMode.Loading
-                uiState.errorRes != null -> SeasonalContentMode.Error
-                uiState.filteredItems.isEmpty() -> SeasonalContentMode.Empty
-                else -> SeasonalContentMode.Grid
-            }
-            val contentKey = Triple(uiState.year, uiState.season, mode)
-
-            AnimatedContent(
-                targetState = contentKey,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                transitionSpec = {
-                    val initialIndex = initialState.first * 4 + initialState.second.ordinal
-                    val targetIndex = targetState.first * 4 + targetState.second.ordinal
-                    val direction = when {
-                        targetIndex > initialIndex -> 1
-                        targetIndex < initialIndex -> -1
-                        else -> 0
-                    }
-                    (fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
-                        slideInHorizontally(
-                            animationSpec = motion.iosTween(IosMotion.Standard),
-                            initialOffsetX = {
-                                if (motion.animationsEnabled) direction * it / 20 else 0
-                            },
-                        )) togetherWith
-                        (fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                            slideOutHorizontally(
-                                animationSpec = motion.iosTween(IosMotion.Quick),
-                                targetOffsetX = {
-                                    if (motion.animationsEnabled) -direction * it / 24 else 0
-                                },
-                            ))
-                },
-                label = "seasonal-content",
-            ) { (_, _, contentMode) ->
-                when (contentMode) {
-                    SeasonalContentMode.Loading -> SeasonalLoadingState()
-                    SeasonalContentMode.Error -> AppErrorState(
-                        title = stringResource(R.string.seasonal_error_title),
-                        message = uiState.errorRes?.let { stringResource(it) },
-                        retryLabel = stringResource(R.string.common_retry),
-                        onRetry = viewModel::load,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                    SeasonalContentMode.Empty -> Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        EmptyState(
-                            icon = Icons.Outlined.Tune,
-                            title = stringResource(R.string.seasonal_empty_title),
-                            subtitle = stringResource(R.string.seasonal_empty_subtitle),
-                            actionLabel = stringResource(R.string.seasonal_filter_reset),
-                            onAction = viewModel::clearFilter,
+                    items(uiState.filteredItems, key = { it.anilistId }, contentType = { "anime" }) { item ->
+                        SearchResultCard(
+                            AnimeSearchResult(
+                                item.anilistId, item.malId, item.title, null, item.coverImageUrl,
+                                item.format, item.seasonYear?.toString(),
+                                (item.averageScore ?: item.meanScore)?.toDouble(), item.episodes,
+                                item.malId?.let(uiState.malEntriesById::get),
+                            ),
+                            { onAnimeClick(item.anilistId) }, null, showDivider = false,
                         )
                     }
-                    SeasonalContentMode.Grid -> if (uiState.listLayout) {
-                        LazyColumn(Modifier.fillMaxSize().testTag("season-results-list"), contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            items(uiState.filteredItems, key = { it.anilistId }) { item ->
-                                SearchResultCard(AnimeSearchResult(item.anilistId, item.malId, item.title, null, item.coverImageUrl, item.format, item.seasonYear?.toString(), (item.averageScore ?: item.meanScore)?.div(10.0), item.episodes, item.malId?.let(uiState.malEntriesById::get)), { onAnimeClick(item.anilistId) }, null, showDivider = false)
-                            }
-                        }
-                    } else LazyVerticalGrid(
-                        columns = GridCells.Adaptive(minSize = 104.dp),
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = 4.dp, bottom = 24.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        items(
-                            items = uiState.filteredItems,
-                            key = { "season:${it.anilistId}" },
-                            contentType = { "seasonal_poster" },
-                        ) { item ->
-                            SeasonalAnimePosterTile(
-                                item = item,
-                                userListEntry = item.malId?.let(uiState.malEntriesById::get),
-                                onClick = { onAnimeClick(item.anilistId) },
-                            )
-                        }
+                }
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 148.dp),
+                modifier = contentModifier.testTag("season-results-grid"),
+                contentPadding = PaddingValues(bottom = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                item(key = "season-controls", span = { GridItemSpan(maxLineSpan) }, contentType = "controls") {
+                    SeasonalControls(uiState, viewModel, onAnimeClick)
+                }
+                if (uiState.isLoading || uiState.errorRes != null || uiState.filteredItems.isEmpty()) {
+                    item(key = "season-state", span = { GridItemSpan(maxLineSpan) }) {
+                        SeasonalResultState(uiState, viewModel)
+                    }
+                } else {
+                    items(uiState.filteredItems, key = { "season:${it.anilistId}" }, contentType = { "poster" }) { item ->
+                        SeasonalAnimePosterTile(
+                            item = item,
+                            userListEntry = item.malId?.let(uiState.malEntriesById::get),
+                            onClick = { onAnimeClick(item.anilistId) },
+                        )
                     }
                 }
             }
@@ -285,32 +149,90 @@ fun SeasonalOverlay(
 }
 
 @Composable
-private fun SeasonalLoadingState() {
-    Box(modifier = Modifier.fillMaxSize()) {
+private fun SeasonalControls(uiState: SeasonalUiState, viewModel: SeasonalViewModel, onAnimeClick: (Int) -> Unit) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            GlassToolbarButton(
+                Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.discovery_previous_season),
+                { viewModel.moveSeason(-1) }, Modifier.testTag("season-previous"),
+                enabled = uiState.year > 1940 || uiState.season.ordinal > 0,
+            )
+            Text(uiState.year.toString(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            GlassToolbarButton(
+                Icons.AutoMirrored.Filled.ArrowForward, stringResource(R.string.discovery_next_season),
+                { viewModel.moveSeason(1) }, Modifier.testTag("season-next"),
+                enabled = uiState.year < LocalDate.now().year + 2 || uiState.season.ordinal < 3,
+            )
+        }
+        SeasonTabRow(uiState.season, uiState.year, { season, year -> viewModel.setSeason(season, year) })
+        AppSearchField(
+            value = uiState.filter.query, onValueChange = viewModel::setQuery,
+            placeholder = stringResource(R.string.seasonal_search), leadingIcon = Icons.Default.Search,
+            onClear = { viewModel.setQuery("") }, modifier = Modifier.fillMaxWidth().testTag("season-search-field"),
+        )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            DiscoveryChip(
+                stringResource(R.string.seasonal_hide_tracked), Icons.Default.VisibilityOff,
+                uiState.filter.hideTracked, viewModel::toggleHideTracked, Modifier.weight(1f), multiple = true,
+            )
+            GlassToolbarButton(
+                Icons.Default.Shuffle, stringResource(R.string.discovery_random_hint),
+                { viewModel.randomAnime()?.let { onAnimeClick(it.anilistId) } }, Modifier.testTag("season-random"),
+                enabled = !uiState.isLoading && uiState.errorRes == null && uiState.filteredItems.isNotEmpty(),
+            )
+            if (uiState.filter.isActive) {
+                GlassToolbarButton(Icons.Default.RestartAlt, stringResource(R.string.seasonal_filter_reset), viewModel::clearFilter)
+            }
+        }
+        if (!uiState.isLoading && uiState.errorRes == null) {
+            val countLabel = if (uiState.filter.isActive) {
+                stringResource(R.string.seasonal_filtered_results_count, uiState.filteredItems.size, uiState.allItems.size)
+            } else stringResource(R.string.seasonal_results_count, uiState.filteredItems.size)
+            Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(countLabel, Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(uiState.filter.sortOrder.labelRes), style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SeasonalResultState(uiState: SeasonalUiState, viewModel: SeasonalViewModel) {
+    when {
+        uiState.isLoading -> SeasonalLoadingState(Modifier.fillMaxWidth().height(320.dp))
+        uiState.errorRes != null -> AppErrorState(
+            title = stringResource(R.string.seasonal_error_title), message = stringResource(uiState.errorRes),
+            retryLabel = stringResource(R.string.common_retry), onRetry = viewModel::load,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 240.dp),
+        )
+        else -> Box(Modifier.fillMaxWidth().heightIn(min = 240.dp), contentAlignment = Alignment.Center) {
+            EmptyState(
+                icon = Icons.Outlined.Tune, title = stringResource(R.string.seasonal_empty_title),
+                subtitle = stringResource(R.string.seasonal_empty_subtitle),
+                actionLabel = stringResource(R.string.seasonal_filter_reset), onAction = viewModel::clearFilter,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SeasonalLoadingState(modifier: Modifier) {
+    Box(modifier) {
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 104.dp),
-            modifier = Modifier.fillMaxSize(),
+            columns = GridCells.Adaptive(minSize = 148.dp), modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(top = 8.dp, bottom = 94.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
             userScrollEnabled = false,
         ) {
-            items(count = 9) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(0.68f)
-                        .clip(ContinuousRoundedShape(15.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainer),
-                )
+            items(count = 4) {
+                Box(Modifier.fillMaxWidth().aspectRatio(.68f).clip(ContinuousRoundedShape(15.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainer))
             }
         }
         AppLoadingState(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 18.dp),
-            label = stringResource(R.string.seasonal_title),
-            message = stringResource(R.string.seasonal_loading_message),
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 18.dp),
+            label = stringResource(R.string.seasonal_title), message = stringResource(R.string.seasonal_loading_message),
         )
     }
 }

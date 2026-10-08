@@ -120,10 +120,23 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.12.0** (version code **37**, October 8, 2026).
+Current release: **5.12.1** (version code **38**, October 8, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### Polished in 5.12.1
+
+- Home has inline header actions, grouped dates, a matching search surface and three compact,
+  equal-width default shortcuts. Active quick filters remain visible; other choices stay in Filters.
+- Shared overlays blur the Activity backdrop and immediately release that effect when the last
+  modal is disposed. Changing an editor's content keeps its backdrop; nested sheets retain ownership.
+- Switch thumbs use theme colors in dark and AMOLED modes instead of a fixed white fill.
+- The season browser uses readable controls, larger posters and a scrolling controls/results area.
+  Search retains focus when results change; a TV icon replaces Home's stars shortcut. List scores
+  use the same 0–10 display scale as the rest of the catalog.
+
+See the [release validation](docs/release-5.12.1.md) for physical-phone checks and the signed AAB.
 
 ### New in 5.12.0
 

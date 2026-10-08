@@ -108,6 +108,23 @@ class AgendaToolsUiTest {
         return ScheduleViewModel(repo, settings, mal, notifications, work, flowOf(setOf(101)), mutedIds = flowOf(muted)).also { models.put("schedule", it) }
     }
 
+    @Test fun homeShowsAnimeAndKeepsThreeDefaultShortcutsInOneAlignedRow() {
+        val vm = scheduleVm()
+        show { ScheduleScreen({}, viewModel = vm) }
+        compose.waitUntil(5000) { vm.uiState.value.weekDays.isNotEmpty() }
+        compose.onNodeWithTag("dashboard-featured").assertIsDisplayed()
+        val bounds = DefaultToolShortcuts.map { compose.onNodeWithTag("shortcut-${it.name}").assertIsDisplayed().assertHeightIsAtLeast(48.dp).fetchSemanticsNode().boundsInRoot }
+        bounds.forEach { assertEquals(bounds.first().top, it.top, 1f); assertEquals(bounds.first().width, it.width, 1f) }
+        assertTrue(compose.onNodeWithTag("dashboard-header").fetchSemanticsNode().boundsInRoot.height <= 96 * instrumentation.targetContext.resources.displayMetrics.density)
+        compose.onNodeWithText(text(R.string.schedule_upcoming_only)).assertDoesNotExist()
+        compose.onNodeWithContentDescription(text(R.string.filter_title)).performClick()
+        compose.onNodeWithText(text(R.string.schedule_upcoming_only)).performClick()
+        compose.onNodeWithText(text(R.string.seasonal_filter_apply)).performClick()
+        compose.onNodeWithText(text(R.string.schedule_upcoming_only)).assertIsDisplayed().performClick()
+        compose.onNodeWithText(text(R.string.schedule_upcoming_only)).assertDoesNotExist()
+        screenshot("home-aligned-light")
+    }
+
     @Test fun dateRailCountsFollowMutedFilterAndDatesRemainSelectable() {
         val vm = scheduleVm(setOf(1))
         show(true) { ScheduleScreen({}, viewModel = vm) }

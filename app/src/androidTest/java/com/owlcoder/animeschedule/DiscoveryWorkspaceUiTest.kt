@@ -6,6 +6,10 @@ import androidx.compose.runtime.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
@@ -68,6 +72,48 @@ class DiscoveryWorkspaceUiTest {
             vm.setSeason(AnimeSeason.WINTER, 2025); store.put("season", vm)
         }
         return vm
+    }
+
+    @Test fun narrowSeasonControlsKeepEveryNameOnOneLineAtNormalAndLargeText() {
+        var fontScale by mutableStateOf(1f)
+        var selected by mutableStateOf(AnimeSeason.WINTER)
+        show(true) {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
+                Box(Modifier.width(320.dp).padding(8.dp)) {
+                    SeasonTabRow(selected, 2025, { season, _ -> selected = season })
+                }
+            }
+        }
+        for (scale in listOf(1f, 1.35f)) {
+            compose.runOnIdle { fontScale = scale }
+            for (season in AnimeSeason.entries) {
+                val layouts = mutableListOf<TextLayoutResult>()
+                compose.onNode(hasText(text(season.labelRes())) and hasAnyAncestor(hasTestTag("season-${season.name}")), useUnmergedTree = true)
+                    .assertIsDisplayed().performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+                assertEquals("Season $season at font scale $scale", 1, layouts.single().lineCount)
+                val layout = layouts.single()
+                assertEquals("Every season letter remains visible", layout.layoutInput.text.length, layout.getLineEnd(0, visibleEnd = true))
+                assertTrue("Season $season at $scale: ${layout.getLineRight(0)} exceeds ${layout.size.width}", layout.getLineRight(0) <= layout.size.width + 1f)
+            }
+        }
+        compose.onNodeWithTag("season-FALL").performClick().assertIsSelected()
+        assertEquals(AnimeSeason.FALL, selected)
+        screenshot("season-controls-large")
+    }
+
+    @Test fun seasonalSearchRetainsFocusWhenResultsBecomeEmptyAndReturn() {
+        val vm = seasonVm()
+        show(true) { SeasonalOverlay({}, {}, vm) }
+        compose.waitUntil(5000) { !vm.uiState.value.isLoading }
+        val input = compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("season-search-field")))
+        input.performTextInput("no matching anime")
+        compose.waitUntil(5000) { vm.uiState.value.filteredItems.isEmpty() }
+        input.assertIsFocused().performTextReplacement("Alpha")
+        compose.waitUntil(5000) { vm.uiState.value.filteredItems.size == 1 }
+        input.assertIsFocused().assertTextContains("Alpha")
+        input.performImeAction()
+        compose.onNodeWithText("Alpha Adventure").assertIsDisplayed()
     }
 
     @Test fun searchFiltersExposeTrackingSortAndFormatWithReset() {
@@ -160,6 +206,8 @@ class DiscoveryWorkspaceUiTest {
         assertEquals(2025, vm.uiState.value.year)
         compose.onNodeWithTag("season-layout").performClick()
         compose.onNodeWithTag("season-results-list").assertIsDisplayed()
+        compose.onNodeWithText("★ 8.0", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("★ 9.0", substring = true).assertIsDisplayed()
         screenshot("season-list")
         compose.runOnIdle { vm.setRelease(ReleaseFilter.FINISHED) }
         compose.onNodeWithText("Alpha Adventure").assertDoesNotExist()

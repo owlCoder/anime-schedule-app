@@ -54,7 +54,8 @@ larger font sizes; empty trend bars do not show a misleading progress marker.
 - The emulator uses 4 KB pages; these checks do not claim runtime testing on a 16 KB device.
 - Live MAL account authentication was not exercised; account and queue checks use isolated fixtures.
 
-The final Settings-search focus regression and physical-device checks are pending phone unlock.
+The Settings-search focus regression and physical-device checks were completed in the
+[5.12.1 follow-up](release-5.12.1.md), including dark/light overlays and enlarged Serbian text.
 At the initial phone check, installed version 5.11.1 used a different signing certificate from the
 local upload key. Phone testing therefore uses an isolated `com.owlcoder.animeschedule.qa` package.
 The production AAB retains `com.owlcoder.animeschedule`; no production-app uninstall was performed

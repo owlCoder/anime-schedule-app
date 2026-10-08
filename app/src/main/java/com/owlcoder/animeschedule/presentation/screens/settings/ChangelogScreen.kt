@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material.icons.outlined.EventAvailable
@@ -54,6 +55,10 @@ private data class ReleaseNote(
 @Composable
 fun ChangelogBottomSheet(onDismiss: () -> Unit) {
     val notes = listOf(
+        ReleaseNote(Icons.Outlined.EventAvailable, stringResource(R.string.changelog_5121_home_title), stringResource(R.string.changelog_5121_home)),
+        ReleaseNote(Icons.Outlined.FavoriteBorder, stringResource(R.string.changelog_5121_blur_title), stringResource(R.string.changelog_5121_blur)),
+        ReleaseNote(Icons.Outlined.EventAvailable, stringResource(R.string.changelog_5121_season_title), stringResource(R.string.changelog_5121_season)),
+        ReleaseNote(Icons.Outlined.Tune, stringResource(R.string.changelog_5121_controls_title), stringResource(R.string.changelog_5121_controls)),
         ReleaseNote(
             Icons.Outlined.Bookmarks,
             stringResource(R.string.changelog_5120_library_title),
@@ -148,7 +153,7 @@ fun ChangelogBottomSheet(onDismiss: () -> Unit) {
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
-                            text = stringResource(R.string.changelog_5120_title),
+                            text = stringResource(R.string.changelog_5121_title),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

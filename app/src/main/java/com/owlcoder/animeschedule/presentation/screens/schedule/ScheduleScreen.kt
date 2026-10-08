@@ -75,7 +75,6 @@ import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
 import com.owlcoder.animeschedule.presentation.components.AppButton
 import com.owlcoder.animeschedule.presentation.components.AppSearchField
 import com.owlcoder.animeschedule.presentation.components.ListStatusEditor
-import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
@@ -127,7 +126,7 @@ import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.outlined.LiveTv
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Search
@@ -442,16 +441,17 @@ private fun TodayHomeContent(
             top = 6.dp,
             bottom = 116.dp,
         ),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         item(key = "today-header") {
-            AppLargeHeader(
-                title = selectedDate.scheduleHeaderTitle(today, appLocale),
-                subtitle = selectedDate.fullDateLabel(appLocale),
-                trailingContent = {
+            Column(Modifier.fillMaxWidth().testTag("dashboard-header"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(selectedDate.scheduleHeaderTitle(today, appLocale), Modifier.weight(1f),
+                        style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold,
+                        maxLines = 2, overflow = TextOverflow.Ellipsis)
                     GlassToolbarGroup {
                         GlassToolbarButton(
-                            icon = Icons.Default.AutoAwesome,
+                            icon = Icons.Outlined.LiveTv,
                             contentDescription = stringResource(R.string.nav_seasonal),
                             onClick = onSeasonal,
                         )
@@ -468,8 +468,9 @@ private fun TodayHomeContent(
                             selected = uiState.filter.isActive,
                         )
                     }
-                },
-            )
+                }
+                Text(selectedDate.fullDateLabel(appLocale), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
 
         item(key = "date-rail") {
@@ -481,29 +482,29 @@ private fun TodayHomeContent(
             )
         }
 
-        item(key = "tool-shortcuts") {
-            ToolShortcutBar(LocalWatchTools.current.data.shortcuts, onShortcut, onCustomizeShortcuts)
-        }
-
         item(key = "schedule-quick-filters") {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 AppSearchField(
                     value = uiState.filter.query,
                     onValueChange = onQueryChange,
-                    placeholder = stringResource(R.string.schedule_search_hint),
+                    placeholder = stringResource(R.string.home_search_hint),
                     leadingIcon = Icons.Default.Search,
                     onClear = { onQueryChange("") },
                     modifier = Modifier.testTag("schedule-search"),
                 )
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    DiscoveryChip(stringResource(R.string.schedule_upcoming_only), Icons.Default.Schedule, uiState.filter.upcomingOnly, { onUpcomingChange(!uiState.filter.upcomingOnly) }, multiple = true)
-                    if (uiState.isLoggedIn) DiscoveryChip(stringResource(R.string.mylist_title), Icons.Default.Bookmarks, uiState.filter.onlyMyList, { onOnlyMyListChange(!uiState.filter.onlyMyList) }, multiple = true)
-                    if (uiState.filter.isActive) AppButton(stringResource(R.string.filter_reset), onClearFilter, variant = AppButtonVariant.Plain, icon = Icons.Default.RestartAlt)
+                if (uiState.filter.isActive) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (uiState.filter.upcomingOnly) DiscoveryChip(stringResource(R.string.schedule_upcoming_only), Icons.Default.Schedule, true, { onUpcomingChange(false) }, multiple = true)
+                    if (uiState.isLoggedIn && uiState.filter.onlyMyList) DiscoveryChip(stringResource(R.string.mylist_title), Icons.Default.Bookmarks, true, { onOnlyMyListChange(false) }, multiple = true)
+                    AppButton(stringResource(R.string.filter_reset), onClearFilter, variant = AppButtonVariant.Plain, icon = Icons.Default.RestartAlt)
                 }
                 if (com.owlcoder.animeschedule.domain.model.ToolShortcut.WEEK_OVERVIEW !in LocalWatchTools.current.data.shortcuts) {
                     AppButton(stringResource(R.string.schedule_agenda), onAgenda, Modifier.fillMaxWidth().testTag("schedule-agenda"), variant = AppButtonVariant.Secondary, icon = Icons.AutoMirrored.Filled.EventNote)
                 }
             }
+        }
+
+        item(key = "tool-shortcuts") {
+            ToolShortcutBar(LocalWatchTools.current.data.shortcuts, onShortcut, onCustomizeShortcuts)
         }
 
         scheduleError?.let { error ->
@@ -921,61 +922,64 @@ private fun ScheduleDateRail(
     counts: Map<LocalDate, Int> = emptyMap(),
 ) {
     val motion = LocalMotionPolicy.current
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Min).heightIn(min = 68.dp),
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
-    ) {
-        dates.forEach { date ->
-            val isSelected = date == selectedDate
-            val count = counts[date] ?: 0
-            val description = androidx.compose.ui.res.pluralStringResource(R.plurals.schedule_day_count, count, date.toString(), count)
-            val containerColor by animateColorAsState(
-                targetValue = if (isSelected) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
-                } else {
-                    Color.Transparent
-                },
-                animationSpec = motion.iosTween(IosMotion.Standard),
-                label = "date-cell-fill",
-            )
-            val borderColor by animateColorAsState(
-                targetValue = if (isSelected) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
-                } else {
-                    Color.Transparent
-                },
-                animationSpec = motion.iosTween(IosMotion.Standard),
-                label = "date-cell-border",
-            )
-            val scale by animateFloatAsState(
-                targetValue = if (isSelected) 1f else 0.97f,
-                animationSpec = motion.iosSpring(),
-                label = "date-cell-scale",
-            )
-            Surface(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                    }
-                    .selectable(isSelected, role = androidx.compose.ui.semantics.Role.RadioButton) { onDateSelected(date) }
-                    .testTag("schedule-date-$date")
-                    .semantics { contentDescription = description },
-                shape = RoundedCornerShape(13.dp),
-                color = containerColor,
-                contentColor = if (isSelected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-                border = BorderStroke(0.5.dp, borderColor),
-                tonalElevation = 0.dp,
-            ) {
-                DateCellContent(date, isSelected, count)
+    Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.extraLarge) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp)
+                .height(IntrinsicSize.Min).heightIn(min = 68.dp),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            dates.forEach { date ->
+                val isSelected = date == selectedDate
+                val count = counts[date] ?: 0
+                val description = androidx.compose.ui.res.pluralStringResource(R.plurals.schedule_day_count, count, date.toString(), count)
+                val containerColor by animateColorAsState(
+                    targetValue = if (isSelected) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+                    } else {
+                        Color.Transparent
+                    },
+                    animationSpec = motion.iosTween(IosMotion.Standard),
+                    label = "date-cell-fill",
+                )
+                val borderColor by animateColorAsState(
+                    targetValue = if (isSelected) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
+                    } else {
+                        Color.Transparent
+                    },
+                    animationSpec = motion.iosTween(IosMotion.Standard),
+                    label = "date-cell-border",
+                )
+                val scale by animateFloatAsState(
+                    targetValue = if (isSelected) 1f else 0.97f,
+                    animationSpec = motion.iosSpring(),
+                    label = "date-cell-scale",
+                )
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                        }
+                        .selectable(isSelected, role = androidx.compose.ui.semantics.Role.RadioButton) { onDateSelected(date) }
+                        .testTag("schedule-date-$date")
+                        .semantics { contentDescription = description },
+                    shape = RoundedCornerShape(13.dp),
+                    color = containerColor,
+                    contentColor = if (isSelected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    border = BorderStroke(0.5.dp, borderColor),
+                    tonalElevation = 0.dp,
+                ) {
+                    DateCellContent(date, isSelected, count)
+                }
             }
         }
     }
@@ -1028,6 +1032,7 @@ private fun FeaturedAiring(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 92.dp)
+            .testTag("dashboard-featured")
             .animateContentSize(animationSpec = motion.iosSpring())
             .clickable(onClick = onClick),
         material = AppMaterial.Grouped,
