@@ -29,6 +29,7 @@ class WorkspaceExpansionUiTest {
     }
     private fun screenshot(name: String) {
         compose.waitForIdle()
+        if (!QaCapture.enabled) return
         instrumentation.uiAutomation.waitForIdle(400, 5000)
         val bitmap = instrumentation.uiAutomation.takeScreenshot()
         File(instrumentation.targetContext.getExternalFilesDir(null), "qa-560-$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
@@ -119,6 +120,7 @@ class WorkspaceExpansionUiTest {
         assertEquals(listOf(recent), exported)
         compose.onNodeWithTag("history-range-LAST_90").performScrollTo().performClick()
         compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("history-search"))).performTextInput("Beta")
+        compose.onNodeWithTag("history-list").performScrollToNode(hasTestTag("history-export"))
         compose.onNodeWithTag("history-export").performScrollTo().performClick()
         assertEquals(listOf(old), exported)
         // Close IME before capturing the sheet.

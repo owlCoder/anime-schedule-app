@@ -16,6 +16,8 @@ enum class MyListSortOrder(val labelRes: Int) {
     PROGRESS(R.string.mylist_sort_progress),
     REMAINING(R.string.mylist_sort_remaining),
     WATCH_TIME(R.string.sort_watch_time),
+    OLDEST(R.string.sort_oldest_edit),
+    LOWEST_SCORE(R.string.sort_lowest_score),
 }
 
 data class MyListInsights(
@@ -43,24 +45,26 @@ internal fun List<MalListEntry>.insights(): MyListInsights {
     )
 }
 
-internal fun List<MalListEntry>.sortedFor(order: MyListSortOrder, tools: WatchTools = WatchTools()): List<MalListEntry> {
+internal fun List<MalListEntry>.sortedFor(order: MyListSortOrder, tools: WatchTools = WatchTools(), pinsFirst: Boolean = false): List<MalListEntry> {
     val titleOrder = compareBy<MalListEntry> { it.title.lowercase(Locale.ROOT) }.thenBy { it.animeId }
-    return when (order) {
-        MyListSortOrder.TITLE -> sortedWith(titleOrder)
-        MyListSortOrder.RECENT -> map { it to it.updatedAt.epochOrZero() }
-            .sortedWith(compareByDescending<Pair<MalListEntry, Long>> { it.second }
-                .thenComparator { a, b -> titleOrder.compare(a.first, b.first) }).map { it.first }
-        MyListSortOrder.SCORE -> sortedWith(compareByDescending<MalListEntry> { it.score }.then(titleOrder))
-        MyListSortOrder.PROGRESS -> sortedWith(compareByDescending<MalListEntry> {
+    val timestamps = if (order == MyListSortOrder.RECENT || order == MyListSortOrder.OLDEST) associate { it.animeId to it.updatedAt.epochOrZero() } else emptyMap()
+    val comparator = when (order) {
+        MyListSortOrder.TITLE -> titleOrder
+        MyListSortOrder.RECENT -> compareByDescending<MalListEntry> { timestamps[it.animeId] ?: 0 }.then(titleOrder)
+        MyListSortOrder.OLDEST -> compareBy<MalListEntry> { timestamps[it.animeId]?.takeIf { epoch -> epoch > 0 } ?: Long.MAX_VALUE }.then(titleOrder)
+        MyListSortOrder.SCORE -> compareByDescending<MalListEntry> { it.score }.then(titleOrder)
+        MyListSortOrder.LOWEST_SCORE -> compareBy<MalListEntry> { it.score.takeIf { score -> score in 1..10 } ?: Int.MAX_VALUE }.then(titleOrder)
+        MyListSortOrder.PROGRESS -> compareByDescending<MalListEntry> {
             it.totalEpisodes?.takeIf { total -> total > 0 }
                 ?.let { total -> it.episodesWatched.coerceIn(0, total).toDouble() / total } ?: -1.0
-        }.then(titleOrder))
-        MyListSortOrder.WATCH_TIME -> sortedWith(compareBy<MalListEntry> { it.remainingMinutes(tools) ?: Long.MAX_VALUE }.then(titleOrder))
-        MyListSortOrder.REMAINING -> sortedWith(compareBy<MalListEntry> {
+        }.then(titleOrder)
+        MyListSortOrder.WATCH_TIME -> compareBy<MalListEntry> { it.remainingMinutes(tools) ?: Long.MAX_VALUE }.then(titleOrder)
+        MyListSortOrder.REMAINING -> compareBy<MalListEntry> {
             it.totalEpisodes?.takeIf { total -> total > 0 }
                 ?.let { total -> (total - it.episodesWatched.coerceAtLeast(0)).coerceAtLeast(0) } ?: Int.MAX_VALUE
-        }.then(titleOrder))
+        }.then(titleOrder)
     }
+    return sortedWith(if (pinsFirst) compareByDescending<MalListEntry> { it.animeId in tools.pinned }.then(comparator) else comparator)
 }
 
 private fun String?.epochOrZero(): Long {

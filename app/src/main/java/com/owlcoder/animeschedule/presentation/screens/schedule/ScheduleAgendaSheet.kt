@@ -71,6 +71,19 @@ internal fun ScheduleAgendaSheet(days: List<ScheduleDay>, selectedDate: LocalDat
                             { onDateSelected(day.date) }, Modifier.testTag("agenda-day-${day.date}"),
                             subtitle = stringResource(R.string.agenda_day_summary, broadcastLabel(day.episodes.size), estimatedTimeLabel(day.estimatedWatchMinutes(tools))), iconBadge = true)
                     }
+                    item {
+                        Text(stringResource(R.string.schedule_week_load), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                        val max = days.maxOfOrNull { it.episodes.size }?.coerceAtLeast(1) ?: 1
+                        Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            days.forEach { day ->
+                                Column(Modifier.testTag("agenda-load-${day.date}"), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text(day.date.format(dateFormat), style = MaterialTheme.typography.labelMedium); Text(day.episodes.size.toString(), style = MaterialTheme.typography.labelMedium) }
+                                    LinearProgressIndicator(progress = { day.episodes.size.toFloat() / max }, Modifier.fillMaxWidth(), gapSize = 0.dp, drawStopIndicator = {})
+                                }
+                            }
+                        }
+                    }
+
                 }
                 AppButton(stringResource(R.string.schedule_agenda_share), onShare, Modifier.fillMaxWidth().testTag("agenda-share"),
                     enabled = days.firstOrNull { it.date == selectedDate }?.episodes?.isNotEmpty() == true, variant = AppButtonVariant.Secondary, icon = Icons.Default.Share)

@@ -7,10 +7,11 @@ Native Android app for tracking anime airing schedules and managing your MyAnime
 - **Today / Tomorrow / next 7 days** airing schedule, with title search, upcoming-only and own-list filters, shown in your device time zone or a time zone you pick
 - **Anime details** — cover, banner, synopsis, studios, characters, relations, countdown to the next episode, and links to the watch sources you configure
 - **Seasonal browser** — every anime of a season with title search, hide-tracked toggle, genre/format filters and sorting
-- **List insights** — sort by recent edits, title, score, progress, or remaining episodes; see completed titles, watched episodes, average score, and your Watching backlog
+- **List insights** — smart filters and saved views with rename/reordering; sort by newest/oldest edits, title, highest/lowest score, progress, remaining episodes or watch time
 - **Episode editor** — grouped status, large progress controls, direct entry, ±10 steps, ratings, notes and safe removal; consecutive edits reuse the schedule overlay
 - **Personal tracking tools** — account-scoped local favorites and notes, All-status and Unrated filters, random picks from current results, and UTF-8 CSV export through the Android document picker
-- **Activity and goals** — the latest 300 local progress changes (including offline edits), with a configurable Monday–Sunday episode goal using your schedule timezone
+- **Activity and goals** — the latest 300 local progress changes (including offline edits), 7/30/90-day comparisons, daily trends, top titles and a Watching-backlog forecast, with a configurable Monday–Sunday episode goal using your schedule timezone
+- **Watch planner** — plan Watching, paused and planned titles within a time budget, include breaks between episodes, see episode ranges and share the plan
 - **Themes** — eleven predefined palettes, Classic accent colors, Android wallpaper colors, saved looks, scheduled light/dark hours, compact layouts, AMOLED canvas, higher contrast and reduced animations
 - **Share anime** — send the title and AniList link with the native Android share sheet
 - **MyAnimeList integration** — OAuth 2.0 login, list read/update, a "+1 episode" quick action, and offline edits that are queued and delivered when you are back online
@@ -93,6 +94,14 @@ All jobs use unique work names, so scheduling is idempotent.
 ./gradlew bundleRelease        # signed Play Store AAB
 ```
 
+Device tests capture PNGs by default. After installing the app and test APKs, a functional rerun can
+skip duplicate image capture while keeping the same assertions:
+
+```bash
+adb shell am instrument -w -r -e qaScreenshots false \
+  com.owlcoder.animeschedule.test/androidx.test.runner.AndroidJUnitRunner
+```
+
 `local.properties` (not committed) holds your credentials:
 
 ```properties
@@ -111,10 +120,26 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.11.1** (version code **36**, October 8, 2026).
+Current release: **5.12.0** (version code **37**, October 8, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### New in 5.12.0
+
+Thirty additions and improvements to library filters/saved views, session planning, activity insights,
+weekly schedules and search. See the [complete release checklist](docs/release-5.12.0.md).
+Smart-filter and sort sheets scroll; planning supports paused/planned titles, budgeted breaks,
+episode ranges and native sharing. Activity reports compare equal-length periods and show daily trends,
+top titles and a backlog estimate. Search adds newest-year sorting, an upper score limit and list-status
+filtering. Unexpected search/pagination/list-refresh failures recover without losing cached content.
+Library statistics no longer recalculate while typing, and pinned sorting uses a single comparator.
+Settings search clears its focus before opening overlays and dismisses the keyboard.
+
+Validation: **228 unit tests** and the full **101-case Pixel 10 Pro UI/integration suite** passed.
+Debug and optimized production builds passed; lint reported 0 errors and 84 warnings. The signed
+version 37 AAB passed bundletool, signing and 16 KB alignment checks. See the release checklist for
+device testing status, measured timing limits and account-test coverage.
 
 ### Polished in 5.11.1
 

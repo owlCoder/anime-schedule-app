@@ -12,6 +12,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.map
+import com.owlcoder.animeschedule.domain.model.LocalTextQuery
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -94,12 +97,18 @@ class MyListViewModel @Inject constructor(
     private val _updateEvent = Channel<UpdateEvent>(Channel.BUFFERED)
     val updateEvent = _updateEvent.receiveAsFlow()
 
+    private data class LibrarySnapshot(val entries: List<MalListEntry>, val counts: Map<WatchStatus, Int>, val insights: MyListInsights)
+    // Typing and sorting do not recalculate statistics for the entire library.
+    private val library = malRepository.getUserList().map { entries ->
+        LibrarySnapshot(entries, entries.groupingBy { it.status }.eachCount(), entries.insights())
+    }.flowOn(Dispatchers.Default)
     private val baseContent = combine(
-        malRepository.getUserList(),
+        library,
         _searchQuery,
         _activeFilter,
         _sortOrder,
-    ) { allEntries, query, filter, sortOrder ->
+    ) { snapshot, query, filter, sortOrder ->
+        val allEntries = snapshot.entries
         val filteredEntries = allEntries.filter { entry ->
             filter == null || entry.status == filter
         }
@@ -108,9 +117,9 @@ class MyListViewModel @Inject constructor(
             allEntries = allEntries,
             searchQuery = query,
             activeFilter = filter,
-            statusCounts = allEntries.groupingBy { it.status }.eachCount(),
+            statusCounts = snapshot.counts,
             sortOrder = sortOrder,
-            insights = allEntries.insights(),
+            insights = snapshot.insights,
         )
     }.flowOn(Dispatchers.Default)
 
@@ -118,17 +127,15 @@ class MyListViewModel @Inject constructor(
         baseContent, _quickFilters, toolsStore?.data ?: flowOf(WatchTools()), _tagFilter, combine(_smartFilter, _scoreRange) { smart, scores -> smart to scores },
     ) { content, quick, tools, tag, filters ->
         val (smart, scores) = filters
-        val query = content.searchQuery.trim()
+        val query = LocalTextQuery(content.searchQuery)
         val entries = content.entries.filter { entry ->
             val id = entry.animeId
-            val matchesQuery = query.isBlank() || entry.title.contains(query, true) ||
-                tools.notes[id].orEmpty().contains(query, true) ||
-                tools.tags[id].orEmpty().any { it.contains(query, true) }
+            val matchesQuery = query.matches(entry.title, tools.notes[id], tools.tags[id]?.joinToString(" "))
             matchesQuery && (!quick.first || id in tools.favorites) &&
                 (!quick.second || entry.score == 0) &&
                 (tag == null || tools.tags[id].orEmpty().any { it.equals(tag, ignoreCase = true) }) &&
                 entry.matchesSmart(smart, tools) && entry.matchesRating(scores.first, scores.second)
-        }.sortedFor(content.sortOrder, tools).sortedByDescending { it.animeId in tools.pinned }
+        }.sortedFor(content.sortOrder, tools, pinsFirst = true)
         content.copy(
             entries = entries, favoritesOnly = quick.first, unratedOnly = quick.second,
             tools = tools, activeTag = tag, smartFilter = smart, scoreRange = scores,
@@ -184,7 +191,10 @@ class MyListViewModel @Inject constructor(
     fun toggleUnrated() = _quickFilters.update { it.first to !it.second }
     fun setWeeklyGoal(goal: Int) { viewModelScope.launch { toolsStore?.setWeeklyGoal(goal) } }
     fun clearActivity() { viewModelScope.launch { toolsStore?.clearActivity() } }
-    fun setSmartFilter(filter: SmartListFilter) { _smartFilter.value = filter }
+    fun setSmartFilter(filter: SmartListFilter) {
+        _smartFilter.value = filter
+        if (filter == SmartListFilter.COMPLETED_UNRATED) _activeFilter.value = WatchStatus.COMPLETED
+    }
     fun setScoreRange(minimum: Int, maximum: Int) { val min = minimum.coerceIn(0, 10); _scoreRange.value = min to maximum.coerceIn(min, 10) }
     fun setMarkers(ids: Set<Int>, favorite: Boolean? = null, pin: Boolean? = null) {
         viewModelScope.launch {
@@ -207,6 +217,8 @@ class MyListViewModel @Inject constructor(
         viewModelScope.launch { toolsStore?.saveView(view) }
     }
     fun deleteView(name: String) { viewModelScope.launch { toolsStore?.deleteView(name) } }
+    fun renameView(old: String, name: String) { viewModelScope.launch { toolsStore?.renameView(old, name) } }
+    fun moveView(name: String, offset: Int) { viewModelScope.launch { toolsStore?.moveView(name, offset) } }
     fun applyView(view: SavedListView) {
         val value = view.normalized()
         _searchQuery.value = value.query; _activeFilter.value = value.status
@@ -228,6 +240,10 @@ class MyListViewModel @Inject constructor(
             try {
                 val synced = malRepository.refreshUserList(force)
                 if (force && !synced) _updateEvent.send(UpdateEvent.Error)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                _updateEvent.send(UpdateEvent.Error)
             } finally {
                 _isLoading.value = false
             }

@@ -164,6 +164,7 @@ class VisualReviewTest {
 
     private fun screenshot(name: String) {
         compose.waitForIdle()
+        if (!QaCapture.enabled) return
         instrumentation.uiAutomation.waitForIdle(400, 5000)
         val bitmap = instrumentation.uiAutomation.takeScreenshot()
         File(

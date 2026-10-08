@@ -25,6 +25,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
+import com.owlcoder.animeschedule.domain.model.WatchStatus
 
 data class SearchUiState(
     val query: String = "",
@@ -98,10 +100,12 @@ class SearchViewModel @Inject constructor(
         _query.value = normalized
         _search.value = SearchUiState(query = normalized, isLoading = normalized.length >= MIN_QUERY_LENGTH)
     }
-    fun setTracking(value: TrackingFilter) = _filter.update { it.copy(tracking = value) }
+    fun setTracking(value: TrackingFilter) = _filter.update { it.copy(tracking = value, watchStatus = it.watchStatus.takeIf { value == TrackingFilter.TRACKED }) }
     fun toggleFormat(value: String) = _filter.update { it.copy(formats = if (value in it.formats) it.formats - value else it.formats + value) }
     fun setSort(value: SearchSort) = _filter.update { it.copy(sort = value) }
-    fun setMinimumScore(value: Int) = _filter.update { it.copy(minimumScore = value.coerceIn(0, 10)) }
+    fun setMinimumScore(value: Int) = _filter.update { val score = value.coerceIn(0, 10); it.copy(minimumScore = score, maximumScore = maxOf(score, it.maximumScore)) }
+    fun setMaximumScore(value: Int) = _filter.update { val score = value.coerceIn(0, 10); it.copy(maximumScore = score, minimumScore = minOf(score, it.minimumScore)) }
+    fun setWatchStatus(value: WatchStatus?) = _filter.update { it.copy(watchStatus = value?.takeUnless { status -> status == WatchStatus.NOT_IN_LIST }, tracking = if (value != null) TrackingFilter.TRACKED else it.tracking) }
     fun setLength(value: EpisodeLength) = _filter.update { it.copy(length = value) }
     fun setYear(value: Int?) = _filter.update { it.copy(year = value?.takeIf { year -> year > 0 }) }
     fun clearFilter() { _filter.value = SearchFilter() }
@@ -129,7 +133,12 @@ class SearchViewModel @Inject constructor(
         }
         _search.value = SearchUiState(query = query, isLoading = true)
         searchJob = viewModelScope.launch {
-            val result = searchRepository.searchAnime(query, page = 0)
+            val result = try { searchRepository.searchAnime(query, page = 0) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) {
+                if (requestGeneration == generation) _search.update { it.copy(isLoading = false, errorRes = R.string.error_search) }
+                return@launch
+            }
             if (requestGeneration != generation) return@launch
             when (result) {
                 is AppResult.Success -> _search.update {
@@ -153,7 +162,12 @@ class SearchViewModel @Inject constructor(
         val requestGeneration = generation
         _search.update { it.copy(isLoadingMore = true, loadMoreError = false) }
         loadMoreJob = viewModelScope.launch {
-            val result = searchRepository.searchAnime(state.query, page = currentPage + 1)
+            val result = try { searchRepository.searchAnime(state.query, page = currentPage + 1) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) {
+                if (requestGeneration == generation) _search.update { it.copy(isLoadingMore = false, loadMoreError = true) }
+                return@launch
+            }
             if (requestGeneration != generation) return@launch
             when (result) {
                 is AppResult.Success -> {

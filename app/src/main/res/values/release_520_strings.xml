@@ -17,7 +17,6 @@
     <string name="mylist_metric_episodes">Watched episodes</string>
     <string name="mylist_metric_score">Average score</string>
     <string name="mylist_backlog">%d episodes left on Watching</string>
-    <string name="mylist_backlog_hint">Only anime with a known episode count are included.</string>
     <string name="mylist_rated_count">Average based on %d rated anime.</string>
     <string name="detail_share">Share anime</string>
     <string name="schedule_no_matches">No matching broadcasts</string>

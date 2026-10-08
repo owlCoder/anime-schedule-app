@@ -204,7 +204,9 @@ class SyncAndShortcutsUiTest {
         override suspend fun flushPendingUpdates() = true
     }
     private fun screenshot(name: String) {
-        compose.waitForIdle(); instrumentation.uiAutomation.waitForIdle(400, 5000)
+        compose.waitForIdle()
+        if (!QaCapture.enabled) return
+        instrumentation.uiAutomation.waitForIdle(400, 5000)
         val image = instrumentation.uiAutomation.takeScreenshot()
         File(instrumentation.targetContext.getExternalFilesDir(null), "qa-5111-$name.png").outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }; image.recycle()
     }

@@ -12,6 +12,11 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -115,7 +120,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -355,6 +359,7 @@ private fun ScheduleScreenContent(
             onGenreToggle = viewModel::toggleGenre,
             onFormatToggle = viewModel::toggleFormat,
             onHideWatchedChange = viewModel::setHideWatched,
+            onHideMutedChange = viewModel::setHideMuted,
             onFavoritesChange = viewModel::setFavoritesOnly,
             onPremieresChange = viewModel::setPremieresOnly,
             onMinimumScoreChange = viewModel::setMinimumScore,
@@ -472,6 +477,7 @@ private fun TodayHomeContent(
                 selectedDate = selectedDate,
                 dates = remember(today) { (0L..6L).map(today::plusDays) },
                 onDateSelected = onDateSelected,
+                counts = remember(uiState.weekDays) { uiState.weekDays.associate { it.date to it.episodes.size } },
             )
         }
 
@@ -596,8 +602,9 @@ private fun ScheduleDayContent(
                     stringResource(R.string.schedule_upcoming_count, listEpisodes.size)
                 }
             }
-            DashboardScheduleMode.LATER_TODAY -> stringResource(
-                R.string.schedule_remaining_count,
+            DashboardScheduleMode.LATER_TODAY -> androidx.compose.ui.res.pluralStringResource(
+                R.plurals.schedule_remaining_count,
+                listEpisodes.size + if (featured != null) 1 else 0,
                 listEpisodes.size + if (featured != null) 1 else 0,
             )
             DashboardScheduleMode.EARLIER_TODAY,
@@ -911,16 +918,19 @@ private fun ScheduleDateRail(
     selectedDate: LocalDate,
     dates: List<LocalDate>,
     onDateSelected: (LocalDate) -> Unit,
+    counts: Map<LocalDate, Int> = emptyMap(),
 ) {
     val motion = LocalMotionPolicy.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(46.dp),
+            .height(IntrinsicSize.Min).heightIn(min = 68.dp),
         horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         dates.forEach { date ->
             val isSelected = date == selectedDate
+            val count = counts[date] ?: 0
+            val description = androidx.compose.ui.res.pluralStringResource(R.plurals.schedule_day_count, count, date.toString(), count)
             val containerColor by animateColorAsState(
                 targetValue = if (isSelected) {
                     MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
@@ -952,7 +962,9 @@ private fun ScheduleDateRail(
                         scaleX = scale
                         scaleY = scale
                     }
-                    .clickable { onDateSelected(date) },
+                    .selectable(isSelected, role = androidx.compose.ui.semantics.Role.RadioButton) { onDateSelected(date) }
+                    .testTag("schedule-date-$date")
+                    .semantics { contentDescription = description },
                 shape = RoundedCornerShape(13.dp),
                 color = containerColor,
                 contentColor = if (isSelected) {
@@ -963,14 +975,14 @@ private fun ScheduleDateRail(
                 border = BorderStroke(0.5.dp, borderColor),
                 tonalElevation = 0.dp,
             ) {
-                DateCellContent(date, isSelected)
+                DateCellContent(date, isSelected, count)
             }
         }
     }
 }
 
 @Composable
-private fun DateCellContent(date: LocalDate, selected: Boolean) {
+private fun DateCellContent(date: LocalDate, selected: Boolean, count: Int) {
     val motion = LocalMotionPolicy.current
     val contentColor by animateColorAsState(
         targetValue = if (selected) {
@@ -998,6 +1010,7 @@ private fun DateCellContent(date: LocalDate, selected: Boolean) {
             fontWeight = FontWeight.SemiBold,
             color = contentColor,
         )
+        Text(count.toString(), style = MaterialTheme.typography.labelSmall, color = contentColor.copy(alpha = .75f), modifier = Modifier.testTag("schedule-count-$date"))
     }
 }
 

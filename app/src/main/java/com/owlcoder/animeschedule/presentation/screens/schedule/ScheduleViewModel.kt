@@ -57,8 +57,9 @@ data class ScheduleFilter(
     val minimumScore: Int = 0,
     val release: ReleaseFilter = ReleaseFilter.ALL,
     val timeOfDay: ScheduleTimeOfDay = ScheduleTimeOfDay.ALL,
+    val hideMuted: Boolean = false,
 ) {
-    val isActive: Boolean get() = onlyMyList || query.isNotBlank() || upcomingOnly || hideWatched || favoritesOnly || genres.isNotEmpty() || formats.isNotEmpty() || premieresOnly || minimumScore > 0 || release != ReleaseFilter.ALL || timeOfDay != ScheduleTimeOfDay.ALL
+    val isActive: Boolean get() = onlyMyList || query.isNotBlank() || upcomingOnly || hideWatched || hideMuted || favoritesOnly || genres.isNotEmpty() || formats.isNotEmpty() || premieresOnly || minimumScore > 0 || release != ReleaseFilter.ALL || timeOfDay != ScheduleTimeOfDay.ALL
 }
 
 enum class ScheduleSection { TODAY, TOMORROW, WEEK }
@@ -137,13 +138,14 @@ class ScheduleViewModel internal constructor(
     notificationRepository: NotificationRepository,
     private val workScheduler: WorkScheduler,
     favoriteIds: Flow<Set<Int>> = flowOf(emptySet()),
+    mutedIds: Flow<Set<Int>> = flowOf(emptySet()),
 ) : ViewModel() {
     @Inject constructor(
         scheduleRepository: ScheduleRepository, settingsRepository: SettingsRepository,
         malRepository: MalRepository, notificationRepository: NotificationRepository,
         workScheduler: WorkScheduler, tools: com.owlcoder.animeschedule.data.local.datastore.WatchToolsStore,
     ) : this(scheduleRepository, settingsRepository, malRepository, notificationRepository, workScheduler,
-        tools.data.map { it.favorites }.distinctUntilChanged())
+        tools.data.map { it.favorites }.distinctUntilChanged(), tools.data.map { it.mutedNotifications.keys }.distinctUntilChanged())
 
 
     private val _refreshStatus = MutableStateFlow(RefreshStatus())
@@ -198,9 +200,9 @@ class ScheduleViewModel internal constructor(
 
     // Filter each day once. Notification badges and edit/refresh state must not re-filter
     // the whole week, and today/tomorrow reuse the same lists as the weekly overview.
-    private val filteredSchedule = combine(snapshot, _filter, filterClock, favoriteIds) { snapshot, filter, now, favorites ->
+    private val filteredSchedule = combine(snapshot, _filter, filterClock, favoriteIds, mutedIds) { snapshot, filter, now, favorites, muted ->
         FilteredSchedule(snapshot, filter, snapshot.days.map { day ->
-            day.copy(episodes = day.episodes.applyFilter(filter, now, favorites, snapshot.zoneId))
+            day.copy(episodes = day.episodes.applyFilter(filter, now, favorites, snapshot.zoneId, muted))
         })
     }
 
@@ -238,6 +240,7 @@ class ScheduleViewModel internal constructor(
     fun setUpcomingOnly(enabled: Boolean) = _filter.update { it.copy(upcomingOnly = enabled) }
 
     fun setHideWatched(enabled: Boolean) = _filter.update { it.copy(hideWatched = enabled) }
+    fun setHideMuted(enabled: Boolean) = _filter.update { it.copy(hideMuted = enabled) }
 
     fun setFavoritesOnly(enabled: Boolean) = _filter.update { it.copy(favoritesOnly = enabled) }
 
@@ -344,11 +347,12 @@ private fun buildSnapshot(
     )
 }
 
-internal fun List<AiringEpisode>.applyFilter(filter: ScheduleFilter, nowEpochSeconds: Long, favoriteIds: Set<Int> = emptySet(), zone: ZoneId = ZoneId.systemDefault()): List<AiringEpisode> {
+internal fun List<AiringEpisode>.applyFilter(filter: ScheduleFilter, nowEpochSeconds: Long, favoriteIds: Set<Int> = emptySet(), zone: ZoneId = ZoneId.systemDefault(), mutedIds: Set<Int> = emptySet()): List<AiringEpisode> {
     if (!filter.isActive) return this
-    val query = filter.query.trim()
+    val query = com.owlcoder.animeschedule.domain.model.LocalTextQuery(filter.query)
     return filter { episode ->
-        (query.isEmpty() || episode.title.contains(query, ignoreCase = true) || episode.titleRomaji?.contains(query, ignoreCase = true) == true) &&
+        query.matches(episode.title, episode.titleRomaji) &&
+            (!filter.hideMuted || episode.animeId !in mutedIds) &&
             (!filter.upcomingOnly || episode.airingAtEpochSeconds > nowEpochSeconds) &&
             (!filter.onlyMyList || episode.malListEntry != null) &&
             (!filter.hideWatched || episode.malListEntry == null || episode.episode > episode.malListEntry.episodesWatched) &&

@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModelStore
 import androidx.test.espresso.Espresso
@@ -48,6 +49,7 @@ class AgendaToolsUiTest {
     }
     private fun screenshot(name: String, composeIdle: Boolean = true) {
         if (composeIdle) compose.waitForIdle()
+        if (!QaCapture.enabled) return
         instrumentation.uiAutomation.waitForIdle(400, 5000)
         val bitmap = instrumentation.uiAutomation.takeScreenshot()
         File(instrumentation.targetContext.getExternalFilesDir(null), "qa-5100-$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }; bitmap.recycle()
@@ -87,7 +89,7 @@ class AgendaToolsUiTest {
         override fun loginAbandoned() = Unit
         override suspend fun logout() = Unit
     }
-    private fun scheduleVm(): ScheduleViewModel {
+    private fun scheduleVm(muted: Set<Int> = emptySet()): ScheduleViewModel {
         val repo = object : ScheduleRepository {
             override fun getWeekSchedule(zoneId: ZoneId, today: LocalDate) = flowOf(days)
             override suspend fun refreshSchedule(zoneId: ZoneId) = AppResult.Success(Unit)
@@ -103,7 +105,23 @@ class AgendaToolsUiTest {
             override fun scheduleFlushPendingUpdates() = Unit
             override fun checkAiringNotifications() = Unit
         }
-        return ScheduleViewModel(repo, settings, mal, notifications, work, flowOf(setOf(101))).also { models.put("schedule", it) }
+        return ScheduleViewModel(repo, settings, mal, notifications, work, flowOf(setOf(101)), mutedIds = flowOf(muted)).also { models.put("schedule", it) }
+    }
+
+    @Test fun dateRailCountsFollowMutedFilterAndDatesRemainSelectable() {
+        val vm = scheduleVm(setOf(1))
+        show(true) { ScheduleScreen({}, viewModel = vm) }
+        compose.waitUntil(5000) { vm.uiState.value.weekDays.isNotEmpty() }
+        compose.onNodeWithTag("schedule-count-$today", useUnmergedTree = true).assertTextEquals("2")
+        compose.runOnIdle { vm.setHideMuted(true) }
+        compose.waitUntil(5000) { vm.uiState.value.weekDays.first { it.date == today }.episodes.size == 1 }
+        compose.onNodeWithTag("schedule-count-$today", useUnmergedTree = true).assertTextEquals("1")
+        compose.onNodeWithTag("schedule-date-$today").assertHeightIsAtLeast(48.dp).performClick().assertIsSelected()
+        screenshot("date-counts-dark")
+        compose.onNodeWithTag("shortcut-WEEK_OVERVIEW").performClick()
+        compose.onNodeWithTag("agenda-days").performScrollToNode(hasTestTag("agenda-load-$today"))
+        compose.onNode(hasText("1") and hasAnyAncestor(hasTestTag("agenda-load-$today"))).assertIsDisplayed()
+        screenshot("weekly-load-dark")
     }
 
     @Test fun weekOverviewHasOneEntryPointAndRemainsAvailableWithoutAShortcut() {

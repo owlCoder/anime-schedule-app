@@ -78,6 +78,8 @@ class WatchToolsStore @Inject constructor(
         if (value.name.isBlank()) it else it.copy(savedViews = (listOf(value) + it.savedViews.filterNot { existing -> existing.name.equals(value.name, true) }).take(8))
     }
     suspend fun deleteView(name: String) = edit { it.copy(savedViews = it.savedViews.filterNot { view -> view.name.equals(name, true) }) }
+    suspend fun renameView(old: String, name: String) = edit { it.renameView(old, name) }
+    suspend fun moveView(name: String, offset: Int) = edit { it.moveView(name, offset) }
 
     suspend fun setMarkers(ids: Set<Int>, favorite: Boolean? = null, pin: Boolean? = null) = edit { it.withMarkers(ids, favorite, pin) }
     suspend fun renameTag(old: String, replacement: String?) = edit { it.renameTag(old, replacement) }

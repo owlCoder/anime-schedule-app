@@ -319,7 +319,7 @@ fun MyListScreen(
         ListOverlay.BACKLOG -> BacklogSheet(uiState.allEntries, uiState.tools, { overlay = null })
         ListOverlay.COMPARE -> CompareAnimeSheet(uiState.allEntries.sortedFor(MyListSortOrder.TITLE), uiState.tools, { overlay = null })
         ListOverlay.SMART -> SmartFiltersSheet(uiState.smartFilter, { viewModel.setSmartFilter(it); overlay = null }, { overlay = null })
-        ListOverlay.VIEWS -> SavedViewsSheet(uiState.tools.savedViews, viewModel::saveView, { viewModel.applyView(it); overlay = null }, viewModel::deleteView, { overlay = null })
+        ListOverlay.VIEWS -> SavedViewsSheet(uiState.tools.savedViews, viewModel::saveView, { viewModel.applyView(it); overlay = null }, viewModel::deleteView, { overlay = null }, viewModel::renameView, viewModel::moveView)
         ListOverlay.PLANNER -> WatchPlannerSheet(uiState.allEntries, uiState.tools, { overlay = null; onAnimeClick(it) }, { overlay = null })
         ListOverlay.CALENDAR -> ActivityCalendarSheet(uiState.tools, viewModel::setDailyGoal, { overlay = null })
         ListOverlay.PICK -> AnimePickSheet(pickedEntry, onOpen = { entry -> overlay = null; onAnimeClick(entry.animeId) }, onReroll = {
@@ -793,10 +793,13 @@ private fun MyListOptionsSheet(
     onSortSelected: (MyListSortOrder) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AppSheet(onDismissRequest = onDismiss, title = stringResource(if (overlay == ListOverlay.SORT) R.string.mylist_sort else R.string.mylist_statistics)) {
-        if (overlay == ListOverlay.SORT) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            MyListSortOrder.entries.forEach { order ->
+    if (overlay == ListOverlay.INSIGHTS) {
+        LibraryInsightsSheet(uiState, onDismiss)
+        return
+    }
+    AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.mylist_sort)) {
+        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 590.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(MyListSortOrder.entries) { order ->
                 AppChoiceRow(stringResource(order.labelRes), when (order) {
                     MyListSortOrder.RECENT -> Icons.Default.Update
                     MyListSortOrder.TITLE -> Icons.Default.SortByAlpha
@@ -804,26 +807,10 @@ private fun MyListOptionsSheet(
                     MyListSortOrder.PROGRESS -> Icons.Default.TrendingUp
                     MyListSortOrder.REMAINING -> Icons.Default.Timer
                     MyListSortOrder.WATCH_TIME -> Icons.Default.HourglassTop
+                    MyListSortOrder.OLDEST -> Icons.Default.History
+                    MyListSortOrder.LOWEST_SCORE -> Icons.Default.StarOutline
                 }, order == uiState.sortOrder, { onSortSelected(order) })
             }
-            }
-        } else {
-            InsightsStrip(uiState.insights)
-            Text(
-                text = stringResource(R.string.mylist_backlog, uiState.insights.remainingEpisodes),
-                modifier = Modifier.padding(vertical = 10.dp),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(stringResource(R.string.mylist_backlog_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            statusTabs.forEach { status ->
-                Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(status.tabIcon(false), contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                    Text(status.displayName(), modifier = Modifier.weight(1f).padding(start = 12.dp))
-                    Text((uiState.statusCounts[status] ?: 0).toString(), fontWeight = FontWeight.SemiBold)
-                }
-            }
-            Text(stringResource(R.string.mylist_rated_count, uiState.insights.ratedAnime), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

@@ -12,7 +12,7 @@ enum class TrackingFilter(@StringRes val labelRes: Int) {
 }
 enum class SearchSort(@StringRes val labelRes: Int) {
     RELEVANCE(R.string.discovery_relevance), TITLE(R.string.seasonal_sort_title),
-    SCORE(R.string.seasonal_sort_score), EPISODES(R.string.discovery_shortest)
+    SCORE(R.string.seasonal_sort_score), EPISODES(R.string.discovery_shortest), NEWEST(R.string.search_sort_newest)
 }
 data class SearchFilter(
     val tracking: TrackingFilter = TrackingFilter.ALL,
@@ -21,14 +21,18 @@ data class SearchFilter(
     val minimumScore: Int = 0,
     val length: EpisodeLength = EpisodeLength.ANY,
     val year: Int? = null,
+    val maximumScore: Int = 10,
+    val watchStatus: com.owlcoder.animeschedule.domain.model.WatchStatus? = null,
 ) {
-    val isActive get() = tracking != TrackingFilter.ALL || formats.isNotEmpty() || sort != SearchSort.RELEVANCE || minimumScore > 0 || length != EpisodeLength.ANY || year != null
+    val isActive get() = tracking != TrackingFilter.ALL || formats.isNotEmpty() || sort != SearchSort.RELEVANCE || minimumScore > 0 || maximumScore < 10 || watchStatus != null || length != EpisodeLength.ANY || year != null
 }
 internal fun AnimeSearchResult.communityScore(): Double? = meanScore?.takeIf { it > 0.0 && it <= 100.0 }?.div(10.0)
 internal fun List<AnimeSearchResult>.discover(filter: SearchFilter): List<AnimeSearchResult> {
     val result = filter { item ->
         (filter.formats.isEmpty() || item.type?.uppercase(Locale.ROOT) in filter.formats) &&
             (filter.minimumScore <= 0 || item.communityScore()?.let { it >= filter.minimumScore } == true) &&
+            (filter.maximumScore >= 10 || item.communityScore()?.let { it <= filter.maximumScore } == true) &&
+            (filter.watchStatus == null || item.userListEntry?.status == filter.watchStatus) &&
             filter.length.matches(item.totalEpisodes) &&
             (filter.year == null || item.year?.trim()?.toIntOrNull() == filter.year) &&
             when (filter.tracking) {
@@ -42,6 +46,7 @@ internal fun List<AnimeSearchResult>.discover(filter: SearchFilter): List<AnimeS
         SearchSort.TITLE -> result.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
         SearchSort.SCORE -> result.sortedByDescending { it.communityScore() ?: -1.0 }
         SearchSort.EPISODES -> result.sortedBy { it.totalEpisodes?.takeIf { n -> n > 0 } ?: Int.MAX_VALUE }
+        SearchSort.NEWEST -> result.sortedByDescending { it.year?.trim()?.toIntOrNull()?.takeIf { year -> year > 0 } ?: 0 }
     }
 }
 enum class ReleaseFilter(@StringRes val labelRes: Int, val status: String?) {

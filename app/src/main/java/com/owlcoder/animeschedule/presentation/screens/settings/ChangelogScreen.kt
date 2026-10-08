@@ -13,11 +13,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CloudSync
-import androidx.compose.material.icons.outlined.Apps
-import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.Bookmarks
+import androidx.compose.material.icons.outlined.EventAvailable
+import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -55,29 +55,29 @@ private data class ReleaseNote(
 fun ChangelogBottomSheet(onDismiss: () -> Unit) {
     val notes = listOf(
         ReleaseNote(
-            Icons.Outlined.Apps,
-            stringResource(R.string.changelog_nav_title),
-            stringResource(R.string.changelog_nav_description),
+            Icons.Outlined.Bookmarks,
+            stringResource(R.string.changelog_5120_library_title),
+            stringResource(R.string.changelog_5120_library),
         ),
         ReleaseNote(
-            Icons.Outlined.Info,
-            stringResource(R.string.changelog_motion_title),
-            stringResource(R.string.changelog_motion_description),
+            Icons.Outlined.Timer,
+            stringResource(R.string.changelog_5120_planner_title),
+            stringResource(R.string.changelog_5120_planner),
         ),
         ReleaseNote(
-            Icons.Outlined.CloudSync,
-            stringResource(R.string.changelog_filters_title),
-            stringResource(R.string.changelog_filters_description),
+            Icons.Outlined.BarChart,
+            stringResource(R.string.changelog_5120_activity_title),
+            stringResource(R.string.changelog_5120_activity),
         ),
         ReleaseNote(
-            Icons.Outlined.AutoAwesome,
-            stringResource(R.string.changelog_states_title),
-            stringResource(R.string.changelog_states_description),
+            Icons.Outlined.EventAvailable,
+            stringResource(R.string.changelog_5120_schedule_title),
+            stringResource(R.string.changelog_5120_schedule),
         ),
         ReleaseNote(
-            Icons.Outlined.Tune,
-            stringResource(R.string.changelog_about_title),
-            stringResource(R.string.changelog_about_description),
+            Icons.Outlined.Search,
+            stringResource(R.string.changelog_5120_search_title),
+            stringResource(R.string.changelog_5120_search),
         ),
     )
 
@@ -148,14 +148,14 @@ fun ChangelogBottomSheet(onDismiss: () -> Unit) {
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
-                            text = stringResource(R.string.changelog_hero_description),
+                            text = stringResource(R.string.changelog_5120_title),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     ChangelogGlassTile(size = 54.dp, cornerRadius = 16.dp) {
                         Icon(
-                            imageVector = Icons.Outlined.AutoAwesome,
+                            imageVector = Icons.Outlined.EventAvailable,
                             contentDescription = null,
                             modifier = Modifier.size(28.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,

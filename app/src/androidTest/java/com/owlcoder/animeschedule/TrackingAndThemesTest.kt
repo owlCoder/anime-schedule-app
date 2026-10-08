@@ -46,7 +46,9 @@ class TrackingAndThemesTest {
     private fun text(id: Int) = instrumentation.targetContext.getString(id)
     @After
     fun cleanup() {
-        instrumentation.runOnMainSync { models.clear() }; scope.cancel(); file.delete()
+        instrumentation.runOnMainSync { models.clear() }
+        runBlocking { scope.coroutineContext[Job]!!.cancelAndJoin() }
+        file.delete()
     }
 
     private class Mal : MalRepository {
@@ -166,7 +168,8 @@ class TrackingAndThemesTest {
         compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
         compose.onNodeWithText(text(R.string.watch_history)).performScrollTo().performClick()
         compose.onNodeWithTag("goal-increase").performClick()
-        compose.waitUntil { vm.uiState.value.tools.weeklyGoal == 13 }
+        try { compose.waitUntil(5_000) { vm.uiState.value.tools.weeklyGoal == 13 } }
+        catch (failure: Throwable) { throw AssertionError("Goal: stored=${runBlocking { tools.data.first() }.weeklyGoal}, visible=${vm.uiState.value.tools.weeklyGoal}", failure) }
         compose.onNodeWithText(
             instrumentation.targetContext.resources.getQuantityString(
                 R.plurals.weekly_goal_progress_count,
@@ -229,7 +232,8 @@ class TrackingAndThemesTest {
         compose.onNode(hasText(text(R.string.personal_tags)) and hasAnyAncestor(isDialog())).performScrollTo().performClick()
         compose.onNodeWithTag("editor-tags").performScrollTo().performTextReplacement("Akcija, Drama, akcija")
         compose.onNodeWithTag("list-editor-save").performClick()
-        compose.waitUntil { vm.uiState.value.tools.tags[101] == setOf("Akcija","Drama") }
+        try { compose.waitUntil(5_000) { vm.uiState.value.tools.tags[101] == setOf("Akcija","Drama") } }
+        catch (failure: Throwable) { throw AssertionError("Tags: stored=${runBlocking { tools.data.first() }.tags[101]}, visible=${vm.uiState.value.tools.tags[101]}", failure) }
         compose.onNodeWithTag("list-status-ALL").performClick()
         compose.onNodeWithTag("list-tags-filter").performScrollTo().performClick()
         compose.onNode(hasText("Drama") and hasAnyAncestor(isDialog())).performClick()
@@ -253,7 +257,7 @@ class TrackingAndThemesTest {
         compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
         compose.onNodeWithText(text(R.string.watch_history)).performScrollTo().performClick()
         compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("history-search"))).performTextInput("alpha")
-        compose.onNodeWithTag("history-this-week").performClick()
+        compose.onNodeWithTag("history-this-week").performScrollTo().assertIsDisplayed().performClick()
         compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("history-search"))).assertIsNotFocused()
         compose.onNode(hasText("Alpha Adventure") and hasAnyAncestor(isDialog())).performScrollTo().assertIsDisplayed()
         compose.onNode(hasText("Beta Journey") and hasAnyAncestor(isDialog())).assertDoesNotExist()
@@ -459,6 +463,7 @@ class TrackingAndThemesTest {
 
     private fun screenshot(name: String, waitForCompose: Boolean = true) {
         if (waitForCompose) compose.waitForIdle()
+        if (!QaCapture.enabled) return
         instrumentation.uiAutomation.waitForIdle(400, 5000)
         val bitmap = instrumentation.uiAutomation.takeScreenshot()
         File(

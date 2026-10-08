@@ -227,6 +227,7 @@ class OverlayEditingTest {
 
     private fun screenshot(name: String) {
         compose.waitForIdle()
+        if (!QaCapture.enabled) return
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val bitmap = instrumentation.uiAutomation.takeScreenshot()
         val file = File(instrumentation.targetContext.getExternalFilesDir(null), "qa-530-$name.png")

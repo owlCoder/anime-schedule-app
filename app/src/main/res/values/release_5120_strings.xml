@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="smart_with_notes">With personal notes</string>
+    <string name="smart_untagged">Without tags</string>
+    <string name="smart_long_series">Long series · 27+ episodes</string>
+    <string name="smart_unknown_length">Unknown episode count</string>
+    <string name="smart_in_progress">Started, still unfinished</string>
+    <string name="smart_completed_unrated">Completed, awaiting a score</string>
+    <string name="sort_oldest_edit">Oldest updates first</string>
+    <string name="sort_lowest_score">Lowest scores first</string>
+    <string name="view_rename">Rename %1$s</string>
+    <string name="view_duplicate">A view with this name already exists.</string>
+    <string name="planner_include_paused">Include on-hold anime</string>
+    <string name="planner_include_planned">Include planned anime</string>
+    <string name="planner_break">Break between episodes · minutes</string>
+    <string name="planner_break_hint">Breaks count toward the session budget. No break is added after the last episode.</string>
+    <string name="planner_rest_total">%1$d min reserved for breaks</string>
+    <string name="planner_episode_range">Episodes %1$d–%2$d</string>
+    <string name="planner_share">Share watch plan</string>
+    <string name="activity_insights">Recent watching activity</string>
+    <string name="activity_local_hint">Based on the last 300 local progress changes. Earlier activity and edits made outside this app are not included.</string>
+    <plurals name="activity_period">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <string name="activity_episode_total">Episodes watched</string>
+    <string name="activity_active_days">Active days</string>
+    <string name="activity_daily_average">Episodes per day</string>
+    <string name="activity_previous_change">Change vs previous period</string>
+    <plurals name="activity_previous_total">
+        <item quantity="one">%1$d episode in the previous %2$d days</item>
+        <item quantity="other">%1$d episodes in the previous %2$d days</item>
+    </plurals>
+    <string name="activity_trend">Last seven days</string>
+    <string name="activity_top_titles">Most watched in this period</string>
+    <string name="activity_no_progress">No progress recorded in this period.</string>
+    <string name="activity_finish_forecast">Watching backlog · estimated finish</string>
+    <string name="activity_forecast_unknown">Not enough information</string>
+    <string name="activity_forecast_hint">Estimate at your last seven days’ pace. Requires known episode totals for every Watching title.</string>
+    <string name="schedule_unmuted">Hide muted anime</string>
+    <string name="schedule_unmuted_hint">Hide titles whose system alerts you have muted.</string>
+    <plurals name="schedule_day_count">
+        <item quantity="one">%1$s · %2$d broadcast</item>
+        <item quantity="other">%1$s · %2$d broadcasts</item>
+    </plurals>
+    <string name="schedule_week_load">Broadcasts across the week</string>
+    <string name="search_sort_newest">Newest releases first</string>
+    <string name="search_maximum_score">Maximum community score</string>
+    <string name="search_score_ceiling">Up to %1$d/10</string>
+    <string name="search_watch_status">Status on your list</string>
+    <string name="changelog_5120_title">A more useful watch workspace</string>
+    <string name="changelog_5120_library">Six new smart filters, oldest-update and lowest-score sorting, and renaming or reordering saved views.</string>
+    <string name="changelog_5120_planner">Plan on-hold and planned anime, reserve time for breaks, see episode ranges and share the whole plan.</string>
+    <string name="changelog_5120_activity">Compare recent watching periods, see daily trends and top titles, and estimate when your current backlog will be finished.</string>
+    <string name="changelog_5120_schedule">Day-by-day broadcast counts, a weekly load chart and a filter for muted anime. Local searches understand separate words and accented letters.</string>
+    <string name="changelog_5120_search">Sort by newest year, set a maximum community score and filter by your own watch status. Search and refresh controls recover after unexpected errors.</string>
+    <string name="library_total_titles">Anime in your list</string>
+    <string name="changelog_5120_library_title">Organize your library</string>
+    <string name="changelog_5120_planner_title">Plan a watch session</string>
+    <string name="changelog_5120_activity_title">Understand your watching pace</string>
+    <string name="changelog_5120_schedule_title">A clearer weekly schedule</string>
+    <string name="changelog_5120_search_title">Find titles and recover smoothly</string>
+    <string name="planner_single_episode">Episode %1$d</string>
+</resources>

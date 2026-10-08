@@ -49,6 +49,8 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.TextStyle
@@ -141,6 +143,8 @@ fun SettingsScreen(
     val isClearingCache by settingsViewModel.isClearingCache.collectAsStateWithLifecycle()
     val cacheActionMessageRes by settingsViewModel.cacheActionMessageRes.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     val tools = LocalWatchTools.current
     val navBarHeight = LocalNavBarHeight.current
     var activeSheet by rememberSaveable { mutableStateOf<SettingsSheet?>(null) }
@@ -202,7 +206,11 @@ fun SettingsScreen(
                 SettingsSection(title) {
                     SettingsGroup {
                         rows.forEachIndexed { index, row ->
-                            SettingsRow(row.icon, row.title, row.value, { activeSheet = row.sheet }, enabled = !(row.sheet == SettingsSheet.ClearCache && isClearingCache),
+                            SettingsRow(row.icon, row.title, row.value, {
+                                focus.clearFocus(force = true)
+                                keyboard?.hide()
+                                activeSheet = row.sheet
+                            }, enabled = !(row.sheet == SettingsSheet.ClearCache && isClearingCache),
                                 iconColor = if (row.destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                                 titleColor = if (row.destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)
                             if (index < rows.lastIndex) SettingsDivider()

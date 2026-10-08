@@ -13,6 +13,32 @@ import org.junit.rules.TemporaryFolder
 
 class WatchToolsStoreTest {
     @get:Rule val temporary = TemporaryFolder()
+    @Test fun `renamed reordered views survive reopening and account switches`() = runTest {
+        val file = File(temporary.root, "views.preferences_pb")
+        var job = SupervisorJob()
+        var backing = PreferenceDataStoreFactory.create(scope = CoroutineScope(job + Dispatchers.IO)) { file }
+        var prefs = UserPreferencesDataStore(backing)
+        var tools = WatchToolsStore(backing, prefs)
+        prefs.setMalLoggedIn(true, "First")
+        tools.saveView(SavedListView("Beta", sort = "LOWEST_SCORE"))
+        tools.saveView(SavedListView("Alpha", query = "weekend", sort = "OLDEST"))
+        tools.renameView("Alpha", "BETA")
+        assertEquals(listOf("Alpha", "Beta"), tools.data.first().savedViews.map { it.name })
+        tools.renameView("Alpha", "Weekend")
+        tools.moveView("Weekend", 1)
+        prefs.setMalLoggedIn(true, "Second")
+        assertTrue(tools.data.first().savedViews.isEmpty())
+        prefs.setMalLoggedIn(true, "FIRST")
+        job.cancelAndJoin(); job = SupervisorJob()
+        backing = PreferenceDataStoreFactory.create(scope = CoroutineScope(job + Dispatchers.IO)) { file }
+        prefs = UserPreferencesDataStore(backing); tools = WatchToolsStore(backing, prefs)
+        try {
+            val views = tools.data.first().savedViews
+            assertEquals(listOf("Beta", "Weekend"), views.map { it.name })
+            assertEquals("weekend", views.last().query)
+            assertEquals(listOf("LOWEST_SCORE", "OLDEST"), views.map { it.sort })
+        } finally { job.cancelAndJoin() }
+    }
     @Test fun `quiet hours and anime muting survive reopening without leaking between accounts`() = runTest {
         val file = File(temporary.root, "alerts.preferences_pb")
         var job = SupervisorJob()

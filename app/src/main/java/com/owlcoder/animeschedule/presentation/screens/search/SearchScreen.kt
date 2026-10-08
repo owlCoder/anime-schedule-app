@@ -291,7 +291,7 @@ fun SearchScreen(
     }
 
     if (showFilters) SearchFilterSheet(uiState.filter, uiState.availableFormats, viewModel::setTracking, viewModel::toggleFormat, viewModel::setSort, viewModel::clearFilter, { showFilters = false },
-        uiState.availableYears, viewModel::setMinimumScore, viewModel::setLength, viewModel::setYear)
+        uiState.availableYears, viewModel::setMinimumScore, viewModel::setLength, viewModel::setYear, viewModel::setMaximumScore, viewModel::setWatchStatus)
 
     editingResult?.let { result ->
         result.malId?.let { malId ->

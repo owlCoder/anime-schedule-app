@@ -17,7 +17,6 @@
     <string name="mylist_metric_episodes">Odgledane epizode</string>
     <string name="mylist_metric_score">Prosečna ocena</string>
     <string name="mylist_backlog">Još %d epizoda na listi Gledam</string>
-    <string name="mylist_backlog_hint">Računaju se samo animei sa poznatim brojem epizoda.</string>
     <string name="mylist_rated_count">Prosek na osnovu %d ocenjenih animea.</string>
     <string name="detail_share">Podeli anime</string>
     <string name="schedule_no_matches">Nema emitovanja za ovaj filter</string>

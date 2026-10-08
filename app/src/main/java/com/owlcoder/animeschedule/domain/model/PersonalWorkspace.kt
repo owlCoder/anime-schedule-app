@@ -5,7 +5,7 @@ import java.util.Locale
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class SmartListFilter { ALL, PINNED, SHORT_SERIES, NEAR_FINISH, UNSTARTED }
+enum class SmartListFilter { ALL, PINNED, SHORT_SERIES, NEAR_FINISH, UNSTARTED, WITH_NOTES, UNTAGGED, LONG_SERIES, UNKNOWN_LENGTH, IN_PROGRESS, COMPLETED_UNRATED }
 
 @Serializable
 data class SavedListView(
@@ -26,7 +26,7 @@ data class SavedListView(
         tag = tag?.trim()?.take(24)?.takeIf { it.isNotBlank() },
         minimumScore = minimumScore.coerceIn(0, 10),
         maximumScore = maximumScore.coerceIn(minimumScore.coerceIn(0, 10), 10),
-        sort = sort.takeIf { it in setOf("RECENT", "TITLE", "SCORE", "PROGRESS", "REMAINING", "WATCH_TIME") } ?: "RECENT",
+        sort = sort.takeIf { it in setOf("RECENT", "OLDEST", "TITLE", "SCORE", "LOWEST_SCORE", "PROGRESS", "REMAINING", "WATCH_TIME") } ?: "RECENT",
     )
 }
 
@@ -38,12 +38,19 @@ fun WatchTools.minutesFor(animeId: Int): Int = (durationOverrides[animeId] ?: ep
 fun MalListEntry.matchesSmart(filter: SmartListFilter, tools: WatchTools): Boolean {
     val remaining = totalEpisodes?.takeIf { it > 0 }?.let { (it - episodesWatched.coerceAtLeast(0)).coerceAtLeast(0) }
     val unfinished = status != WatchStatus.COMPLETED && status != WatchStatus.DROPPED
+    val incomplete = unfinished && (remaining == null || remaining > 0)
     return when (filter) {
         SmartListFilter.ALL -> true
         SmartListFilter.PINNED -> animeId in tools.pinned
         SmartListFilter.SHORT_SERIES -> totalEpisodes in 1..13 && unfinished
         SmartListFilter.NEAR_FINISH -> remaining in 1..3 && unfinished
         SmartListFilter.UNSTARTED -> episodesWatched == 0 && unfinished
+        SmartListFilter.WITH_NOTES -> !tools.notes[animeId].isNullOrBlank()
+        SmartListFilter.UNTAGGED -> tools.tags[animeId].isNullOrEmpty()
+        SmartListFilter.LONG_SERIES -> (totalEpisodes ?: 0) > 26 && incomplete
+        SmartListFilter.UNKNOWN_LENGTH -> totalEpisodes == null || totalEpisodes <= 0
+        SmartListFilter.IN_PROGRESS -> episodesWatched > 0 && incomplete
+        SmartListFilter.COMPLETED_UNRATED -> status == WatchStatus.COMPLETED && score == 0
     }
 }
 
@@ -71,21 +78,25 @@ enum class PlannerStrategy { BALANCED, FINISH_FIRST, FOCUS }
 data class WatchPlanItem(val entry: MalListEntry, val episodes: Int, val minutes: Int)
 
 /** Balanced rounds share episodes; focused modes fill each title in priority order. All modes respect the budget and known remainder. */
-fun planWatchSession(entries: List<MalListEntry>, tools: WatchTools, budgetMinutes: Int, strategy: PlannerStrategy = PlannerStrategy.BALANCED, excluded: Set<Int> = emptySet()): List<WatchPlanItem> {
+fun planWatchSession(entries: List<MalListEntry>, tools: WatchTools, budgetMinutes: Int, strategy: PlannerStrategy = PlannerStrategy.BALANCED, excluded: Set<Int> = emptySet(),
+    statuses: Set<WatchStatus> = setOf(WatchStatus.WATCHING), breakMinutes: Int = 0): List<WatchPlanItem> {
+    val allowed = statuses.intersect(setOf(WatchStatus.WATCHING, WatchStatus.ON_HOLD, WatchStatus.PLAN_TO_WATCH))
     val candidates = entries.distinctBy { it.animeId }.filter {
-        it.animeId > 0 && it.animeId !in excluded && it.status == WatchStatus.WATCHING && (it.totalEpisodes == null || it.totalEpisodes <= 0 || it.episodesWatched < it.totalEpisodes)
+        it.animeId > 0 && it.animeId !in excluded && it.status in allowed && (it.totalEpisodes == null || it.totalEpisodes <= 0 || it.episodesWatched < it.totalEpisodes)
     }.let { candidates ->
         if (strategy == PlannerStrategy.FINISH_FIRST) candidates.sortedWith(compareBy<MalListEntry> { it.remainingMinutes(tools) ?: Long.MAX_VALUE }.thenByDescending { it.animeId in tools.pinned })
         else candidates.sortedByDescending { it.animeId in tools.pinned }
     }
     val counts = linkedMapOf<Int, Int>()
     var left = budgetMinutes.coerceIn(0, 480)
+    val pause = breakMinutes.coerceIn(0, 30)
+    var total = 0
     if (strategy != PlannerStrategy.BALANCED) {
         candidates.forEach { entry ->
             val duration = tools.minutesFor(entry.animeId)
             val remaining = entry.totalEpisodes?.takeIf { it > 0 }?.let { (it - entry.episodesWatched.coerceAtLeast(0)).coerceAtLeast(0) } ?: Int.MAX_VALUE
-            val count = minOf(left / duration, remaining)
-            if (count > 0) { counts[entry.animeId] = count; left -= count * duration }
+            val count = minOf((left + if (total == 0) pause else 0) / (duration + pause), remaining)
+            if (count > 0) { counts[entry.animeId] = count; left -= count * (duration + pause) - if (total == 0) pause else 0; total += count }
         }
     } else do {
         var added = false
@@ -93,8 +104,9 @@ fun planWatchSession(entries: List<MalListEntry>, tools: WatchTools, budgetMinut
             val duration = tools.minutesFor(entry.animeId)
             val count = counts[entry.animeId] ?: 0
             val remaining = entry.totalEpisodes?.takeIf { it > 0 }?.let { (it - entry.episodesWatched.coerceAtLeast(0)).coerceAtLeast(0) }
-            if (duration <= left && (remaining == null || count < remaining)) {
-                counts[entry.animeId] = count + 1; left -= duration; added = true
+            val cost = duration + if (total == 0) 0 else pause
+            if (cost <= left && (remaining == null || count < remaining)) {
+                counts[entry.animeId] = count + 1; left -= cost; total++; added = true
             }
         }
     } while (added)

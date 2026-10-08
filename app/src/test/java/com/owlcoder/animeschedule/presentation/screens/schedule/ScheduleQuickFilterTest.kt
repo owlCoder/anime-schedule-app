@@ -25,4 +25,12 @@ class ScheduleQuickFilterTest {
         assertEquals(emptyList<Int>(), episodes.applyFilter(filter, 102).map { it.animeId })
         assertEquals(4, episodes.applyFilter(ScheduleFilter(), 102).size)
     }
+
+    @Test fun `muted filter uses AniList ids and word query can span accent insensitive titles`() {
+        val episodes = listOf(episode(1, "Čuvaj Dragon", 100, "Weekend"), episode(2, "Dragon", 100, "Weekend").copy(malId = 1))
+        val query = ScheduleFilter(query = "  cuvaj weekend ")
+        assertEquals(listOf(1), episodes.applyFilter(query, 0).map { it.animeId })
+        assertEquals(listOf(2), episodes.applyFilter(ScheduleFilter(hideMuted = true), 0, mutedIds = setOf(1)).map { it.animeId })
+        assertEquals(2, episodes.applyFilter(ScheduleFilter(), 0, mutedIds = setOf(1)).size)
+    }
 }

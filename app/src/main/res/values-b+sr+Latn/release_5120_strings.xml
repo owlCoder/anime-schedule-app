@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="smart_with_notes">Sa ličnim beleškama</string>
+    <string name="smart_untagged">Bez oznaka</string>
+    <string name="smart_long_series">Duge serije · 27+ epizoda</string>
+    <string name="smart_unknown_length">Nepoznat broj epizoda</string>
+    <string name="smart_in_progress">Započeto, još nezavršeno</string>
+    <string name="smart_completed_unrated">Završeno, bez ocene</string>
+    <string name="sort_oldest_edit">Najstarije izmene prvo</string>
+    <string name="sort_lowest_score">Najniže ocene prvo</string>
+    <string name="view_rename">Preimenuj %1$s</string>
+    <string name="view_duplicate">Prikaz sa ovim nazivom već postoji.</string>
+    <string name="planner_include_paused">Uključi anime na pauzi</string>
+    <string name="planner_include_planned">Uključi planirane anime</string>
+    <string name="planner_break">Pauza između epizoda · minuti</string>
+    <string name="planner_break_hint">Pauze ulaze u vreme sesije. Nema pauze posle poslednje epizode.</string>
+    <string name="planner_rest_total">%1$d min rezervisano za pauze</string>
+    <string name="planner_episode_range">Epizode %1$d–%2$d</string>
+    <string name="planner_share">Podeli plan gledanja</string>
+    <string name="activity_insights">Skorašnja aktivnost gledanja</string>
+    <string name="activity_local_hint">Na osnovu poslednjih 300 lokalnih izmena napretka. Ranija aktivnost i izmene van aplikacije nisu uključene.</string>
+    <plurals name="activity_period">
+        <item quantity="one">%1$d dan</item>
+        <item quantity="few">%1$d dana</item>
+        <item quantity="other">%1$d dana</item>
+    </plurals>
+    <string name="activity_episode_total">Odgledane epizode</string>
+    <string name="activity_active_days">Aktivni dani</string>
+    <string name="activity_daily_average">Epizode po danu</string>
+    <string name="activity_previous_change">Razlika u odnosu na prethodni period</string>
+    <plurals name="activity_previous_total">
+        <item quantity="one">%1$d epizoda u prethodnih %2$d dana</item>
+        <item quantity="few">%1$d epizode u prethodnih %2$d dana</item>
+        <item quantity="other">%1$d epizoda u prethodnih %2$d dana</item>
+    </plurals>
+    <string name="activity_trend">Poslednjih sedam dana</string>
+    <string name="activity_top_titles">Najgledanije u ovom periodu</string>
+    <string name="activity_no_progress">Nema zabeleženog napretka u ovom periodu.</string>
+    <string name="activity_finish_forecast">Procena završetka animea koje gledaš</string>
+    <string name="activity_forecast_unknown">Nema dovoljno podataka</string>
+    <string name="activity_forecast_hint">Procena prema tempu iz poslednjih sedam dana. Potreban je poznat broj epizoda svih animea koje gledaš.</string>
+    <string name="schedule_unmuted">Sakrij utišane anime</string>
+    <string name="schedule_unmuted_hint">Sakrij naslove čija su sistemska obaveštenja utišana.</string>
+    <plurals name="schedule_day_count">
+        <item quantity="one">%1$s · %2$d emitovanje</item>
+        <item quantity="few">%1$s · %2$d emitovanja</item>
+        <item quantity="other">%1$s · %2$d emitovanja</item>
+    </plurals>
+    <string name="schedule_week_load">Emitovanja tokom nedelje</string>
+    <string name="search_sort_newest">Najnovija izdanja prvo</string>
+    <string name="search_maximum_score">Najviša ocena zajednice</string>
+    <string name="search_score_ceiling">Do %1$d/10</string>
+    <string name="search_watch_status">Status na tvojoj listi</string>
+    <string name="changelog_5120_title">Korisniji prostor za gledanje</string>
+    <string name="changelog_5120_library">Šest novih pametnih filtera, redosled po najstarijim izmenama i najnižim ocenama, preimenovanje i raspored sačuvanih prikaza.</string>
+    <string name="changelog_5120_planner">Planiraj anime na pauzi i planirane naslove, odvoji vreme za pauze, vidi raspon epizoda i podeli ceo plan.</string>
+    <string name="changelog_5120_activity">Uporedi periode gledanja, vidi dnevni tempo i najgledanije naslove i proceni kada ćeš završiti anime koje gledaš.</string>
+    <string name="changelog_5120_schedule">Broj emitovanja po danu, nedeljni grafikon i filter utišanih animea. Lokalna pretraga razume odvojene reči i slova sa dijakriticima.</string>
+    <string name="changelog_5120_search">Poređaj po najnovijoj godini, zadaj najvišu ocenu zajednice i filtriraj po svom statusu gledanja. Pretraga i osvežavanje se oporavljaju nakon neočekivanih grešaka.</string>
+    <string name="library_total_titles">Anime u tvojoj listi</string>
+    <string name="changelog_5120_library_title">Organizuj svoju listu</string>
+    <string name="changelog_5120_planner_title">Isplaniraj gledanje</string>
+    <string name="changelog_5120_activity_title">Prati svoj tempo gledanja</string>
+    <string name="changelog_5120_schedule_title">Pregledniji nedeljni raspored</string>
+    <string name="changelog_5120_search_title">Pronađi naslove i nastavi bez zastoja</string>
+    <string name="planner_single_episode">Epizoda %1$d</string>
+</resources>

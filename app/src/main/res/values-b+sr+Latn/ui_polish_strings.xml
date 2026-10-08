@@ -76,17 +76,6 @@
     <!-- Changelog -->
     <string name="changelog_release_date">8. oktobar 2026.</string>
     <string name="changelog_whats_new">Šta je novo</string>
-    <string name="changelog_hero_description">Čitljivije prečice, vidljive poruke u svakom overlayu, pouzdaniji ponovni pokušaj i lakše animacije učitavanja. Postojeći podaci ostaju sačuvani.</string>
-    <string name="changelog_nav_title">Čitljive prečice rasporeda</string>
-    <string name="changelog_nav_description">Alatke su u poravnatim redovima sa udobnim dodirnim zonama. Pregled nedelje ima jedan ulaz i ostaje dostupan kada ga ukloniš iz prečica.</string>
-    <string name="changelog_motion_title">Poruke tamo gde radiš</string>
-    <string name="changelog_motion_description">Poruke uspeha i greške su vidljive u aktivnom overlayu i ne prekrivaju sadržaj ili dugmad. Poništi zadržava isti rok pri otvaranju ili zatvaranju menija, bez duplih poruka.</string>
-    <string name="changelog_filters_title">Jasnija sinhronizacija i oporavak</string>
-    <string name="changelog_filters_description">Ikonice prate prijavu, izmene na čekanju i greške. Neočekivani neuspeh oslobađa dugme za ponovni pokušaj, a kasnija uspešna sinhronizacija uklanja prethodnu grešku.</string>
-    <string name="changelog_states_title">Lakše učitavanje</string>
-    <string name="changelog_states_description">Uglađeniji prikaz učitavanja u pretrazi i detaljima animea, sa mirnijim izgledom kada su animacije smanjene. Oporavak u pozadini počinje nakon otvaranja aplikacije.</string>
-    <string name="changelog_about_title">Ujednačene kontrole</string>
-    <string name="changelog_about_description">Ikonice dugmadi zadržavaju prostor uz duže tekstove. Izbor prečica, nedostupne alatke i odjava sa brisanjem lokalnih izmena su jasnije prikazani.</string>
     <string name="changelog_footer">Napravljeno pažljivo od strane AnimeSchedule tima</string>
 
     <!-- Izvori za gledanje -->
@@ -120,7 +109,11 @@
     <string name="schedule_one_broadcast">1 emitovanje</string>
     <string name="schedule_broadcasts_count">%d emitovanja</string>
     <string name="schedule_upcoming_count">Predstoji: %d</string>
-    <string name="schedule_remaining_count">Preostalo emitovanja: %d</string>
+    <plurals name="schedule_remaining_count">
+        <item quantity="one">Preostalo %d emitovanje</item>
+        <item quantity="few">Preostala %d emitovanja</item>
+        <item quantity="other">Preostalo %d emitovanja</item>
+    </plurals>
     <string name="schedule_no_more_soon">Uskoro nema novih emitovanja</string>
     <string name="schedule_nothing_else">Ništa drugo se ne emituje u ovom periodu. Otvori ceo dnevni raspored.</string>
     <string name="schedule_nothing_date">Nema zakazanih emitovanja za %s.</string>

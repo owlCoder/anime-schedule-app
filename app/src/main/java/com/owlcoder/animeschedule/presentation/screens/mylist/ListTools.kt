@@ -174,7 +174,7 @@ internal fun WatchHistorySheet(
         val focus = LocalFocusManager.current
         val keyboard = LocalSoftwareKeyboardController.current
         LazyColumn(
-            Modifier.fillMaxWidth().heightIn(max = 620.dp),
+            Modifier.fillMaxWidth().heightIn(max = 620.dp).testTag("history-list"),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {

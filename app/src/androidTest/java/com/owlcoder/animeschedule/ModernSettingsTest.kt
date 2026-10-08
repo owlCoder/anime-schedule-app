@@ -134,7 +134,9 @@ class ModernSettingsTest {
         screenshot("cache-rounded-choices")
     }
     private fun screenshot(name:String){
-        compose.waitForIdle();instrumentation.uiAutomation.waitForIdle(400,5000);val bitmap=instrumentation.uiAutomation.takeScreenshot()
+        compose.waitForIdle()
+        if (!QaCapture.enabled) return
+        instrumentation.uiAutomation.waitForIdle(400,5000);val bitmap=instrumentation.uiAutomation.takeScreenshot()
         File(instrumentation.targetContext.getExternalFilesDir(null),"qa-540-$name.png").outputStream().use{bitmap.compress(Bitmap.CompressFormat.PNG,100,it)};bitmap.recycle()
     }
 }

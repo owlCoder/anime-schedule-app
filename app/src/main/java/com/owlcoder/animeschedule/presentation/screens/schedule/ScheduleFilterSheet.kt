@@ -27,6 +27,7 @@ fun ScheduleFilterSheet(
     onHideWatchedChange: (Boolean) -> Unit = {}, onFavoritesChange: (Boolean) -> Unit = {},
     onPremieresChange: (Boolean) -> Unit = {}, onMinimumScoreChange: (Int) -> Unit = {},
     onReleaseChange: (ReleaseFilter) -> Unit = {}, onTimeOfDayChange: (ScheduleTimeOfDay) -> Unit = {},
+    onHideMutedChange: (Boolean) -> Unit = {},
 ) {
     AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.filter_title), trailingContent = {
         AppButton(stringResource(R.string.filter_reset), onClear, enabled = filter.isActive, variant = AppButtonVariant.Plain, icon = Icons.Default.RestartAlt)
@@ -45,6 +46,11 @@ fun ScheduleFilterSheet(
                     AppChoiceRow(stringResource(R.string.schedule_hide_watched), Icons.Default.VisibilityOff, filter.hideWatched,
                         { onHideWatchedChange(!filter.hideWatched) }, Modifier.testTag("schedule-hide-watched"),
                         subtitle = stringResource(R.string.schedule_hide_watched_hint), selectionRole = Role.Checkbox)
+                }
+                item {
+                    AppChoiceRow(stringResource(R.string.schedule_unmuted), Icons.Default.NotificationsOff, filter.hideMuted,
+                        { onHideMutedChange(!filter.hideMuted) }, Modifier.testTag("schedule-hide-muted"),
+                        subtitle = stringResource(R.string.schedule_unmuted_hint), selectionRole = Role.Checkbox)
                 }
                 item {
                     AppChoiceRow(stringResource(R.string.schedule_favorites_only), Icons.Default.Favorite, filter.favoritesOnly,

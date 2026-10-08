@@ -42,6 +42,12 @@ internal fun SmartListFilter.labelRes() = when (this) {
     SmartListFilter.SHORT_SERIES -> R.string.smart_short
     SmartListFilter.NEAR_FINISH -> R.string.smart_near_finish
     SmartListFilter.UNSTARTED -> R.string.smart_unstarted
+    SmartListFilter.WITH_NOTES -> R.string.smart_with_notes
+    SmartListFilter.UNTAGGED -> R.string.smart_untagged
+    SmartListFilter.LONG_SERIES -> R.string.smart_long_series
+    SmartListFilter.UNKNOWN_LENGTH -> R.string.smart_unknown_length
+    SmartListFilter.IN_PROGRESS -> R.string.smart_in_progress
+    SmartListFilter.COMPLETED_UNRATED -> R.string.smart_completed_unrated
 }
 
 private fun SmartListFilter.icon() = when (this) {
@@ -50,14 +56,20 @@ private fun SmartListFilter.icon() = when (this) {
     SmartListFilter.SHORT_SERIES -> Icons.Default.Timer
     SmartListFilter.NEAR_FINISH -> Icons.Default.Flag
     SmartListFilter.UNSTARTED -> Icons.Default.NewReleases
+    SmartListFilter.WITH_NOTES -> Icons.Default.Notes
+    SmartListFilter.UNTAGGED -> Icons.Default.LabelOff
+    SmartListFilter.LONG_SERIES -> Icons.Default.PlaylistPlay
+    SmartListFilter.UNKNOWN_LENGTH -> Icons.Default.HelpOutline
+    SmartListFilter.IN_PROGRESS -> Icons.Default.PlayCircle
+    SmartListFilter.COMPLETED_UNRATED -> Icons.Default.StarOutline
 }
 
 @Composable
 internal fun SmartFiltersSheet(current: SmartListFilter, onSelect: (SmartListFilter) -> Unit, onDismiss: () -> Unit) {
     AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.smart_filters)) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.smart_filters_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            SmartListFilter.entries.forEach { filter ->
+        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 590.dp).testTag("smart-filter-list"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            item { Text(stringResource(R.string.smart_filters_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            items(SmartListFilter.entries, key = { it.name }) { filter ->
                 AppChoiceRow(stringResource(filter.labelRes()), filter.icon(), current == filter, { onSelect(filter) }, Modifier.testTag("smart-${filter.name}"))
             }
         }
@@ -65,8 +77,11 @@ internal fun SmartFiltersSheet(current: SmartListFilter, onSelect: (SmartListFil
 }
 
 @Composable
-internal fun SavedViewsSheet(views: List<SavedListView>, onSave: (String) -> Unit, onApply: (SavedListView) -> Unit, onDelete: (String) -> Unit, onDismiss: () -> Unit) {
+internal fun SavedViewsSheet(views: List<SavedListView>, onSave: (String) -> Unit, onApply: (SavedListView) -> Unit, onDelete: (String) -> Unit, onDismiss: () -> Unit,
+    onRename: (String, String) -> Unit = { _, _ -> }, onMove: (String, Int) -> Unit = { _, _ -> }) {
     var name by rememberSaveable { mutableStateOf("") }
+    var editing by rememberSaveable { mutableStateOf<String?>(null) }
+    var draft by rememberSaveable { mutableStateOf("") }
     AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.saved_list_views)) {
         val focus = LocalFocusManager.current
         val keyboard = LocalSoftwareKeyboardController.current
@@ -93,6 +108,21 @@ internal fun SavedViewsSheet(views: List<SavedListView>, onSave: (String) -> Uni
                         Text("$status · ${stringResource(view.smartFilter.labelRes())}", Modifier.padding(horizontal = 12.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (view.minimumScore != 0 || view.maximumScore != 10) Text(stringResource(R.string.rating_value, view.minimumScore, view.maximumScore), Modifier.padding(horizontal = 12.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                         if (view.query.isNotBlank()) Text(view.query, Modifier.padding(horizontal = 12.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            IconButton({ editing = view.name; draft = view.name }, Modifier.testTag("view-rename-${view.name}")) { Icon(Icons.Default.Edit, stringResource(R.string.view_rename, view.name)) }
+                            val index = views.indexOf(view)
+                            IconButton({ onMove(view.name, -1) }, Modifier.testTag("view-up-${view.name}"), enabled = index > 0) { Icon(Icons.Default.ArrowUpward, stringResource(R.string.shortcuts_up, view.name)) }
+                            IconButton({ onMove(view.name, 1) }, Modifier.testTag("view-down-${view.name}"), enabled = index < views.lastIndex) { Icon(Icons.Default.ArrowDownward, stringResource(R.string.shortcuts_down, view.name)) }
+                        }
+                        if (editing == view.name) {
+                            val duplicate = views.any { it.name != view.name && it.name.equals(draft.trim(), true) }
+                            OutlinedTextField(draft, { draft = it.take(32) }, Modifier.fillMaxWidth().testTag("view-rename-field"), singleLine = true, label = { Text(stringResource(R.string.view_name)) },
+                                isError = duplicate, supportingText = { if (duplicate) Text(stringResource(R.string.view_duplicate)) }, shape = MaterialTheme.shapes.large)
+                            Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                AppButton(stringResource(R.string.common_cancel), { editing = null; focus.clearFocus(); keyboard?.hide() }, Modifier.weight(1f).fillMaxHeight(), variant = AppButtonVariant.Plain, icon = Icons.Default.Close)
+                                AppButton(stringResource(R.string.common_save), { onRename(view.name, draft); editing = null; focus.clearFocus(); keyboard?.hide() }, Modifier.weight(1f).fillMaxHeight().testTag("view-rename-save"), enabled = draft.isNotBlank() && !duplicate, icon = Icons.Default.Check)
+                            }
+                        }
                     }
                 }
             }
@@ -107,9 +137,16 @@ internal fun WatchPlannerSheet(entries: List<MalListEntry>, tools: WatchTools, o
     var excluded by remember { mutableStateOf(emptySet<Int>()) }
     var showStyle by remember { mutableStateOf(false) }
     var showTitles by remember { mutableStateOf(false) }
-    val candidates = entries.filter { it.animeId > 0 && it.status == WatchStatus.WATCHING && (it.totalEpisodes == null || it.totalEpisodes <= 0 || it.episodesWatched < it.totalEpisodes) }.distinctBy { it.animeId }
-    val plan = remember(entries, tools, budget, strategy, excluded) { planWatchSession(entries.sortedFor(MyListSortOrder.RECENT), tools, budget, strategy, excluded) }
-    val used = plan.sumOf { it.minutes }
+    var includePaused by rememberSaveable { mutableStateOf(false) }
+    var includePlanned by rememberSaveable { mutableStateOf(false) }
+    var pause by rememberSaveable { mutableIntStateOf(0) }
+    val statuses = setOf(WatchStatus.WATCHING) + (if (includePaused) setOf(WatchStatus.ON_HOLD) else emptySet()) + (if (includePlanned) setOf(WatchStatus.PLAN_TO_WATCH) else emptySet())
+    val candidates = remember(entries, statuses) { entries.filter { it.animeId > 0 && it.status in statuses && (it.totalEpisodes == null || it.totalEpisodes <= 0 || it.episodesWatched < it.totalEpisodes) }.distinctBy { it.animeId } }
+    val plan = remember(entries, tools, budget, strategy, excluded, statuses, pause) { planWatchSession(entries.sortedFor(MyListSortOrder.RECENT), tools, budget, strategy, excluded, statuses, pause) }
+    val rest = (plan.sumOf { it.episodes } - 1).coerceAtLeast(0) * pause
+    val used = plan.sumOf { it.minutes } + rest
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val resources = androidx.compose.ui.platform.LocalResources.current
     AppSheet(onDismissRequest = onDismiss, title = stringResource(R.string.watch_planner)) {
         LazyColumn(Modifier.fillMaxWidth().heightIn(max = 620.dp).testTag("planner-list"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item { Text(stringResource(R.string.planner_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
@@ -124,6 +161,7 @@ internal fun WatchPlannerSheet(entries: List<MalListEntry>, tools: WatchTools, o
                     Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(androidx.compose.ui.res.pluralStringResource(R.plurals.planner_episode_count, plan.sumOf { it.episodes }, plan.sumOf { it.episodes }, used), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text(stringResource(R.string.planner_unused, budget - used), style = MaterialTheme.typography.bodySmall)
+                        if (rest > 0) Text(stringResource(R.string.planner_rest_total, rest), style = MaterialTheme.typography.bodySmall, modifier = Modifier.testTag("planner-rest-total"))
                     }
                 }
             }
@@ -133,6 +171,7 @@ internal fun WatchPlannerSheet(entries: List<MalListEntry>, tools: WatchTools, o
                     Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         AppButton(item.entry.title.ifBlank { "#${item.entry.animeId}" }, { onOpen(item.entry.animeId) }, Modifier.fillMaxWidth().testTag("plan-${item.entry.animeId}"), variant = AppButtonVariant.Plain, icon = Icons.Default.PlayArrow)
                         Text(androidx.compose.ui.res.pluralStringResource(R.plurals.planner_episode_count, item.episodes, item.episodes, item.minutes), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(planEpisodeRange(resources, item), style = MaterialTheme.typography.labelMedium, modifier = Modifier.testTag("plan-range-${item.entry.animeId}"))
                     }
                 }
             }
@@ -154,9 +193,27 @@ internal fun WatchPlannerSheet(entries: List<MalListEntry>, tools: WatchTools, o
                     AppChoiceRow(entry.title, Icons.Default.PlayCircle, entry.animeId !in excluded, { excluded = if (entry.animeId in excluded) excluded - entry.animeId else excluded + entry.animeId }, Modifier.testTag("planner-include-${entry.animeId}"), selectionRole = Role.Checkbox)
                 }
             }
-
+            item { AppChoiceRow(stringResource(R.string.planner_include_paused), Icons.Default.PauseCircle, includePaused, { includePaused = !includePaused }, Modifier.testTag("planner-paused"), selectionRole = Role.Checkbox) }
+            item { AppChoiceRow(stringResource(R.string.planner_include_planned), Icons.Default.BookmarkAdd, includePlanned, { includePlanned = !includePlanned }, Modifier.testTag("planner-planned"), selectionRole = Role.Checkbox) }
+            item { NumberSetting(stringResource(R.string.planner_break), pause, 0, 30, 5, { pause = it }, "planner-break") }
+            item { Text(stringResource(R.string.planner_break_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            item { AppButton(stringResource(R.string.planner_share), {
+                val text = buildString {
+                    append(resources.getString(R.string.watch_planner)); append(" · "); append(resources.getString(R.string.episode_length_value, used))
+                    plan.forEach { item -> append("\n"); append(item.entry.title); append(" · "); append(planEpisodeRange(resources, item)) }
+                    if (rest > 0) { append("\n"); append(resources.getString(R.string.planner_rest_total, rest)) }
+                }
+                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(android.content.Intent.EXTRA_TEXT, text) }
+                context.startActivity(android.content.Intent.createChooser(intent, resources.getString(R.string.planner_share)))
+            }, Modifier.fillMaxWidth().testTag("planner-share"), enabled = plan.isNotEmpty(), variant = AppButtonVariant.Secondary, icon = Icons.Default.Share) }
         }
     }
+}
+
+private fun planEpisodeRange(resources: android.content.res.Resources, item: WatchPlanItem): String {
+    val first = item.entry.episodesWatched.coerceAtLeast(0).toLong() + 1
+    return if (item.episodes == 1) resources.getString(R.string.planner_single_episode, first)
+        else resources.getString(R.string.planner_episode_range, first, first + item.episodes - 1)
 }
 
 @Composable
