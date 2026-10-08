@@ -74,19 +74,19 @@
     <string name="about_privacy">Privacy</string>
 
     <!-- Changelog -->
-    <string name="changelog_release_date">October 7, 2026</string>
+    <string name="changelog_release_date">October 8, 2026</string>
     <string name="changelog_whats_new">What\'s new</string>
-    <string name="changelog_hero_description">Safer list sync, Undo after edits, notification actions and customizable shortcuts. Your saved data is preserved when upgrading.</string>
-    <string name="changelog_nav_title">Your sync at a glance</string>
-    <string name="changelog_nav_description">See pending changes, connection status and the last successful sync. Retry delivery and safely reconnect the same MAL account.</string>
-    <string name="changelog_motion_title">Undo an accidental edit</string>
-    <string name="changelog_motion_description">Restore the previous episode count, status and score from the in-app message—even while the editor is open. Newer edits are protected.</string>
-    <string name="changelog_filters_title">Your tools, your order</string>
-    <string name="changelog_filters_description">Choose up to four shortcuts for Schedule: Planner, Week overview, Favorites, History, Activity calendar or Sync center. Reorder them with the arrows.</string>
-    <string name="changelog_states_title">Act from a notification</string>
-    <string name="changelog_states_description">Add one watched episode or request a reminder in 15 minutes. Duplicate taps cannot add extra progress, and offline actions sync later.</string>
-    <string name="changelog_about_title">Reliable account changes</string>
-    <string name="changelog_about_description">Offline edits remain tied to their account. Server rejections stay visible, and signing out explains what happens to pending changes.</string>
+    <string name="changelog_hero_description">Clearer shortcuts, visible feedback in every overlay, safer retry behavior and lighter loading animations. Your existing data is preserved.</string>
+    <string name="changelog_nav_title">Readable Schedule shortcuts</string>
+    <string name="changelog_nav_description">Your tools use aligned rows with full touch targets. Week overview has one entry point and stays available when removed from shortcuts.</string>
+    <string name="changelog_motion_title">Feedback where you are working</string>
+    <string name="changelog_motion_description">Success and error messages appear in the active overlay without covering content or buttons. Undo keeps one timeout when a sheet opens or closes, without duplicate messages.</string>
+    <string name="changelog_filters_title">Clearer sync and recovery</string>
+    <string name="changelog_filters_description">Sync icons reflect sign-in, pending changes and errors. Unexpected failures release the retry button, and a later successful sync clears the previous error.</string>
+    <string name="changelog_states_title">Lighter loading</string>
+    <string name="changelog_states_description">Smoother loading placeholders in search and anime details, with calmer visuals when reduced motion is enabled. Background recovery starts after the app opens.</string>
+    <string name="changelog_about_title">Consistent controls</string>
+    <string name="changelog_about_description">Button icons retain their space beside longer labels. Shortcut selection, disabled tools and destructive sign-out actions are easier to distinguish.</string>
     <string name="changelog_footer">Made with care by the AnimeSchedule team</string>
 
     <!-- Watch sources -->

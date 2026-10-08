@@ -19,7 +19,10 @@
     <plurals name="sync_pending"><item quantity="one">%d change waiting to sync</item><item quantity="other">%d changes waiting to sync</item></plurals>
     <plurals name="sync_pending_offline"><item quantity="one">%d change waiting for internet</item><item quantity="other">%d changes waiting for internet</item></plurals>
     <string name="logout_pending_title">Sign out with pending changes?</string>
-    <string name="logout_pending_hint">%d changes have not reached MAL. Signing out clears this account’s cached list and pending changes from this device. Stay signed in and retry sync to keep them.</string>
+    <plurals name="logout_pending_hint">
+        <item quantity="one">%d change has not reached MAL. Signing out clears this account’s cached list and pending changes from this device. Stay signed in and retry sync to keep it.</item>
+        <item quantity="other">%d changes have not reached MAL. Signing out clears this account’s cached list and pending changes from this device. Stay signed in and retry sync to keep them.</item>
+    </plurals>
     <string name="undo_action">Undo</string>
     <string name="undo_list_change">Saved changes · %s</string>
     <string name="undo_done">Previous progress, status and score restored</string>
@@ -38,4 +41,7 @@
     <string name="shortcut_planner_label">Planner</string>
     <string name="shortcut_history_label">History</string>
     <string name="shortcut_calendar_label">Calendar</string>
+    <string name="shortcut_week_label">Week overview</string>
+    <string name="shortcut_sync_label">Sync</string>
+    <string name="shortcuts_selected">%d / 4 selected</string>
 </resources>

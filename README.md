@@ -89,7 +89,8 @@ All jobs use unique work names, so scheduling is idempotent.
 ./gradlew testDebugUnitTest    # unit tests
 ./gradlew lintDebug            # Android lint
 ./gradlew connectedDebugAndroidTest # Compose overlay regression tests on a connected emulator
-./gradlew assembleRelease      # minified (R8) + signed release build
+./gradlew assembleRelease      # minified (R8) + signed release APK
+./gradlew bundleRelease        # signed Play Store AAB
 ```
 
 `local.properties` (not committed) holds your credentials:
@@ -110,10 +111,32 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.11.0** (version code **35**, October 7, 2026).
+Current release: **5.11.1** (version code **36**, October 8, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### Polished in 5.11.1
+
+- Schedule shortcuts wrap into aligned rows with leading icons and accessible full names. The
+  weekly overview no longer has a duplicate button; its fallback remains when the shortcut is removed.
+- Shortcut selection shows its count, checked state and disabled choices. Shared buttons reserve space
+  for their icons alongside long labels, including larger Serbian text; sign-out uses destructive styling.
+- Success, error and Undo messages have their own space in the active sheet, keeping content and actions visible. One timeout follows the message between
+  the sheet and page, avoiding duplicate announcements and extending neither Undo nor its dismissal.
+- Sync indicators reflect the current session/error state. Unexpected retry and schedule-refresh failures
+  release busy controls and retain cached content; a later background success clears a retry error.
+- Search/detail loading skeletons share a draw-only shimmer, with a static reduced-motion fallback.
+  Application recovery dependencies initialize lazily in background work; unused loading code is removed.
+
+Validation: **214 unit tests** and the full **94-case device UI/integration suite** passed on Pixel 10 Pro
+(API 36.1). Visual checks cover dark/AMOLED and light surfaces, overlay feedback, and Serbian text at
+135% font scale. Debug and optimized release builds and lint passed (0 errors, 85 warnings).
+The signed AAB passed bundletool and signature validation; its device splits were installed over the
+existing app data with the original signing certificate. The release app was checked with live search
+and anime details, Appearance, notification settings and Sync center. Native LOAD and APK ZIP alignment
+were checked for 16 KB pages; the emulator itself uses 4 KB pages. Live MAL account sign-in was not
+exercised; authentication and account/queue checks use isolated fixtures.
 
 ### New in 5.11.0
 

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -157,7 +158,7 @@ private fun ButtonRow(label: String, icon: ImageVector?, color: Color, enabled: 
 }
 
 @Composable
-private fun ButtonContent(label: String, icon: ImageVector?, color: Color, enabled: Boolean) {
+private fun RowScope.ButtonContent(label: String, icon: ImageVector?, color: Color, enabled: Boolean) {
     val resolved = if (enabled) color else color.copy(alpha = 0.42f)
     if (icon != null) {
         Icon(icon, null, Modifier.size(18.dp), tint = resolved)
@@ -165,10 +166,12 @@ private fun ButtonContent(label: String, icon: ImageVector?, color: Color, enabl
     }
     Text(
         text = label,
+        modifier = Modifier.weight(1f, fill = false),
         color = resolved,
         style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.SemiBold,
         maxLines = 2,
+        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
     )
 }

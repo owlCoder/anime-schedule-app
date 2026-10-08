@@ -74,19 +74,19 @@
     <string name="about_privacy">Privatnost</string>
 
     <!-- Changelog -->
-    <string name="changelog_release_date">7. oktobar 2026.</string>
+    <string name="changelog_release_date">8. oktobar 2026.</string>
     <string name="changelog_whats_new">Šta je novo</string>
-    <string name="changelog_hero_description">Pouzdanija sinhronizacija liste, poništavanje izmena, akcije obaveštenja i prilagodljive prečice. Sačuvani podaci ostaju pri nadogradnji.</string>
-    <string name="changelog_nav_title">Sinhronizacija na jednom mestu</string>
-    <string name="changelog_nav_description">Pogledaj izmene na čekanju, vezu i poslednju uspešnu sinhronizaciju. Pokušaj ponovo ili se bezbedno prijavi na isti MAL nalog.</string>
-    <string name="changelog_motion_title">Poništi slučajnu izmenu</string>
-    <string name="changelog_motion_description">Vrati prethodni broj epizoda, status i ocenu iz poruke u aplikaciji, čak i dok je editor otvoren. Novije izmene su zaštićene.</string>
-    <string name="changelog_filters_title">Tvoje alatke, tvoj redosled</string>
-    <string name="changelog_filters_description">Izaberi do četiri prečice za raspored: Planer, Nedeljni pregled, Favoriti, Istorija, Kalendar aktivnosti ili Centar sinhronizacije. Promeni redosled strelicama.</string>
-    <string name="changelog_states_title">Akcije iz obaveštenja</string>
-    <string name="changelog_states_description">Dodaj jednu odgledanu epizodu ili zatraži podsetnik za 15 minuta. Ponovljeni dodiri ne dodaju višak epizoda, a offline izmene se šalju kasnije.</string>
-    <string name="changelog_about_title">Pouzdane promene naloga</string>
-    <string name="changelog_about_description">Offline izmene ostaju vezane za nalog. Odbijene izmene su vidljive, a odjava objašnjava šta se dešava sa izmenama na čekanju.</string>
+    <string name="changelog_hero_description">Čitljivije prečice, vidljive poruke u svakom overlayu, pouzdaniji ponovni pokušaj i lakše animacije učitavanja. Postojeći podaci ostaju sačuvani.</string>
+    <string name="changelog_nav_title">Čitljive prečice rasporeda</string>
+    <string name="changelog_nav_description">Alatke su u poravnatim redovima sa udobnim dodirnim zonama. Pregled nedelje ima jedan ulaz i ostaje dostupan kada ga ukloniš iz prečica.</string>
+    <string name="changelog_motion_title">Poruke tamo gde radiš</string>
+    <string name="changelog_motion_description">Poruke uspeha i greške su vidljive u aktivnom overlayu i ne prekrivaju sadržaj ili dugmad. Poništi zadržava isti rok pri otvaranju ili zatvaranju menija, bez duplih poruka.</string>
+    <string name="changelog_filters_title">Jasnija sinhronizacija i oporavak</string>
+    <string name="changelog_filters_description">Ikonice prate prijavu, izmene na čekanju i greške. Neočekivani neuspeh oslobađa dugme za ponovni pokušaj, a kasnija uspešna sinhronizacija uklanja prethodnu grešku.</string>
+    <string name="changelog_states_title">Lakše učitavanje</string>
+    <string name="changelog_states_description">Uglađeniji prikaz učitavanja u pretrazi i detaljima animea, sa mirnijim izgledom kada su animacije smanjene. Oporavak u pozadini počinje nakon otvaranja aplikacije.</string>
+    <string name="changelog_about_title">Ujednačene kontrole</string>
+    <string name="changelog_about_description">Ikonice dugmadi zadržavaju prostor uz duže tekstove. Izbor prečica, nedostupne alatke i odjava sa brisanjem lokalnih izmena su jasnije prikazani.</string>
     <string name="changelog_footer">Napravljeno pažljivo od strane AnimeSchedule tima</string>
 
     <!-- Izvori za gledanje -->

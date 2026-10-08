@@ -275,6 +275,10 @@ class ScheduleViewModel internal constructor(
                 }
                 failed = result !is AppResult.Success
                 if (!failed) workScheduler.checkAiringNotifications()
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                failed = true
             } finally {
                 _refreshStatus.value = RefreshStatus(isRefreshing = false, hasLoadedOnce = true, failed = failed)
             }

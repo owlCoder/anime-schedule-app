@@ -8,6 +8,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
@@ -33,13 +35,15 @@ internal fun syncHeadline(state: MalSyncState): String = when {
 
 @Composable
 internal fun SyncSummary(state: MalSyncState, onOpen: () -> Unit) {
-    AppActionRow(syncHeadline(state), when {
+    AppActionRow(syncHeadline(state), syncIcon(state), onOpen, Modifier.fillMaxWidth().testTag("sync-summary"), subtitle = stringResource(R.string.sync_center))
+}
+
+private fun syncIcon(state: MalSyncState): ImageVector = when {
         !state.loggedIn -> Icons.Default.AccountCircle
         state.syncing -> Icons.Default.Sync
         state.rejectedCount > 0 || state.failed -> Icons.Default.SyncProblem
         state.pendingCount > 0 -> Icons.Default.CloudUpload
         else -> Icons.Default.CloudDone
-    }, onOpen, Modifier.fillMaxWidth().testTag("sync-summary"), subtitle = stringResource(R.string.sync_center))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,7 +53,7 @@ internal fun SyncCenterSheet(state: MalSyncState, onRetry: () -> Unit, onLogin: 
         Column(Modifier.fillMaxWidth().heightIn(max = 560.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Surface(color = MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.large) {
                 Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Icon(if (state.pendingCount > 0) Icons.Default.CloudUpload else Icons.Default.CloudDone, null, tint = MaterialTheme.colorScheme.primary)
+                    Icon(syncIcon(state), null, tint = if (state.loggedIn && (state.rejectedCount > 0 || state.failed)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
                     Text(syncHeadline(state), Modifier.testTag("sync-status"), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     if (state.syncing) LinearProgressIndicator(Modifier.fillMaxWidth())
                     Text(stringResource(if (state.online) R.string.sync_online else R.string.sync_offline), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -60,7 +64,10 @@ internal fun SyncCenterSheet(state: MalSyncState, onRetry: () -> Unit, onLogin: 
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.sync_last_success), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     val locale = LocalConfiguration.current.locales[0]
-                    Text(if (state.lastSuccessEpochMs <= 0) stringResource(R.string.sync_never) else DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(locale).withZone(zone).format(Instant.ofEpochMilli(state.lastSuccessEpochMs)), Modifier.testTag("sync-last-success"), style = MaterialTheme.typography.bodyLarge)
+                    val lastSuccess = remember(state.lastSuccessEpochMs, locale, zone) {
+                        if (state.lastSuccessEpochMs <= 0) null else DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT).withLocale(locale).withZone(zone).format(Instant.ofEpochMilli(state.lastSuccessEpochMs))
+                    }
+                    Text(lastSuccess ?: stringResource(R.string.sync_never), Modifier.testTag("sync-last-success"), style = MaterialTheme.typography.bodyLarge)
                 }
             }
             if (state.failed && state.rejectedCount == 0) Text(stringResource(R.string.sync_retry_hint), color = MaterialTheme.colorScheme.error)

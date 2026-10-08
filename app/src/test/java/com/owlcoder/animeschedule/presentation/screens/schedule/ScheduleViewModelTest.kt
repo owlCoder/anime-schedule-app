@@ -248,6 +248,28 @@ class ScheduleViewModelTest {
         assertEquals(listOf(2), state.todayEpisodes.map { it.airingId })
         assertEquals(listOf("Action", "Drama"), state.availableGenres)
     }
+    @Test fun `unexpected refresh failure preserves cached content and allows retry`() = runTest {
+        val cached = FakeScheduleRepository().apply {
+            days = { today -> listOf(ScheduleDay(today, listOf(episode(7)))) }
+        }
+        var attempts = 0
+        val repository = object : ScheduleRepository by cached {
+            override suspend fun refreshSchedule(zoneId: ZoneId): AppResult<Unit> {
+                if (++attempts == 1) throw IllegalStateException("fixture failure")
+                return AppResult.Success(Unit)
+            }
+        }
+        val vm = ScheduleViewModel(repository, FakeSettings(), FakeMal(), FakeNotifications, FakeWork())
+        backgroundScope.launch { vm.uiState.collect { } }
+        runCurrent()
+        assertEquals(7, vm.uiState.value.todayEpisodes.single().airingId)
+        assertTrue(!vm.uiState.value.isLoading)
+        assertNull(vm.uiState.value.errorRes)
+        vm.refresh(); runCurrent()
+        assertEquals(2, attempts)
+        assertTrue(!vm.uiState.value.isLoading)
+    }
+
     @Test fun `cached schedule is visible while the initial network request is still pending`() = runTest {
         val repo=FakeScheduleRepository().apply {
             refreshGate=CompletableDeferred()

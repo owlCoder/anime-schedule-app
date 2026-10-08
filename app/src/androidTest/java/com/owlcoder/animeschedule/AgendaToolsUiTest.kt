@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.lifecycle.SavedStateHandle
@@ -105,6 +106,21 @@ class AgendaToolsUiTest {
         return ScheduleViewModel(repo, settings, mal, notifications, work, flowOf(setOf(101))).also { models.put("schedule", it) }
     }
 
+    @Test fun weekOverviewHasOneEntryPointAndRemainsAvailableWithoutAShortcut() {
+        val vm = scheduleVm(); var shortcuts by mutableStateOf(DefaultToolShortcuts)
+        show { CompositionLocalProvider(LocalWatchTools provides WatchToolsActions(data = WatchTools(shortcuts = shortcuts))) {
+            ScheduleScreen({}, viewModel = vm)
+        } }
+        compose.waitUntil(5000) { vm.uiState.value.weekDays.isNotEmpty() }
+        compose.onNodeWithTag("shortcut-WEEK_OVERVIEW").assertIsDisplayed()
+        compose.onNodeWithTag("schedule-agenda").assertDoesNotExist()
+        compose.runOnIdle { shortcuts = listOf(ToolShortcut.PLANNER, ToolShortcut.FAVORITES) }
+        compose.onNodeWithTag("shortcut-WEEK_OVERVIEW").assertDoesNotExist()
+        compose.onNodeWithTag("schedule-agenda").performScrollTo().performClick()
+        compose.onNodeWithTag("agenda-total").assertIsDisplayed()
+        assertEquals(ScheduleOverlay.Agenda, vm.openOverlay.value)
+    }
+
     @Test fun scheduleFiltersUseCheckboxesAndResetNewOptions() {
         var filter by mutableStateOf(ScheduleFilter())
         show(true) { ScheduleFilterSheet(filter, listOf("Action", "Slice of Life"), listOf("TV", "TV_SHORT", "MOVIE"), true, {}, {}, {}, { filter = filter.copy(formats = setOf(it)) }, { filter = ScheduleFilter() }, {}, { filter = filter.copy(hideWatched = it) }, { filter = filter.copy(favoritesOnly = it) }) }
@@ -162,7 +178,7 @@ class AgendaToolsUiTest {
         android.os.ParcelFileDescriptor.AutoCloseInputStream(automation.executeShellCommand("input keyevent 4")).use { it.readBytes() }
         compose.waitUntil(10_000) { automation.rootInActiveWindow?.packageName?.toString() == instrumentation.targetContext.packageName }
         assertEquals(ScheduleOverlay.None, vm.openOverlay.value)
-        compose.onNodeWithTag("schedule-agenda").assertIsDisplayed()
+        compose.onNodeWithTag("shortcut-WEEK_OVERVIEW").assertIsDisplayed()
     }
     @Test fun titlesCopyExactTextAndCharacterSearchCombinesWithRoleInOneDialog() {
         var copied = ""; var picked = 0
@@ -175,6 +191,7 @@ class AgendaToolsUiTest {
         assertEquals(detail.titleNative, copied)
         Espresso.pressBack(); compose.waitForIdle()
         screenshot("tools-after-back")
+        compose.onNodeWithTag("detail-tools-menu").performScrollToNode(hasTestTag("detail-character-finder"))
         compose.onNodeWithTag("detail-character-finder").assertIsDisplayed().performClick()
         compose.onNodeWithTag("character-role-SUPPORTING").performClick().assertIsSelected()
         val input = compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("character-search")))
@@ -283,14 +300,17 @@ class AgendaToolsUiTest {
         compose.onNodeWithTag("copy-title-${R.string.detail_title_romaji}").performClick()
         val clipboard = instrumentation.targetContext.getSystemService(android.content.ClipboardManager::class.java)
         compose.waitUntil(5000) { clipboard.primaryClip?.getItemAt(0)?.text?.toString() == detail.titleRomaji }
-        Espresso.pressBack(); compose.waitForIdle()
+        compose.onNodeWithContentDescription(text(android.R.string.cancel)).performClick(); compose.waitForIdle()
         screenshot("tools-after-back")
+        compose.onNodeWithTag("detail-tools-menu").performScrollToNode(hasTestTag("detail-character-finder"))
         compose.onNodeWithTag("detail-character-finder").assertIsDisplayed().performClick()
-        // Click the sheet's accessibility scrim action once; native clipboard previews
-        // can intercept coordinate taps or race the next composition.
-        compose.onNodeWithContentDescription(instrumentation.targetContext.getString(androidx.compose.ui.R.string.close_sheet)).performClick()
+        // Invoke the scrim's accessibility action. Its full-window bounds overlap the
+        // expanded sheet; a coordinate tap at their center would hit sheet content.
+        compose.onNodeWithContentDescription(instrumentation.targetContext.getString(androidx.compose.ui.R.string.close_sheet))
+            .performSemanticsAction(SemanticsActions.OnClick) { it() }
+        compose.onNodeWithTag("detail-tools-menu").performScrollToNode(hasTestTag("detail-character-finder"))
         compose.onNodeWithTag("detail-character-finder").assertIsDisplayed()
-        Espresso.pressBack(); compose.waitForIdle()
+        compose.onNodeWithContentDescription(text(android.R.string.cancel)).performClick(); compose.waitForIdle()
         compose.onAllNodes(isDialog()).assertCountEquals(0)
         compose.onNodeWithTag("detail-tools").performClick()
         compose.onNodeWithTag("detail-character-finder").performClick()
@@ -395,7 +415,7 @@ class AgendaToolsUiTest {
         compose.waitUntil(5000) { vm.uiState.value.weekDays.isNotEmpty() }
         compose.onNodeWithTag("agenda-days").performScrollToNode(hasTestTag("agenda-day-${today.plusDays(6)}"))
         compose.onNodeWithTag("agenda-day-${today.plusDays(6)}").performClick()
-        compose.onNodeWithTag("schedule-agenda").performClick()
+        compose.onNodeWithTag("shortcut-WEEK_OVERVIEW").performClick()
         compose.onNodeWithTag("agenda-share").assertIsNotEnabled()
         compose.onNodeWithTag("agenda-days").performScrollToNode(hasTestTag("agenda-share-week"))
         compose.onNodeWithTag("agenda-share-week").performClick()

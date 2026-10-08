@@ -23,6 +23,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.filled.Tune
 import com.owlcoder.animeschedule.presentation.components.AppLoadingState
+import com.owlcoder.animeschedule.presentation.components.rememberSkeletonShimmer
+import androidx.compose.foundation.progressSemantics
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -543,8 +546,9 @@ internal fun SearchResults(results: List<AnimeSearchResult>, hasNextPage: Boolea
 }
 
 @Composable
-private fun SearchLoadingState() {
-    InsetGroup {
+internal fun SearchLoadingState() {
+    val shimmer = rememberSkeletonShimmer()
+    InsetGroup(Modifier.progressSemantics().testTag("search-loading")) {
         repeat(4) { index ->
             if (index > 0) {
                 HorizontalDivider(
@@ -564,20 +568,20 @@ private fun SearchLoadingState() {
                 Box(
                     Modifier
                         .size(40.dp, 54.dp)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(9.dp)),
+                        .clip(RoundedCornerShape(9.dp)).then(shimmer),
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
                     Box(
                         Modifier
                             .fillMaxWidth(0.58f)
                             .height(11.dp)
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape),
+                            .clip(CircleShape).then(shimmer),
                     )
                     Box(
                         Modifier
                             .fillMaxWidth(0.34f)
                             .height(9.dp)
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape),
+                            .clip(CircleShape).then(shimmer),
                     )
                 }
             }

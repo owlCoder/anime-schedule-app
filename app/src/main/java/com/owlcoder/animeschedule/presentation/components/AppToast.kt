@@ -37,12 +37,16 @@ data class ToastData(val id: Long, val message: String, val tone: ToastTone, val
 data class ToastAction(val key: Long, val label: String, val onClick: () -> Unit, val onDismiss: () -> Unit = {})
 
 /** A single current message; a new notification replaces the old timeout as well as its text. */
-class ToastController {
+class ToastController(private val enabled: Boolean = true) {
     var current by mutableStateOf<ToastData?>(null)
         private set
     private var counter = 0L
+    private val sheets = mutableStateListOf<Any>()
+    internal val activeSheet: Any? get() = sheets.lastOrNull()
+    internal fun attachSheet(key: Any) { if (enabled) sheets.add(key) }
+    internal fun detachSheet(key: Any) { sheets.remove(key) }
     fun show(message: String, tone: ToastTone = ToastTone.Info, action: ToastAction? = null) {
-        if (message.isBlank()) return
+        if (!enabled || message.isBlank()) return
         // Routine success events must not replace a newly offered Undo for the same edit.
         if (current?.action != null && tone == ToastTone.Success && action == null) return
         val previous = current
@@ -66,24 +70,27 @@ class ToastController {
     }
 }
 
-val LocalToast = compositionLocalOf { ToastController() }
+// Unhosted previews/components must not share a mutable, never-expiring global message.
+val LocalToast = compositionLocalOf { ToastController(enabled = false) }
 
 @Composable
 fun ToastHost(controller: ToastController, content: @Composable () -> Unit) {
+    // A single timer survives moving the same message between the page and a modal.
+    // Rendering it in two windows must not extend Undo or run two dismissal callbacks.
+    ToastTimeout(controller)
     Box(Modifier.fillMaxSize()) {
-        content()
-        ToastOverlay(controller, Modifier.fillMaxSize().imePadding().navigationBarsPadding()
-            .padding(start = 24.dp, end = 24.dp, bottom = LocalNavBarHeight.current + 16.dp))
+        CompositionLocalProvider(LocalToast provides controller, content = content)
+        if (controller.activeSheet == null) {
+            ToastOverlay(controller, Modifier.fillMaxSize().imePadding().navigationBarsPadding()
+                .padding(start = 24.dp, end = 24.dp, bottom = LocalNavBarHeight.current + 16.dp))
+        }
     }
 }
 
 @Composable
-internal fun ToastOverlay(controller: ToastController, modifier: Modifier, onlyActions: Boolean = false) {
-    val motion = LocalMotionPolicy.current
+private fun ToastTimeout(controller: ToastController) {
     val accessibility = LocalAccessibilityManager.current
-    val data = controller.current?.takeIf { !onlyActions || it.action != null }
-    var lastShown by remember { mutableStateOf<ToastData?>(null) }
-    SideEffect { if (data != null) lastShown = data }
+    val data = controller.current
     LaunchedEffect(data?.id) {
         if (data != null) {
             val base = maxOf(
@@ -100,6 +107,14 @@ internal fun ToastOverlay(controller: ToastController, modifier: Modifier, onlyA
             if (controller.current?.id == data.id) controller.dismiss()
         }
     }
+}
+
+@Composable
+internal fun ToastOverlay(controller: ToastController, modifier: Modifier) {
+    val motion = LocalMotionPolicy.current
+    val data = controller.current
+    var lastShown by remember { mutableStateOf<ToastData?>(null) }
+    SideEffect { if (data != null) lastShown = data }
     Box(modifier, contentAlignment = Alignment.BottomCenter) {
             AnimatedVisibility(
                 data != null,
@@ -162,7 +177,7 @@ private fun ToastCard(data: ToastData, onDismiss: () -> Unit, onAction: () -> Un
                     maxLines = if (data.action != null) 3 else Int.MAX_VALUE,
                     overflow = TextOverflow.Ellipsis,
                 )
-                IconButton(onDismiss, modifier = Modifier.size(40.dp).testTag("toast-dismiss")) {
+                IconButton(onDismiss, modifier = Modifier.size(48.dp).testTag("toast-dismiss")) {
                     Icon(
                         Icons.Default.Close,
                         stringResource(R.string.toast_dismiss),

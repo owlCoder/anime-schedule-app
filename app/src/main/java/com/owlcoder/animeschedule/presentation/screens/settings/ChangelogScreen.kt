@@ -12,23 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.NotificationsOff
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.AccountTree
-import androidx.compose.material.icons.outlined.Alarm
-import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Undo
 import androidx.compose.material.icons.outlined.CloudSync
 import androidx.compose.material.icons.outlined.Apps
-import androidx.compose.material.icons.automirrored.outlined.ViewList
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Layers
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -65,27 +55,27 @@ private data class ReleaseNote(
 fun ChangelogBottomSheet(onDismiss: () -> Unit) {
     val notes = listOf(
         ReleaseNote(
-            Icons.Outlined.CloudSync,
+            Icons.Outlined.Apps,
             stringResource(R.string.changelog_nav_title),
             stringResource(R.string.changelog_nav_description),
         ),
         ReleaseNote(
-            Icons.AutoMirrored.Outlined.Undo,
+            Icons.Outlined.Info,
             stringResource(R.string.changelog_motion_title),
             stringResource(R.string.changelog_motion_description),
         ),
         ReleaseNote(
-            Icons.Outlined.Apps,
+            Icons.Outlined.CloudSync,
             stringResource(R.string.changelog_filters_title),
             stringResource(R.string.changelog_filters_description),
         ),
         ReleaseNote(
-            Icons.Outlined.NotificationsActive,
+            Icons.Outlined.AutoAwesome,
             stringResource(R.string.changelog_states_title),
             stringResource(R.string.changelog_states_description),
         ),
         ReleaseNote(
-            Icons.Outlined.Info,
+            Icons.Outlined.Tune,
             stringResource(R.string.changelog_about_title),
             stringResource(R.string.changelog_about_description),
         ),

@@ -19,7 +19,11 @@
     <plurals name="sync_pending"><item quantity="one">%d izmena čeka sinhronizaciju</item><item quantity="few">%d izmene čekaju sinhronizaciju</item><item quantity="other">%d izmena čeka sinhronizaciju</item></plurals>
     <plurals name="sync_pending_offline"><item quantity="one">%d izmena čeka internet</item><item quantity="few">%d izmene čekaju internet</item><item quantity="other">%d izmena čeka internet</item></plurals>
     <string name="logout_pending_title">Odjava uz izmene na čekanju?</string>
-    <string name="logout_pending_hint">%d izmena još nije stiglo na MAL. Odjava briše keširanu listu i izmene na čekanju ovog naloga sa uređaja. Ostani prijavljen i pokušaj sinhronizaciju ponovo da ih sačuvaš.</string>
+    <plurals name="logout_pending_hint">
+        <item quantity="one">%d izmena još nije stigla na MAL. Odjava briše keširanu listu i izmene na čekanju ovog naloga sa uređaja. Ostani prijavljen i pokušaj sinhronizaciju ponovo da ih sačuvaš.</item>
+        <item quantity="few">%d izmene još nisu stigle na MAL. Odjava briše keširanu listu i izmene na čekanju ovog naloga sa uređaja. Ostani prijavljen i pokušaj sinhronizaciju ponovo da ih sačuvaš.</item>
+        <item quantity="other">%d izmena još nije stiglo na MAL. Odjava briše keširanu listu i izmene na čekanju ovog naloga sa uređaja. Ostani prijavljen i pokušaj sinhronizaciju ponovo da ih sačuvaš.</item>
+    </plurals>
     <string name="undo_action">Poništi</string>
     <string name="undo_list_change">Izmene sačuvane · %s</string>
     <string name="undo_done">Vraćeni prethodni napredak, status i ocena</string>
@@ -38,4 +42,7 @@
     <string name="shortcut_planner_label">Planer</string>
     <string name="shortcut_history_label">Istorija</string>
     <string name="shortcut_calendar_label">Kalendar</string>
+    <string name="shortcut_week_label">Pregled nedelje</string>
+    <string name="shortcut_sync_label">Sinhronizacija</string>
+    <string name="shortcuts_selected">%d / 4 izabrano</string>
 </resources>

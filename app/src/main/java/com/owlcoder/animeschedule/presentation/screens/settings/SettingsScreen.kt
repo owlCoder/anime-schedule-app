@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -222,9 +223,9 @@ fun SettingsScreen(
         SettingsSheet.Sync -> SyncCenterSheet(sync.state, sync.retry, sync.login, { activeSheet = null }, sync.zone)
         SettingsSheet.Shortcuts -> ToolShortcutsSheet(tools.data.shortcuts, tools.setShortcuts) { activeSheet = null }
         SettingsSheet.Logout -> AppSheet(onDismissRequest = { activeSheet = null }, title = stringResource(R.string.logout_pending_title)) {
-            Text(stringResource(R.string.logout_pending_hint, sync.state.pendingCount), style = MaterialTheme.typography.bodyMedium)
+            Text(pluralStringResource(R.plurals.logout_pending_hint, sync.state.pendingCount, sync.state.pendingCount), style = MaterialTheme.typography.bodyMedium)
             AppButton(stringResource(R.string.sync_retry), { activeSheet = SettingsSheet.Sync }, Modifier.fillMaxWidth().padding(top = 16.dp), icon = Icons.Default.CloudSync)
-            AppButton(stringResource(R.string.profile_logout), { activeSheet = null; authViewModel.logout() }, Modifier.fillMaxWidth().padding(top = 8.dp), variant = AppButtonVariant.Secondary, icon = Icons.AutoMirrored.Filled.ExitToApp)
+            AppButton(stringResource(R.string.profile_logout), { activeSheet = null; authViewModel.logout() }, Modifier.fillMaxWidth().padding(top = 8.dp), variant = AppButtonVariant.Destructive, icon = Icons.AutoMirrored.Filled.ExitToApp)
         }
         SettingsSheet.Theme, SettingsSheet.Accent -> AppearanceSheet(uiState.themeMode, uiState.accentColor, uiState.themeOptions,
             settingsViewModel::setThemeMode, settingsViewModel::setThemeOptions,

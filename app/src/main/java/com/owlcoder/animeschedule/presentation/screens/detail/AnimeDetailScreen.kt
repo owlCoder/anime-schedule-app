@@ -66,6 +66,7 @@ import com.owlcoder.animeschedule.presentation.components.AppButton
 import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
 import com.owlcoder.animeschedule.presentation.components.AppErrorState
 import com.owlcoder.animeschedule.presentation.components.AppLoadingState
+import com.owlcoder.animeschedule.presentation.components.rememberSkeletonShimmer
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
@@ -688,8 +689,9 @@ private fun HorizontalSection(title: String, content: LazyListScope.() -> Unit) 
 }
 
 @Composable
-private fun DetailLoadingState(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.navigationBarsPadding()) {
+internal fun DetailLoadingState(modifier: Modifier = Modifier) {
+    val shimmer = rememberSkeletonShimmer()
+    Box(modifier = modifier.navigationBarsPadding().testTag("detail-loading")) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -700,7 +702,7 @@ private fun DetailLoadingState(modifier: Modifier = Modifier) {
                 Modifier
                     .fillMaxWidth()
                     .height(280.dp)
-                    .background(MaterialTheme.colorScheme.surfaceContainer),
+                    .then(shimmer),
             )
             Column(
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -711,7 +713,7 @@ private fun DetailLoadingState(modifier: Modifier = Modifier) {
                         .fillMaxWidth()
                         .height(44.dp)
                         .clip(ContinuousRoundedShape(14.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainer),
+                        .then(shimmer),
                 )
                 repeat(3) {
                     Row(
@@ -728,7 +730,7 @@ private fun DetailLoadingState(modifier: Modifier = Modifier) {
                             Modifier
                                 .size(50.dp)
                                 .clip(ContinuousRoundedShape(11.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                                .then(shimmer),
                         )
                         Column(
                             modifier = Modifier.weight(1f),
@@ -739,14 +741,14 @@ private fun DetailLoadingState(modifier: Modifier = Modifier) {
                                     .fillMaxWidth(0.72f)
                                     .height(10.dp)
                                     .clip(ContinuousRoundedShape(5.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                                    .then(shimmer),
                             )
                             Box(
                                 Modifier
                                     .fillMaxWidth(0.46f)
                                     .height(8.dp)
                                     .clip(ContinuousRoundedShape(4.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                                    .then(shimmer),
                             )
                         }
                     }

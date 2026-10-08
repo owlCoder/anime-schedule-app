@@ -82,7 +82,6 @@ import com.owlcoder.animeschedule.presentation.components.GlassToolbarButton
 import com.owlcoder.animeschedule.presentation.components.GlassToolbarGroup
 import com.owlcoder.animeschedule.presentation.components.IosMotion
 import com.owlcoder.animeschedule.presentation.components.ListStatusBottomSheet
-import com.owlcoder.animeschedule.presentation.components.LoadingShimmer
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.MediaThumbnail
@@ -495,7 +494,9 @@ private fun TodayHomeContent(
                     if (uiState.isLoggedIn) DiscoveryChip(stringResource(R.string.mylist_title), Icons.Default.Bookmarks, uiState.filter.onlyMyList, { onOnlyMyListChange(!uiState.filter.onlyMyList) }, multiple = true)
                     if (uiState.filter.isActive) AppButton(stringResource(R.string.filter_reset), onClearFilter, variant = AppButtonVariant.Plain, icon = Icons.Default.RestartAlt)
                 }
-                AppButton(stringResource(R.string.schedule_agenda), onAgenda, Modifier.fillMaxWidth().testTag("schedule-agenda"), variant = AppButtonVariant.Secondary, icon = Icons.AutoMirrored.Filled.EventNote)
+                if (com.owlcoder.animeschedule.domain.model.ToolShortcut.WEEK_OVERVIEW !in LocalWatchTools.current.data.shortcuts) {
+                    AppButton(stringResource(R.string.schedule_agenda), onAgenda, Modifier.fillMaxWidth().testTag("schedule-agenda"), variant = AppButtonVariant.Secondary, icon = Icons.AutoMirrored.Filled.EventNote)
+                }
             }
         }
 

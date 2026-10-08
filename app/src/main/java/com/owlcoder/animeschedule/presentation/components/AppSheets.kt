@@ -15,11 +15,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.window.DialogWindowProvider
 import androidx.core.view.WindowCompat
 import androidx.compose.ui.res.stringResource
@@ -61,6 +62,12 @@ fun AppSheet(
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
     val container = if (LocalAmoledDark.current) Color.Black else MaterialTheme.colorScheme.surfaceContainerHigh
     val scrim = Color.Black.copy(alpha = if (dark) 0.42f else 0.26f)
+    val toast = LocalToast.current
+    val sheetKey = remember { Any() }
+    DisposableEffect(toast, sheetKey) {
+        toast.attachSheet(sheetKey)
+        onDispose { toast.detachSheet(sheetKey) }
+    }
 
     ModalBottomSheet(
         onDismissRequest = {
@@ -101,55 +108,57 @@ fun AppSheet(
                 }
             }
         }
-        val toast = LocalToast.current
-        val actionSpace = if (toast.current?.action != null)
-            (220 * (LocalDensity.current.fontScale / 1.5f).coerceAtLeast(1f)).dp else 0.dp
-        Box(Modifier.heightIn(min = actionSpace)) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .imePadding()
-                    .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 18.dp),
-            ) {
-                if (!title.isNullOrBlank()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 48.dp)
-                            .padding(bottom = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        if (showBackButton) {
-                            GlassIconButton(
-                                icon = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(android.R.string.cancel),
-                                onClick = onDismissRequest,
-                                modifier = Modifier.padding(end = 6.dp),
-                            )
-                        }
-                        Text(
-                            text = title,
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(end = 8.dp),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
+        val ownsToast = toast.activeSheet === sheetKey
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .imePadding()
+                .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 18.dp),
+        ) {
+            if (!title.isNullOrBlank()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (showBackButton) {
+                        GlassIconButton(
+                            icon = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(android.R.string.cancel),
+                            onClick = onDismissRequest,
+                            modifier = Modifier.padding(end = 6.dp),
                         )
-                        trailingContent?.invoke()
-                        if (showCloseButton) {
-                            GlassIconButton(
-                                icon = Icons.Default.Close,
-                                contentDescription = stringResource(android.R.string.cancel),
-                                onClick = onDismissRequest,
-                            )
-                        }
+                    }
+                    Text(
+                        text = title,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    trailingContent?.invoke()
+                    if (showCloseButton) {
+                        GlassIconButton(
+                            icon = Icons.Default.Close,
+                            contentDescription = stringResource(android.R.string.cancel),
+                            onClick = onDismissRequest,
+                        )
                     }
                 }
-                content()
             }
-            if (toast.current?.action != null) ToastOverlay(toast, Modifier.matchParentSize().padding(horizontal = 12.dp, vertical = 18.dp), onlyActions = true)
+            // Measure feedback first and give scrollable content the remaining space.
+            // A floating message could cover Save/Retry or the bottom of a short sheet.
+            Box(Modifier.weight(1f, fill = false)) {
+                Column(Modifier.fillMaxWidth(), content = content)
+            }
+            if (ownsToast && toast.current != null) {
+                ToastOverlay(toast, Modifier.fillMaxWidth().padding(top = 12.dp))
+            }
         }
     }
 }
