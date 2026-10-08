@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="changelog_5124_title">Preglednija pretraga</string>
+    <string name="changelog_5124_search_title">Više prostora za rezultate</string>
+    <string name="changelog_5124_search">Izbor nedavne pretrage i otvaranje editora statusa zatvaraju tastaturu. Povratak iz editora zadržava vidljive rezultate. Polje pretrage ima stalnu oznaku za pristupačnost, a dugme praznog rezultata jasno kaže Obriši pretragu.</string>
+</resources>

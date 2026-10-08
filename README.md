@@ -120,10 +120,20 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.12.3** (version code **40**, October 8, 2026).
+Current release: **5.12.4** (version code **41**, October 8, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### Polished in 5.12.4
+
+- Selecting a recent query and opening the list editor release search focus and hide the
+  keyboard. Returning from editing keeps the normal results layout and navigation visible.
+- Search retains an accessible input label, and clearing an empty result is labeled clearly.
+- A UI regression case covers history selection, editing, cancellation and clearing an empty
+  result without deleting saved history.
+
+See the [release validation](docs/release-5.12.4.md) for this emulator review.
 
 ### Polished in 5.12.3
 

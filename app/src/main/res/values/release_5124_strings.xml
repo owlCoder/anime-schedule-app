@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="changelog_5124_title">Smoother search transitions</string>
+    <string name="changelog_5124_search_title">More room for results</string>
+    <string name="changelog_5124_search">Selecting a recent search and opening the status editor dismiss the keyboard. Returning from editing keeps results visible. The search field has a persistent accessibility label, and the empty-state action clearly says Clear search.</string>
+</resources>

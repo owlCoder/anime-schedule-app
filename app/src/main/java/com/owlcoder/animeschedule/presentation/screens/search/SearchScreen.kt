@@ -56,6 +56,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -273,14 +274,14 @@ fun SearchScreen(
                 query = recent
                 viewModel.setQuery(recent)
                 viewModel.onSearchSubmit(recent)
-                requestInputFocus()
+                clearFocusAndKeyboard()
             },
             onAnimeClick = { result ->
                 viewModel.onSearchSubmit(query)
                 clearFocusAndKeyboard()
                 onAnimeClick(result.anilistId)
             },
-            onEditStatus = { editingResult = it },
+            onEditStatus = { clearFocusAndKeyboard(); editingResult = it },
             onRetry = viewModel::retrySearch,
             onClearQuery = {
                 query = ""
@@ -323,6 +324,7 @@ private fun SearchField(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val motion = LocalMotionPolicy.current
+    val placeholder = stringResource(R.string.search_placeholder)
     AppMaterialSurface(
         modifier = modifier
             .height(52.dp)
@@ -355,7 +357,7 @@ private fun SearchField(
             ) {
                 if (query.isEmpty()) {
                     Text(
-                        text = stringResource(R.string.search_placeholder),
+                        text = placeholder,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -375,6 +377,7 @@ private fun SearchField(
                     keyboardActions = KeyboardActions(onSearch = { onSubmit() }),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .semantics { contentDescription = placeholder }
                         .focusRequester(focusRequester)
                         .onFocusChanged { onFocusChanged(it.isFocused) },
                 )
@@ -481,7 +484,7 @@ private fun SearchContent(
                 icon = Icons.Default.Search,
                 title = stringResource(R.string.search_no_results_title),
                 subtitle = stringResource(R.string.search_no_results_subtitle),
-                actionLabel = stringResource(R.string.search_clear_recent),
+                actionLabel = stringResource(R.string.search_clear_query),
                 onAction = onClearQuery,
             )
             SearchContentMode.Results -> SearchResults(

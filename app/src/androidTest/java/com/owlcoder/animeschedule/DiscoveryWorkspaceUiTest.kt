@@ -179,6 +179,52 @@ class DiscoveryWorkspaceUiTest {
         screenshot("search-tracked")
     }
 
+    @Test fun recentSelectionAndStatusEditorReturnToUnfocusedResults() {
+        val recent = "Alpha recent query"
+        lateinit var vm: SearchViewModel
+        val repo = object : SearchRepository {
+            override val recentSearches = flowOf(listOf(recent))
+            override suspend fun searchAnime(query: String, page: Int) =
+                AppResult.Success(SearchPage(if (query == "no matches") emptyList() else searchItems, false))
+            override suspend fun saveRecentSearch(query: String) = Unit
+            override suspend fun clearRecentSearches() = Unit
+            override suspend fun removeRecentSearch(query: String) = Unit
+        }
+        instrumentation.runOnMainSync {
+            vm = SearchViewModel(repo, mal)
+            store.put("recent-focus", vm)
+        }
+        var focused = false
+        show { SearchScreen({}, viewModel = vm, requestFocus = true, onFocusChanged = { focused = it }) }
+        val input = compose.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag("anime-search-field")))
+        input.assertIsFocused().assertContentDescriptionEquals(text(R.string.search_placeholder))
+        compose.onNodeWithText(recent).performClick()
+        compose.waitUntil(5000) { vm.uiState.value.loadedCount == 3 }
+        input.assertIsNotFocused().assertTextContains(recent)
+        compose.runOnIdle { assertFalse(focused) }
+        screenshot("recent-selection-unfocused")
+
+        input.performClick()
+        input.assertIsFocused()
+        compose.onNodeWithContentDescription(text(R.string.cd_edit_list_status)).performClick()
+        compose.onNodeWithTag("list-editor-save").assertIsDisplayed()
+        compose.runOnIdle { assertFalse("Opening the editor releases search focus", focused) }
+        androidx.test.espresso.Espresso.closeSoftKeyboard()
+        androidx.test.espresso.Espresso.pressBack()
+        compose.onAllNodes(isDialog()).assertCountEquals(0)
+        input.assertIsNotFocused().assertContentDescriptionEquals(text(R.string.search_placeholder))
+        compose.onNodeWithText("Alpha Adventure").assertIsDisplayed()
+        screenshot("search-after-editor-back")
+
+        input.performClick().performTextReplacement("no matches")
+        input.performImeAction()
+        compose.waitUntil(5000) { vm.uiState.value.noResults }
+        compose.onNodeWithText(text(R.string.search_clear_query)).assertIsDisplayed().performClick()
+        input.assertTextEquals("").assertIsNotFocused()
+        compose.onNodeWithText(recent).assertIsDisplayed()
+        compose.runOnIdle { assertEquals(listOf(recent), vm.recentSearches.value) }
+    }
+
     @Test fun seasonalReleaseLengthAndScoreCombineAndReset() {
         var filter by mutableStateOf(SeasonalFilter())
         show { SeasonalFilterSheet(filter, listOf("Action", "Drama"), listOf("TV", "MOVIE"), {}, {}, { filter = filter.copy(sortOrder = it) }, { filter = filter.copy(release = it) }, { filter = filter.copy(length = it) }, { filter = filter.copy(minimumScore = it) }, { filter = SeasonalFilter(sortOrder = filter.sortOrder) }, {}) }
