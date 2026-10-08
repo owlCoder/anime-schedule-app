@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="changelog_5123_title">Jasniji detalji animea</string>
+    <string name="changelog_5123_detail_title">Završno doterivanje detalja</string>
+    <string name="changelog_5123_detail">Blag tamni prelaz čuva čitljivost statusnih ikonica na svetlim bannerima. Prečice izvora imaju veće dodirne površine, prostor za uvećani tekst i ikonicu reprodukcije kada izvor nema logo.</string>
+</resources>

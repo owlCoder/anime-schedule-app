@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -104,6 +105,7 @@ import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
@@ -390,7 +392,8 @@ private fun DetailHero(detail: AnimeDetail, onBack: () -> Unit, onShare: () -> U
             modifier = Modifier.fillMaxSize().background(
                 Brush.verticalGradient(
                     colorStops = arrayOf(
-                        0f to Color.Black.copy(alpha = 0.12f),
+                        0f to Color.Black.copy(alpha = 0.56f),
+                        0.24f to Color.Black.copy(alpha = 0.36f),
                         0.42f to Color.Black.copy(alpha = 0.18f),
                         0.66f to Color.Black.copy(alpha = 0.56f),
                         0.86f to Color.Black.copy(alpha = 0.82f),
@@ -891,7 +894,8 @@ private fun ExpandableSynopsis(text: String) {
 @Composable
 private fun WatchSourceChip(source: WatchSource, onClick: () -> Unit) {
     Surface(
-        modifier = Modifier.height(38.dp).clickable(onClick = onClick),
+        modifier = Modifier.heightIn(min = 48.dp).clip(PillShape)
+            .clickable(role = Role.Button, onClick = onClick),
         shape = PillShape,
         color = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
@@ -899,16 +903,19 @@ private fun WatchSourceChip(source: WatchSource, onClick: () -> Unit) {
         tonalElevation = 0.dp,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 13.dp),
+            modifier = Modifier.padding(horizontal = 13.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp),
         ) {
-            source.faviconUrl?.let {
+            if (source.faviconUrl != null) {
                 FaviconImage(
-                    faviconUrl = it,
+                    faviconUrl = source.faviconUrl,
                     siteUrl = source.urlTemplate,
                     modifier = Modifier.size(18.dp).clip(CircleShape),
                 )
+            } else {
+                Icon(Icons.Default.PlayCircle, null, Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Text(
                 text = source.name,

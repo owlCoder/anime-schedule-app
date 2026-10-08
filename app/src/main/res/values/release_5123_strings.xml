@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="changelog_5123_title">Clearer anime details</string>
+    <string name="changelog_5123_detail_title">Final detail polish</string>
+    <string name="changelog_5123_detail">A gentle dark gradient keeps status icons readable on bright banners. Watch-source shortcuts have larger touch targets, room for enlarged text and a fallback play icon.</string>
+</resources>

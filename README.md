@@ -120,10 +120,18 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.12.2** (version code **39**, October 8, 2026).
+Current release: **5.12.3** (version code **40**, October 8, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### Polished in 5.12.3
+
+- White status icons retain contrast on bright anime banners.
+- Watch-source shortcuts have a 48 dp minimum height, grow with text size, and show a play
+  icon when no site logo is available. Their press feedback follows the rounded shape.
+
+See the [release validation](docs/release-5.12.3.md) for this final emulator review.
 
 ### Polished in 5.12.2
 
