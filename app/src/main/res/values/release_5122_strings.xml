@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="changelog_5122_title">Smoother everyday controls</string>
+    <string name="changelog_5122_sources_title">Source editing</string>
+    <string name="changelog_5122_sources">Back returns from the editor to a visible source list. Fields have clear icons, consistent backgrounds and Next/Done keyboard actions.</string>
+    <string name="changelog_5122_language_title">Consistent language</string>
+    <string name="changelog_5122_language">Dates and weekday names follow your selected app language, including after a live language change.</string>
+    <string name="changelog_5122_controls_title">Aligned controls</string>
+    <string name="changelog_5122_controls">Appearance uses the same dark and AMOLED switches as other settings. Segmented controls keep every option the same height when labels wrap.</string>
+</resources>

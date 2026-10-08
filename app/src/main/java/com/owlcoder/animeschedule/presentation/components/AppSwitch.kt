@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun AppSwitch(
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
+    onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
@@ -63,14 +63,14 @@ fun AppSwitch(
     Box(
         modifier = modifier
             .size(width = 50.dp, height = 44.dp)
-            .toggleable(
+            .then(if (onCheckedChange != null) Modifier.toggleable(
                 value = checked,
                 interactionSource = interactionSource,
                 indication = null,
                 enabled = enabled,
                 role = Role.Switch,
                 onValueChange = onCheckedChange,
-            ),
+            ) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         Box(

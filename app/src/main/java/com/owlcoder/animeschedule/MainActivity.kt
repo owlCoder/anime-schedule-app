@@ -37,6 +37,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.owlcoder.animeschedule.core.locale.LocaleHelper
+import com.owlcoder.animeschedule.core.locale.ProvideAppLocale
 import com.owlcoder.animeschedule.domain.model.effectiveZoneId
 import com.owlcoder.animeschedule.domain.model.AppLanguage
 import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
@@ -150,120 +151,122 @@ class MainActivity : AppCompatActivity() {
 
             applyLocale(effectiveLanguage)
 
-            AnimeScheduleTheme(
-                themeMode = effectiveTheme,
-                accentColor = effectiveAccent,
-                options = prefs.themeOptions
-            ) {
-                SheetBackdropHost(Modifier.fillMaxSize()) {
-                    CompositionLocalProvider(com.owlcoder.animeschedule.presentation.components.LocalWatchTools provides toolsActions) {
-                        if (!prefs.onboardingDone) {
-                            OnboardingScreen(
-                                onComplete = {
-                                    scope.launch {
-                                        prefsDataStore.setThemeMode(pendingTheme)
-                                        prefsDataStore.setAccentColor(pendingAccent)
-                                        prefsDataStore.setAppLanguage(pendingLanguage)
-                                        prefsDataStore.setNotificationsEnabled(pendingNotifEnabled)
-                                        prefsDataStore.setNotificationOffset(pendingNotifOffset)
-                                        prefsDataStore.setOnboardingDone()
-                                        LocaleHelper.applyLanguage(pendingLanguage)
-                                    }
-                                },
-                                onLogin = { context -> authViewModel.launchMalLogin(context) },
-                                isMalConnected = isMalConnected,
-                                malUsername = malUsername,
-                                selectedTheme = pendingTheme,
-                                selectedAccent = pendingAccent,
-                                selectedLanguage = pendingLanguage,
-                                onThemeChange = { pendingTheme = it },
-                                onAccentChange = { pendingAccent = it },
-                                onLanguageChange = { pendingLanguage = it },
-                                onNotifSettingsChange = { enabled, offset ->
-                                    pendingNotifEnabled = enabled
-                                    pendingNotifOffset = offset
-                                    if (enabled) requestNotificationPermissionIfNeeded()
-                                },
-                            )
-                        } else {
-                            val navController = rememberNavController()
-                            val hazeState = rememberHazeState()
-                            val motion = LocalMotionPolicy.current
-                            LaunchedEffect(navController, pendingDeepLinkAnimeId) {
-                                pendingDeepLinkAnimeId?.let { animeId ->
-                                    pendingDeepLinkAnimeId = null
-                                    navController.navigate(Screen.Detail.createRoute(animeId)) {
-                                        launchSingleTop = true
+            ProvideAppLocale(effectiveLanguage) {
+                AnimeScheduleTheme(
+                    themeMode = effectiveTheme,
+                    accentColor = effectiveAccent,
+                    options = prefs.themeOptions
+                ) {
+                    SheetBackdropHost(Modifier.fillMaxSize()) {
+                        CompositionLocalProvider(com.owlcoder.animeschedule.presentation.components.LocalWatchTools provides toolsActions) {
+                            if (!prefs.onboardingDone) {
+                                OnboardingScreen(
+                                    onComplete = {
+                                        scope.launch {
+                                            prefsDataStore.setThemeMode(pendingTheme)
+                                            prefsDataStore.setAccentColor(pendingAccent)
+                                            prefsDataStore.setAppLanguage(pendingLanguage)
+                                            prefsDataStore.setNotificationsEnabled(pendingNotifEnabled)
+                                            prefsDataStore.setNotificationOffset(pendingNotifOffset)
+                                            prefsDataStore.setOnboardingDone()
+                                            LocaleHelper.applyLanguage(pendingLanguage)
+                                        }
+                                    },
+                                    onLogin = { context -> authViewModel.launchMalLogin(context) },
+                                    isMalConnected = isMalConnected,
+                                    malUsername = malUsername,
+                                    selectedTheme = pendingTheme,
+                                    selectedAccent = pendingAccent,
+                                    selectedLanguage = pendingLanguage,
+                                    onThemeChange = { pendingTheme = it },
+                                    onAccentChange = { pendingAccent = it },
+                                    onLanguageChange = { pendingLanguage = it },
+                                    onNotifSettingsChange = { enabled, offset ->
+                                        pendingNotifEnabled = enabled
+                                        pendingNotifOffset = offset
+                                        if (enabled) requestNotificationPermissionIfNeeded()
+                                    },
+                                )
+                            } else {
+                                val navController = rememberNavController()
+                                val hazeState = rememberHazeState()
+                                val motion = LocalMotionPolicy.current
+                                LaunchedEffect(navController, pendingDeepLinkAnimeId) {
+                                    pendingDeepLinkAnimeId?.let { animeId ->
+                                        pendingDeepLinkAnimeId = null
+                                        navController.navigate(Screen.Detail.createRoute(animeId)) {
+                                            launchSingleTop = true
+                                        }
                                     }
                                 }
-                            }
 
-                            val toastController = remember { ToastController() }
-                            com.owlcoder.animeschedule.presentation.components.ListUndoMessages(malRepository, toastController)
-                            var isSearchFocused by rememberSaveable { mutableStateOf(false) }
-                            val backStackEntry by navController.currentBackStackEntryAsState()
-                            val currentRoute = backStackEntry?.destination?.route
-                            val showBottomBar = shouldShowBottomBar(currentRoute) && !isSearchFocused
+                                val toastController = remember { ToastController() }
+                                com.owlcoder.animeschedule.presentation.components.ListUndoMessages(malRepository, toastController)
+                                var isSearchFocused by rememberSaveable { mutableStateOf(false) }
+                                val backStackEntry by navController.currentBackStackEntryAsState()
+                                val currentRoute = backStackEntry?.destination?.route
+                                val showBottomBar = shouldShowBottomBar(currentRoute) && !isSearchFocused
 
-                            AppSystemBarAppearance(
-                                statusBarOnImagery = currentRoute == Screen.Detail.ROUTE,
-                            )
+                                AppSystemBarAppearance(
+                                    statusBarOnImagery = currentRoute == Screen.Detail.ROUTE,
+                                )
 
-                            CompositionLocalProvider(
-                                LocalChromeHazeState provides hazeState,
-                                LocalNavBarHeight provides if (showBottomBar) 84.dp else 0.dp,
-                                LocalToast provides toastController,
-                                com.owlcoder.animeschedule.presentation.components.LocalSyncCenter provides
-                                    com.owlcoder.animeschedule.presentation.components.SyncCenterActions(syncState, prefs.effectiveZoneId, syncViewModel::retry, { authViewModel.launchMalLogin(this@MainActivity) }),
-                            ) {
-                                ToastHost(controller = toastController) {
-                                    Box(modifier = Modifier.fillMaxSize()) {
-                                        Scaffold(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .hazeSource(hazeState),
-                                            contentWindowInsets = WindowInsets.safeDrawing.only(
-                                                WindowInsetsSides.Horizontal,
-                                            ),
-                                        ) { innerPadding ->
-                                            AnimeNavHost(
-                                                navController = navController,
+                                CompositionLocalProvider(
+                                    LocalChromeHazeState provides hazeState,
+                                    LocalNavBarHeight provides if (showBottomBar) 84.dp else 0.dp,
+                                    LocalToast provides toastController,
+                                    com.owlcoder.animeschedule.presentation.components.LocalSyncCenter provides
+                                        com.owlcoder.animeschedule.presentation.components.SyncCenterActions(syncState, prefs.effectiveZoneId, syncViewModel::retry, { authViewModel.launchMalLogin(this@MainActivity) }),
+                                ) {
+                                    ToastHost(controller = toastController) {
+                                        Box(modifier = Modifier.fillMaxSize()) {
+                                            Scaffold(
                                                 modifier = Modifier
                                                     .fillMaxSize()
-                                                    .padding(innerPadding),
-                                                onRestartForLanguage = { lang ->
-                                                    scope.launch {
-                                                        prefsDataStore.setAppLanguage(lang)
-                                                        LocaleHelper.applyLanguage(lang)
-                                                    }
-                                                },
-                                                onSearchFocusChanged = { isSearchFocused = it },
-                                            )
+                                                    .hazeSource(hazeState),
+                                                contentWindowInsets = WindowInsets.safeDrawing.only(
+                                                    WindowInsetsSides.Horizontal,
+                                                ),
+                                            ) { innerPadding ->
+                                                AnimeNavHost(
+                                                    navController = navController,
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .padding(innerPadding),
+                                                    onRestartForLanguage = { lang ->
+                                                        scope.launch {
+                                                            prefsDataStore.setAppLanguage(lang)
+                                                            LocaleHelper.applyLanguage(lang)
+                                                        }
+                                                    },
+                                                    onSearchFocusChanged = { isSearchFocused = it },
+                                                )
+                                            }
+
+                                            AnimatedVisibility(
+                                                visible = showBottomBar,
+                                                modifier = Modifier.align(Alignment.BottomCenter),
+                                                enter = slideInVertically(
+                                                    animationSpec = motion.iosTween(IosMotion.Standard),
+                                                    initialOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
+                                                ) + fadeIn(
+                                                    animationSpec = motion.iosTween(IosMotion.Quick),
+                                                ),
+                                                exit = slideOutVertically(
+                                                    animationSpec = motion.iosTween(IosMotion.Standard),
+                                                    targetOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
+                                                ) + fadeOut(
+                                                    animationSpec = motion.iosTween(IosMotion.Quick),
+                                                ),
+                                            ) {
+                                                AnimeBottomBar(
+                                                    navController = navController,
+                                                    hazeState = hazeState,
+                                                )
+                                            }
+
+
                                         }
-
-                                        AnimatedVisibility(
-                                            visible = showBottomBar,
-                                            modifier = Modifier.align(Alignment.BottomCenter),
-                                            enter = slideInVertically(
-                                                animationSpec = motion.iosTween(IosMotion.Standard),
-                                                initialOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
-                                            ) + fadeIn(
-                                                animationSpec = motion.iosTween(IosMotion.Quick),
-                                            ),
-                                            exit = slideOutVertically(
-                                                animationSpec = motion.iosTween(IosMotion.Standard),
-                                                targetOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
-                                            ) + fadeOut(
-                                                animationSpec = motion.iosTween(IosMotion.Quick),
-                                            ),
-                                        ) {
-                                            AnimeBottomBar(
-                                                navController = navController,
-                                                hazeState = hazeState,
-                                            )
-                                        }
-
-
                                     }
                                 }
                             }

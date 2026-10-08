@@ -2,6 +2,7 @@ package com.owlcoder.animeschedule.core.locale
 
 import android.content.Context
 import android.content.res.Configuration
+import android.content.res.Resources
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.owlcoder.animeschedule.domain.model.AppLanguage
@@ -32,6 +33,6 @@ object LocaleHelper {
     fun resolveLocale(language: AppLanguage): Locale = when (language) {
         AppLanguage.ENGLISH -> Locale.ENGLISH
         AppLanguage.SERBIAN_LATIN -> Locale.forLanguageTag("sr-Latn")
-        AppLanguage.SYSTEM -> Locale.getDefault()
+        AppLanguage.SYSTEM -> Resources.getSystem().configuration.locales[0]
     }
 }

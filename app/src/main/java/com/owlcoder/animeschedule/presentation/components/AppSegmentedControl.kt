@@ -36,7 +36,7 @@ fun AppSegmentedControl(
         color = MaterialTheme.colorScheme.surfaceContainerHighest
     ) {
         Row(
-            Modifier.fillMaxWidth().padding(4.dp).selectableGroup(),
+            Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(4.dp).selectableGroup(),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             options.forEachIndexed { index, option ->
@@ -49,7 +49,7 @@ fun AppSegmentedControl(
                 val tint =
                     if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 Surface(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).fillMaxHeight()
                         .clip(MaterialTheme.shapes.medium)
                         .selectable(selected, role = Role.Tab) { onSelect(index) },
                     shape = MaterialTheme.shapes.medium, color = fill, contentColor = tint,
@@ -60,7 +60,7 @@ fun AppSegmentedControl(
                     shadowElevation = if (selected) 1.dp else 0.dp,
                 ) {
                     Row(
-                        Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                        Modifier.fillMaxWidth().fillMaxHeight().heightIn(min = 48.dp)
                             .padding(horizontal = 8.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)

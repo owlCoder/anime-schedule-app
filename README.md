@@ -120,10 +120,21 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.12.1** (version code **38**, October 8, 2026).
+Current release: **5.12.2** (version code **39**, October 8, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### Polished in 5.12.2
+
+- System Back returns from the watch-source editor to its visible list before closing the modal.
+- Source fields have leading icons, matching low surface colors, accessible minimum heights and
+  Next/Done keyboard actions. Leaving the editor clears focus and hides its keyboard.
+- Dates and strings follow the same app language; native launchers retain the Activity context.
+- Appearance shares the dark/AMOLED switch style and keeps a single accessible toggle per row.
+- Wrapped segmented-control labels keep equal-height, vertically centered options.
+
+See the [release validation](docs/release-5.12.2.md) for emulator checks and the signed AAB.
 
 ### Polished in 5.12.1
 

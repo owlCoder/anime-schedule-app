@@ -198,7 +198,7 @@ private fun AppearanceToggle(title: Int, hint: Int, checked: Boolean, icon: andr
                 Text(stringResource(title), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                 Text(stringResource(hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Switch(checked, null)
+            AppSwitch(checked, null, Modifier.testTag("appearance-switch-$title"))
         }
     }
 }

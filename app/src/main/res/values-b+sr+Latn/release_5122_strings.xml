@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="changelog_5122_title">Ugodnije svakodnevne kontrole</string>
+    <string name="changelog_5122_sources_title">Uređivanje izvora</string>
+    <string name="changelog_5122_sources">Nazad iz editora vraća vidljivu listu izvora. Polja imaju jasne ikonice, usklađene pozadine i tastaturne akcije Dalje/Gotovo.</string>
+    <string name="changelog_5122_language_title">Usklađen jezik</string>
+    <string name="changelog_5122_language">Datumi i nazivi dana prate izabrani jezik aplikacije, uključujući promenu jezika tokom rada.</string>
+    <string name="changelog_5122_controls_title">Poravnate kontrole</string>
+    <string name="changelog_5122_controls">Izgled koristi iste tamne i AMOLED prekidače kao ostala podešavanja. Segmentirane kontrole imaju jednaku visinu i kada se tekst prelomi u više redova.</string>
+</resources>

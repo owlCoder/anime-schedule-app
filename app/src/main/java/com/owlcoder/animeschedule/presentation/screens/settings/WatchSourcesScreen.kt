@@ -10,21 +10,34 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.border
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,8 +47,6 @@ import com.owlcoder.animeschedule.domain.model.WatchSource
 import com.owlcoder.animeschedule.domain.model.isValidWatchSourceTemplate
 import com.owlcoder.animeschedule.presentation.components.AppButton
 import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
-import com.owlcoder.animeschedule.presentation.components.AppMaterial
-import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
@@ -47,7 +58,6 @@ import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -59,6 +69,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.presentation.components.iosSpring
@@ -78,9 +90,29 @@ fun WatchSourcesBottomSheet(
     var name by remember(showAddSheet, editingSource?.id) { mutableStateOf(editingSource?.name.orEmpty()) }
     var url by remember(showAddSheet, editingSource?.id) { mutableStateOf(editingSource?.urlTemplate.orEmpty()) }
     var external by remember(showAddSheet, editingSource?.id) { mutableStateOf(editingSource?.openExternally ?: false) }
-    val leaveEditor = { showAddSheet = false; editingSource = null }
+    val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val leaveEditor = {
+        focus.clearFocus(force = true)
+        keyboard?.hide()
+        showAddSheet = false
+        editingSource = null
+    }
+    val isEditing by rememberUpdatedState(editing)
+    val dismissEditor by rememberUpdatedState(leaveEditor)
+    val confirmChange = remember {
+        { target: SheetValue ->
+            if (target == SheetValue.Hidden && isEditing) { dismissEditor(); false } else true
+        }
+    }
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        // Keep callback identity stable: Material includes it in the saved state keys.
+        confirmValueChange = confirmChange,
+    )
     AppSheet(
         onDismissRequest = { if (editing) leaveEditor() else onDismiss() },
+        sheetState = sheetState,
         title = stringResource(if (editing) { if (showAddSheet) R.string.watch_sources_add else R.string.watch_sources_edit } else R.string.watch_sources_title),
         trailingContent = {
             if (editing) AppButton(stringResource(R.string.common_save), {
@@ -257,22 +289,34 @@ private fun SourceForm(
     openExternally: Boolean,
     onOpenExternallyChange: (Boolean) -> Unit,
 ) {
+    val urlFocus = remember { FocusRequester() }
+    val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 11.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         FormField(
             label = stringResource(R.string.watch_sources_name_label),
             value = name,
             onValueChange = onNameChange,
+            icon = Icons.Default.Edit,
+            modifier = Modifier.testTag("source-name"),
+            containerModifier = Modifier.testTag("source-name-container"),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { urlFocus.requestFocus() }),
         )
         FormField(
             label = stringResource(R.string.watch_sources_url_label),
             value = urlTemplate,
             onValueChange = onUrlChange,
             helper = stringResource(R.string.watch_sources_url_hint),
+            icon = Icons.Default.Link,
+            modifier = Modifier.focusRequester(urlFocus).testTag("source-url"),
+            containerModifier = Modifier.testTag("source-url-container"),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { focus.clearFocus(); keyboard?.hide() }),
         )
         HorizontalDivider(
             thickness = 0.5.dp,
@@ -315,7 +359,12 @@ private fun FormField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    containerModifier: Modifier = Modifier,
     helper: String? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Text(
@@ -324,36 +373,42 @@ private fun FormField(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 2.dp),
         )
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                color = MaterialTheme.colorScheme.onSurface,
-            ),
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(44.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                .padding(horizontal = 13.dp),
-            decorationBox = { innerTextField ->
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.CenterStart,
-                ) {
-                    if (value.isEmpty()) {
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+        Box(containerModifier.fillMaxWidth()) {
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                    color = MaterialTheme.colorScheme.onSurface,
+                ),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                keyboardOptions = keyboardOptions,
+                keyboardActions = keyboardActions,
+                modifier = modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow)
+                    .border(.5.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 13.dp, vertical = 12.dp),
+                decorationBox = { innerTextField ->
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Icon(icon, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                            if (value.isEmpty()) {
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            innerTextField()
+                        }
                     }
-                    innerTextField()
-                }
-            },
-        )
+                },
+            )
+        }
         if (!helper.isNullOrBlank()) {
             Text(
                 text = helper,
