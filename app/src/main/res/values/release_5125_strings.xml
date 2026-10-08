@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="changelog_5125_title">Smooth tab selection</string>
+    <string name="changelog_5125_tabs_title">Tabs without a dark flash</string>
+    <string name="changelog_5125_tabs">Tab backgrounds fade into their active tone without a dark inner frame. A subtle press response replaces the dark ripple, and the selection outline fades together with the background.</string>
+</resources>

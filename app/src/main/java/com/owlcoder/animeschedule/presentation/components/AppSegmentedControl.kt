@@ -1,18 +1,18 @@
 package com.owlcoder.animeschedule.presentation.components
 
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -41,26 +41,40 @@ fun AppSegmentedControl(
         ) {
             options.forEachIndexed { index, option ->
                 val selected = selectedIndex == index
-                val fill by animateColorAsState(
-                    if (selected) MaterialTheme.colorScheme.surface else Color.Transparent,
+                val interactionSource = remember { MutableInteractionSource() }
+                val selectionAlpha by animateFloatAsState(
+                    if (selected) 1f else 0f,
                     motion.iosTween(IosMotion.Quick),
-                    label = "segment-fill"
+                    label = "segment-selection-alpha"
                 )
                 val tint =
                     if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 Surface(
                     modifier = Modifier.weight(1f).fillMaxHeight()
                         .clip(MaterialTheme.shapes.medium)
-                        .selectable(selected, role = Role.Tab) { onSelect(index) },
-                    shape = MaterialTheme.shapes.medium, color = fill, contentColor = tint,
-                    border = if (selected) BorderStroke(
+                        .selectable(
+                            selected = selected,
+                            interactionSource = interactionSource,
+                            indication = null,
+                            role = Role.Tab,
+                            onClick = { onSelect(index) }
+                        ),
+                    // Keep the surface RGB stable: interpolating from transparent black
+                    // creates a dark intermediate fill before the active tab appears.
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = selectionAlpha),
+                    contentColor = tint,
+                    border = BorderStroke(
                         .5.dp,
-                        MaterialTheme.colorScheme.outlineVariant
-                    ) else null,
-                    shadowElevation = if (selected) 1.dp else 0.dp,
+                        MaterialTheme.colorScheme.outlineVariant.copy(
+                            alpha = MaterialTheme.colorScheme.outlineVariant.alpha * selectionAlpha
+                        )
+                    ),
+                    shadowElevation = 0.dp,
                 ) {
                     Row(
                         Modifier.fillMaxWidth().fillMaxHeight().heightIn(min = 48.dp)
+                            .iosPressScale(interactionSource)
                             .padding(horizontal = 8.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)

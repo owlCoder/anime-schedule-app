@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -156,6 +157,55 @@ class EmulatorPolishUiTest {
         compose.onNodeWithText(labels[2]).performClick().assertIsSelected()
         compose.runOnIdle { assertEquals(2, selected) }
         screenshot("segmented-large-light")
+    }
+
+    @Test fun lightSegmentsDoNotFlashADarkFrameOnPressOrSelection() =
+        verifySegmentedTransition(ThemeMode.LIGHT)
+
+    @Test fun darkSegmentsDoNotFlashADarkFrameOnPressOrSelection() =
+        verifySegmentedTransition(ThemeMode.DARK)
+
+    private fun verifySegmentedTransition(mode: ThemeMode) {
+        var selected by mutableIntStateOf(0)
+        val labels = listOf("First", "Second")
+        compose.setContent {
+            AnimeScheduleTheme(themeMode = mode) {
+                Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(top = 64.dp)) {
+                    AppSegmentedControl(labels.map { SegmentOption(it, Icons.Default.Palette) }, selected, { selected = it }, Modifier.width(300.dp))
+                }
+            }
+        }
+        val tabs = labels.map { compose.onNodeWithText(it) }
+        fun luminance(tab: SemanticsNodeInteraction): Float {
+            val pixels = tab.captureToImage().toPixelMap()
+            // Clear of the centered icon/text, rounded corners and selection hairline.
+            return pixels[(pixels.width * .82f).toInt(), (pixels.height * .25f).toInt()].luminance()
+        }
+        val resting = tabs.map(::luminance)
+        val tolerance = if (mode == ThemeMode.LIGHT) .035f else .005f
+        val minimum = resting.min() - tolerance
+        val maximum = resting.max() + tolerance
+        fun assertNoFlash() = tabs.forEach { tab ->
+            val value = luminance(tab)
+            assertTrue("$mode tab fill stays between its resting tones: $value", value in minimum..maximum)
+        }
+        compose.mainClock.autoAdvance = false
+        try {
+            tabs[1].performTouchInput { down(center) }
+            compose.mainClock.advanceTimeBy(120)
+            assertNoFlash()
+            tabs[1].performTouchInput { up() }
+            repeat(7) {
+                compose.mainClock.advanceTimeBy(32)
+                assertNoFlash()
+            }
+            tabs[0].assertIsNotSelected()
+            tabs[1].assertIsSelected()
+            compose.runOnIdle { assertEquals(1, selected) }
+        } finally {
+            compose.mainClock.autoAdvance = true
+        }
+        screenshot("segmented-transition-${mode.name.lowercase()}")
     }
 
     @Test fun languageChangesKeepDateResourcesAndActivityContextTogether() {

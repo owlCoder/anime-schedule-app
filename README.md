@@ -120,10 +120,18 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.12.4** (version code **41**, October 8, 2026).
+Current release: **5.12.5** (version code **42**, October 8, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### Polished in 5.12.5
+
+- Shared segmented tabs fade their fixed surface tone instead of interpolating from transparent
+  black. Press feedback scales only the content; the selection hairline fades with the fill.
+- Light/dark UI regressions sample tab backgrounds during pressing and selection transitions.
+
+See the [release validation](docs/release-5.12.5.md) for this emulator review.
 
 ### Polished in 5.12.4
 

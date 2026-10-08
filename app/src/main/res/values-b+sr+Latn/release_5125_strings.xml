@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="changelog_5125_title">Glatka promena tabova</string>
+    <string name="changelog_5125_tabs_title">Tabovi bez tamnog bljeska</string>
+    <string name="changelog_5125_tabs">Pozadina taba postepeno dobija aktivnu boju bez tamnog unutrašnjeg okvira. Blag odziv na dodir zamenjuje tamni ripple efekat, a okvir se pojavljuje zajedno sa pozadinom.</string>
+</resources>
