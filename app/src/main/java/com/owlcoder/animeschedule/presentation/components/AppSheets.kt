@@ -2,6 +2,7 @@ package com.owlcoder.animeschedule.presentation.components
 
 import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.animateFloatAsState
@@ -51,6 +52,7 @@ fun AppSheet(
     showCloseButton: Boolean = false,
     // Return true after navigating to a parent page inside this same modal.
     onNavigateBack: () -> Boolean = { false },
+    animateSizeChanges: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val motion = LocalMotionPolicy.current
@@ -114,7 +116,7 @@ fun AppSheet(
                 ) {
                     Surface(
                         modifier = modifier.widthIn(max = 640.dp).fillMaxWidth()
-                            .animateContentSize(motion.iosTween(IosMotion.Standard)).semantics {
+                            .then(if (animateSizeChanges) Modifier.animateContentSize(motion.iosTween(IosMotion.Standard)) else Modifier).semantics {
                             if (!title.isNullOrBlank()) paneTitle = title
                         },
                         shape = RoundedCornerShape(topStart = GlassTokens.sheetRadius, topEnd = GlassTokens.sheetRadius),
@@ -129,9 +131,13 @@ fun AppSheet(
                                     if (showBackButton) GlassIconButton(Icons.AutoMirrored.Filled.ArrowBack,
                                         stringResource(android.R.string.cancel), dismissAnimated,
                                         Modifier.padding(end = 6.dp), enabled = !dismissing)
-                                    Text(title, Modifier.weight(1f).padding(end = 8.dp),
-                                        style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold,
-                                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    AnimatedContent(title, Modifier.weight(1f).padding(end = 8.dp),
+                                        transitionSpec = { motion.contentTransform(durationMillis = IosMotion.Quick) },
+                                        label = "sheet-title") { displayedTitle ->
+                                        Text(displayedTitle.orEmpty(),
+                                            style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold,
+                                            maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    }
                                     trailingContent?.invoke()
                                     if (showCloseButton) GlassIconButton(Icons.Default.Close,
                                         stringResource(android.R.string.cancel), dismissAnimated, enabled = !dismissing)
@@ -139,8 +145,8 @@ fun AppSheet(
                             }
                             // Feedback takes space before scrollable content is measured.
                             Box(Modifier.weight(1f, fill = false)) { Column(Modifier.fillMaxWidth(), content = content) }
-                            if (toast.activeSheet === sheetKey && toast.current != null) {
-                                ToastOverlay(toast, Modifier.fillMaxWidth().padding(top = 12.dp))
+                            if (toast.activeSheet === sheetKey) {
+                                ToastOverlay(toast, Modifier.fillMaxWidth(), topPadding = 12.dp)
                             }
                         }
                     }

@@ -2,6 +2,7 @@ package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -22,8 +23,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
@@ -55,19 +58,20 @@ fun AppButton(
     val animatedModifier = modifier.iosPressScale(interactionSource, pressedScale = 0.975f)
 
     when (variant) {
-        AppButtonVariant.Plain -> androidx.compose.material3.TextButton(
-            onClick = onClick,
-            enabled = enabled,
-            modifier = animatedModifier.heightIn(min = AppButtonHeight),
-            interactionSource = interactionSource,
-            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
-            shape = AppButtonShape,
+        AppButtonVariant.Plain -> Row(
+            modifier = animatedModifier.heightIn(min = AppButtonHeight)
+                .clip(AppButtonShape)
+                .clickable(interactionSource, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
+                .padding(horizontal = 10.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
         ) {
             ButtonContent(label, icon, accent, enabled)
         }
 
         AppButtonVariant.Primary -> {
-            val container = if (enabled) accent else accent.copy(alpha = 0.30f)
+            val container by animateColorAsState(if (enabled) accent else accent.copy(alpha = 0.30f),
+                LocalMotionPolicy.current.iosTween(IosMotion.Quick), label = "button-fill")
             val contentColor = if (enabled) {
                 MaterialTheme.colorScheme.onPrimary
             } else {
@@ -161,7 +165,8 @@ private fun ButtonRow(label: String, icon: ImageVector?, color: Color, enabled: 
 
 @Composable
 private fun RowScope.ButtonContent(label: String, icon: ImageVector?, color: Color, enabled: Boolean) {
-    val resolved = if (enabled) color else color.copy(alpha = 0.42f)
+    val resolved by animateColorAsState(if (enabled) color else color.copy(alpha = 0.42f),
+        LocalMotionPolicy.current.iosTween(IosMotion.Quick), label = "button-content")
     if (icon != null) {
         Icon(icon, null, Modifier.size(18.dp), tint = resolved)
         androidx.compose.foundation.layout.Spacer(Modifier.size(8.dp))

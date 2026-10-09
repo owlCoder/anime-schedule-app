@@ -48,6 +48,7 @@ fun SeasonalOverlay(
     viewModel: SeasonalViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val motion = LocalMotionPolicy.current
     var showFilterSheet by remember { mutableStateOf(false) }
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -96,7 +97,10 @@ fun SeasonalOverlay(
                                 (item.averageScore ?: item.meanScore)?.toDouble(), item.episodes,
                                 item.malId?.let(uiState.malEntriesById::get),
                             ),
-                            { onAnimeClick(item.anilistId) }, null, showDivider = false,
+                            { onAnimeClick(item.anilistId) }, null,
+                            modifier = Modifier.animateItem(fadeInSpec = motion.iosTween(IosMotion.Quick),
+                                placementSpec = motion.iosDecelerate(IosMotion.Standard), fadeOutSpec = motion.iosAccelerate(IosMotion.PressIn)),
+                            showDivider = false,
                         )
                     }
                 }
@@ -122,6 +126,8 @@ fun SeasonalOverlay(
                             item = item,
                             userListEntry = item.malId?.let(uiState.malEntriesById::get),
                             onClick = { onAnimeClick(item.anilistId) },
+                            modifier = Modifier.animateItem(fadeInSpec = motion.iosTween(IosMotion.Quick),
+                                placementSpec = motion.iosDecelerate(IosMotion.Standard), fadeOutSpec = motion.iosAccelerate(IosMotion.PressIn)),
                         )
                     }
                 }

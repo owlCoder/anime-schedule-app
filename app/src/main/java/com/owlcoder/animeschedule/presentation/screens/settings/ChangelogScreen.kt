@@ -59,6 +59,8 @@ private data class ReleaseNote(
 @Composable
 fun ChangelogBottomSheet(onDismiss: () -> Unit) {
     val notes = listOf(
+        ReleaseNote(Icons.Outlined.Tune, stringResource(R.string.changelog_51210_motion_title), stringResource(R.string.changelog_51210_motion)),
+        ReleaseNote(Icons.Outlined.TouchApp, stringResource(R.string.changelog_51210_controls_title), stringResource(R.string.changelog_51210_controls)),
         ReleaseNote(Icons.Outlined.DateRange, stringResource(R.string.changelog_5129_history_title), stringResource(R.string.changelog_5129_history)),
         ReleaseNote(Icons.Outlined.Tune, stringResource(R.string.changelog_5129_motion_title), stringResource(R.string.changelog_5129_motion)),
         ReleaseNote(Icons.Outlined.TouchApp, stringResource(R.string.changelog_5129_controls_title), stringResource(R.string.changelog_5129_controls)),

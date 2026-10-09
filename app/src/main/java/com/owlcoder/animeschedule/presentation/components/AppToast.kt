@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import com.owlcoder.animeschedule.R
 import kotlinx.coroutines.delay
 
@@ -110,7 +111,7 @@ private fun ToastTimeout(controller: ToastController) {
 }
 
 @Composable
-internal fun ToastOverlay(controller: ToastController, modifier: Modifier) {
+internal fun ToastOverlay(controller: ToastController, modifier: Modifier, topPadding: Dp = 0.dp) {
     val motion = LocalMotionPolicy.current
     val data = controller.current
     var lastShown by remember { mutableStateOf<ToastData?>(null) }
@@ -120,12 +121,20 @@ internal fun ToastOverlay(controller: ToastController, modifier: Modifier) {
                 data != null,
                 enter = slideInVertically(
                     motion.iosDecelerate(IosMotion.Standard)
-                ) { if (motion.animationsEnabled) it / 2 else 0 } + fadeIn(motion.iosTween(IosMotion.Quick)),
+                ) { if (motion.animationsEnabled) it / 3 else 0 } + fadeIn(motion.iosTween(IosMotion.Quick)) +
+                    expandVertically(motion.iosDecelerate(IosMotion.Standard), expandFrom = Alignment.Bottom),
                 exit = slideOutVertically(motion.iosTween(IosMotion.Quick)) { if (motion.animationsEnabled) it / 3 else 0 } + fadeOut(
                     motion.iosTween(IosMotion.Quick)
-                ),
+                ) + shrinkVertically(motion.iosAccelerate(IosMotion.Quick), shrinkTowards = Alignment.Bottom),
             ) {
-                (data ?: lastShown)?.let { ToastCard(it, controller::dismiss) { controller.performAction(it.id) } }
+                (data ?: lastShown)?.let { shown ->
+                    AnimatedContent(shown, Modifier.padding(top = topPadding),
+                        transitionSpec = { motion.contentTransform() }, contentKey = { it.id }, label = "toast-message") { message ->
+                        ToastCard(message, {
+                            if (controller.current?.id == message.id) controller.dismiss()
+                        }) { controller.performAction(message.id) }
+                    }
+                }
             }
     }
 }

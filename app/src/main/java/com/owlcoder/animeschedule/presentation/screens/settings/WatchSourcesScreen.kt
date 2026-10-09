@@ -46,6 +46,7 @@ import com.owlcoder.animeschedule.domain.model.isValidWatchSourceTemplate
 import com.owlcoder.animeschedule.presentation.components.AppButton
 import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
 import com.owlcoder.animeschedule.presentation.components.AppSheet
+import com.owlcoder.animeschedule.presentation.components.SheetPageTransition
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.EmptyState
@@ -82,25 +83,31 @@ fun WatchSourcesBottomSheet(
     viewModel: WatchSourcesViewModel = hiltViewModel(),
 ) {
     val sources by viewModel.sources.collectAsStateWithLifecycle()
-    var showAddSheet by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf(false) }
     var editingSource by remember { mutableStateOf<WatchSource?>(null) }
-
-    val editing = showAddSheet || editingSource != null
-    var name by remember(showAddSheet, editingSource?.id) { mutableStateOf(editingSource?.name.orEmpty()) }
-    var url by remember(showAddSheet, editingSource?.id) { mutableStateOf(editingSource?.urlTemplate.orEmpty()) }
-    var external by remember(showAddSheet, editingSource?.id) { mutableStateOf(editingSource?.openExternally ?: false) }
+    var name by remember { mutableStateOf("") }
+    var url by remember { mutableStateOf("") }
+    var external by remember { mutableStateOf(false) }
+    fun openEditor(source: WatchSource?) {
+        editingSource = source
+        name = source?.name.orEmpty()
+        url = source?.urlTemplate.orEmpty()
+        external = source?.openExternally ?: false
+        editing = true
+    }
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val leaveEditor = {
         focus.clearFocus(force = true)
         keyboard?.hide()
-        showAddSheet = false
-        editingSource = null
+        // Retain the outgoing form until its exit finishes; the next editor initializes anew.
+        editing = false
     }
     AppSheet(
         onDismissRequest = onDismiss,
         onNavigateBack = { if (editing) { leaveEditor(); true } else false },
-        title = stringResource(if (editing) { if (showAddSheet) R.string.watch_sources_add else R.string.watch_sources_edit } else R.string.watch_sources_title),
+        title = stringResource(if (editing) { if (editingSource == null) R.string.watch_sources_add else R.string.watch_sources_edit } else R.string.watch_sources_title),
+        animateSizeChanges = false,
         trailingContent = {
             if (editing) AppButton(stringResource(R.string.common_save), {
                 val source = editingSource
@@ -109,16 +116,18 @@ fun WatchSourcesBottomSheet(
                 leaveEditor()
             }, variant = AppButtonVariant.Plain, icon = Icons.Default.Save,
                 enabled = name.isNotBlank() && isValidWatchSourceTemplate(url.trim()))
-            else GlassIconButton(Icons.Default.Add, stringResource(R.string.watch_sources_add), { showAddSheet = true })
+            else GlassIconButton(Icons.Default.Add, stringResource(R.string.watch_sources_add), { openEditor(null) })
         },
     ) {
-        if (editing) Column(Modifier.fillMaxWidth().heightIn(max = 540.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            SourceForm(name, { name = it }, url, { url = it }, external, { external = it })
-            editingSource?.let { source ->
-                AppButton(stringResource(R.string.watch_sources_delete), { viewModel.deleteSource(source); leaveEditor() }, Modifier.fillMaxWidth(), variant = AppButtonVariant.Destructive, icon = Icons.Default.DeleteOutline)
-            }
-            AppButton(stringResource(R.string.common_cancel), leaveEditor, Modifier.fillMaxWidth(), variant = AppButtonVariant.Secondary, icon = Icons.Default.Close)
-        } else WatchSourcesContent(sources, Modifier.fillMaxWidth().heightIn(max = 590.dp), { showAddSheet = true }, { editingSource = it }, viewModel::setOpenExternally)
+        SheetPageTransition(editing, isRoot = { !it }) { editorPage ->
+            if (editorPage) Column(Modifier.fillMaxWidth().heightIn(max = 540.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                SourceForm(name, { name = it }, url, { url = it }, external, { external = it })
+                editingSource?.let { source ->
+                    AppButton(stringResource(R.string.watch_sources_delete), { viewModel.deleteSource(source); leaveEditor() }, Modifier.fillMaxWidth(), enabled = editing, variant = AppButtonVariant.Destructive, icon = Icons.Default.DeleteOutline)
+                }
+                AppButton(stringResource(R.string.common_cancel), leaveEditor, Modifier.fillMaxWidth(), variant = AppButtonVariant.Secondary, icon = Icons.Default.Close)
+            } else WatchSourcesContent(sources, Modifier.fillMaxWidth().heightIn(max = 590.dp), { openEditor(null) }, { openEditor(it) }, viewModel::setOpenExternally)
+        }
     }
 }
 

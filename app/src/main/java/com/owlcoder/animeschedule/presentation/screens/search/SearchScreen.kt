@@ -379,6 +379,7 @@ internal fun RecentSearches(searches: List<String>, onClear: () -> Unit, onSelec
 
 @Composable
 internal fun SearchResults(results: List<AnimeSearchResult>, hasNextPage: Boolean, isLoadingMore: Boolean, bottomPadding: Dp, onAnimeClick: (AnimeSearchResult) -> Unit, onEditStatus: (AnimeSearchResult) -> Unit, onLoadMore: () -> Unit, loadMoreError: Boolean = false, onClearFilter: () -> Unit = {}) {
+    val motion = LocalMotionPolicy.current
     LazyColumn(Modifier.fillMaxSize().testTag("search-results"), contentPadding = PaddingValues(bottom = bottomPadding), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (results.isEmpty()) item {
             Column(Modifier.fillMaxWidth().padding(vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -388,7 +389,9 @@ internal fun SearchResults(results: List<AnimeSearchResult>, hasNextPage: Boolea
             }
         }
         items(results, key = { it.anilistId }, contentType = { "search-result" }) { result ->
-            SearchResultCard(result, { onAnimeClick(result) }, if (result.malId != null) ({ onEditStatus(result) }) else null, showDivider = false)
+            SearchResultCard(result, { onAnimeClick(result) }, if (result.malId != null) ({ onEditStatus(result) }) else null,
+                modifier = Modifier.animateItem(fadeInSpec = motion.iosTween(IosMotion.Quick),
+                    placementSpec = motion.iosTween(IosMotion.Standard), fadeOutSpec = motion.iosTween(IosMotion.PressIn)), showDivider = false)
         }
         if (hasNextPage || isLoadingMore) item(key = "load_more") {
             Column(Modifier.fillMaxWidth().padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {

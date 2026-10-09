@@ -59,69 +59,72 @@ fun NotificationsOverlay(onAnimeClick: (Int) -> Unit, onDismiss: () -> Unit,
     AppSheet(onDismissRequest = onDismiss, onNavigateBack = {
         if (showTools) { showTools = false; true } else false
     },
+        animateSizeChanges = false,
         title = stringResource(if (showTools) R.string.notif_tools else R.string.notif_screen_title),
         trailingContent = { if (!showTools) GlassIconButton(Icons.Default.Tune, stringResource(R.string.notif_tools), { showTools = true }, Modifier.testTag("notif-tools")) }) {
         val focus = LocalFocusManager.current
         val keyboard = LocalSoftwareKeyboardController.current
         fun finishInput() { focus.clearFocus(force = true); keyboard?.hide() }
         LaunchedEffect(showTools) { finishInput() }
-        LazyColumn(Modifier.fillMaxWidth().heightIn(max = 650.dp).testTag(if (showTools) "notif-tools-list" else "notif-history"),
-            state = if (showTools) toolsState else historyState,
-            verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
-            if (showTools) {
-                item { Text(stringResource(R.string.notif_sort), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                items(NotificationSort.entries, key = { "sort-$it" }) { option ->
-                    AppChoiceRow(stringResource(if (option == NotificationSort.NEWEST) R.string.notif_newest else R.string.notif_oldest),
-                        Icons.Default.Sort, option == sort, { sort = option }, Modifier.testTag("notif-sort-$option"))
-                }
-                item { Text(stringResource(R.string.notif_scope_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                item { AppButton(stringResource(R.string.notif_mark_visible, visibleUnread.size), { viewModel.markVisibleRead(visibleUnread.map { it.id }) },
-                    Modifier.fillMaxWidth().testTag("notif-mark-visible"), enabled = visibleUnread.isNotEmpty() && !marking, icon = Icons.Default.MarkEmailRead) }
-                item { AppButton(stringResource(R.string.notifications_mark_all), viewModel::markAllRead,
-                    Modifier.fillMaxWidth().testTag("notif-mark-all"), enabled = unread.isNotEmpty() && !marking, variant = AppButtonVariant.Secondary, icon = Icons.Default.DoneAll) }
-                if (markError) item { Text(stringResource(R.string.notif_mark_failed), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-            } else {
-                item("search") { AppSearchField(query, { query = it }, Modifier.testTag("notification-search"), stringResource(R.string.notif_search), Icons.Default.Search, onClear = { query = "" }) }
-                item("tabs") { AppSegmentedControl(listOf(
-                    SegmentOption(stringResource(R.string.notif_tab_unread), Icons.Default.MarkEmailUnread, unread.size),
-                    SegmentOption(stringResource(R.string.notif_tab_read), Icons.Default.MarkEmailRead, read.size)), selectedTab,
-                    { selectedTab = it; confirmClear = false; finishInput() }) }
-                item("periods") { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    NotificationPeriod.entries.chunked(2).forEach { row ->
-                        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            row.forEach { option -> DiscoveryChip(stringResource(when (option) {
-                                NotificationPeriod.ALL -> R.string.notif_period_all
-                                NotificationPeriod.TODAY -> R.string.notif_period_today
-                                NotificationPeriod.WEEK -> R.string.notif_period_week
-                                NotificationPeriod.MONTH -> R.string.notif_period_month
-                            }), Icons.Default.DateRange, option == period, { period = option; finishInput() }, Modifier.weight(1f).fillMaxHeight().testTag("notif-period-$option")) }
+        SheetPageTransition(showTools, isRoot = { !it }) { toolsPage ->
+            LazyColumn(Modifier.fillMaxWidth().heightIn(max = 650.dp).testTag(if (toolsPage) "notif-tools-list" else "notif-history"),
+                state = if (toolsPage) toolsState else historyState,
+                verticalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(bottom = 10.dp)) {
+                if (toolsPage) {
+                    item { Text(stringResource(R.string.notif_sort), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    items(NotificationSort.entries, key = { "sort-$it" }) { option ->
+                        AppChoiceRow(stringResource(if (option == NotificationSort.NEWEST) R.string.notif_newest else R.string.notif_oldest),
+                            Icons.Default.Sort, option == sort, { sort = option }, Modifier.testTag("notif-sort-$option"))
+                    }
+                    item { Text(stringResource(R.string.notif_scope_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    item { AppButton(stringResource(R.string.notif_mark_visible, visibleUnread.size), { viewModel.markVisibleRead(visibleUnread.map { it.id }) },
+                        Modifier.fillMaxWidth().testTag("notif-mark-visible"), enabled = visibleUnread.isNotEmpty() && !marking, icon = Icons.Default.MarkEmailRead) }
+                    item { AppButton(stringResource(R.string.notifications_mark_all), viewModel::markAllRead,
+                        Modifier.fillMaxWidth().testTag("notif-mark-all"), enabled = unread.isNotEmpty() && !marking, variant = AppButtonVariant.Secondary, icon = Icons.Default.DoneAll) }
+                    if (markError) item { Text(stringResource(R.string.notif_mark_failed), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                } else {
+                    item("search") { AppSearchField(query, { query = it }, Modifier.testTag("notification-search"), stringResource(R.string.notif_search), Icons.Default.Search, onClear = { query = "" }) }
+                    item("tabs") { AppSegmentedControl(listOf(
+                        SegmentOption(stringResource(R.string.notif_tab_unread), Icons.Default.MarkEmailUnread, unread.size),
+                        SegmentOption(stringResource(R.string.notif_tab_read), Icons.Default.MarkEmailRead, read.size)), selectedTab,
+                        { selectedTab = it; confirmClear = false; finishInput() }) }
+                    item("periods") { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        NotificationPeriod.entries.chunked(2).forEach { row ->
+                            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                row.forEach { option -> DiscoveryChip(stringResource(when (option) {
+                                    NotificationPeriod.ALL -> R.string.notif_period_all
+                                    NotificationPeriod.TODAY -> R.string.notif_period_today
+                                    NotificationPeriod.WEEK -> R.string.notif_period_week
+                                    NotificationPeriod.MONTH -> R.string.notif_period_month
+                                }), Icons.Default.DateRange, option == period, { period = option; finishInput() }, Modifier.weight(1f).fillMaxHeight().testTag("notif-period-$option")) }
+                            }
+                        }
+                    } }
+                    if (selectedTab == 1 && read.isNotEmpty()) item("clear") {
+                        if (confirmClear) Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface) {
+                            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(stringResource(R.string.notif_clear_confirm, read.size), style = MaterialTheme.typography.bodyMedium)
+                                AppButton(stringResource(R.string.notif_clear_read), { viewModel.clearRead(); confirmClear = false }, Modifier.fillMaxWidth().testTag("notif-clear-confirm"), enabled = !clearing, variant = AppButtonVariant.Destructive, icon = Icons.Default.DeleteOutline)
+                                AppButton(stringResource(R.string.common_cancel), { confirmClear = false }, Modifier.fillMaxWidth().testTag("notif-clear-cancel"), enabled = !clearing, variant = AppButtonVariant.Plain, icon = Icons.Default.Close)
+                            }
+                        } else AppButton(stringResource(R.string.notif_clear_read), { finishInput(); confirmClear = true }, Modifier.fillMaxWidth().testTag("notif-clear-read"), enabled = !clearing, variant = AppButtonVariant.Plain, icon = Icons.Default.DeleteOutline)
+                    }
+                    if (clearError) item("error") { Text(stringResource(R.string.notif_clear_failed), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                    if (markError) item("mark-error") { Text(stringResource(R.string.notif_mark_failed), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+                    if (visible.isEmpty()) item("empty") {
+                        val emptyModifier = Modifier.fillMaxWidth().heightIn(min = 200.dp)
+                        when {
+                            query.isNotBlank() -> EmptyState(Icons.Default.SearchOff, stringResource(R.string.notif_search_empty), actionLabel = stringResource(R.string.search_clear_query), onAction = { query = ""; finishInput() }, modifier = emptyModifier)
+                            period != NotificationPeriod.ALL -> EmptyState(Icons.Default.DateRange, stringResource(R.string.notif_period_empty), actionLabel = stringResource(R.string.notif_period_reset), onAction = { period = NotificationPeriod.ALL }, modifier = emptyModifier)
+                            else -> EmptyState(Icons.Outlined.NotificationsNone, stringResource(if (selectedTab == 0) R.string.notif_empty_unread else R.string.notif_empty_read), subtitle = if (selectedTab == 0) stringResource(R.string.notif_screen_empty_subtitle) else null, modifier = emptyModifier)
                         }
                     }
-                } }
-                if (selectedTab == 1 && read.isNotEmpty()) item("clear") {
-                    if (confirmClear) Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface) {
-                        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(stringResource(R.string.notif_clear_confirm, read.size), style = MaterialTheme.typography.bodyMedium)
-                            AppButton(stringResource(R.string.notif_clear_read), { viewModel.clearRead(); confirmClear = false }, Modifier.fillMaxWidth().testTag("notif-clear-confirm"), enabled = !clearing, variant = AppButtonVariant.Destructive, icon = Icons.Default.DeleteOutline)
-                            AppButton(stringResource(R.string.common_cancel), { confirmClear = false }, Modifier.fillMaxWidth().testTag("notif-clear-cancel"), enabled = !clearing, variant = AppButtonVariant.Plain, icon = Icons.Default.Close)
-                        }
-                    } else AppButton(stringResource(R.string.notif_clear_read), { finishInput(); confirmClear = true }, Modifier.fillMaxWidth().testTag("notif-clear-read"), enabled = !clearing, variant = AppButtonVariant.Plain, icon = Icons.Default.DeleteOutline)
-                }
-                if (clearError) item("error") { Text(stringResource(R.string.notif_clear_failed), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                if (markError) item("mark-error") { Text(stringResource(R.string.notif_mark_failed), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                if (visible.isEmpty()) item("empty") {
-                    val emptyModifier = Modifier.fillMaxWidth().heightIn(min = 200.dp)
-                    when {
-                        query.isNotBlank() -> EmptyState(Icons.Default.SearchOff, stringResource(R.string.notif_search_empty), actionLabel = stringResource(R.string.search_clear_query), onAction = { query = ""; finishInput() }, modifier = emptyModifier)
-                        period != NotificationPeriod.ALL -> EmptyState(Icons.Default.DateRange, stringResource(R.string.notif_period_empty), actionLabel = stringResource(R.string.notif_period_reset), onAction = { period = NotificationPeriod.ALL }, modifier = emptyModifier)
-                        else -> EmptyState(Icons.Outlined.NotificationsNone, stringResource(if (selectedTab == 0) R.string.notif_empty_unread else R.string.notif_empty_read), subtitle = if (selectedTab == 0) stringResource(R.string.notif_screen_empty_subtitle) else null, modifier = emptyModifier)
+                    grouped.forEach { (date, rows) ->
+                        item("day-${date.toEpochDay()}") { Text(date.format(formatter), Modifier.padding(horizontal = 8.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold) }
+                        items(rows, key = { "notification-${it.id}" }) { notification -> NotificationCard(notification, onClick = {
+                            viewModel.markRead(notification.id); onDismiss(); onAnimeClick(notification.animeId)
+                        }, onReadChange = { read -> viewModel.setRead(notification.id, read) }, readActionEnabled = !marking) }
                     }
-                }
-                grouped.forEach { (date, rows) ->
-                    item("day-${date.toEpochDay()}") { Text(date.format(formatter), Modifier.padding(horizontal = 8.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold) }
-                    items(rows, key = { "notification-${it.id}" }) { notification -> NotificationCard(notification, onClick = {
-                        viewModel.markRead(notification.id); onDismiss(); onAnimeClick(notification.animeId)
-                    }, onReadChange = { read -> viewModel.setRead(notification.id, read) }, readActionEnabled = !marking) }
                 }
             }
         }

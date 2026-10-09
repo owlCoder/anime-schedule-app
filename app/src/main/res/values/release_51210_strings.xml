@@ -1,0 +1,6 @@
+<resources>
+    <string name="changelog_51210_motion_title">Calmer page transitions</string>
+    <string name="changelog_51210_motion">Content fades through without overlapping text. Detail, notification and calendar subpages share a smooth transition and keep their saved input and scroll position.</string>
+    <string name="changelog_51210_controls_title">Refined controls and feedback</string>
+    <string name="changelog_51210_controls">Tabs use a sliding selection indicator. Button states change smoothly, search actions keep their space, and messages finish their exit animation inside panels.</string>
+</resources>

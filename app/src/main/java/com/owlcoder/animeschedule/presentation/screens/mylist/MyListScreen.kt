@@ -121,6 +121,8 @@ import com.owlcoder.animeschedule.presentation.components.displayName
 import com.owlcoder.animeschedule.presentation.components.labelRes
 import com.owlcoder.animeschedule.presentation.components.contentTransform
 import com.owlcoder.animeschedule.presentation.components.iosTween
+import com.owlcoder.animeschedule.presentation.components.iosDecelerate
+import com.owlcoder.animeschedule.presentation.components.iosAccelerate
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.PillShape
 
@@ -489,7 +491,11 @@ internal fun LoggedInList(
                                     onIncrementEpisode = { onIncrementEpisode(entry.animeId) },
                                     onEditStatus = { onEditStatus(entry.animeId) },
                                     showDivider = false,
-                                    modifier = Modifier.padding(horizontal = 16.dp).testTag("mylist-entry-${entry.animeId}"),
+                                    modifier = Modifier.animateItem(
+                                        fadeInSpec = motion.iosTween(IosMotion.Quick),
+                                        placementSpec = motion.iosDecelerate(IosMotion.Standard),
+                                        fadeOutSpec = motion.iosAccelerate(IosMotion.PressIn),
+                                    ).padding(horizontal = 16.dp).testTag("mylist-entry-${entry.animeId}"),
                                 )
                             }
                         }

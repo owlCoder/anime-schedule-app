@@ -120,10 +120,22 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.12.9** (version code **46**, October 9, 2026).
+Current release: **5.12.10** (version code **47**, October 9, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### Polished in 5.12.10
+
+- Sliding segmented-control selection, stable labels and equal accessible touch targets.
+- Fade-through content changes and restrained screen navigation prevent overlapping text.
+- Nested detail, notification, agenda and watch-source pages animate within one panel;
+  detail/tool pages retain input and scroll state.
+- Panel feedback animates out fully, replacement messages resize smoothly and stale Undo actions are ignored.
+- Library, search and seasonal cards move smoothly when filtered or reordered.
+- Button states animate consistently; the search clear action reserves space so typing does not shift the input.
+
+See the [release validation](docs/release-5.12.10.md).
 
 ### Polished in 5.12.9
 

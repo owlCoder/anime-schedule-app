@@ -41,39 +41,36 @@ fun AnimeNavHost(
 
     // Top-level destinations should feel like switching panes, not pushing a new screen.
     val rootEnter = fadeIn(
-        animationSpec = motion.iosDecelerate(IosMotion.Standard),
+        animationSpec = motion.iosDecelerate(IosMotion.Standard - IosMotion.PressIn, IosMotion.PressIn),
     )
     val rootExit = fadeOut(
-        animationSpec = motion.iosAccelerate(IosMotion.Quick),
+        animationSpec = motion.iosAccelerate(IosMotion.PressIn),
     )
 
-    // Detail navigation keeps the familiar iOS push direction with a restrained parallax layer.
+    // A short directional translation keeps the destination readable during navigation.
     val pushEnter = slideInHorizontally(
         animationSpec = motion.iosDecelerate(IosMotion.Navigation),
-        initialOffsetX = { if (motion.animationsEnabled) it * 9 / 10 else 0 },
+        initialOffsetX = { if (motion.animationsEnabled) it / 8 else 0 },
     ) + fadeIn(
-        animationSpec = motion.iosDecelerate(IosMotion.Standard),
-        initialAlpha = 0.94f,
+        animationSpec = motion.iosDecelerate(IosMotion.Navigation - IosMotion.PressIn, IosMotion.PressIn),
     )
     val pushExit = slideOutHorizontally(
         animationSpec = motion.iosAccelerate(IosMotion.Navigation),
-        targetOffsetX = { if (motion.animationsEnabled) -it / 5 else 0 },
+        targetOffsetX = { if (motion.animationsEnabled) -it / 16 else 0 },
     ) + fadeOut(
-        animationSpec = motion.iosAccelerate(IosMotion.Quick),
-        targetAlpha = 0.88f,
+        animationSpec = motion.iosAccelerate(IosMotion.PressIn),
     )
     val popEnter = slideInHorizontally(
         animationSpec = motion.iosDecelerate(IosMotion.Navigation),
-        initialOffsetX = { if (motion.animationsEnabled) -it / 5 else 0 },
+        initialOffsetX = { if (motion.animationsEnabled) -it / 16 else 0 },
     ) + fadeIn(
-        animationSpec = motion.iosDecelerate(IosMotion.Standard),
-        initialAlpha = 0.88f,
+        animationSpec = motion.iosDecelerate(IosMotion.Navigation - IosMotion.PressIn, IosMotion.PressIn),
     )
     val popExit = slideOutHorizontally(
         animationSpec = motion.iosAccelerate(IosMotion.Navigation),
-        targetOffsetX = { if (motion.animationsEnabled) it * 9 / 10 else 0 },
+        targetOffsetX = { if (motion.animationsEnabled) it / 8 else 0 },
     ) + fadeOut(
-        animationSpec = motion.iosAccelerate(IosMotion.Quick),
+        animationSpec = motion.iosAccelerate(IosMotion.PressIn),
     )
 
     NavHost(

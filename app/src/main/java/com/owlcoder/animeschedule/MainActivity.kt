@@ -243,13 +243,13 @@ class MainActivity : AppCompatActivity() {
                                                 modifier = Modifier.align(Alignment.BottomCenter),
                                                 enter = slideInVertically(
                                                     animationSpec = motion.iosTween(IosMotion.Standard),
-                                                    initialOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
+                                                    initialOffsetY = { if (motion.animationsEnabled) it / 5 else 0 },
                                                 ) + fadeIn(
                                                     animationSpec = motion.iosTween(IosMotion.Quick),
                                                 ),
                                                 exit = slideOutVertically(
-                                                    animationSpec = motion.iosTween(IosMotion.Standard),
-                                                    targetOffsetY = { if (motion.animationsEnabled) it / 2 else 0 },
+                                                    animationSpec = motion.iosTween(IosMotion.Quick),
+                                                    targetOffsetY = { if (motion.animationsEnabled) it / 5 else 0 },
                                                 ) + fadeOut(
                                                     animationSpec = motion.iosTween(IosMotion.Quick),
                                                 ),

@@ -16,6 +16,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -106,9 +108,16 @@ fun AppSearchField(
                         }
                         inner()
                     }
-                    if (value.isNotEmpty() && onClear != null) {
-                        IconButton(onClick = onClear, enabled = enabled, modifier = Modifier.size(48.dp)) {
-                            Icon(Icons.Default.Close, clearDescription, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (onClear != null) {
+                        // Reserve the trailing action so the text/cursor never jump when typing.
+                        Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                            androidx.compose.animation.AnimatedVisibility(value.isNotEmpty(),
+                                enter = fadeIn(motion.iosTween(IosMotion.Quick)),
+                                exit = fadeOut(motion.iosTween(IosMotion.PressIn))) {
+                                IconButton(onClick = onClear, enabled = enabled, modifier = Modifier.size(48.dp)) {
+                                    Icon(Icons.Default.Close, clearDescription, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
                         }
                     }
                 }

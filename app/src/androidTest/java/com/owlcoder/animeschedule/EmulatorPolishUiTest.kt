@@ -142,7 +142,7 @@ class EmulatorPolishUiTest {
         compose.runOnIdle { assertFalse(options.amoled) }
     }
 
-    @Test fun wrappedSegmentsHaveEqualHeightAndKeepTheirSelection() {
+    @Test fun wrappedSegmentsUseReadableRowsAndKeepTheirSelection() {
         var selected by mutableIntStateOf(0)
         val labels = listOf("Sistemska podešavanja", "Svetla", "Automatska tamna tema")
         compose.setContent { SerbianLarge {
@@ -153,7 +153,8 @@ class EmulatorPolishUiTest {
             }
         } }
         val tabs = labels.map { compose.onNodeWithText(it).assertIsDisplayed().fetchSemanticsNode().boundsInRoot }
-        tabs.forEach { assertEquals(tabs.first().top, it.top, 1f); assertEquals(tabs.first().height, it.height, 1f) }
+        tabs.forEach { assertEquals(tabs.first().height, it.height, 1f) }
+        assertTrue("Large labels use separate readable rows", tabs.zipWithNext().all { (a, b) -> a.bottom <= b.top })
         compose.onNodeWithText(labels[2]).performClick().assertIsSelected()
         compose.runOnIdle { assertEquals(2, selected) }
         screenshot("segmented-large-light")

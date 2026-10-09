@@ -45,8 +45,10 @@ fun <T> MotionPolicy.iosTween(
 
 fun <T> MotionPolicy.iosDecelerate(
     durationMillis: Int = IosMotion.Standard,
+    delayMillis: Int = 0,
 ): FiniteAnimationSpec<T> = tween(
     durationMillis = duration(durationMillis),
+    delayMillis = if (reduceMotion) 0 else delayMillis,
     easing = IosMotion.DecelerateEasing,
 )
 
@@ -64,16 +66,19 @@ fun MotionPolicy.iosPressIn(): FiniteAnimationSpec<Float> = tween(
 
 fun MotionPolicy.iosPressOut(): FiniteAnimationSpec<Float> = iosDecelerate(IosMotion.PressOut)
 
-/** Content size must use the same policy as its fade; Compose's default is a separate spring. */
+/** Fade through a clean frame, rather than layering two sets of text over one another. */
 fun MotionPolicy.contentTransform(
     enter: EnterTransition? = null,
     exit: ExitTransition? = null,
     durationMillis: Int = IosMotion.Standard,
-): ContentTransform = ContentTransform(
-    targetContentEnter = enter ?: fadeIn(iosDecelerate(durationMillis)),
-    initialContentExit = exit ?: fadeOut(iosAccelerate(minOf(durationMillis, IosMotion.Quick))),
-    sizeTransform = SizeTransform { _, _ -> iosTween(durationMillis) },
-)
+): ContentTransform {
+    val fadeOutMillis = minOf(durationMillis / 3, IosMotion.PressIn)
+    return ContentTransform(
+        targetContentEnter = enter ?: fadeIn(iosDecelerate(durationMillis - fadeOutMillis, fadeOutMillis)),
+        initialContentExit = exit ?: fadeOut(iosAccelerate(fadeOutMillis)),
+        sizeTransform = SizeTransform { _, _ -> iosTween(durationMillis) },
+    )
+}
 
 fun MotionPolicy.expandEnter(): EnterTransition =
     fadeIn(iosDecelerate(IosMotion.Standard)) + expandVertically(iosDecelerate(IosMotion.Standard))
