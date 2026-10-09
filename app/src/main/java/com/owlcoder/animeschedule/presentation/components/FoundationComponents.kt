@@ -11,6 +11,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -52,6 +57,12 @@ fun AppSearchField(
     val clearDescription = stringResource(R.string.search_clear_query)
     val focus = androidx.compose.ui.platform.LocalFocusManager.current
     val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    var focused by remember { mutableStateOf(false) }
+    val motion = LocalMotionPolicy.current
+    val outline by animateColorAsState(
+        if (focused && enabled) MaterialTheme.colorScheme.primary.copy(alpha = .65f)
+        else MaterialTheme.colorScheme.outlineVariant,
+        motion.iosTween(IosMotion.Quick), label = "search-focus-outline")
     Box(modifier.fillMaxWidth()) {
         BasicTextField(
             value = value,
@@ -60,9 +71,9 @@ fun AppSearchField(
                 .fillMaxWidth()
                 .heightIn(min = 52.dp)
                 .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
-                .onFocusChanged { onFocusChanged(it.isFocused) }
+                .onFocusChanged { focused = it.isFocused; onFocusChanged(it.isFocused) }
                 .background(MaterialTheme.colorScheme.surfaceContainerLow, shape)
-                .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
+                .border(0.5.dp, outline, shape)
                 .semantics { contentDescription = placeholder }
                 .padding(start = 11.dp, end = 2.dp, top = 2.dp, bottom = 2.dp),
             enabled = enabled,

@@ -119,10 +119,7 @@ internal fun ToastOverlay(controller: ToastController, modifier: Modifier) {
             AnimatedVisibility(
                 data != null,
                 enter = slideInVertically(
-                    motion.iosSpring(
-                        dampingRatio = .92f,
-                        stiffness = 540f
-                    )
+                    motion.iosDecelerate(IosMotion.Standard)
                 ) { if (motion.animationsEnabled) it / 2 else 0 } + fadeIn(motion.iosTween(IosMotion.Quick)),
                 exit = slideOutVertically(motion.iosTween(IosMotion.Quick)) { if (motion.animationsEnabled) it / 3 else 0 } + fadeOut(
                     motion.iosTween(IosMotion.Quick)

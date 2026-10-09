@@ -6,11 +6,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -33,12 +30,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Today
+import com.owlcoder.animeschedule.presentation.components.GlassIconButton
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SheetValue
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -139,7 +137,9 @@ import com.owlcoder.animeschedule.presentation.components.displayName
 import com.owlcoder.animeschedule.presentation.components.ToolShortcutsSheet
 import com.owlcoder.animeschedule.presentation.components.ToolShortcutBar
 import com.owlcoder.animeschedule.presentation.components.LocalSyncCenter
-import com.owlcoder.animeschedule.presentation.components.iosSpring
+import com.owlcoder.animeschedule.presentation.components.contentTransform
+import com.owlcoder.animeschedule.presentation.components.expandEnter
+import com.owlcoder.animeschedule.presentation.components.expandExit
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -203,7 +203,14 @@ private fun ScheduleScreenContent(
     // date that has become yesterday.
     var pickedEpochDay by rememberSaveable { mutableStateOf<Long?>(null) }
     val selectedDate = pickedEpochDay?.let(LocalDate::ofEpochDay)
-        ?.takeIf { it in today..today.plusDays(6) } ?: today
+        ?.takeIf { it in today.minusDays(7)..today.plusDays(6) } ?: today
+    val previousWeek = selectedDate < today
+    LaunchedEffect(previousWeek, today, uiState.zoneId) {
+        if (previousWeek) viewModel.loadPreviousWeek()
+    }
+    val refreshSelectedWeek: () -> Unit = {
+        if (previousWeek) viewModel.loadPreviousWeek(force = true) else viewModel.refresh()
+    }
     var editingEpisode by remember { mutableStateOf<AiringEpisode?>(null) }
     var lastIncrementedEpisode by remember { mutableStateOf<AiringEpisode?>(null) }
 
@@ -211,10 +218,9 @@ private fun ScheduleScreenContent(
     val savedMsg = stringResource(R.string.toast_status_saved)
     val removedMsg = stringResource(R.string.toast_removed_from_list)
     val errorMsg = stringResource(R.string.toast_update_error)
-    val scheduleErrorMsg = uiState.errorRes?.let { stringResource(it) }
+    val scheduleErrorMsg = (if (previousWeek) uiState.previousWeekErrorRes else uiState.errorRes)?.let { stringResource(it) }
 
     LaunchedEffect(uiState.isInitialLoad) { onInitialLoadChange(uiState.isInitialLoad) }
-    LaunchedEffect(scheduleErrorMsg) { scheduleErrorMsg?.let(toast::error) }
     LaunchedEffect(Unit) {
         viewModel.incrementEvent.collect { event ->
             when (event) {
@@ -245,8 +251,8 @@ private fun ScheduleScreenContent(
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         PullToRefreshBox(
-            isRefreshing = uiState.isLoading,
-            onRefresh = viewModel::refresh,
+            isRefreshing = uiState.isLoading || (previousWeek && uiState.isPreviousWeekLoading),
+            onRefresh = refreshSelectedWeek,
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize(),
@@ -258,7 +264,7 @@ private fun ScheduleScreenContent(
                     selectedDate = selectedDate,
                     onDateSelected = { pickedEpochDay = it.takeIf { date -> date != today }?.toEpochDay() },
                     scheduleError = scheduleErrorMsg,
-                    onRetry = viewModel::refresh,
+                    onRetry = refreshSelectedWeek,
                     onCardClick = { onAnimeClick(it.animeId) },
                     onRecentAnimeClick = onAnimeClick,
                     onIncrementEpisode = { episode ->
@@ -320,7 +326,10 @@ private fun ScheduleScreenContent(
 
     when (openOverlay) {
         ScheduleOverlay.Agenda -> {
-            val days = remember(uiState.today, uiState.weekDays) { scheduleAgenda(uiState.today, uiState.weekDays) }
+            val days = remember(uiState.today, previousWeek, uiState.weekDays, uiState.previousWeekDays) {
+                scheduleAgenda(if (previousWeek) today.minusDays(7) else today,
+                    if (previousWeek) uiState.previousWeekDays else uiState.weekDays)
+            }
             ScheduleAgendaSheet(days, selectedDate, onDateSelected = { date ->
                 pickedEpochDay = date.toEpochDay()
                 viewModel.setOpenOverlay(ScheduleOverlay.None)
@@ -476,9 +485,19 @@ private fun TodayHomeContent(
         item(key = "date-rail") {
             ScheduleDateRail(
                 selectedDate = selectedDate,
-                dates = remember(today) { (0L..6L).map(today::plusDays) },
+                dates = remember(today, selectedDate < today) {
+                    val start = if (selectedDate < today) today.minusDays(7) else today
+                    (0L..6L).map(start::plusDays)
+                },
                 onDateSelected = onDateSelected,
-                counts = remember(uiState.weekDays) { uiState.weekDays.associate { it.date to it.episodes.size } },
+                onPreviousWeek = { onDateSelected(today.minusDays(7)) },
+                onNextWeek = { onDateSelected(today) },
+                onToday = { onDateSelected(today) },
+                previousWeek = selectedDate < today,
+                todaySelected = selectedDate == today,
+                counts = remember(uiState.weekDays, uiState.previousWeekDays) {
+                    (uiState.previousWeekDays + uiState.weekDays).associate { it.date to it.episodes.size }
+                },
             )
         }
 
@@ -509,7 +528,7 @@ private fun TodayHomeContent(
 
         scheduleError?.let { error ->
             item(key = "schedule-error") {
-                ErrorBanner(error, onRetry)
+                ErrorBanner(error, onRetry, horizontalInset = 0.dp)
             }
         }
 
@@ -526,7 +545,7 @@ private fun TodayHomeContent(
                         animationSpec = motion.iosTween(IosMotion.Quick),
                         targetOffsetX = { if (motion.animationsEnabled) -direction * it / 14 else 0 },
                     ) + fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
-                    enter togetherWith exit
+                    motion.contentTransform(enter, exit)
                 },
                 label = "schedule-date-content",
             ) { date ->
@@ -617,10 +636,27 @@ private fun ScheduleDayContent(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            if (!hasSchedule) {
+            if (!hasSchedule && selectedDate < today && uiState.isPreviousWeekLoading) {
+                Column(Modifier.fillMaxWidth().heightIn(min = 240.dp).testTag("schedule-history-loading"),
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    com.owlcoder.animeschedule.presentation.components.OrbitLoader(Modifier.size(48.dp))
+                    Spacer(Modifier.height(12.dp))
+                    Text(stringResource(R.string.schedule_loading_previous_week), style = MaterialTheme.typography.bodyMedium)
+                }
+            } else if (!hasSchedule && (if (selectedDate < today) uiState.previousWeekErrorRes else uiState.errorRes) != null) {
+                Box(Modifier.fillMaxWidth().heightIn(min = 160.dp).padding(24.dp), contentAlignment = Alignment.Center) {
+                    Text(stringResource(R.string.schedule_date_unavailable),
+                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                }
+            } else if (!hasSchedule) {
                 EmptyState(
                     icon = Icons.Default.CalendarMonth,
-                    title = stringResource(if (uiState.filter.isActive) R.string.schedule_no_matches else R.string.schedule_empty_title),
+                    title = stringResource(when {
+                        uiState.filter.isActive -> R.string.schedule_no_matches
+                        isToday -> R.string.schedule_empty_title
+                        else -> R.string.schedule_no_broadcasts
+                    }),
                     subtitle = if (uiState.filter.isActive) {
                         stringResource(R.string.schedule_no_matches_hint)
                     } else if (isToday) {
@@ -701,10 +737,8 @@ private fun ScheduleDayContent(
 
             AnimatedVisibility(
                 visible = isToday && uiState.recentlyChangedEntries.isNotEmpty(),
-                enter = fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
-                    expandVertically(animationSpec = motion.iosSpring()),
-                exit = fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                    shrinkVertically(animationSpec = motion.iosTween(IosMotion.Quick)),
+                enter = motion.expandEnter(),
+                exit = motion.expandExit(),
             ) {
                 RecentlyChangedSection(
                     entries = uiState.recentlyChangedEntries,
@@ -860,7 +894,6 @@ private fun RecentlyChangedSheet(
     AppSheet(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.schedule_section_recently_changed),
-        sheetGesturesEnabled = true,
     ) {
         LazyColumn(
             modifier = Modifier
@@ -919,66 +952,84 @@ private fun ScheduleDateRail(
     selectedDate: LocalDate,
     dates: List<LocalDate>,
     onDateSelected: (LocalDate) -> Unit,
+    onPreviousWeek: () -> Unit,
+    onNextWeek: () -> Unit,
+    onToday: () -> Unit,
+    previousWeek: Boolean,
+    todaySelected: Boolean,
     counts: Map<LocalDate, Int> = emptyMap(),
 ) {
     val motion = LocalMotionPolicy.current
     Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.extraLarge) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp)
-                .height(IntrinsicSize.Min).heightIn(min = 68.dp),
-            horizontalArrangement = Arrangement.spacedBy(3.dp),
-        ) {
-            dates.forEach { date ->
-                val isSelected = date == selectedDate
-                val count = counts[date] ?: 0
-                val description = androidx.compose.ui.res.pluralStringResource(R.plurals.schedule_day_count, count, date.toString(), count)
-                val containerColor by animateColorAsState(
-                    targetValue = if (isSelected) {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
-                    } else {
-                        Color.Transparent
-                    },
-                    animationSpec = motion.iosTween(IosMotion.Standard),
-                    label = "date-cell-fill",
-                )
-                val borderColor by animateColorAsState(
-                    targetValue = if (isSelected) {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
-                    } else {
-                        Color.Transparent
-                    },
-                    animationSpec = motion.iosTween(IosMotion.Standard),
-                    label = "date-cell-border",
-                )
-                val scale by animateFloatAsState(
-                    targetValue = if (isSelected) 1f else 0.97f,
-                    animationSpec = motion.iosSpring(),
-                    label = "date-cell-scale",
-                )
-                Surface(
+        Column {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp).heightIn(min = 48.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                GlassIconButton(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.schedule_previous_week),
+                    onPreviousWeek, Modifier.testTag("schedule-previous-week"), enabled = !previousWeek)
+                AppButton(stringResource(R.string.schedule_tab_today), onToday, Modifier.testTag("schedule-return-today"),
+                    variant = AppButtonVariant.Plain, icon = Icons.Default.Today, enabled = !todaySelected)
+                GlassIconButton(Icons.AutoMirrored.Filled.ArrowForward, stringResource(R.string.schedule_next_week),
+                    onNextWeek, Modifier.testTag("schedule-next-week"), enabled = previousWeek)
+            }
+            AnimatedContent(dates, transitionSpec = { motion.contentTransform() }, label = "schedule-week-rail") { displayedDates ->
+                Row(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .graphicsLayer {
-                            scaleX = scale
-                            scaleY = scale
-                        }
-                        .selectable(isSelected, role = androidx.compose.ui.semantics.Role.RadioButton) { onDateSelected(date) }
-                        .testTag("schedule-date-$date")
-                        .semantics { contentDescription = description },
-                    shape = RoundedCornerShape(13.dp),
-                    color = containerColor,
-                    contentColor = if (isSelected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
-                    border = BorderStroke(0.5.dp, borderColor),
-                    tonalElevation = 0.dp,
+                        .fillMaxWidth()
+                        .padding(4.dp)
+                        .height(IntrinsicSize.Min).heightIn(min = 68.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
                 ) {
-                    DateCellContent(date, isSelected, count)
+                    displayedDates.forEach { date ->
+                        val isSelected = date == selectedDate
+                        val count = counts[date] ?: 0
+                        val description = androidx.compose.ui.res.pluralStringResource(R.plurals.schedule_day_count, count, date.toString(), count)
+                        val containerColor by animateColorAsState(
+                            targetValue = if (isSelected) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+                            } else {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0f)
+                            },
+                            animationSpec = motion.iosTween(IosMotion.Standard),
+                            label = "date-cell-fill",
+                        )
+                        val borderColor by animateColorAsState(
+                            targetValue = if (isSelected) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.30f)
+                            } else {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0f)
+                            },
+                            animationSpec = motion.iosTween(IosMotion.Standard),
+                            label = "date-cell-border",
+                        )
+                        val scale by animateFloatAsState(
+                            targetValue = if (isSelected) 1f else 0.97f,
+                            animationSpec = motion.iosTween(IosMotion.Standard),
+                            label = "date-cell-scale",
+                        )
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .graphicsLayer {
+                                    scaleX = scale
+                                    scaleY = scale
+                                }
+                                .selectable(isSelected, role = androidx.compose.ui.semantics.Role.RadioButton) { onDateSelected(date) }
+                                .testTag("schedule-date-$date")
+                                .semantics { contentDescription = description },
+                            shape = RoundedCornerShape(13.dp),
+                            color = containerColor,
+                            contentColor = if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                            border = BorderStroke(0.5.dp, borderColor),
+                            tonalElevation = 0.dp,
+                        ) {
+                            DateCellContent(date, isSelected, count)
+                        }
+                    }
                 }
             }
         }
@@ -1033,7 +1084,7 @@ private fun FeaturedAiring(
             .fillMaxWidth()
             .heightIn(min = 92.dp)
             .testTag("dashboard-featured")
-            .animateContentSize(animationSpec = motion.iosSpring())
+            .animateContentSize(animationSpec = motion.iosTween(IosMotion.Standard))
             .clickable(onClick = onClick),
         material = AppMaterial.Grouped,
         shape = MaterialTheme.shapes.extraLarge,
@@ -1146,7 +1197,7 @@ private fun UpcomingAiringList(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .animateContentSize(animationSpec = motion.iosSpring())
+            .animateContentSize(animationSpec = motion.iosTween(IosMotion.Standard))
             .drawBehind {
                 val x = 11.5.dp.toPx()
                 val inset = 34.dp.toPx()
@@ -1305,8 +1356,7 @@ private fun MalProgressText(
     AnimatedContent(
         targetState = entry.episodesWatched,
         transitionSpec = {
-            fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
-                fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
+            motion.contentTransform(durationMillis = IosMotion.Quick)
         },
         label = "schedule-mal-progress-${episode.animeId}",
     ) { watched ->
@@ -1347,21 +1397,10 @@ private fun ScheduleSeeAllSheet(
 ) {
     val listState = rememberLazyListState()
     val sortedEpisodes = remember(episodes) { episodes.sortedBy { it.airingAtEpochSeconds } }
-    val isEditing by rememberUpdatedState(editingEpisode != null)
-    val dismissEditor by rememberUpdatedState(onDismissEditor)
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-        confirmValueChange = { target ->
-            // Back, scrim taps and dismissal gestures return from the editor to the list
-            // without hiding the modal that still owns that list.
-            if (target == SheetValue.Hidden && isEditing) { dismissEditor(); false } else true
-        },
-    )
     AppSheet(
-        onDismissRequest = if (editingEpisode != null) onDismissEditor else onDismiss,
+        onDismissRequest = onDismiss,
+        onNavigateBack = { if (editingEpisode != null) { onDismissEditor(); true } else false },
         title = title.takeIf { editingEpisode == null },
-        sheetState = sheetState,
-        sheetGesturesEnabled = editingEpisode == null,
     ) {
         val editingId = editingEpisode?.malId
         if (editingEpisode != null && editingId != null) {

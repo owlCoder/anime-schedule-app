@@ -16,6 +16,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.outlined.TouchApp
+import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Bookmarks
 import androidx.compose.material.icons.outlined.EventAvailable
@@ -57,6 +59,9 @@ private data class ReleaseNote(
 @Composable
 fun ChangelogBottomSheet(onDismiss: () -> Unit) {
     val notes = listOf(
+        ReleaseNote(Icons.Outlined.DateRange, stringResource(R.string.changelog_5129_history_title), stringResource(R.string.changelog_5129_history)),
+        ReleaseNote(Icons.Outlined.Tune, stringResource(R.string.changelog_5129_motion_title), stringResource(R.string.changelog_5129_motion)),
+        ReleaseNote(Icons.Outlined.TouchApp, stringResource(R.string.changelog_5129_controls_title), stringResource(R.string.changelog_5129_controls)),
         ReleaseNote(Icons.Outlined.Search, stringResource(R.string.changelog_5128_search_title), stringResource(R.string.changelog_5128_search)),
         ReleaseNote(Icons.Outlined.Tune, stringResource(R.string.changelog_5128_controls_title), stringResource(R.string.changelog_5128_controls)),
         ReleaseNote(Icons.Outlined.Palette, stringResource(R.string.changelog_5127_themes_title), stringResource(R.string.changelog_5127_themes)),
@@ -168,7 +173,7 @@ fun ChangelogBottomSheet(onDismiss: () -> Unit) {
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
-                            text = stringResource(R.string.changelog_5128_title),
+                            text = stringResource(R.string.changelog_5129_title),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

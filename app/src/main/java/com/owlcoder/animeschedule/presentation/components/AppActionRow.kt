@@ -2,11 +2,13 @@ package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -20,8 +22,10 @@ import com.owlcoder.animeschedule.ui.theme.LocalCompactLayout
 fun AppActionRow(label: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier = Modifier,
     subtitle: String? = null, enabled: Boolean = true, showChevron: Boolean = true) {
     val compact = LocalCompactLayout.current
+    val source = remember { MutableInteractionSource() }
     val content = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = .42f)
-    Surface(modifier.fillMaxWidth().clip(MaterialTheme.shapes.large).clickable(enabled = enabled, role = Role.Button, onClick = onClick),
+    Surface(modifier.fillMaxWidth().iosPressScale(source, pressedScale = .99f).clip(MaterialTheme.shapes.large)
+        .clickable(source, indication = null, enabled = enabled, role = Role.Button, onClick = onClick),
         shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(.5.dp, MaterialTheme.colorScheme.outlineVariant)) {
         Row(Modifier.heightIn(min = if (compact) 48.dp else 60.dp).padding(horizontal = 14.dp, vertical = if (compact) 10.dp else 14.dp), verticalAlignment = Alignment.CenterVertically,

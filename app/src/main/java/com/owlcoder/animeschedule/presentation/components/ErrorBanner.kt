@@ -23,6 +23,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import com.owlcoder.animeschedule.R
 
 @Composable
@@ -30,11 +31,12 @@ fun ErrorBanner(
     message: String,
     onRetry: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    horizontalInset: Dp = 16.dp,
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = horizontalInset, vertical = 8.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },
         shape = ContinuousRoundedShape(14.dp),
         colors = CardDefaults.cardColors(

@@ -48,14 +48,6 @@ internal fun DetailToolsSheet(detail: AnimeDetail, onDismiss: () -> Unit, onChar
     fun navigate(target: DetailToolPage) {
         page = target
     }
-    val currentPage by rememberUpdatedState(page)
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { target ->
-        // Return from child pages on Back or a scrim tap without hiding their shared sheet.
-        if (target == SheetValue.Hidden && currentPage != DetailToolPage.MENU) {
-            navigate(DetailToolPage.MENU)
-            false
-        } else true
-    })
     val title = stringResource(when (page) {
         DetailToolPage.MENU -> R.string.detail_tools
         DetailToolPage.TITLES -> R.string.detail_alternative_titles
@@ -63,9 +55,9 @@ internal fun DetailToolsSheet(detail: AnimeDetail, onDismiss: () -> Unit, onChar
         DetailToolPage.RELATIONS -> R.string.detail_related_finder
         DetailToolPage.SYNOPSIS -> R.string.detail_synopsis_reader
     })
-    AppSheet(onDismissRequest = {
-        if (page == DetailToolPage.MENU) onDismiss() else navigate(DetailToolPage.MENU)
-    }, title = title, sheetState = sheetState, trailingContent = {
+    AppSheet(onDismissRequest = onDismiss, onNavigateBack = {
+        if (page != DetailToolPage.MENU) { navigate(DetailToolPage.MENU); true } else false
+    }, title = title, trailingContent = {
         if (page == DetailToolPage.SYNOPSIS) GlassIconButton(Icons.Default.ContentCopy, stringResource(R.string.detail_copy_synopsis), { onCopySynopsis(synopsis) })
     }) {
         // The sheet has its own focus owner. Clear its input when navigating between pages.

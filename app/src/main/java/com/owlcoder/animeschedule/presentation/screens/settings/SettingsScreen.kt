@@ -76,6 +76,8 @@ import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
 import java.time.ZoneId
 import java.util.Locale
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import com.owlcoder.animeschedule.presentation.components.iosPressScale
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -362,11 +364,13 @@ private fun SettingsRow(
     trailing: (@Composable () -> Unit)? = null,
 ) {
 
+    val source = remember { MutableInteractionSource() }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = if (LocalCompactLayout.current) 56.dp else 66.dp)
-            .clickable(enabled = enabled, onClick = onClick)
+            .iosPressScale(source, pressedScale = .99f)
+            .clickable(source, indication = null, enabled = enabled, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick)
             .padding(horizontal = 14.dp, vertical = if (LocalCompactLayout.current) 8.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -191,6 +191,7 @@ fun AnimeScheduleTheme(
     }
     val colorScheme = remember(darkTheme, options) { buildAppColorScheme(darkTheme, options) }
     val systemMotion = rememberMotionPolicy()
+    val motion = MotionPolicy(systemMotion.reduceMotion || options.reduceMotion)
 
     // enableEdgeToEdge() follows the system theme by default. Keep system-bar icon
     // contrast synchronized with the in-app theme, including forced Light/Dark modes.
@@ -219,7 +220,7 @@ fun AnimeScheduleTheme(
             LocalCompactLayout provides options.compactLayout,
             LocalAmoledDark provides (darkTheme && options.amoled),
         ) {
-            ProvideMotionPolicy(policy = MotionPolicy(systemMotion.reduceMotion || options.reduceMotion), content = content)
+            ProvideMotionPolicy(policy = motion, content = content)
         }
     }
 }

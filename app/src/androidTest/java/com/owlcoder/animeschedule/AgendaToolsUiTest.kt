@@ -88,10 +88,10 @@ class AgendaToolsUiTest {
         override fun loginAbandoned() = Unit
         override suspend fun logout() = Unit
     }
-    private fun scheduleVm(muted: Set<Int> = emptySet()): ScheduleViewModel {
-        val repo = object : ScheduleRepository {
+    private fun scheduleVm(muted: Set<Int> = emptySet(), repository: ScheduleRepository? = null): ScheduleViewModel {
+        val repo = repository ?: object : ScheduleRepository {
             override fun getWeekSchedule(zoneId: ZoneId, today: LocalDate) = flowOf(days)
-            override suspend fun refreshSchedule(zoneId: ZoneId) = AppResult.Success(Unit)
+            override suspend fun refreshSchedule(zoneId: ZoneId, startDate: java.time.LocalDate) = AppResult.Success(Unit)
         }
         val notifications = object : NotificationRepository {
             override fun getAll() = flowOf(emptyList<AppNotification>())
@@ -105,6 +105,83 @@ class AgendaToolsUiTest {
             override fun checkAiringNotifications() = Unit
         }
         return ScheduleViewModel(repo, settings, mal, notifications, work, flowOf(setOf(101)), mutedIds = flowOf(muted)).also { models.put("schedule", it) }
+    }
+
+    @Test fun homeCanBrowsePreviousSevenDaysAndItsAgendaThenReturnToToday() {
+        val past = today.minusDays(7)
+        val cached = MutableStateFlow(days)
+        var historicalRequests = 0
+        val repo = object : ScheduleRepository {
+            override fun getWeekSchedule(zoneId: ZoneId, today: LocalDate) = cached.map { rows ->
+                rows.filter { it.date in today..today.plusDays(6) }
+            }
+            override suspend fun refreshSchedule(zoneId: ZoneId, startDate: LocalDate): AppResult<Unit> {
+                if (startDate == past) {
+                    historicalRequests++
+                    cached.value = days + ScheduleDay(past, listOf(days.first().episodes.first().copy(title = "Previous-week anime", airingAtEpochSeconds = past.atTime(20, 0).atZone(zone).toEpochSecond())))
+                }
+                return AppResult.Success(Unit)
+            }
+        }
+        val vm = scheduleVm(repository = repo)
+        show { ScheduleScreen({}, viewModel = vm) }
+        compose.waitUntil(5000) { !vm.uiState.value.isLoading }
+        assertEquals(0, historicalRequests)
+        compose.onNodeWithTag("schedule-previous-week").assertIsEnabled().performClick()
+        compose.waitUntil(5000) { vm.uiState.value.previousWeekDays.isNotEmpty() }
+        compose.onNodeWithTag("schedule-date-$past").assertIsSelected()
+        compose.onNodeWithText("Previous-week anime").assertIsDisplayed()
+        compose.onNodeWithTag("schedule-previous-week").assertIsNotEnabled()
+        compose.onNodeWithTag("schedule-next-week").assertIsEnabled()
+        screenshot("home-previous-week-light")
+        compose.onNodeWithTag("shortcut-WEEK_OVERVIEW").performClick()
+        compose.onNodeWithTag("agenda-days").performScrollToNode(hasTestTag("agenda-load-$past"))
+        compose.onNodeWithTag("agenda-load-$past").assertIsDisplayed()
+        screenshot("agenda-previous-week-light")
+        compose.onNodeWithContentDescription(text(android.R.string.cancel)).performClick()
+        compose.onNodeWithTag("schedule-return-today").performClick()
+        compose.onNodeWithTag("schedule-date-$today").assertIsSelected()
+        compose.onNodeWithTag("schedule-next-week").assertIsNotEnabled()
+        compose.onNodeWithTag("schedule-previous-week").performClick()
+        compose.runOnIdle { assertEquals(1, historicalRequests) }
+        compose.onNodeWithTag("schedule-next-week").performClick()
+        compose.onNodeWithTag("schedule-date-$today").assertIsSelected()
+    }
+
+    @Test fun previousWeekLoadingAndOfflineRetryDoNotShowAnEmptyDayPrematurely() {
+        val past = today.minusDays(7)
+        val cached = MutableStateFlow(days)
+        var gate = kotlinx.coroutines.CompletableDeferred<AppResult<Unit>>()
+        val repo = object : ScheduleRepository {
+            override fun getWeekSchedule(zoneId: ZoneId, today: LocalDate) = cached.map { rows -> rows.filter { it.date in today..today.plusDays(6) } }
+            override suspend fun refreshSchedule(zoneId: ZoneId, startDate: LocalDate): AppResult<Unit> {
+                if (startDate != past) return AppResult.Success(Unit)
+                val result = gate.await()
+                if (result is AppResult.Success) {
+                    cached.value = days + ScheduleDay(past, listOf(days.first().episodes.first().copy(
+                        title = "Cached past anime", airingAtEpochSeconds = past.atTime(20, 0).atZone(zone).toEpochSecond())))
+                }
+                return result
+            }
+        }
+        val vm = scheduleVm(repository = repo)
+        show(true) { ScheduleScreen({}, viewModel = vm) }
+        compose.waitUntil(5000) { !vm.uiState.value.isLoading }
+        compose.onNodeWithTag("schedule-previous-week").performClick()
+        compose.onNodeWithTag("schedule-history-loading").assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.schedule_empty_title)).assertDoesNotExist()
+        gate.complete(AppResult.Error(AppError.Network("offline")))
+        compose.waitUntil(5000) { !vm.uiState.value.isPreviousWeekLoading }
+        screenshot("home-previous-week-offline-dark")
+        compose.onNodeWithText(text(R.string.error_load_schedule)).assertIsDisplayed()
+        compose.onNodeWithText(text(R.string.schedule_empty_title)).assertDoesNotExist()
+        compose.onNodeWithTag("toast-dismiss").assertDoesNotExist()
+        gate = kotlinx.coroutines.CompletableDeferred(AppResult.Success(Unit))
+        compose.onNode(hasText(text(R.string.common_retry)) and hasClickAction()).performClick()
+        compose.waitUntil(5000) { vm.uiState.value.previousWeekErrorRes == null }
+        compose.onNodeWithText("Cached past anime").assertIsDisplayed()
+        compose.onNodeWithTag("schedule-return-today").performClick()
+        compose.onNodeWithTag("schedule-date-$today").assertIsSelected()
     }
 
     @Test fun homeShowsAnimeAndKeepsThreeDefaultShortcutsInOneAlignedRow() {
@@ -340,7 +417,7 @@ class AgendaToolsUiTest {
         compose.onNodeWithTag("detail-character-finder").assertIsDisplayed().performClick()
         // Invoke the scrim's accessibility action. Its full-window bounds overlap the
         // expanded sheet; a coordinate tap at their center would hit sheet content.
-        compose.onNodeWithContentDescription(instrumentation.targetContext.getString(androidx.compose.ui.R.string.close_sheet))
+        compose.onNodeWithContentDescription(text(R.string.overlay_dismiss))
             .performSemanticsAction(SemanticsActions.OnClick) { it() }
         compose.onNodeWithTag("detail-tools-menu").performScrollToNode(hasTestTag("detail-character-finder"))
         compose.onNodeWithTag("detail-character-finder").assertIsDisplayed()

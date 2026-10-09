@@ -34,11 +34,9 @@ internal fun ScheduleAgendaSheet(days: List<ScheduleDay>, selectedDate: LocalDat
     val totalMinutes = remember(days, tools.episodeMinutes, tools.durationOverrides) { days.estimatedWatchMinutes(tools) }
     val nextDay = remember(days, selectedDate) { days.nextBroadcastDay(selectedDate) }
     var showReminders by rememberSaveable { mutableStateOf(false) }
-    val currentPage by rememberUpdatedState(showReminders)
-    val state = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = {
-        if (it == SheetValue.Hidden && currentPage) { showReminders = false; false } else true
-    })
-    AppSheet(onDismissRequest = { if (showReminders) showReminders = false else onDismiss() }, sheetState = state,
+    AppSheet(onDismissRequest = onDismiss, onNavigateBack = {
+        if (showReminders) { showReminders = false; true } else false
+    },
         title = stringResource(if (showReminders) R.string.calendar_reminder else R.string.schedule_agenda)) {
         if (showReminders) LazyColumn(Modifier.heightIn(max = 580.dp).testTag("agenda-reminders"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             item { Text(stringResource(R.string.calendar_reminder_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }

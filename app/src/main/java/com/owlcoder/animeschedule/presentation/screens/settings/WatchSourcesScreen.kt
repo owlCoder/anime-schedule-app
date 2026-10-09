@@ -19,8 +19,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.SheetValue
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -54,6 +52,8 @@ import com.owlcoder.animeschedule.presentation.components.EmptyState
 import com.owlcoder.animeschedule.presentation.components.FaviconImage
 import com.owlcoder.animeschedule.presentation.components.GlassIconButton
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
+import com.owlcoder.animeschedule.presentation.components.IosMotion
+import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -73,7 +73,6 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.owlcoder.animeschedule.presentation.components.iosSpring
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,21 +97,9 @@ fun WatchSourcesBottomSheet(
         showAddSheet = false
         editingSource = null
     }
-    val isEditing by rememberUpdatedState(editing)
-    val dismissEditor by rememberUpdatedState(leaveEditor)
-    val confirmChange = remember {
-        { target: SheetValue ->
-            if (target == SheetValue.Hidden && isEditing) { dismissEditor(); false } else true
-        }
-    }
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-        // Keep callback identity stable: Material includes it in the saved state keys.
-        confirmValueChange = confirmChange,
-    )
     AppSheet(
-        onDismissRequest = { if (editing) leaveEditor() else onDismiss() },
-        sheetState = sheetState,
+        onDismissRequest = onDismiss,
+        onNavigateBack = { if (editing) { leaveEditor(); true } else false },
         title = stringResource(if (editing) { if (showAddSheet) R.string.watch_sources_add else R.string.watch_sources_edit } else R.string.watch_sources_title),
         trailingContent = {
             if (editing) AppButton(stringResource(R.string.common_save), {
@@ -210,7 +197,7 @@ private fun SourceRow(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 68.dp)
-            .animateContentSize(animationSpec = motion.iosSpring())
+            .animateContentSize(animationSpec = motion.iosTween(IosMotion.Standard))
             .clickable(onClick = onClick)
             .padding(start = 11.dp, end = 8.dp, top = 7.dp, bottom = 7.dp),
         verticalAlignment = Alignment.CenterVertically,

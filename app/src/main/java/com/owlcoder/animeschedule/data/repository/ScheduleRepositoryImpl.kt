@@ -50,8 +50,8 @@ class ScheduleRepositoryImpl @Inject constructor(
         }.flowOn(Dispatchers.Default)
     }
 
-    override suspend fun refreshSchedule(zoneId: ZoneId): AppResult<Unit> {
-        val (from, to) = weekRangeUtc(zoneId)
+    override suspend fun refreshSchedule(zoneId: ZoneId, startDate: LocalDate): AppResult<Unit> {
+        val (from, to) = weekRangeUtc(zoneId, startDate)
         val nowEpoch = Instant.now().epochSecond
         val result = providerOrchestrator.firstSuccessful(
             operation = ProviderOperation.SCHEDULE,

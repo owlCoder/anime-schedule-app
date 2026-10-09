@@ -90,6 +90,9 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
+import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
+import com.owlcoder.animeschedule.presentation.components.IosMotion
+import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.components.iosPressScale
 import kotlinx.coroutines.launch
 
@@ -114,6 +117,7 @@ fun OnboardingScreen(
 ) {
     val pagerState = rememberPagerState(pageCount = { OnboardingPageCount })
     val scope = rememberCoroutineScope()
+    val motion = LocalMotionPolicy.current
     val context = LocalContext.current
     var notificationsEnabled by remember { mutableStateOf(true) }
     var notificationOffset by remember { mutableIntStateOf(0) }
@@ -175,7 +179,7 @@ fun OnboardingScreen(
                 language = selectedLanguage,
                 onBackOrLater = {
                     if (currentPage > 0) {
-                        scope.launch { pagerState.animateScrollToPage(currentPage - 1) }
+                        scope.launch { pagerState.animateScrollToPage(currentPage - 1, animationSpec = motion.iosTween(IosMotion.Navigation)) }
                     } else {
                         onComplete()
                     }
@@ -184,7 +188,7 @@ fun OnboardingScreen(
                     if (currentPage == OnboardingPageCount - 1) {
                         onComplete()
                     } else {
-                        scope.launch { pagerState.animateScrollToPage(currentPage + 1) }
+                        scope.launch { pagerState.animateScrollToPage(currentPage + 1, animationSpec = motion.iosTween(IosMotion.Navigation)) }
                     }
                 },
             )
@@ -305,6 +309,7 @@ private fun LanguageChoiceCard(
         } else {
             MaterialTheme.colorScheme.surfaceContainerHigh
         },
+        animationSpec = LocalMotionPolicy.current.iosTween(IosMotion.Quick),
         label = "language-card-background",
     )
     Surface(
@@ -397,6 +402,7 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
         repeat(pageCount) { index ->
             val width by animateDpAsState(
                 targetValue = if (index == currentPage) 22.dp else 7.dp,
+                animationSpec = LocalMotionPolicy.current.iosTween(IosMotion.Quick),
                 label = "onboarding-indicator-width",
             )
             val color by animateColorAsState(
@@ -405,6 +411,7 @@ private fun PageIndicator(currentPage: Int, pageCount: Int) {
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.24f)
                 },
+                animationSpec = LocalMotionPolicy.current.iosTween(IosMotion.Quick),
                 label = "onboarding-indicator-color",
             )
             Box(
@@ -845,6 +852,7 @@ private fun FeatureTile(
         } else {
             MaterialTheme.colorScheme.surfaceContainerHigh
         },
+        animationSpec = LocalMotionPolicy.current.iosTween(IosMotion.Quick),
         label = "feature-tile-color",
     )
     Surface(
@@ -898,6 +906,7 @@ private fun DatePreviewCell(
         } else {
             Color.Transparent
         },
+        animationSpec = LocalMotionPolicy.current.iosTween(IosMotion.Quick),
         label = "date-preview-color",
     )
     Surface(
@@ -982,6 +991,7 @@ private fun SelectionChip(
         } else {
             MaterialTheme.colorScheme.surfaceContainerHigh
         },
+        animationSpec = LocalMotionPolicy.current.iosTween(IosMotion.Quick),
         label = "selection-chip-background",
     )
     Surface(

@@ -8,6 +8,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,6 +21,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.owlcoder.animeschedule.R
+import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
+import com.owlcoder.animeschedule.presentation.components.IosMotion
+import com.owlcoder.animeschedule.presentation.components.iosTween
+import com.owlcoder.animeschedule.presentation.components.iosPressScale
 import java.util.Locale
 
 @Composable
@@ -28,12 +36,18 @@ internal fun DiscoverySection(title: String) {
 @Composable
 internal fun DiscoveryChip(label: String, icon: ImageVector, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, multiple: Boolean = false) {
     val shape = MaterialTheme.shapes.medium
-    val input = if (multiple) Modifier.toggleable(selected, role = Role.Checkbox, onValueChange = { onClick() })
-        else Modifier.selectable(selected, role = Role.RadioButton, onClick = onClick)
-    Surface(modifier.clip(shape).then(input), shape = shape,
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-        contentColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-        border = BorderStroke(.6.dp, if (selected) MaterialTheme.colorScheme.primary.copy(alpha = .5f) else MaterialTheme.colorScheme.outlineVariant)) {
+    val motion = LocalMotionPolicy.current
+    val source = remember { MutableInteractionSource() }
+    val fill by animateColorAsState(if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        motion.iosTween(IosMotion.Quick), label = "chip-fill")
+    val tint by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        motion.iosTween(IosMotion.Quick), label = "chip-tint")
+    val border by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary.copy(alpha = .5f) else MaterialTheme.colorScheme.outlineVariant,
+        motion.iosTween(IosMotion.Quick), label = "chip-border")
+    val input = if (multiple) Modifier.toggleable(selected, source, indication = null, role = Role.Checkbox, onValueChange = { onClick() })
+        else Modifier.selectable(selected, source, indication = null, role = Role.RadioButton, onClick = onClick)
+    Surface(modifier.iosPressScale(source, pressedScale = .98f).clip(shape).then(input), shape = shape,
+        color = fill, contentColor = tint, border = BorderStroke(.6.dp, border)) {
         Row(Modifier.heightIn(min = 48.dp).padding(horizontal = 12.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.CenterHorizontally)) {
             Icon(if (selected && multiple) Icons.Default.Check else icon, null, Modifier.size(18.dp))
             Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium)

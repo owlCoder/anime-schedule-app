@@ -1,7 +1,5 @@
 package com.owlcoder.animeschedule.presentation.components
 
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
@@ -197,8 +195,8 @@ fun ListStatusEditor(
                 }
                 AnimatedVisibility(
                     statusExpanded,
-                    enter = fadeIn(motion.iosTween(IosMotion.Quick)),
-                    exit = fadeOut(motion.iosTween(IosMotion.Quick))
+                    enter = motion.expandEnter(),
+                    exit = motion.expandExit()
                 ) {
                     Column(
                         Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
@@ -332,7 +330,7 @@ fun ListStatusEditor(
                     if (total != null) {
                         val progress by animateFloatAsState(
                             episodes.toFloat() / total,
-                            motion.iosSpring(),
+                            motion.iosTween(IosMotion.Standard),
                             label = "episode-progress"
                         )
                         LinearProgressIndicator(
@@ -418,8 +416,8 @@ fun ListStatusEditor(
                 }
                 AnimatedVisibility(
                     noteExpanded,
-                    enter = fadeIn(motion.iosTween(IosMotion.Quick)),
-                    exit = fadeOut(motion.iosTween(IosMotion.Quick))
+                    enter = motion.expandEnter(),
+                    exit = motion.expandExit()
                 ) {
                     OutlinedTextField(
                         note,

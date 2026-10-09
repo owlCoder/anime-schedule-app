@@ -114,7 +114,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.presentation.components.displayName
-import com.owlcoder.animeschedule.presentation.components.iosSpring
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.core.net.toUri
@@ -882,7 +881,7 @@ private fun ExpandableSynopsis(text: String) {
     val motion = LocalMotionPolicy.current
     Column(
         modifier = Modifier
-            .animateContentSize(animationSpec = motion.iosSpring())
+            .animateContentSize(animationSpec = motion.iosTween(IosMotion.Standard))
             .padding(horizontal = 14.dp, vertical = 12.dp),
     ) {
         Text(

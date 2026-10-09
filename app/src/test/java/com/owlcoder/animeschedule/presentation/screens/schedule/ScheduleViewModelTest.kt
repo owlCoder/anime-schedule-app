@@ -45,6 +45,7 @@ class ScheduleViewModelTest {
     private class FakeScheduleRepository : ScheduleRepository {
         var days: (LocalDate) -> List<ScheduleDay> = { emptyList() }
         var refreshCalls = 0
+        val refreshDates = mutableListOf<LocalDate>()
         var refreshGate: CompletableDeferred<AppResult<Unit>> = CompletableDeferred(AppResult.Success(Unit))
         var lastZone: ZoneId? = null
 
@@ -53,8 +54,9 @@ class ScheduleViewModelTest {
             return flowOf(days(today))
         }
 
-        override suspend fun refreshSchedule(zoneId: ZoneId): AppResult<Unit> {
+        override suspend fun refreshSchedule(zoneId: ZoneId, startDate: java.time.LocalDate): AppResult<Unit> {
             refreshCalls++
+            refreshDates += startDate
             return refreshGate.await()
         }
     }
@@ -118,6 +120,53 @@ class ScheduleViewModelTest {
         // Keep the WhileSubscribed pipeline running, like a visible screen would.
         backgroundScope.launch { vm.uiState.collect { } }
         return vm
+    }
+
+    @Test fun `previous week is lazy and successful loads are reused without changing the forward week`() = runTest {
+        val repo = FakeScheduleRepository().apply {
+            days = { start -> listOf(ScheduleDay(start, listOf(episode(start.dayOfMonth)))) }
+        }
+        val work = FakeWork()
+        val vm = viewModel(repo, work = work)
+        runCurrent()
+        val today = vm.uiState.value.today
+        assertEquals(listOf(today), repo.refreshDates)
+        assertTrue(vm.uiState.value.previousWeekDays.isEmpty())
+        vm.loadPreviousWeek(); runCurrent()
+        assertEquals(listOf(today, today.minusDays(7)), repo.refreshDates)
+        assertEquals(today, vm.uiState.value.weekDays.single().date)
+        assertEquals(today.minusDays(7), vm.uiState.value.previousWeekDays.single().date)
+        assertEquals(1, vm.uiState.value.episodesForDate(today.minusDays(7)).size)
+        vm.loadPreviousWeek(); runCurrent()
+        assertEquals(2, repo.refreshCalls)
+        assertEquals(1, work.notificationChecks)
+    }
+
+    @Test fun `failed history load leaves today intact and can be retried without duplicate requests`() = runTest {
+        val repo = FakeScheduleRepository()
+        val vm = viewModel(repo); runCurrent()
+        repo.refreshGate = CompletableDeferred()
+        vm.loadPreviousWeek(); vm.loadPreviousWeek(); runCurrent()
+        assertEquals(2, repo.refreshCalls)
+        assertTrue(vm.uiState.value.isPreviousWeekLoading)
+        repo.refreshGate.complete(AppResult.Error(AppError.Network("offline"))); runCurrent()
+        assertEquals(R.string.error_load_schedule, vm.uiState.value.previousWeekErrorRes)
+        assertNull(vm.uiState.value.errorRes)
+        repo.refreshGate = CompletableDeferred(AppResult.Success(Unit))
+        vm.loadPreviousWeek(force = true); runCurrent()
+        assertEquals(3, repo.refreshCalls)
+        assertNull(vm.uiState.value.previousWeekErrorRes)
+        assertTrue(!vm.uiState.value.isPreviousWeekLoading)
+    }
+
+    @Test fun `cached past broadcasts remain available when their refresh is offline`() = runTest {
+        val repo = FakeScheduleRepository().apply { days = { start -> listOf(ScheduleDay(start, listOf(episode(9)))) } }
+        val vm = viewModel(repo); runCurrent()
+        repo.refreshGate = CompletableDeferred(AppResult.Error(AppError.Network("offline")))
+        vm.loadPreviousWeek(); runCurrent()
+        assertEquals(9, vm.uiState.value.previousWeekDays.single().episodes.single().airingId)
+        assertNull(vm.uiState.value.previousWeekErrorRes)
+        assertTrue(!vm.uiState.value.isPreviousWeekLoading)
     }
 
     @Test fun `badge changes reuse filtered week and day lists`() = runTest {
@@ -252,7 +301,7 @@ class ScheduleViewModelTest {
         }
         var attempts = 0
         val repository = object : ScheduleRepository by cached {
-            override suspend fun refreshSchedule(zoneId: ZoneId): AppResult<Unit> {
+            override suspend fun refreshSchedule(zoneId: ZoneId, startDate: java.time.LocalDate): AppResult<Unit> {
                 if (++attempts == 1) throw IllegalStateException("fixture failure")
                 return AppResult.Success(Unit)
             }

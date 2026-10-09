@@ -2,10 +2,16 @@ package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.runtime.Composable
@@ -15,11 +21,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 
 /** Calm, responsive motion values shared by navigation, overlays and interactive controls. */
 object IosMotion {
-    const val PressIn = 100
-    const val Quick = 180
-    const val Standard = 280
-    const val Navigation = 340
-    const val Sheet = 390
+    const val PressIn = 80
+    const val PressOut = 180
+    const val Quick = 160
+    const val Standard = 240
+    const val Navigation = 300
+    const val Sheet = 300
 
     /** Smooth ease-out close to the timing used by modern iOS interface transitions. */
     val StandardEasing = CubicBezierEasing(0.22f, 0.61f, 0.36f, 1.00f)
@@ -50,37 +57,31 @@ fun <T> MotionPolicy.iosAccelerate(
     easing = IosMotion.AccelerateEasing,
 )
 
-/**
- * Critically damped positional spring. It settles smoothly without the visible rubber-band bounce
- * that feels distracting on nav indicators, switches and content-size changes.
- */
-fun <T> MotionPolicy.iosSpring(
-    dampingRatio: Float = 0.92f,
-    stiffness: Float = Spring.StiffnessMediumLow,
-): FiniteAnimationSpec<T> = if (reduceMotion) {
-    tween(durationMillis = 0)
-} else {
-    spring(
-        dampingRatio = dampingRatio,
-        stiffness = stiffness,
-    )
-}
-
 fun MotionPolicy.iosPressIn(): FiniteAnimationSpec<Float> = tween(
     durationMillis = duration(IosMotion.PressIn),
     easing = IosMotion.DecelerateEasing,
 )
 
-fun MotionPolicy.iosPressOut(): FiniteAnimationSpec<Float> = if (reduceMotion) {
-    tween(durationMillis = 0)
-} else {
-    spring(
-        dampingRatio = 0.92f,
-        stiffness = 520f,
-    )
-}
+fun MotionPolicy.iosPressOut(): FiniteAnimationSpec<Float> = iosDecelerate(IosMotion.PressOut)
 
-/** Fast tactile compression on touch-down, followed by a soft spring release. */
+/** Content size must use the same policy as its fade; Compose's default is a separate spring. */
+fun MotionPolicy.contentTransform(
+    enter: EnterTransition? = null,
+    exit: ExitTransition? = null,
+    durationMillis: Int = IosMotion.Standard,
+): ContentTransform = ContentTransform(
+    targetContentEnter = enter ?: fadeIn(iosDecelerate(durationMillis)),
+    initialContentExit = exit ?: fadeOut(iosAccelerate(minOf(durationMillis, IosMotion.Quick))),
+    sizeTransform = SizeTransform { _, _ -> iosTween(durationMillis) },
+)
+
+fun MotionPolicy.expandEnter(): EnterTransition =
+    fadeIn(iosDecelerate(IosMotion.Standard)) + expandVertically(iosDecelerate(IosMotion.Standard))
+
+fun MotionPolicy.expandExit(): ExitTransition =
+    fadeOut(iosAccelerate(IosMotion.Quick)) + shrinkVertically(iosAccelerate(IosMotion.Quick))
+
+/** Fast tactile compression on touch-down, followed by a bounded, smooth release. */
 @Composable
 fun Modifier.iosPressScale(
     interactionSource: MutableInteractionSource,

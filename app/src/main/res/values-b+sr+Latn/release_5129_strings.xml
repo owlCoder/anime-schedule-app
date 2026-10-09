@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="changelog_5129_title">Usklađene, odzivne animacije</string>
+    <string name="changelog_5129_motion_title">Uglađeniji prelazi</string>
+    <string name="changelog_5129_motion">Navigacija, paneli, promena sadržaja i proširivanje sekcija koriste usklađena trajanja. Smanjene animacije važe i za panele i promenu veličine sadržaja, a sistemske izmene se primenjuju bez ponovnog pokretanja aplikacije.</string>
+    <string name="changelog_5129_controls_title">Doterane kontrole</string>
+    <string name="changelog_5129_controls">Filteri, palete tema, podešavanja i meniji sa alatima imaju usklađen odziv na dodir. Fokus pretrage je jasniji, prekidači imaju veće dodirne površine, a uvodno podešavanje poštuje iste animacije.</string>
+    <string name="overlay_dismiss">Zatvori panel</string>
+    <string name="schedule_previous_week">Prethodnih 7 dana</string>
+    <string name="schedule_next_week">Narednih 7 dana</string>
+    <string name="schedule_loading_previous_week">Učitavanje prethodne nedelje…</string>
+    <string name="changelog_5129_history_title">Prethodna nedelja na početnoj</string>
+    <string name="changelog_5129_history">Pregledaj emitovanja iz prethodnih sedam dana, vrati se na Danas ili otvori njihov nedeljni pregled. Istorija se učitava kada je zatražiš i ostaje dostupna iz lokalnog keša.</string>
+    <string name="schedule_date_unavailable">Raspored za ovaj datum trenutno nije dostupan. Pokušaj ponovo.</string>
+</resources>

@@ -7,6 +7,8 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,12 +75,15 @@ fun InsetListRow(
     enabled: Boolean = true,
     selected: Boolean = false,
 ) {
+    val source = remember { MutableInteractionSource() }
     val rowModifier = modifier
         .fillMaxWidth()
         .heightIn(min = if (supportingText.isNullOrBlank()) 48.dp else 50.dp)
         .then(
             if (onClick != null) {
-                Modifier.clickable(
+                Modifier.iosPressScale(source, pressedScale = .99f).clickable(
+                    interactionSource = source,
+                    indication = null,
                     enabled = enabled,
                     role = Role.Button,
                     onClick = onClick,

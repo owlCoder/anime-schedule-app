@@ -23,7 +23,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 
-/** 46x28 visual control centered in a 50x44 accessibility target. */
+/** 46x28 visual control centered in a 50x48 accessibility target. */
 @Composable
 fun AppSwitch(
     checked: Boolean,
@@ -45,7 +45,7 @@ fun AppSwitch(
     )
     val thumbOffset by animateDpAsState(
         targetValue = if (checked) 20.dp else 2.dp,
-        animationSpec = motion.iosSpring(),
+        animationSpec = motion.iosDecelerate(IosMotion.Standard),
         label = "switch-thumb",
     )
     val thumbColor by animateColorAsState(
@@ -56,13 +56,13 @@ fun AppSwitch(
             enabled -> Color.White
             else -> Color.White.copy(alpha = .76f)
         },
-        animationSpec = motion.iosTween(IosMotion.Quick),
+        animationSpec = motion.iosTween(IosMotion.Standard),
         label = "switch-thumb-color",
     )
 
     Box(
         modifier = modifier
-            .size(width = 50.dp, height = 44.dp)
+            .size(width = 50.dp, height = 48.dp)
             .then(if (onCheckedChange != null) Modifier.toggleable(
                 value = checked,
                 interactionSource = interactionSource,

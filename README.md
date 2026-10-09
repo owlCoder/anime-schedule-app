@@ -120,10 +120,21 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.12.8** (version code **45**, October 9, 2026).
+Current release: **5.12.9** (version code **46**, October 9, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### Polished in 5.12.9
+
+- Home can browse the previous seven days, return to Today and open the selected week's overview;
+  historical data loads on demand and remains available from the local cache.
+- Shared timing for navigation, panels, content resizing, expanding sections and control feedback.
+- Reduced motion covers all panels and content sizes; system changes apply live.
+- Animated picker/chip selection, clearer search focus, consistent menu feedback and 48 dp switches.
+- Onboarding previews and page navigation follow the same policy as the main UI.
+
+See the [release validation](docs/release-5.12.9.md).
 
 ### Polished in 5.12.8
 

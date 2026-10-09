@@ -116,7 +116,7 @@ class OverlayEditingTest {
                     )
                 }))
             }
-            override suspend fun refreshSchedule(zoneId: ZoneId) = AppResult.Success(Unit)
+            override suspend fun refreshSchedule(zoneId: ZoneId, startDate: java.time.LocalDate) = AppResult.Success(Unit)
         }
         val vm = keep("schedule", ScheduleViewModel(repo, Settings, mal, Notifications, Work))
         vm.setOpenOverlay(ScheduleOverlay.SeeAll(ScheduleSection.TODAY))

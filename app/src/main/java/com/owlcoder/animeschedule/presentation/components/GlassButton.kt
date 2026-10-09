@@ -1,6 +1,7 @@
 package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -235,9 +237,12 @@ fun GlassIconButton(
     iconSize: Dp = 18.dp,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val opacity = animateFloatAsState(if (enabled) 1f else .38f,
+        LocalMotionPolicy.current.iosTween(IosMotion.Quick), label = "icon-button-enabled")
     Box(
         modifier = modifier
             .iosPressScale(interactionSource, pressedScale = 0.94f)
+            .graphicsLayer { alpha = opacity.value }
             .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
             .clickable(
                 interactionSource = interactionSource,

@@ -1,186 +1,150 @@
 package com.owlcoder.animeschedule.presentation.components
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
+import android.view.WindowManager
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.ModalBottomSheetProperties
-import androidx.compose.material3.SheetState
-import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import kotlinx.coroutines.launch
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.window.DialogWindowProvider
-import androidx.core.view.WindowCompat
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import com.owlcoder.animeschedule.ui.theme.GlassTokens
-import com.owlcoder.animeschedule.ui.theme.LocalAmoledDark
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.view.WindowCompat
+import com.owlcoder.animeschedule.R
+import com.owlcoder.animeschedule.ui.theme.GlassTokens
+import com.owlcoder.animeschedule.ui.theme.LocalAmoledDark
 
-/**
- * Stable modal content surface. The modal owns its dim scrim, so dismissal never leaves an
- * independent Activity blur effect behind.
- *
- * Sheet drag gestures are disabled by default because nested scrollable content otherwise hands
- * its remaining drag to ModalBottomSheet at the top/bottom boundary. That makes a fully expanded
- * overlay visibly jump a few pixels while the user is only trying to scroll its list. Every app
- * sheet has an explicit back action, so locking the sheet position keeps navigation predictable.
- */
-@OptIn(ExperimentalMaterial3Api::class)
+/** One modal owns its surface, dimming and motion, including nested Back navigation. */
 @Composable
 fun AppSheet(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     title: String? = null,
     trailingContent: @Composable (() -> Unit)? = null,
     showBackButton: Boolean = true,
     showCloseButton: Boolean = false,
-    sheetGesturesEnabled: Boolean = false,
+    // Return true after navigating to a parent page inside this same modal.
+    onNavigateBack: () -> Boolean = { false },
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
+    val motion = LocalMotionPolicy.current
+    val dark = MaterialTheme.colorScheme.background.luminance() < .35f
     val container = if (LocalAmoledDark.current) Color.Black else MaterialTheme.colorScheme.surfaceContainerHigh
-    val scrim = Color.Black.copy(alpha = if (dark) 0.42f else 0.26f)
     val toast = LocalToast.current
     val sheetKey = remember { Any() }
-    val scope = rememberCoroutineScope()
+    val visible = remember { MutableTransitionState(false) }
     var dismissing by remember { mutableStateOf(false) }
     val dismissAnimated: () -> Unit = {
-        if (!dismissing) {
+        if (!dismissing && !onNavigateBack()) {
             dismissing = true
-            scope.launch {
-                try {
-                    sheetState.hide()
-                    // Nested content may reject Hidden and navigate to its parent instead.
-                    if (!sheetState.isVisible) onDismissRequest()
-                } finally {
-                    dismissing = false
-                }
-            }
+            visible.targetState = false
         }
+    }
+    LaunchedEffect(Unit) { if (!dismissing) visible.targetState = true }
+    LaunchedEffect(visible.isIdle, visible.currentState, dismissing) {
+        if (dismissing && visible.isIdle && !visible.currentState) onDismissRequest()
     }
     DisposableEffect(toast, sheetKey) {
         toast.attachSheet(sheetKey)
         onDispose { toast.detachSheet(sheetKey) }
     }
 
-    ModalBottomSheet(
-        onDismissRequest = {
-            // Android Back can report dismissal after a rejected Hidden transition. Content
-            // navigation may keep the sheet visible; do not close its owner in that case.
-            if (!sheetState.isVisible) onDismissRequest()
-        },
-        modifier = modifier,
-        sheetState = sheetState,
-        sheetGesturesEnabled = sheetGesturesEnabled,
-        shape = RoundedCornerShape(
-            topStart = GlassTokens.sheetRadius,
-            topEnd = GlassTokens.sheetRadius,
-            bottomStart = 0.dp,
-            bottomEnd = 0.dp,
-        ),
-        containerColor = container,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        scrimColor = scrim,
-        tonalElevation = 0.dp,
-        dragHandle = null,
-        properties = ModalBottomSheetProperties(
-            isAppearanceLightStatusBars = !dark,
-            isAppearanceLightNavigationBars = !dark,
-        ),
+    Dialog(
+        onDismissRequest = dismissAnimated,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false,
+            dismissOnClickOutside = false),
     ) {
-        // Material 3 initializes these flags when the dialog is created, but does not
-        // update them when a live theme preview changes an already-open sheet.
         val view = LocalView.current
         SideEffect {
             var parent = view.parent
             while (parent != null && parent !is DialogWindowProvider) parent = parent.parent
             val window = (parent as? DialogWindowProvider)?.window
             if (window != null) {
+                // Compose owns the scrim and timing. A second window fade/dim would linger.
+                window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+                window.setWindowAnimations(0)
+                window.isNavigationBarContrastEnforced = false
                 WindowCompat.getInsetsController(window, view).apply {
                     isAppearanceLightStatusBars = !dark
                     isAppearanceLightNavigationBars = !dark
                 }
             }
         }
-        val ownsToast = toast.activeSheet === sheetKey
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .imePadding()
-                .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 18.dp),
-        ) {
-            if (!title.isNullOrBlank()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 48.dp)
-                        .padding(bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+        val scrimAlpha = animateFloatAsState(
+            if (visible.targetState) { if (dark) .42f else .26f } else 0f,
+            motion.iosTween(if (dismissing) IosMotion.Standard else IosMotion.Sheet), label = "sheet-scrim")
+        val dismissLabel = stringResource(R.string.overlay_dismiss)
+        val interaction = remember { MutableInteractionSource() }
+        Box(Modifier.fillMaxSize()) {
+            // Read opacity during drawing so dimming does not recompose the panel's content.
+            Box(Modifier.matchParentSize().drawBehind { drawRect(Color.Black.copy(alpha = scrimAlpha.value)) }
+                .clickable(interaction, indication = null, enabled = !dismissing, role = Role.Button, onClick = dismissAnimated)
+                .semantics { contentDescription = dismissLabel })
+            Box(Modifier.fillMaxSize().statusBarsPadding().imePadding().padding(top = 8.dp),
+                contentAlignment = Alignment.BottomCenter) {
+                AnimatedVisibility(visibleState = visible,
+                    enter = slideInVertically(motion.iosDecelerate(IosMotion.Sheet)) { if (motion.animationsEnabled) it else 0 },
+                    exit = slideOutVertically(motion.iosAccelerate(IosMotion.Standard)) { if (motion.animationsEnabled) it else 0 },
                 ) {
-                    if (showBackButton) {
-                        GlassIconButton(
-                            icon = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(android.R.string.cancel),
-                            onClick = dismissAnimated,
-                            enabled = !dismissing,
-                            modifier = Modifier.padding(end = 6.dp),
-                        )
-                    }
-                    Text(
-                        text = title,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    trailingContent?.invoke()
-                    if (showCloseButton) {
-                        GlassIconButton(
-                            icon = Icons.Default.Close,
-                            contentDescription = stringResource(android.R.string.cancel),
-                            onClick = dismissAnimated,
-                            enabled = !dismissing,
-                        )
+                    Surface(
+                        modifier = modifier.widthIn(max = 640.dp).fillMaxWidth()
+                            .animateContentSize(motion.iosTween(IosMotion.Standard)).semantics {
+                            if (!title.isNullOrBlank()) paneTitle = title
+                        },
+                        shape = RoundedCornerShape(topStart = GlassTokens.sheetRadius, topEnd = GlassTokens.sheetRadius),
+                        color = container, contentColor = MaterialTheme.colorScheme.onSurface,
+                        tonalElevation = 0.dp,
+                    ) {
+                        Column(Modifier.fillMaxWidth().navigationBarsPadding()
+                            .padding(start = 18.dp, end = 18.dp, top = 8.dp, bottom = 18.dp)) {
+                            if (!title.isNullOrBlank()) {
+                                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(bottom = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically) {
+                                    if (showBackButton) GlassIconButton(Icons.AutoMirrored.Filled.ArrowBack,
+                                        stringResource(android.R.string.cancel), dismissAnimated,
+                                        Modifier.padding(end = 6.dp), enabled = !dismissing)
+                                    Text(title, Modifier.weight(1f).padding(end = 8.dp),
+                                        style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold,
+                                        maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    trailingContent?.invoke()
+                                    if (showCloseButton) GlassIconButton(Icons.Default.Close,
+                                        stringResource(android.R.string.cancel), dismissAnimated, enabled = !dismissing)
+                                }
+                            }
+                            // Feedback takes space before scrollable content is measured.
+                            Box(Modifier.weight(1f, fill = false)) { Column(Modifier.fillMaxWidth(), content = content) }
+                            if (toast.activeSheet === sheetKey && toast.current != null) {
+                                ToastOverlay(toast, Modifier.fillMaxWidth().padding(top = 12.dp))
+                            }
+                        }
                     }
                 }
-            }
-            // Measure feedback first and give scrollable content the remaining space.
-            // A floating message could cover Save/Retry or the bottom of a short sheet.
-            Box(Modifier.weight(1f, fill = false)) {
-                Column(Modifier.fillMaxWidth(), content = content)
-            }
-            if (ownsToast && toast.current != null) {
-                ToastOverlay(toast, Modifier.fillMaxWidth().padding(top = 12.dp))
             }
         }
     }

@@ -2,9 +2,6 @@ package com.owlcoder.animeschedule.presentation.screens.mylist
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -122,7 +119,7 @@ import com.owlcoder.animeschedule.presentation.components.LocalMotionPolicy
 import com.owlcoder.animeschedule.presentation.components.LocalToast
 import com.owlcoder.animeschedule.presentation.components.displayName
 import com.owlcoder.animeschedule.presentation.components.labelRes
-import com.owlcoder.animeschedule.presentation.components.iosSpring
+import com.owlcoder.animeschedule.presentation.components.contentTransform
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.PillShape
@@ -216,10 +213,7 @@ fun MyListScreen(
     AnimatedContent(
         targetState = uiState.isLoggedIn,
         modifier = Modifier.fillMaxSize(),
-        transitionSpec = {
-            fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
-                fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
-        },
+        transitionSpec = { motion.contentTransform(durationMillis = IosMotion.Quick) },
         label = "my-list-auth-state",
     ) { loggedIn ->
         if (!loggedIn) {
@@ -440,10 +434,7 @@ internal fun LoggedInList(
                 AnimatedContent(
                     targetState = contentMode,
                     modifier = Modifier.weight(1f).fillMaxWidth(),
-                    transitionSpec = {
-                        fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) togetherWith
-                            fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
-                    },
+                    transitionSpec = { motion.contentTransform() },
                     label = "my-list-content",
                 ) { mode ->
                     when (mode) {
@@ -570,10 +561,7 @@ private fun StatusFilterRow(
                     ) {
                         AnimatedContent(
                             targetState = isSelected,
-                            transitionSpec = {
-                                fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
-                                    fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
-                            },
+                            transitionSpec = { motion.contentTransform(durationMillis = IosMotion.Quick) },
                             label = "my-list-tab-icon",
                         ) { selectedState ->
                             Icon(

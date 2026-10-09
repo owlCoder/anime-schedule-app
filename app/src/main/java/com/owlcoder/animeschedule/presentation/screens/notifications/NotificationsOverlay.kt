@@ -56,11 +56,9 @@ fun NotificationsOverlay(onAnimeClick: (Int) -> Unit, onDismiss: () -> Unit,
     // The already sorted rows determine group order. Date keys include the year, independent of locale.
     val grouped = remember(visible, zone) { visible.groupBy { Instant.ofEpochSecond(it.createdAtEpochSeconds).atZone(zone).toLocalDate() } }
     val formatter = remember(locale) { DateTimeFormatter.ofPattern("EEEE, d MMM yyyy", locale) }
-    val currentPage by rememberUpdatedState(showTools)
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = {
-        if (it == SheetValue.Hidden && currentPage) { showTools = false; false } else true
-    })
-    AppSheet(onDismissRequest = { if (showTools) showTools = false else onDismiss() }, sheetState = sheetState,
+    AppSheet(onDismissRequest = onDismiss, onNavigateBack = {
+        if (showTools) { showTools = false; true } else false
+    },
         title = stringResource(if (showTools) R.string.notif_tools else R.string.notif_screen_title),
         trailingContent = { if (!showTools) GlassIconButton(Icons.Default.Tune, stringResource(R.string.notif_tools), { showTools = true }, Modifier.testTag("notif-tools")) }) {
         val focus = LocalFocusManager.current

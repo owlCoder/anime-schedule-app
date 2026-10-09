@@ -5,11 +5,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -78,7 +73,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.owlcoder.animeschedule.presentation.components.iosPressScale
-import com.owlcoder.animeschedule.presentation.components.iosSpring
+import com.owlcoder.animeschedule.presentation.components.contentTransform
+import com.owlcoder.animeschedule.presentation.components.iosDecelerate
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import dev.chrisbanes.haze.hazeEffect
 
@@ -159,10 +155,7 @@ fun AnimeBottomBar(
                 val itemWidth = maxWidth / items.size.toFloat()
                 val indicatorX by animateDpAsState(
                     targetValue = itemWidth * selectedIndex.toFloat(),
-                    animationSpec = motion.iosSpring(
-                        dampingRatio = 0.92f,
-                        stiffness = 360f,
-                    ),
+                    animationSpec = motion.iosDecelerate(IosMotion.Standard),
                     label = "bottom-tab-indicator-position",
                 )
                 Surface(
@@ -220,10 +213,7 @@ private fun BottomNavItemView(
     val motion = LocalMotionPolicy.current
     val scale by animateFloatAsState(
         targetValue = if (selected) 1f else 0.992f,
-        animationSpec = motion.iosSpring(
-            dampingRatio = 0.94f,
-            stiffness = 420f,
-        ),
+        animationSpec = motion.iosDecelerate(IosMotion.Standard),
         label = "bottom-tab-scale",
     )
 
@@ -311,18 +301,7 @@ private fun TabVisual(
         ) {
             AnimatedContent(
                 targetState = selected,
-                transitionSpec = {
-                    (fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                        scaleIn(
-                            initialScale = 0.94f,
-                            animationSpec = motion.iosTween(IosMotion.Quick),
-                        )) togetherWith
-                        (fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                            scaleOut(
-                                targetScale = 1.02f,
-                                animationSpec = motion.iosTween(IosMotion.Quick),
-                            ))
-                },
+                transitionSpec = { motion.contentTransform(durationMillis = IosMotion.Quick) },
                 label = "bottom-tab-icon",
             ) { active ->
                 Icon(

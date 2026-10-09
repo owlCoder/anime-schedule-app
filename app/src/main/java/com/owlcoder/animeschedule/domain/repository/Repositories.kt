@@ -24,8 +24,8 @@ interface ScheduleRepository {
     /** The seven local days starting at [today] in [zoneId], grouped by local date; never fails. */
     fun getWeekSchedule(zoneId: ZoneId, today: LocalDate): Flow<List<ScheduleDay>>
 
-    /** Fetches the current week from the remote provider into the local cache. */
-    suspend fun refreshSchedule(zoneId: ZoneId): AppResult<Unit>
+    /** Fetches seven local days from [startDate]; the default remains today's forward week. */
+    suspend fun refreshSchedule(zoneId: ZoneId, startDate: LocalDate = LocalDate.now(zoneId)): AppResult<Unit>
 }
 
 interface AnimeDetailRepository {

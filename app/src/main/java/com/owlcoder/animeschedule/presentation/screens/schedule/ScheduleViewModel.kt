@@ -81,6 +81,9 @@ data class ScheduleUiState(
     val todayEpisodes: List<AiringEpisode> = emptyList(),
     val tomorrowEpisodes: List<AiringEpisode> = emptyList(),
     val weekDays: List<ScheduleDay> = emptyList(),
+    val previousWeekDays: List<ScheduleDay> = emptyList(),
+    val isPreviousWeekLoading: Boolean = false,
+    @StringRes val previousWeekErrorRes: Int? = null,
     val isLoading: Boolean = true,
     val isInitialLoad: Boolean = true,
     @StringRes val errorRes: Int? = null,
@@ -96,7 +99,7 @@ data class ScheduleUiState(
     fun episodesForDate(date: LocalDate): List<AiringEpisode> = when (date) {
         today -> todayEpisodes
         today.plusDays(1) -> tomorrowEpisodes
-        else -> weekDays.firstOrNull { it.date == date }?.episodes.orEmpty()
+        else -> (if (date < today) previousWeekDays else weekDays).firstOrNull { it.date == date }?.episodes.orEmpty()
     }
 }
 
@@ -120,13 +123,17 @@ private data class FilteredSchedule(
     val snapshot: ScheduleSnapshot,
     val filter: ScheduleFilter,
     val days: List<ScheduleDay>,
-)
+) {
+    val currentDays = days.filter { it.date in snapshot.today..snapshot.today.plusDays(6) }
+    val previousDays = days.filter { it.date in snapshot.today.minusDays(7)..snapshot.today.minusDays(1) }
+}
 
 private data class Auxiliary(
     val pendingIncrementIds: Set<Int>,
     val unreadNotificationCount: Int,
     val recentlyChanged: List<MalListEntry>,
     val refresh: RefreshStatus,
+    val historyRefresh: RefreshStatus,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -149,6 +156,8 @@ class ScheduleViewModel internal constructor(
 
 
     private val _refreshStatus = MutableStateFlow(RefreshStatus())
+    private val _historyRequested = MutableStateFlow(false)
+    private val _historyRefreshStatus = MutableStateFlow(RefreshStatus(isRefreshing = false))
     private val _filter = MutableStateFlow(ScheduleFilter())
     private val _pendingIncrementIds = MutableStateFlow<Set<Int>>(emptySet())
     private val _openOverlay = MutableStateFlow<ScheduleOverlay>(ScheduleOverlay.None)
@@ -165,14 +174,23 @@ class ScheduleViewModel internal constructor(
     val incrementEvent = _incrementEvent.receiveAsFlow()
 
     private var refreshJob: Job? = null
+    private var historyJob: Job? = null
+    private var historyRequestKey: Pair<ZoneId, LocalDate>? = null
+    private var loadedHistoryKey: Pair<ZoneId, LocalDate>? = null
+    private var historyRequestId = 0
 
     private val snapshot: Flow<ScheduleSnapshot> = settingsRepository.userPreferencesFlow
         .map { it.effectiveZoneId to it.malLoggedIn }
         .distinctUntilChanged()
         .flatMapLatest { (zoneId, isLoggedIn) ->
             currentDateFlow(zoneId).flatMapLatest { today ->
-                scheduleRepository.getWeekSchedule(zoneId, today).map { days ->
-                    buildSnapshot(zoneId, today, days, isLoggedIn)
+                _historyRequested.flatMapLatest { historyRequested ->
+                    val current = scheduleRepository.getWeekSchedule(zoneId, today)
+                    val days = if (historyRequested) combine(current,
+                        scheduleRepository.getWeekSchedule(zoneId, today.minusDays(7))) { future, past ->
+                        (past + future).distinctBy { it.date }.sortedBy { it.date }
+                    } else current
+                    days.map { buildSnapshot(zoneId, today, it, isLoggedIn) }
                 }
             }
         }
@@ -191,7 +209,8 @@ class ScheduleViewModel internal constructor(
         notificationRepository.getUnreadCount(),
         recentlyChanged,
         _refreshStatus,
-    ) { pending, unread, recent, refresh -> Auxiliary(pending, unread, recent, refresh) }
+        _historyRefreshStatus,
+    ) { pending, unread, recent, refresh, history -> Auxiliary(pending, unread, recent, refresh, history) }
 
     // Run the time filter only while it is enabled and the screen is subscribed.
     private val filterClock = _filter.map { it.upcomingOnly }.distinctUntilChanged().flatMapLatest { enabled ->
@@ -214,12 +233,17 @@ class ScheduleViewModel internal constructor(
             today = snapshot.today,
             todayEpisodes = byDate[snapshot.today]?.episodes.orEmpty(),
             tomorrowEpisodes = byDate[snapshot.today.plusDays(1)]?.episodes.orEmpty(),
-            weekDays = filtered.days,
+            weekDays = filtered.currentDays,
+            previousWeekDays = filtered.previousDays,
+            isPreviousWeekLoading = aux.historyRefresh.isRefreshing,
+            previousWeekErrorRes = R.string.error_load_schedule.takeIf {
+                aux.historyRefresh.failed && snapshot.days.none { it.date < snapshot.today }
+            },
             isLoading = aux.refresh.isRefreshing,
             isInitialLoad = aux.refresh.isRefreshing && !aux.refresh.hasLoadedOnce && snapshot.days.isEmpty(),
             // A failed refresh only matters when there is nothing cached to show instead.
             errorRes = R.string.error_load_schedule.takeIf {
-                aux.refresh.failed && snapshot.days.isEmpty()
+                aux.refresh.failed && snapshot.days.none { it.date in snapshot.today..snapshot.today.plusDays(6) }
             },
             isLoggedIn = snapshot.isLoggedIn,
             filter = filtered.filter,
@@ -263,6 +287,37 @@ class ScheduleViewModel internal constructor(
 
     fun setOpenOverlay(overlay: ScheduleOverlay) {
         _openOverlay.value = overlay
+    }
+
+    /** History is fetched only when requested; successful ranges are reused within this session. */
+    fun loadPreviousWeek(force: Boolean = false) {
+        val state = uiState.value
+        val key = state.zoneId to state.today.minusDays(7)
+        _historyRequested.value = true
+        if (historyJob?.isActive == true && historyRequestKey == key) return
+        if (!force && loadedHistoryKey == key) return
+        val requestId = ++historyRequestId
+        historyJob?.cancel()
+        historyRequestKey = key
+        _historyRefreshStatus.value = RefreshStatus(isRefreshing = true)
+        historyJob = viewModelScope.launch {
+            var failed = true
+            try {
+                val result = withTimeoutOrNull(SCHEDULE_REFRESH_TIMEOUT_MS) {
+                    scheduleRepository.refreshSchedule(key.first, key.second)
+                }
+                failed = result !is AppResult.Success
+                if (!failed) loadedHistoryKey = key
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                failed = true
+            } finally {
+                if (requestId == historyRequestId) {
+                    _historyRefreshStatus.value = RefreshStatus(isRefreshing = false, hasLoadedOnce = true, failed = failed)
+                }
+            }
+        }
     }
 
     /** Pulls a fresh schedule. A refresh already in flight is reused instead of duplicated. */

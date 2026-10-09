@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="changelog_5129_title">Consistent, responsive motion</string>
+    <string name="changelog_5129_motion_title">Smoother transitions</string>
+    <string name="changelog_5129_motion">Navigation, panels, content changes and expanding sections share consistent timing. Reduced motion applies to panels and content resizing, and system changes are picked up without restarting the app.</string>
+    <string name="changelog_5129_controls_title">Polished controls</string>
+    <string name="changelog_5129_controls">Filters, theme palettes, settings and tool menus have consistent touch feedback. Search focus is clearer, switches have larger touch targets, and onboarding follows the same animation settings.</string>
+    <string name="overlay_dismiss">Close panel</string>
+    <string name="schedule_previous_week">Previous 7 days</string>
+    <string name="schedule_next_week">Next 7 days</string>
+    <string name="schedule_loading_previous_week">Loading the previous week…</string>
+    <string name="changelog_5129_history_title">The previous week on Home</string>
+    <string name="changelog_5129_history">Browse broadcasts from the previous seven days, return to Today, or open their weekly overview. History loads when you request it and stays available from the local cache.</string>
+    <string name="schedule_date_unavailable">The schedule for this date is unavailable. Try again.</string>
+</resources>

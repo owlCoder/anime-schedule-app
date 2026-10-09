@@ -4,11 +4,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -89,7 +84,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.unit.dp
-import com.owlcoder.animeschedule.presentation.components.iosSpring
+import com.owlcoder.animeschedule.presentation.components.contentTransform
+import com.owlcoder.animeschedule.presentation.components.expandEnter
+import com.owlcoder.animeschedule.presentation.components.expandExit
 import com.owlcoder.animeschedule.presentation.components.iosTween
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -169,14 +166,8 @@ fun SearchScreen(
     ) {
         AnimatedVisibility(
             visible = !isFocused,
-            enter = slideInVertically(
-                animationSpec = motion.iosTween(IosMotion.Standard),
-                initialOffsetY = { -it / 4 },
-            ) + fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)),
-            exit = slideOutVertically(
-                animationSpec = motion.iosTween(IosMotion.Quick),
-                targetOffsetY = { -it / 4 },
-            ) + fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)),
+            enter = motion.expandEnter(),
+            exit = motion.expandExit(),
         ) {
             AppLargeHeader(
                 title = stringResource(R.string.search_title),
@@ -187,16 +178,16 @@ fun SearchScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .animateContentSize(animationSpec = motion.iosSpring()),
+                .animateContentSize(animationSpec = motion.iosTween(IosMotion.Standard)),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(7.dp),
         ) {
             AnimatedVisibility(
                 visible = isFocused,
-                enter = fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                    scaleIn(initialScale = 0.88f, animationSpec = motion.iosSpring()),
-                exit = fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                    scaleOut(targetScale = 0.9f, animationSpec = motion.iosTween(IosMotion.Quick)),
+                enter = fadeIn(motion.iosTween(IosMotion.Quick)) +
+                    androidx.compose.animation.expandHorizontally(motion.iosTween(IosMotion.Standard)),
+                exit = fadeOut(motion.iosTween(IosMotion.Quick)) +
+                    androidx.compose.animation.shrinkHorizontally(motion.iosTween(IosMotion.Quick)),
             ) {
                 GlassIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
@@ -316,12 +307,7 @@ private fun SearchContent(
     AnimatedContent(
         targetState = mode,
         modifier = Modifier.fillMaxSize(),
-        transitionSpec = {
-            (fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
-                scaleIn(initialScale = 0.99f, animationSpec = motion.iosTween(IosMotion.Standard))) togetherWith
-                (fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                    scaleOut(targetScale = 0.995f, animationSpec = motion.iosTween(IosMotion.Quick)))
-        },
+        transitionSpec = { motion.contentTransform() },
         label = "search-content",
     ) { contentMode ->
         when (contentMode) {

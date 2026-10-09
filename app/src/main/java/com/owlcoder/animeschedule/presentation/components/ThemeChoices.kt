@@ -1,5 +1,6 @@
 package com.owlcoder.animeschedule.presentation.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -36,6 +37,7 @@ fun ThemeModePicker(mode: ThemeMode, onSelect: (ThemeMode) -> Unit, modifier: Mo
 
 @Composable
 fun ThemePaletteGrid(selected: ThemePalette, onSelect: (ThemePalette) -> Unit, modifier: Modifier = Modifier) {
+    val motion = LocalMotionPolicy.current
     val dark = MaterialTheme.colorScheme.background.luminance() < .35f
     val largeText = LocalDensity.current.fontScale > 1.2f
     BoxWithConstraints(modifier.fillMaxWidth()) {
@@ -47,13 +49,15 @@ fun ThemePaletteGrid(selected: ThemePalette, onSelect: (ThemePalette) -> Unit, m
                         val scheme = remember(dark, palette) { buildAppColorScheme(dark, ThemeOptions(palette = palette, amoled = false)) }
                         val interaction = remember { MutableInteractionSource() }
                         val active = selected == palette
+                        val outline by animateColorAsState(
+                            if (active) scheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                            motion.iosTween(IosMotion.Quick), label = "palette-outline")
                         Surface(
-                            Modifier.weight(1f).fillMaxHeight().clip(MaterialTheme.shapes.medium)
+                            Modifier.weight(1f).fillMaxHeight().iosPressScale(interaction, pressedScale = .98f).clip(MaterialTheme.shapes.medium)
                                 .selectable(active, interaction, indication = null, role = Role.RadioButton, onClick = { onSelect(palette) })
                                 .testTag("theme-palette-${palette.name}"),
                             color = scheme.surface, shape = MaterialTheme.shapes.medium,
-                            border = BorderStroke(if (active) 1.5.dp else .5.dp,
-                                if (active) scheme.primary else MaterialTheme.colorScheme.outlineVariant),
+                            border = BorderStroke(1.dp, outline),
                         ) {
                             Column(Modifier.heightIn(min = 60.dp).padding(10.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,

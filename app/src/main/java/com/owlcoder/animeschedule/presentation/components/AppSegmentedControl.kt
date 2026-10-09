@@ -1,6 +1,7 @@
 package com.owlcoder.animeschedule.presentation.components
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -48,8 +49,9 @@ fun AppSegmentedControl(
                     motion.iosTween(IosMotion.Quick),
                     label = "segment-selection-alpha"
                 )
-                val tint =
-                    if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                val tint by animateColorAsState(
+                    if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    motion.iosTween(IosMotion.Quick), label = "segment-tint")
                 Surface(
                     modifier = Modifier.weight(1f).fillMaxHeight()
                         .clip(MaterialTheme.shapes.medium)
