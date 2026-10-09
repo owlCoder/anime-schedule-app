@@ -21,6 +21,7 @@ import com.owlcoder.animeschedule.domain.repository.*
 import com.owlcoder.animeschedule.presentation.components.*
 import com.owlcoder.animeschedule.presentation.screens.mylist.*
 import com.owlcoder.animeschedule.presentation.screens.settings.AppearanceSheet
+import com.owlcoder.animeschedule.presentation.screens.settings.DisplaySheet
 import com.owlcoder.animeschedule.presentation.screens.settings.AuthViewModel
 import com.owlcoder.animeschedule.ui.theme.AnimeScheduleTheme
 import java.io.File
@@ -204,16 +205,12 @@ class TrackingAndThemesTest {
     fun appearancePalettesModesAndAccessibilityOptionsStayUsable() {
         var options by mutableStateOf(ThemeOptions())
         var mode by mutableStateOf(ThemeMode.LIGHT)
+        var display by mutableStateOf(false)
         compose.setContent {
             AnimeScheduleTheme(themeMode = mode, options = options) {
-                AppearanceSheet(
-                    mode,
-                    AccentColor.TELEGRAM_BLUE,
-                    options,
-                    { mode = it },
-                    { options = it },
-                    { options = ThemeOptions() },
-                    {})
+                if (display) DisplaySheet(options, { options = it }, {})
+                else AppearanceSheet(mode, options, { mode = it }, { options = options.copy(palette = it) },
+                    { options = ThemeOptions() }, { display = true })
             }
         }
         compose.onNodeWithTag("theme-palette-SAKURA").performClick()
@@ -225,13 +222,12 @@ class TrackingAndThemesTest {
         compose.onNodeWithText(text(R.string.settings_theme_light)).performClick()
         assertSheetSystemBars(darkIcons = true)
         compose.onNodeWithText(text(R.string.settings_theme_dark)).performClick()
+        compose.onNodeWithContentDescription(instrumentation.targetContext.getString(android.R.string.cancel)).performClick()
         compose.onNodeWithText(text(R.string.theme_contrast)).performScrollTo().performClick()
         compose.runOnIdle { assertTrue(options.highContrast); assertEquals(ThemeMode.DARK, mode) }
         compose.onNodeWithText(text(R.string.theme_motion)).performScrollTo().performClick()
         compose.runOnIdle { assertTrue(options.reduceMotion) }
-        compose.onNodeWithText(text(R.string.theme_dynamic)).performScrollTo().performClick()
-        compose.runOnIdle { assertTrue(options.dynamicColors) }
-        screenshot("appearance-dynamic-dark")
+        screenshot("display-sakura-dark")
     }
 
     @Test fun tagsCanBeEditedSavedAndCombinedWithListFilters() {
@@ -272,31 +268,27 @@ class TrackingAndThemesTest {
         screenshot("history-search-this-week")
     }
 
-    @Test fun predefinedAccentsSchedulingCompactModeAndSavedLooksWorkTogether() {
+    @Test fun predefinedPalettesAndSeparateDisplaySchedulingWorkTogether() {
         var options by mutableStateOf(ThemeOptions())
         var mode by mutableStateOf(ThemeMode.LIGHT)
-        var accent by mutableStateOf(AccentColor.TELEGRAM_BLUE)
-        var presets by mutableStateOf(emptyList<AppearancePreset>())
+        var display by mutableStateOf(false)
         compose.setContent {
             AnimeScheduleTheme(themeMode=mode,options=options) {
-                AppearanceSheet(mode,accent,options,{ mode=it },{ options=it },{ options=ThemeOptions() },{},presets,{ presets=listOf(it) },{ mode=it.mode;options=it.options;accent=it.accent },{ name -> presets=presets.filterNot{it.name==name} },{ accent=it;options=options.copy(palette=ThemePalette.CLASSIC,dynamicColors=false) })
+                if (display) DisplaySheet(options, { options = it }, {})
+                else AppearanceSheet(mode, options, { mode=it }, { options=options.copy(palette=it) }, {}, { display=true })
             }
         }
-        compose.onNodeWithTag("theme-accent-GREEN").performScrollTo().performClick()
-        compose.runOnIdle { assertEquals(AccentColor.GREEN,accent) }
+        compose.onNodeWithTag("theme-palette-MINT").performScrollTo().performClick().assertIsSelected()
+        compose.runOnIdle { assertEquals(ThemePalette.MINT,options.palette) }
+        compose.onNodeWithTag("preset-name").assertDoesNotExist()
+        compose.onNodeWithTag("theme-accent-GREEN").assertDoesNotExist()
+        compose.onNodeWithText(text(R.string.compact_layout)).assertDoesNotExist()
+        compose.onNodeWithContentDescription(instrumentation.targetContext.getString(android.R.string.cancel)).performClick()
         compose.onNodeWithText(text(R.string.compact_layout)).performScrollTo().performClick()
         compose.onNodeWithText(text(R.string.scheduled_theme)).performScrollTo().performClick()
-        compose.runOnIdle { assertTrue(options.compactLayout);assertTrue(options.scheduled) }
+        compose.runOnIdle { assertTrue(options.compactLayout);assertTrue(options.scheduled);assertEquals(ThemePalette.MINT,options.palette) }
+        compose.onNodeWithText(text(R.string.dark_starts)).performScrollTo().assertIsDisplayed()
         screenshot("scheduled-theme-display")
-        compose.onNodeWithTag("preset-name").performScrollTo().performTextInput("Evening")
-        compose.onNodeWithTag("preset-save").performScrollTo().performClick()
-        compose.onNodeWithTag("preset-name").assertIsNotFocused()
-        compose.runOnIdle { assertEquals(1,presets.size);options=ThemeOptions() }
-        compose.onNodeWithTag("preset-Evening").performScrollTo().assertIsDisplayed().performClick()
-        compose.runOnIdle { assertTrue(options.compactLayout);assertTrue(options.scheduled);assertEquals(AccentColor.GREEN,accent) }
-        screenshot("appearance-saved-look")
-        compose.onNodeWithContentDescription(instrumentation.targetContext.getString(R.string.preset_delete,"Evening")).performScrollTo().assertIsDisplayed().performClick()
-        compose.runOnIdle { assertTrue(presets.isEmpty()) }
     }
 
     private fun assertSheetSystemBars(darkIcons: Boolean) = compose.runOnIdle {

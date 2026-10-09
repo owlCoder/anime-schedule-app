@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="appearance_display">Display</string>
-    <string name="appearance_saved">Saved</string>
     <string name="compact_layout">Compact layout</string>
     <string name="compact_layout_hint">Smaller covers and spacing in lists, search and settings. Text stays readable.</string>
     <string name="scheduled_theme">Automatic day / night theme</string>
@@ -11,11 +10,6 @@
     <string name="dark_ends">Dark mode ends</string>
     <string name="hour_decrease">One hour earlier</string>
     <string name="hour_increase">One hour later</string>
-    <string name="preset_hint">Save your current colors, mode and display options. Keep up to eight named looks; saving the same name updates it.</string>
-    <string name="preset_name">Name your look</string>
-    <string name="preset_save">Save this look</string>
-    <string name="preset_empty">Your saved looks will appear here.</string>
-    <string name="preset_delete">Delete %1$s</string>
     <string name="palette_ocean">Ocean</string>
     <string name="palette_lavender">Lavender</string>
     <string name="palette_ember">Ember</string>
@@ -39,7 +33,7 @@
     <string name="backup_export">Export personal backup</string>
     <string name="backup_select">Choose a backup to restore</string>
     <string name="backup_restore">Restore this backup</string>
-    <string name="backup_preview">%1$d favorites · %2$d notes · %3$d tagged anime\n%4$d activity records · %5$d saved looks</string>
+    <string name="backup_preview">%1$d favorites · %2$d notes · %3$d tagged anime\n%4$d activity records</string>
     <string name="backup_replace_hint">Replaces local personal data for %1$s and the current appearance. Your MAL list and login are unchanged.</string>
     <string name="backup_guest">this device profile</string>
     <string name="backup_exported">Personal backup saved</string>
@@ -55,5 +49,4 @@
     <string name="continue_watching_hint">Open your most recently updated Watching anime with episodes remaining.</string>
     <string name="history_search">Search watch activity</string>
     <string name="history_this_week">This week only</string>
-    <string name="appearance_accent_hint">Choose a predefined accent to use with the Classic palette.</string>
 </resources>

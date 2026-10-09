@@ -140,13 +140,13 @@ class MainActivity : AppCompatActivity() {
             )
 
             var pendingTheme by rememberSaveable { mutableStateOf(prefs.themeMode) }
-            var pendingAccent by rememberSaveable { mutableStateOf(prefs.accentColor) }
+            var pendingPalette by rememberSaveable { mutableStateOf(prefs.themeOptions.palette) }
             var pendingLanguage by rememberSaveable { mutableStateOf(prefs.appLanguage) }
             var pendingNotifEnabled by rememberSaveable { mutableStateOf(true) }
             var pendingNotifOffset by rememberSaveable { mutableIntStateOf(0) }
 
             val effectiveTheme = if (prefs.onboardingDone) prefs.themeMode else pendingTheme
-            val effectiveAccent = if (prefs.onboardingDone) prefs.accentColor else pendingAccent
+            val effectiveOptions = if (prefs.onboardingDone) prefs.themeOptions else prefs.themeOptions.copy(palette = pendingPalette, scheduled = false)
             val effectiveLanguage = if (prefs.onboardingDone) prefs.appLanguage else pendingLanguage
 
             applyLocale(effectiveLanguage)
@@ -154,8 +154,7 @@ class MainActivity : AppCompatActivity() {
             ProvideAppLocale(effectiveLanguage) {
                 AnimeScheduleTheme(
                     themeMode = effectiveTheme,
-                    accentColor = effectiveAccent,
-                    options = prefs.themeOptions
+                    options = effectiveOptions
                 ) {
                     SheetBackdropHost(Modifier.fillMaxSize()) {
                         CompositionLocalProvider(com.owlcoder.animeschedule.presentation.components.LocalWatchTools provides toolsActions) {
@@ -163,12 +162,8 @@ class MainActivity : AppCompatActivity() {
                                 OnboardingScreen(
                                     onComplete = {
                                         scope.launch {
-                                            prefsDataStore.setThemeMode(pendingTheme)
-                                            prefsDataStore.setAccentColor(pendingAccent)
-                                            prefsDataStore.setAppLanguage(pendingLanguage)
-                                            prefsDataStore.setNotificationsEnabled(pendingNotifEnabled)
-                                            prefsDataStore.setNotificationOffset(pendingNotifOffset)
-                                            prefsDataStore.setOnboardingDone()
+                                            prefsDataStore.completeOnboarding(pendingTheme, pendingPalette, pendingLanguage,
+                                                pendingNotifEnabled, pendingNotifOffset)
                                             LocaleHelper.applyLanguage(pendingLanguage)
                                         }
                                     },
@@ -176,10 +171,10 @@ class MainActivity : AppCompatActivity() {
                                     isMalConnected = isMalConnected,
                                     malUsername = malUsername,
                                     selectedTheme = pendingTheme,
-                                    selectedAccent = pendingAccent,
+                                    selectedPalette = pendingPalette,
                                     selectedLanguage = pendingLanguage,
                                     onThemeChange = { pendingTheme = it },
-                                    onAccentChange = { pendingAccent = it },
+                                    onPaletteChange = { pendingPalette = it },
                                     onLanguageChange = { pendingLanguage = it },
                                     onNotifSettingsChange = { enabled, offset ->
                                         pendingNotifEnabled = enabled

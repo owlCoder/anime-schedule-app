@@ -4,13 +4,12 @@ import java.time.LocalDate
 import java.util.Locale
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.Json
 
 @Serializable
-data class AppearancePreset(
-    val name: String,
+data class AppearanceSettings(
     val mode: ThemeMode = ThemeMode.SYSTEM,
-    val accent: AccentColor = AccentColor.TELEGRAM_BLUE,
     val options: ThemeOptions = ThemeOptions(),
 )
 
@@ -54,18 +53,15 @@ fun WatchTools.normalized(): WatchTools = copy(
 /** Portable personal data only: no login tokens, credentials, API keys or MAL list mutations. */
 @Serializable
 data class PersonalBackup(
-    val schemaVersion: Int = 1,
+    val schemaVersion: Int = 2,
     val tools: WatchTools = WatchTools(),
-    val appearance: AppearancePreset = AppearancePreset("Current"),
-    val presets: List<AppearancePreset> = emptyList(),
+    val appearance: AppearanceSettings = AppearanceSettings(),
 ) {
     fun normalized(): PersonalBackup {
-        require(schemaVersion == 1) { "Unsupported backup version" }
+        require(schemaVersion == 2) { "Unsupported backup version" }
         return copy(
             tools = tools.normalized(),
             appearance = appearance.copy(options = appearance.options.normalized()),
-            presets = presets.take(8).map { it.copy(name = it.name.trim().take(32), options = it.options.normalized()) }
-                .filter { it.name.isNotEmpty() }.distinctBy { it.name.lowercase(Locale.ROOT) },
         )
     }
     fun encode(): String = json.encodeToString(normalized())
@@ -76,7 +72,19 @@ data class PersonalBackup(
             // Empty or unrelated JSON must never silently replace the user's personal data.
             val root = json.parseToJsonElement(text)
             require(root is kotlinx.serialization.json.JsonObject && "schemaVersion" in root && "tools" in root) { "Invalid backup" }
-            return json.decodeFromString<PersonalBackup>(text).normalized()
+            val version = (root["schemaVersion"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toIntOrNull()
+            require(version == 1 || version == 2) { "Unsupported backup version" }
+            if (version == 2) return json.decodeFromString<PersonalBackup>(text).normalized()
+            val appearanceNode = root["appearance"]
+            require(appearanceNode == null || appearanceNode is kotlinx.serialization.json.JsonObject) { "Invalid appearance" }
+            val oldAppearance = appearanceNode as? kotlinx.serialization.json.JsonObject
+            val oldOptions = oldAppearance?.get("options")?.let { json.decodeFromJsonElement<ThemeOptions>(it) } ?: ThemeOptions()
+            val accent = (oldAppearance?.get("accent") as? kotlinx.serialization.json.JsonPrimitive)?.content
+            val appearance = AppearanceSettings(
+                mode = oldAppearance?.get("mode")?.let { json.decodeFromJsonElement<ThemeMode>(it) } ?: ThemeMode.SYSTEM,
+                options = oldOptions.withLegacyAccent(accent),
+            )
+            return PersonalBackup(tools = json.decodeFromJsonElement(root.getValue("tools")), appearance = appearance).normalized()
         }
     }
 }

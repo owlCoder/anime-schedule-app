@@ -48,8 +48,6 @@
     <string name="theme_palette">Paleta boja</string>
     <string name="theme_preview">Pregled uživo</string>
     <string name="theme_preview_subtitle">Tvoja sledeća epizoda je spremna</string>
-    <string name="theme_dynamic">Boje Android pozadine</string>
-    <string name="theme_dynamic_hint">Koristi sistemsku paletu umesto teme ili akcenta.</string>
     <string name="theme_amoled">AMOLED crna</string>
     <string name="theme_amoled_hint">Potpuno crna pozadina stranica i panela u tamnom režimu.</string>
     <string name="theme_contrast">Veći kontrast</string>
@@ -72,5 +70,4 @@
         <item quantity="other">%1$d / %2$d ove nedelje</item>
     </plurals>
     <string name="toast_dismiss">Zatvori obaveštenje</string>
-    <string name="accent_classic_only">Koristi klasična tema</string>
 </resources>

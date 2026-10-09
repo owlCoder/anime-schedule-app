@@ -7,15 +7,15 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.owlcoder.animeschedule.domain.model.AccentColor
 import com.owlcoder.animeschedule.domain.model.AppLanguage
 import com.owlcoder.animeschedule.domain.model.CacheRetentionPolicy
-import com.owlcoder.animeschedule.domain.model.AppearancePreset
 import com.owlcoder.animeschedule.domain.model.normalized
 import com.owlcoder.animeschedule.domain.model.ThemeOptions
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 import com.owlcoder.animeschedule.domain.model.ThemeMode
+import com.owlcoder.animeschedule.domain.model.ThemePalette
+import com.owlcoder.animeschedule.domain.model.withLegacyAccent
 import com.owlcoder.animeschedule.domain.model.QuietHours
 import com.owlcoder.animeschedule.domain.model.UserPreferences
 import kotlinx.coroutines.flow.Flow
@@ -41,13 +41,13 @@ class UserPreferencesDataStore @Inject constructor(
         val MAL_AVATAR_URL = stringPreferencesKey("mal_avatar_url")
         val LAST_MAL_LIST_SYNC = longPreferencesKey("last_mal_list_sync_epoch_ms")
         val LAST_MAL_SYNC_SUCCESS = longPreferencesKey("last_mal_sync_success_epoch_ms")
-        val APPEARANCE_PRESETS = stringPreferencesKey("appearance_presets_v1")
+        val LEGACY_APPEARANCE_PRESETS = stringPreferencesKey("appearance_presets_v1")
         val THEME_OPTIONS = stringPreferencesKey("theme_options_v1")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val NOTIFICATIONS_ENABLED = booleanPreferencesKey("notifications_enabled")
         val QUIET_HOURS = stringPreferencesKey("notification_quiet_hours_v1")
         val NOTIFICATION_OFFSET = intPreferencesKey("notification_offset_minutes")
-        val ACCENT_COLOR = stringPreferencesKey("accent_color")
+        val LEGACY_ACCENT_COLOR = stringPreferencesKey("accent_color")
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         val APP_LANGUAGE = stringPreferencesKey("app_language")
         val CACHE_RETENTION_DAYS = intPreferencesKey("cache_retention_days")
@@ -89,13 +89,11 @@ class UserPreferencesDataStore @Inject constructor(
             malLoggedIn = prefs[Keys.MAL_LOGGED_IN] ?: false,
             malUsername = prefs[Keys.MAL_USERNAME] ?: "",
             malAvatarUrl = prefs[Keys.MAL_AVATAR_URL] ?: "",
-            themeOptions = runCatching { json.decodeFromString<ThemeOptions>(prefs[Keys.THEME_OPTIONS] ?: "{}").normalized() }.getOrDefault(ThemeOptions()),
-            appearancePresets = runCatching { json.decodeFromString<List<AppearancePreset>>(prefs[Keys.APPEARANCE_PRESETS] ?: "[]") }.getOrDefault(emptyList()),
+            themeOptions = runCatching { json.decodeFromString<ThemeOptions>(prefs[Keys.THEME_OPTIONS] ?: "{}").normalized() }.getOrDefault(ThemeOptions()).withLegacyAccent(prefs[Keys.LEGACY_ACCENT_COLOR]),
             themeMode = runCatching { ThemeMode.valueOf(prefs[Keys.THEME_MODE] ?: "") }.getOrDefault(ThemeMode.SYSTEM),
             notificationsEnabled = prefs[Keys.NOTIFICATIONS_ENABLED] ?: true,
             notificationOffsetMinutes = prefs[Keys.NOTIFICATION_OFFSET] ?: 0,
             quietHours = runCatching { json.decodeFromString<QuietHours>(prefs[Keys.QUIET_HOURS] ?: "{}").normalized() }.getOrDefault(QuietHours()),
-            accentColor = runCatching { AccentColor.valueOf(prefs[Keys.ACCENT_COLOR] ?: "") }.getOrDefault(AccentColor.TELEGRAM_BLUE),
             onboardingDone = prefs[Keys.ONBOARDING_DONE] ?: false,
             appLanguage = appLanguage,
             cacheRetentionDays = CacheRetentionPolicy.normalizeRetentionDays(
@@ -125,37 +123,44 @@ class UserPreferencesDataStore @Inject constructor(
         dataStore.edit { it[Keys.LAST_MAL_LIST_SYNC] = epochMs }
     }
 
+    private fun androidx.datastore.preferences.core.MutablePreferences.writeThemeOptions(options: ThemeOptions) {
+        this[Keys.THEME_OPTIONS] = Json.encodeToString(options.normalized())
+        remove(Keys.LEGACY_ACCENT_COLOR)
+        remove(Keys.LEGACY_APPEARANCE_PRESETS)
+    }
+
     suspend fun setThemeOptions(options: ThemeOptions) {
-        dataStore.edit { it[Keys.THEME_OPTIONS] = Json.encodeToString(options.normalized()) }
+        dataStore.edit { it.writeThemeOptions(options) }
     }
 
-    suspend fun saveAppearancePreset(preset: AppearancePreset) {
-        val name = preset.name.trim().take(32)
-        if (name.isEmpty()) return
-        dataStore.edit { prefs ->
-            val previous = runCatching { json.decodeFromString<List<AppearancePreset>>(prefs[Keys.APPEARANCE_PRESETS] ?: "[]") }.getOrDefault(emptyList())
-            val next = listOf(preset.copy(name = name, options = preset.options.normalized())) + previous.filterNot { it.name.equals(name, ignoreCase = true) }
-            prefs[Keys.APPEARANCE_PRESETS] = Json.encodeToString(next.take(8))
-        }
+    suspend fun setThemePalette(palette: ThemePalette) {
+        dataStore.edit { it.writeThemeOptions(read(it).themeOptions.copy(palette = palette)) }
     }
 
-    suspend fun deleteAppearancePreset(name: String) {
-        dataStore.edit { prefs ->
-            val previous = runCatching { json.decodeFromString<List<AppearancePreset>>(prefs[Keys.APPEARANCE_PRESETS] ?: "[]") }.getOrDefault(emptyList())
-            prefs[Keys.APPEARANCE_PRESETS] = Json.encodeToString(previous.filterNot { it.name == name })
-        }
-    }
-
-    suspend fun applyAppearancePreset(preset: AppearancePreset) {
-        dataStore.edit { prefs ->
-            prefs[Keys.THEME_MODE] = preset.mode.name
-            prefs[Keys.ACCENT_COLOR] = preset.accent.name
-            prefs[Keys.THEME_OPTIONS] = Json.encodeToString(preset.options.normalized())
+    suspend fun resetAppearance() {
+        dataStore.edit {
+            it[Keys.THEME_MODE] = ThemeMode.SYSTEM.name
+            it.writeThemeOptions(read(it).themeOptions.copy(palette = ThemePalette.CLASSIC, scheduled = false))
         }
     }
 
     suspend fun setThemeMode(mode: ThemeMode) {
-        dataStore.edit { it[Keys.THEME_MODE] = mode.name }
+        dataStore.edit {
+            it[Keys.THEME_MODE] = mode.name
+            it.writeThemeOptions(read(it).themeOptions.copy(scheduled = false))
+        }
+    }
+
+    suspend fun completeOnboarding(mode: ThemeMode, palette: ThemePalette, language: AppLanguage,
+        notificationsEnabled: Boolean, offsetMinutes: Int) {
+        dataStore.edit {
+            it[Keys.THEME_MODE] = mode.name
+            it.writeThemeOptions(read(it).themeOptions.copy(palette = palette, scheduled = false))
+            it[Keys.APP_LANGUAGE] = language.name
+            it[Keys.NOTIFICATIONS_ENABLED] = notificationsEnabled
+            it[Keys.NOTIFICATION_OFFSET] = offsetMinutes
+            it[Keys.ONBOARDING_DONE] = true
+        }
     }
 
     suspend fun setNotificationsEnabled(enabled: Boolean) {
@@ -168,10 +173,6 @@ class UserPreferencesDataStore @Inject constructor(
 
     suspend fun setQuietHours(value: QuietHours) {
         dataStore.edit { it[Keys.QUIET_HOURS] = Json.encodeToString(value.normalized()) }
-    }
-
-    suspend fun setAccentColor(color: AccentColor) {
-        dataStore.edit { it[Keys.ACCENT_COLOR] = color.name }
     }
 
     suspend fun setOnboardingDone() {

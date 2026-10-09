@@ -111,7 +111,7 @@ class ModernSettingsTest {
     }
     @Test fun onboardingAllSixPagesKeepActionsVisible() {
         var completed=false
-        compose.setContent {AnimeScheduleTheme(themeMode=ThemeMode.LIGHT){OnboardingScreen({completed=true},{},false,"",ThemeMode.LIGHT,AccentColor.TELEGRAM_BLUE,AppLanguage.ENGLISH,{},{},{})}}
+        compose.setContent {AnimeScheduleTheme(themeMode=ThemeMode.LIGHT){OnboardingScreen({completed=true},{},false,"",ThemeMode.LIGHT,ThemePalette.CLASSIC,AppLanguage.ENGLISH,{},{},{})}}
         repeat(6){page->
             screenshot("onboarding-$page")
             compose.onNodeWithText(if(page==5)"Get started" else "Continue").assertIsDisplayed().performClick()

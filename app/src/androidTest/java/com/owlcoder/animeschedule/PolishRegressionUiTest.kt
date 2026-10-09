@@ -40,7 +40,7 @@ class PolishRegressionUiTest {
         var checked by mutableStateOf(false)
         var enabled by mutableStateOf(true)
         compose.setContent {
-            AnimeScheduleTheme(themeMode = mode, accentColor = AccentColor.GREEN, options = ThemeOptions(amoled = amoled)) {
+            AnimeScheduleTheme(themeMode = mode, options = ThemeOptions(palette = ThemePalette.FOREST, amoled = amoled)) {
                 Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().padding(18.dp)) {
                     AppSwitch(checked, { checked = it }, Modifier.testTag("polish-switch"), enabled = enabled)
                 }

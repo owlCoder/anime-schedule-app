@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="appearance_display">Prikaz</string>
-    <string name="appearance_saved">Sačuvano</string>
     <string name="compact_layout">Kompaktan prikaz</string>
     <string name="compact_layout_hint">Manje slike i razmaci u listi, pretrazi i podešavanjima. Tekst ostaje čitljiv.</string>
     <string name="scheduled_theme">Automatska dnevna / noćna tema</string>
@@ -11,11 +10,6 @@
     <string name="dark_ends">Tamni režim se završava</string>
     <string name="hour_decrease">Jedan sat ranije</string>
     <string name="hour_increase">Jedan sat kasnije</string>
-    <string name="preset_hint">Sačuvaj trenutne boje, režim i opcije prikaza. Čuvaj do osam imenovanih izgleda; isto ime ažurira postojeći izgled.</string>
-    <string name="preset_name">Naziv izgleda</string>
-    <string name="preset_save">Sačuvaj ovaj izgled</string>
-    <string name="preset_empty">Sačuvani izgledi će se pojaviti ovde.</string>
-    <string name="preset_delete">Obriši %1$s</string>
     <string name="palette_ocean">Okean</string>
     <string name="palette_lavender">Lavanda</string>
     <string name="palette_ember">Žar</string>
@@ -39,7 +33,7 @@
     <string name="backup_export">Izvezi rezervnu kopiju</string>
     <string name="backup_select">Izaberi kopiju za vraćanje</string>
     <string name="backup_restore">Vrati ovu kopiju</string>
-    <string name="backup_preview">%1$d favorita · %2$d beleški · %3$d označenih animea\n%4$d zapisa istorije · %5$d sačuvanih izgleda</string>
+    <string name="backup_preview">%1$d favorita · %2$d beleški · %3$d označenih animea\n%4$d zapisa istorije</string>
     <string name="backup_replace_hint">Zamenjuje lokalne lične podatke za %1$s i trenutni izgled. MAL lista i prijava ostaju sačuvane.</string>
     <string name="backup_guest">profil ovog uređaja</string>
     <string name="backup_exported">Rezervna kopija je sačuvana</string>
@@ -55,5 +49,4 @@
     <string name="continue_watching_hint">Otvori poslednji izmenjeni anime koji gledaš i koji ima preostalih epizoda.</string>
     <string name="history_search">Pretraži istoriju gledanja</string>
     <string name="history_this_week">Samo ove nedelje</string>
-    <string name="appearance_accent_hint">Izaberi predefinisanu boju za klasičnu paletu.</string>
 </resources>

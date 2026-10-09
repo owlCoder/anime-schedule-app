@@ -1,7 +1,6 @@
 package com.owlcoder.animeschedule.data.repository
 
 import kotlinx.coroutines.flow.Flow
-import com.owlcoder.animeschedule.domain.model.AccentColor
 import com.owlcoder.animeschedule.domain.model.AppLanguage
 import com.owlcoder.animeschedule.domain.model.ThemeMode
 import com.owlcoder.animeschedule.domain.model.UserPreferences
@@ -35,10 +34,6 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setNotificationOffset(minutes: Int) {
         prefsDataStore.setNotificationOffset(minutes)
-    }
-
-    override suspend fun setAccentColor(color: AccentColor) {
-        prefsDataStore.setAccentColor(color)
     }
 
     override suspend fun setAppLanguage(language: AppLanguage) {

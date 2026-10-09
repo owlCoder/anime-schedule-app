@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_mode_system">System</string>
+    <string name="appearance_palette_hint">Choose one of 15 palettes. Each has light and dark colors.</string>
+    <string name="display_settings_hint">AMOLED, contrast, animations and layout</string>
+    <string name="palette_ruby">Ruby</string>
+    <string name="palette_amethyst">Amethyst</string>
+    <string name="palette_mint">Mint</string>
+    <string name="palette_gold">Gold</string>
+    <string name="changelog_5127_title">One palette system</string>
+    <string name="changelog_5127_themes_title">15 predefined palettes</string>
+    <string name="changelog_5127_themes">Appearance and onboarding share 15 compact palette choices and a smaller System, Light and Dark selector. Settings icons follow the selected palette.</string>
+    <string name="changelog_5127_display_title">Display has its own menu</string>
+    <string name="changelog_5127_display">AMOLED, contrast, reduced animations, compact layout and automatic day/night mode are grouped in Display. Saved appearances and separate accent colors have been removed.</string>
+</resources>

@@ -15,7 +15,6 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.annotation.StringRes
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,7 +60,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.owlcoder.animeschedule.R
 import com.owlcoder.animeschedule.domain.model.AppLanguage
-import com.owlcoder.animeschedule.domain.model.AccentColor
 import com.owlcoder.animeschedule.domain.model.CacheRetentionPolicy
 import com.owlcoder.animeschedule.domain.model.LoginFailure
 import com.owlcoder.animeschedule.domain.model.LoginState
@@ -75,7 +73,6 @@ import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.presentation.components.InsetGroup
 import com.owlcoder.animeschedule.presentation.components.LocalNavBarHeight
-import com.owlcoder.animeschedule.ui.theme.accentPrimary
 import java.time.ZoneId
 import java.util.Locale
 import androidx.compose.foundation.clickable
@@ -101,7 +98,6 @@ import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -109,7 +105,7 @@ private val SettingsGroupShape = ContinuousRoundedShape(18.dp)
 
 private enum class SettingsSheet {
     Theme,
-    Accent, // Legacy saved sheet state opens the unified appearance panel.
+    Display,
     Notifications,
     Timezone,
     Language,
@@ -163,8 +159,9 @@ fun SettingsScreen(
         stringResource(R.string.settings_section_preferences) to listOf(
             SettingsItem(Icons.Default.DashboardCustomize, stringResource(R.string.shortcuts_title), stringResource(R.string.shortcuts_settings_hint), SettingsSheet.Shortcuts, "shortcuts precice prečice tools alatke"),
             SettingsItem(Icons.Default.Palette, stringResource(R.string.settings_appearance),
-                if (uiState.themeOptions.scheduled) stringResource(R.string.scheduled_theme) else if (uiState.themeOptions.dynamicColors) stringResource(R.string.theme_dynamic) else "${themeModeLabel(uiState.themeMode)} · ${stringResource(uiState.themeOptions.palette.labelRes())}",
-                SettingsSheet.Theme, "theme tema izgled colors boje accent akcent color"),
+                if (uiState.themeOptions.scheduled) stringResource(R.string.scheduled_theme) else "${themeModeLabel(uiState.themeMode)} · ${stringResource(uiState.themeOptions.palette.labelRes())}",
+                SettingsSheet.Theme, "theme tema izgled colors boje palettes palete color"),
+            SettingsItem(Icons.Default.Tune, stringResource(R.string.appearance_display), stringResource(R.string.display_settings_hint), SettingsSheet.Display, "display prikaz amoled contrast kontrast animation animacije compact raspored schedule automatska"),
             SettingsItem(Icons.Default.Notifications, stringResource(R.string.settings_notifications),
                 if (uiState.notificationsEnabled && !permissionGranted) stringResource(R.string.notification_permission_needed) else if (uiState.notificationsEnabled) "${stringResource(R.string.settings_notifications_on)} · ${notificationOffsetLabel(uiState.notificationOffsetMinutes)}" else stringResource(R.string.settings_notifications_off), SettingsSheet.Notifications, "reminder podsetnik"),
             SettingsItem(Icons.Default.Public, stringResource(R.string.settings_timezone), uiState.timezoneId.ifEmpty { stringResource(R.string.settings_timezone_system) }, SettingsSheet.Timezone),
@@ -211,7 +208,6 @@ fun SettingsScreen(
                                 keyboard?.hide()
                                 activeSheet = row.sheet
                             }, enabled = !(row.sheet == SettingsSheet.ClearCache && isClearingCache),
-                                iconColor = if (row.destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                                 titleColor = if (row.destructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)
                             if (index < rows.lastIndex) SettingsDivider()
                         }
@@ -235,12 +231,10 @@ fun SettingsScreen(
             AppButton(stringResource(R.string.sync_retry), { activeSheet = SettingsSheet.Sync }, Modifier.fillMaxWidth().padding(top = 16.dp), icon = Icons.Default.CloudSync)
             AppButton(stringResource(R.string.profile_logout), { activeSheet = null; authViewModel.logout() }, Modifier.fillMaxWidth().padding(top = 8.dp), variant = AppButtonVariant.Destructive, icon = Icons.AutoMirrored.Filled.ExitToApp)
         }
-        SettingsSheet.Theme, SettingsSheet.Accent -> AppearanceSheet(uiState.themeMode, uiState.accentColor, uiState.themeOptions,
-            settingsViewModel::setThemeMode, settingsViewModel::setThemeOptions,
-            { settingsViewModel.applyAppearancePreset(com.owlcoder.animeschedule.domain.model.AppearancePreset("Default")) }, { activeSheet = null },
-            uiState.appearancePresets, settingsViewModel::saveAppearancePreset, settingsViewModel::applyAppearancePreset, settingsViewModel::deleteAppearancePreset, onAccentChange = { color ->
-                settingsViewModel.applyAppearancePreset(com.owlcoder.animeschedule.domain.model.AppearancePreset("Current", uiState.themeMode, color, uiState.themeOptions.copy(palette = com.owlcoder.animeschedule.domain.model.ThemePalette.CLASSIC, dynamicColors = false)))
-            })
+        SettingsSheet.Theme -> AppearanceSheet(uiState.themeMode, uiState.themeOptions,
+            settingsViewModel::setThemeMode, settingsViewModel::setThemePalette,
+            settingsViewModel::resetAppearance, { activeSheet = null })
+        SettingsSheet.Display -> DisplaySheet(uiState.themeOptions, settingsViewModel::setThemeOptions) { activeSheet = null }
         SettingsSheet.Notifications -> NotificationSettingsSheet(uiState.notificationsEnabled, uiState.notificationOffsetMinutes, ::enableNotifications, settingsViewModel::setNotificationOffset, { activeSheet = null }, permissionGranted, { enableNotifications(true) }, uiState.quietHours, settingsViewModel::setQuietHours)
         SettingsSheet.Timezone -> TimezoneSheet(uiState.timezoneId, { settingsViewModel.setTimezone(it); activeSheet = null }, { activeSheet = null })
         SettingsSheet.Language -> SelectionSheet(stringResource(R.string.settings_language), listOf(AppLanguage.ENGLISH, AppLanguage.SERBIAN_LATIN), uiState.appLanguage, { languageLabel(it) }, {
@@ -313,7 +307,7 @@ private fun AccountRow(
             Surface(
                 modifier = Modifier.size(40.dp),
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                color = MaterialTheme.colorScheme.primaryContainer,
                 tonalElevation = 0.dp,
             ) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -321,7 +315,7 @@ private fun AccountRow(
                         Icons.Default.AccountCircle,
                         contentDescription = null,
                         modifier = Modifier.size(29.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
@@ -364,14 +358,9 @@ private fun SettingsRow(
     value: String,
     onClick: () -> Unit,
     enabled: Boolean = true,
-    iconColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     titleColor: Color = MaterialTheme.colorScheme.onSurface,
     trailing: (@Composable () -> Unit)? = null,
 ) {
-    val destructive = iconColor == MaterialTheme.colorScheme.error
-    val dark = MaterialTheme.colorScheme.background.luminance() < 0.35f
-    val tileColor = if (titleColor == MaterialTheme.colorScheme.error) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer
-    val tileBorder = MaterialTheme.colorScheme.outlineVariant
 
     Row(
         modifier = Modifier
@@ -381,26 +370,7 @@ private fun SettingsRow(
             .padding(horizontal = 14.dp, vertical = if (LocalCompactLayout.current) 8.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Surface(
-            modifier = Modifier.size(36.dp),
-            shape = ContinuousRoundedShape(9.dp),
-            color = tileColor,
-            border = BorderStroke(0.5.dp, tileBorder),
-            tonalElevation = 0.dp,
-            shadowElevation = 0.dp,
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = iconColor,
-                )
-            }
-        }
+        SettingsIconTile(icon, destructive = titleColor == MaterialTheme.colorScheme.error)
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -616,21 +586,6 @@ private fun themeModeLabel(mode: ThemeMode): String = when (mode) {
     ThemeMode.SYSTEM -> stringResource(R.string.settings_theme_system)
     ThemeMode.LIGHT -> stringResource(R.string.settings_theme_light)
     ThemeMode.DARK -> stringResource(R.string.settings_theme_dark)
-}
-
-@Composable
-internal fun accentLabel(accent: AccentColor): String = when (accent) {
-    AccentColor.TELEGRAM_BLUE -> stringResource(R.string.accent_telegram_blue)
-    AccentColor.PURPLE -> stringResource(R.string.accent_purple)
-    AccentColor.GREEN -> stringResource(R.string.accent_green)
-    AccentColor.ORANGE -> stringResource(R.string.accent_orange)
-    AccentColor.PINK -> stringResource(R.string.accent_pink)
-    AccentColor.RED -> stringResource(R.string.accent_red)
-    AccentColor.CYAN -> stringResource(R.string.accent_cyan)
-    AccentColor.INDIGO -> stringResource(R.string.accent_indigo)
-    AccentColor.TEAL -> stringResource(R.string.accent_teal)
-    AccentColor.YELLOW -> stringResource(R.string.accent_yellow)
-    AccentColor.DEEP_PURPLE -> stringResource(R.string.accent_deep_purple)
 }
 
 @Composable

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_mode_system">Sistem</string>
+    <string name="appearance_palette_hint">Izaberi jednu od 15 paleta. Svaka ima svetlu i tamnu varijantu.</string>
+    <string name="display_settings_hint">AMOLED, kontrast, animacije i raspored</string>
+    <string name="palette_ruby">Rubin</string>
+    <string name="palette_amethyst">Ametist</string>
+    <string name="palette_mint">Menta</string>
+    <string name="palette_gold">Zlato</string>
+    <string name="changelog_5127_title">Jedinstven izbor paleta</string>
+    <string name="changelog_5127_themes_title">15 predefinisanih paleta</string>
+    <string name="changelog_5127_themes">Izgled i onboarding koriste istih 15 kompaktnih paleta i manji izbor sistemske, svetle i tamne teme. Ikonice u podešavanjima prate izabranu paletu.</string>
+    <string name="changelog_5127_display_title">Prikaz ima poseban meni</string>
+    <string name="changelog_5127_display">AMOLED, kontrast, smanjene animacije, kompaktan raspored i automatska dnevna/noćna tema grupisani su u meniju Prikaz. Sačuvani izgledi i zasebne akcentne boje su uklonjeni.</string>
+</resources>

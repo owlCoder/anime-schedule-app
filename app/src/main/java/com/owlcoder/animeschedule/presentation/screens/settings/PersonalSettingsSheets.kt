@@ -113,7 +113,7 @@ internal fun PersonalBackupSheet(store: PersonalBackupStore, username: String, o
             preview?.let { backup ->
                 Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(stringResource(R.string.backup_preview, backup.tools.favorites.size, backup.tools.notes.size, backup.tools.tags.size, backup.tools.activity.size, backup.presets.size), style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.backup_preview, backup.tools.favorites.size, backup.tools.notes.size, backup.tools.tags.size, backup.tools.activity.size), style = MaterialTheme.typography.bodyMedium)
                         Text(stringResource(R.string.backup_replace_hint, username.ifBlank { stringResource(R.string.backup_guest) }), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         AppButton(stringResource(R.string.backup_restore), {
                             scope.launch {

@@ -105,10 +105,9 @@ class VisualReviewTest {
                     AnimatedSplashScreen(Modifier.fillMaxSize())
                     if (appearanceVisible) AppearanceSheet(
                         ThemeMode.DARK,
-                        AccentColor.GREEN,
                         options,
                         {},
-                        { options = it },
+                        { options = options.copy(palette = it) },
                         {},
                         { appearanceVisible = false })
                 }

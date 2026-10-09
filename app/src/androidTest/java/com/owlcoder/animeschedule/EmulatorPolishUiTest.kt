@@ -128,11 +128,11 @@ class EmulatorPolishUiTest {
         var options by mutableStateOf(ThemeOptions(palette = ThemePalette.ICE, amoled = true))
         compose.setContent { SerbianLarge {
             AnimeScheduleTheme(themeMode = ThemeMode.DARK, options = options) {
-                AppearanceSheet(ThemeMode.DARK, AccentColor.TELEGRAM_BLUE, options, {}, { options = it }, {}, {})
+                DisplaySheet(options, { options = it }, {})
             }
         } }
         val switches = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Switch)
-        compose.onAllNodes(switches).assertCountEquals(6)
+        compose.onAllNodes(switches).assertCountEquals(5)
         compose.onNode(switches and hasText("AMOLED crna")).performScrollTo()
         val pixels = compose.onNodeWithTag("appearance-switch-${R.string.theme_amoled}", useUnmergedTree = true).captureToImage().toPixelMap()
         val thumb = pixels[(pixels.width * .72f).toInt(), pixels.height / 2]

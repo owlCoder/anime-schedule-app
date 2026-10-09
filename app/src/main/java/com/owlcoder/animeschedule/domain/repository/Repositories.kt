@@ -1,7 +1,6 @@
 package com.owlcoder.animeschedule.domain.repository
 
 import com.owlcoder.animeschedule.core.result.AppResult
-import com.owlcoder.animeschedule.domain.model.AccentColor
 import com.owlcoder.animeschedule.domain.model.AnimeDetail
 import com.owlcoder.animeschedule.domain.model.AnimeSeason
 import com.owlcoder.animeschedule.domain.model.AppLanguage
@@ -89,7 +88,6 @@ interface SettingsRepository {
     suspend fun setThemeMode(mode: ThemeMode)
     suspend fun setNotificationsEnabled(enabled: Boolean)
     suspend fun setNotificationOffset(minutes: Int)
-    suspend fun setAccentColor(color: AccentColor)
     suspend fun setAppLanguage(language: AppLanguage)
     suspend fun setCacheRetentionDays(days: Int)
 }

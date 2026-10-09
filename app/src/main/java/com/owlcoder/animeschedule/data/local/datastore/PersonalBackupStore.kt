@@ -21,8 +21,7 @@ class PersonalBackupStore @Inject constructor(
         val prefs = preferences.read(snapshot)
         return PersonalBackup(
             tools = tools.read(snapshot),
-            appearance = AppearancePreset("Current", prefs.themeMode, prefs.accentColor, prefs.themeOptions),
-            presets = prefs.appearancePresets,
+            appearance = AppearanceSettings(prefs.themeMode, prefs.themeOptions),
         ).encode().also { require(it.toByteArray(Charsets.UTF_8).size <= 2_000_000) { "Backup is too large" } }
     }
 
@@ -32,9 +31,9 @@ class PersonalBackupStore @Inject constructor(
         dataStore.edit { prefs ->
             prefs[tools.key(prefs)] = Json.encodeToString(value.tools)
             prefs[UserPreferencesDataStore.Keys.THEME_MODE] = value.appearance.mode.name
-            prefs[UserPreferencesDataStore.Keys.ACCENT_COLOR] = value.appearance.accent.name
+            prefs.remove(UserPreferencesDataStore.Keys.LEGACY_ACCENT_COLOR)
             prefs[UserPreferencesDataStore.Keys.THEME_OPTIONS] = Json.encodeToString(value.appearance.options)
-            prefs[UserPreferencesDataStore.Keys.APPEARANCE_PRESETS] = Json.encodeToString(value.presets)
+            prefs.remove(UserPreferencesDataStore.Keys.LEGACY_APPEARANCE_PRESETS)
         }
     }
 }

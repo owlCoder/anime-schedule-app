@@ -5,12 +5,11 @@ import java.time.ZoneId
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class ThemePalette { CLASSIC, MIDNIGHT, SAKURA, FOREST, SAND, OCEAN, LAVENDER, EMBER, ICE, COFFEE, NEON }
+enum class ThemePalette { CLASSIC, MIDNIGHT, SAKURA, FOREST, SAND, OCEAN, LAVENDER, EMBER, ICE, COFFEE, NEON, RUBY, AMETHYST, MINT, GOLD }
 
 @Serializable
 data class ThemeOptions(
     val palette: ThemePalette = ThemePalette.CLASSIC,
-    val dynamicColors: Boolean = false,
     val amoled: Boolean = true,
     val highContrast: Boolean = false,
     val reduceMotion: Boolean = false,
@@ -23,21 +22,6 @@ data class ThemeOptions(
 @Serializable
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
-@Serializable
-enum class AccentColor {
-    TELEGRAM_BLUE,
-    PURPLE,
-    GREEN,
-    ORANGE,
-    PINK,
-    RED,
-    CYAN,
-    INDIGO,
-    TEAL,
-    YELLOW,
-    DEEP_PURPLE
-}
-
 enum class AppLanguage { SYSTEM, ENGLISH, SERBIAN_LATIN }
 
 data class UserPreferences(
@@ -47,11 +31,9 @@ data class UserPreferences(
     val malAvatarUrl: String = "",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val themeOptions: ThemeOptions = ThemeOptions(),
-    val appearancePresets: List<AppearancePreset> = emptyList(),
     val notificationsEnabled: Boolean = true,
     val notificationOffsetMinutes: Int = 0,
     val quietHours: QuietHours = QuietHours(),
-    val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
     val onboardingDone: Boolean = false,
     val appLanguage: AppLanguage = AppLanguage.ENGLISH,
     /** How long temporary Room/image cache data should be retained. */
@@ -66,3 +48,20 @@ val UserPreferences.effectiveZoneId: ZoneId
     get() = timezoneId.takeIf { it.isNotEmpty() }
         ?.let { runCatching { ZoneId.of(it) }.getOrNull() }
         ?: ZoneId.systemDefault()
+
+/** Translate old Classic accents once; an explicit palette always wins. */
+fun ThemeOptions.withLegacyAccent(accent: String?): ThemeOptions = if (palette != ThemePalette.CLASSIC) this else copy(
+    palette = when (accent) {
+        "PURPLE" -> ThemePalette.AMETHYST
+        "GREEN" -> ThemePalette.FOREST
+        "ORANGE" -> ThemePalette.EMBER
+        "PINK" -> ThemePalette.SAKURA
+        "RED" -> ThemePalette.RUBY
+        "CYAN" -> ThemePalette.OCEAN
+        "INDIGO" -> ThemePalette.MIDNIGHT
+        "TEAL" -> ThemePalette.MINT
+        "YELLOW" -> ThemePalette.GOLD
+        "DEEP_PURPLE" -> ThemePalette.LAVENDER
+        else -> ThemePalette.CLASSIC
+    },
+)

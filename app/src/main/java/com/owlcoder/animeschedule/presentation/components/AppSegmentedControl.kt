@@ -27,7 +27,8 @@ fun AppSegmentedControl(
     options: List<SegmentOption>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
     val motion = LocalMotionPolicy.current
     Surface(
@@ -36,8 +37,8 @@ fun AppSegmentedControl(
         color = MaterialTheme.colorScheme.surfaceContainerHighest
     ) {
         Row(
-            Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(4.dp).selectableGroup(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            Modifier.fillMaxWidth().height(IntrinsicSize.Min).padding(if (compact) 2.dp else 4.dp).selectableGroup(),
+            horizontalArrangement = Arrangement.spacedBy(if (compact) 2.dp else 4.dp)
         ) {
             options.forEachIndexed { index, option ->
                 val selected = selectedIndex == index
@@ -75,11 +76,11 @@ fun AppSegmentedControl(
                     Row(
                         Modifier.fillMaxWidth().fillMaxHeight().heightIn(min = 48.dp)
                             .iosPressScale(interactionSource)
-                            .padding(horizontal = 8.dp, vertical = 10.dp),
+                            .padding(horizontal = if (compact) 6.dp else 8.dp, vertical = if (compact) 6.dp else 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
+                        horizontalArrangement = Arrangement.spacedBy(if (compact) 4.dp else 6.dp, Alignment.CenterHorizontally)
                     ) {
-                        Icon(option.icon, null, modifier = Modifier.size(18.dp))
+                        Icon(option.icon, null, modifier = Modifier.size(if (compact) 16.dp else 18.dp))
                         Text(option.label + (option.count?.takeIf { it > 0 }?.let { " · $it" } ?: ""),
                             modifier = Modifier.weight(1f, fill = false),
                             style = MaterialTheme.typography.labelMedium,

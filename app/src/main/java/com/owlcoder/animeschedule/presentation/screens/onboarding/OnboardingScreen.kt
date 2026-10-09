@@ -41,13 +41,20 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.owlcoder.animeschedule.R
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import com.owlcoder.animeschedule.presentation.components.ThemeModePicker
+import com.owlcoder.animeschedule.presentation.components.ThemePaletteGrid
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import com.owlcoder.animeschedule.domain.model.AccentColor
+import com.owlcoder.animeschedule.domain.model.ThemePalette
 import com.owlcoder.animeschedule.domain.model.AppLanguage
 import com.owlcoder.animeschedule.domain.model.ThemeMode
 import com.owlcoder.animeschedule.presentation.components.AppButton
@@ -57,7 +64,6 @@ import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
 import com.owlcoder.animeschedule.presentation.components.AppSwitch
 import com.owlcoder.animeschedule.presentation.components.ContinuousRoundedShape
 import com.owlcoder.animeschedule.ui.theme.PillShape
-import com.owlcoder.animeschedule.ui.theme.accentPrimary
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
@@ -99,10 +105,10 @@ fun OnboardingScreen(
     isMalConnected: Boolean,
     malUsername: String,
     selectedTheme: ThemeMode,
-    selectedAccent: AccentColor,
+    selectedPalette: ThemePalette,
     selectedLanguage: AppLanguage,
     onThemeChange: (ThemeMode) -> Unit,
-    onAccentChange: (AccentColor) -> Unit,
+    onPaletteChange: (ThemePalette) -> Unit,
     onLanguageChange: (AppLanguage) -> Unit,
     onNotifSettingsChange: (enabled: Boolean, offsetMinutes: Int) -> Unit = { _, _ -> },
 ) {
@@ -156,9 +162,9 @@ fun OnboardingScreen(
                     else -> PersonalizePage(
                         language = selectedLanguage,
                         selectedTheme = selectedTheme,
-                        selectedAccent = selectedAccent,
+                        selectedPalette = selectedPalette,
                         onThemeChange = onThemeChange,
-                        onAccentChange = onAccentChange,
+                        onPaletteChange = onPaletteChange,
                     )
                 }
             }
@@ -704,46 +710,24 @@ private fun MalPreviewPage(
 }
 
 @Composable
-private fun PersonalizePage(
+internal fun PersonalizePage(
     language: AppLanguage,
     selectedTheme: ThemeMode,
-    selectedAccent: AccentColor,
+    selectedPalette: ThemePalette,
     onThemeChange: (ThemeMode) -> Unit,
-    onAccentChange: (AccentColor) -> Unit,
+    onPaletteChange: (ThemePalette) -> Unit,
 ) {
-    ProductPage(
-        eyebrow = language.t("FINISH SETUP", "ZAVRŠI PODEŠAVANJE"),
-        title = language.t("Make it yours", "Podesi po svom ukusu"),
-        subtitle = language.t(
-            "Choose appearance and accent. Changes are applied immediately.",
-            "Izaberi izgled i boju. Promene se primenjuju odmah.",
-        ),
-    ) {
-        CompactPreferenceGroup(
-            icon = Icons.Default.Palette,
-            title = language.t("Appearance", "Izgled"),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                ThemeMode.entries.forEach { mode ->
-                    SelectionChip(
-                        label = when (mode) {
-                            ThemeMode.SYSTEM -> language.t("System", "Sistem")
-                            ThemeMode.LIGHT -> language.t("Light", "Svetlo")
-                            ThemeMode.DARK -> language.t("Dark", "Tamno")
-                        },
-                        icon = when (mode) { ThemeMode.SYSTEM -> Icons.Default.PhoneAndroid; ThemeMode.LIGHT -> Icons.Default.LightMode; ThemeMode.DARK -> Icons.Default.DarkMode },
-                        selected = selectedTheme == mode,
-                        onClick = { onThemeChange(mode) },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
-            }
-            AccentPicker(selectedAccent, onAccentChange)
-        }
-
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 20.dp)
+        .testTag("onboarding-theme-page"), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        Text(language.t("FINISH SETUP", "ZAVRŠI PODEŠAVANJE"), style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+        Text(language.t("Make it yours", "Podesi po svom ukusu"), style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.appearance_palette_hint), style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        ThemeModePicker(selectedTheme, onThemeChange)
+        Text(stringResource(R.string.theme_palette), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+        ThemePaletteGrid(selectedPalette, onPaletteChange)
     }
 }
 
@@ -1075,62 +1059,3 @@ private fun CompactPreferenceGroup(
         }
     }
 }
-
-@Composable
-private fun AccentPicker(
-    selectedAccent: AccentColor,
-    onAccentChange: (AccentColor) -> Unit,
-) {
-    val options = listOf(
-        AccentColor.TELEGRAM_BLUE,
-        AccentColor.PURPLE,
-        AccentColor.GREEN,
-        AccentColor.ORANGE,
-        AccentColor.PINK,
-        AccentColor.RED,
-        AccentColor.CYAN,
-    )
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        options.forEach { accent ->
-            val selected = selectedAccent == accent
-            Surface(
-                modifier = Modifier
-                    .size(38.dp)
-                    .iosPressScale()
-                    .onboardingClickable { onAccentChange(accent) },
-                shape = CircleShape,
-                color = accent.swatch(),
-                border = androidx.compose.foundation.BorderStroke(
-                    width = if (selected) 3.dp else 1.dp,
-                    color = if (selected) MaterialTheme.colorScheme.onSurface
-                    else MaterialTheme.colorScheme.surface,
-                ),
-            ) {
-                if (selected) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            modifier = Modifier.size(17.dp),
-                            tint = if (accent.swatch().luminance() > 0.58f) {
-                                Color(0xFF10131A)
-                            } else {
-                                Color.White
-                            },
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AccentColor.swatch(): Color = accentPrimary(
-    accent = this,
-    dark = MaterialTheme.colorScheme.background.luminance() < 0.35f,
-)

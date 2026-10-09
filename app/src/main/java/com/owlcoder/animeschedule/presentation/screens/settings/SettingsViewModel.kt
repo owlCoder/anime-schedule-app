@@ -11,11 +11,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import com.owlcoder.animeschedule.R
-import com.owlcoder.animeschedule.domain.model.AccentColor
 import com.owlcoder.animeschedule.domain.model.AppLanguage
 import com.owlcoder.animeschedule.domain.model.CacheRetentionPolicy
 import com.owlcoder.animeschedule.domain.model.ThemeMode
-import com.owlcoder.animeschedule.domain.model.AppearancePreset
 import com.owlcoder.animeschedule.data.local.datastore.UserPreferencesDataStore
 import com.owlcoder.animeschedule.data.local.datastore.PersonalBackupStore
 import com.owlcoder.animeschedule.data.work.CacheMaintenance
@@ -40,12 +38,10 @@ data class SettingsUiState(
     val username: String = "",
     val avatarUrl: String = "",
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val appearancePresets: List<AppearancePreset> = emptyList(),
     val themeOptions: com.owlcoder.animeschedule.domain.model.ThemeOptions = com.owlcoder.animeschedule.domain.model.ThemeOptions(),
     val notificationsEnabled: Boolean = true,
     val notificationOffsetMinutes: Int = 0,
     val quietHours: com.owlcoder.animeschedule.domain.model.QuietHours = com.owlcoder.animeschedule.domain.model.QuietHours(),
-    val accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
     val appLanguage: AppLanguage = AppLanguage.ENGLISH,
     val cacheRetentionDays: Int = CacheRetentionPolicy.DEFAULT_RETENTION_DAYS,
     val profileStats: ProfileStats = ProfileStats(),
@@ -88,11 +84,9 @@ class SettingsViewModel @Inject constructor(
             avatarUrl = avatarUrl,
             themeMode = preferences.themeMode,
             themeOptions = preferences.themeOptions,
-            appearancePresets = preferences.appearancePresets,
             notificationsEnabled = preferences.notificationsEnabled,
             notificationOffsetMinutes = preferences.notificationOffsetMinutes,
             quietHours = preferences.quietHours,
-            accentColor = preferences.accentColor,
             appLanguage = preferences.appLanguage,
             cacheRetentionDays = preferences.cacheRetentionDays,
             profileStats = ProfileStats(
@@ -111,9 +105,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { settingsRepository.setTimezoneId(timezoneId) }
     }
 
-    fun saveAppearancePreset(preset: AppearancePreset) { viewModelScope.launch { preferencesStore.saveAppearancePreset(preset) } }
-    fun applyAppearancePreset(preset: AppearancePreset) { viewModelScope.launch { preferencesStore.applyAppearancePreset(preset) } }
-    fun deleteAppearancePreset(name: String) { viewModelScope.launch { preferencesStore.deleteAppearancePreset(name) } }
+    fun setThemePalette(palette: com.owlcoder.animeschedule.domain.model.ThemePalette) {
+        viewModelScope.launch { preferencesStore.setThemePalette(palette) }
+    }
+    fun resetAppearance() { viewModelScope.launch { preferencesStore.resetAppearance() } }
 
     fun setThemeOptions(options: com.owlcoder.animeschedule.domain.model.ThemeOptions) {
         viewModelScope.launch { settingsRepository.setThemeOptions(options) }
@@ -133,10 +128,6 @@ class SettingsViewModel @Inject constructor(
 
     fun setQuietHours(value: com.owlcoder.animeschedule.domain.model.QuietHours) {
         viewModelScope.launch { preferencesStore.setQuietHours(value) }
-    }
-
-    fun setAccentColor(color: AccentColor) {
-        viewModelScope.launch { settingsRepository.setAccentColor(color) }
     }
 
     fun setAppLanguage(language: AppLanguage) {

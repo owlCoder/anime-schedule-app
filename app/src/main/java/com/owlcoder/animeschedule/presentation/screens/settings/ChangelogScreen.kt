@@ -1,5 +1,7 @@
 package com.owlcoder.animeschedule.presentation.screens.settings
 
+import androidx.compose.material.icons.outlined.Palette
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,6 +57,8 @@ private data class ReleaseNote(
 @Composable
 fun ChangelogBottomSheet(onDismiss: () -> Unit) {
     val notes = listOf(
+        ReleaseNote(Icons.Outlined.Palette, stringResource(R.string.changelog_5127_themes_title), stringResource(R.string.changelog_5127_themes)),
+        ReleaseNote(Icons.Outlined.Tune, stringResource(R.string.changelog_5127_display_title), stringResource(R.string.changelog_5127_display)),
         ReleaseNote(Icons.Outlined.Tune, stringResource(R.string.changelog_5126_library_title), stringResource(R.string.changelog_5126_library)),
         ReleaseNote(Icons.Outlined.Tune, stringResource(R.string.changelog_5126_overlays_title), stringResource(R.string.changelog_5126_overlays)),
         ReleaseNote(Icons.Outlined.Tune, stringResource(R.string.changelog_5126_notifications_title), stringResource(R.string.changelog_5126_notifications)),
@@ -162,7 +166,7 @@ fun ChangelogBottomSheet(onDismiss: () -> Unit) {
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
-                            text = stringResource(R.string.changelog_5126_title),
+                            text = stringResource(R.string.changelog_5127_title),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

@@ -24,13 +24,13 @@ class PersonalBackupTest {
         assertEquals(8, normalizedTags((1..15).joinToString(",")).size)
         assertEquals(24, normalizedTags("x".repeat(100)).single().length)
     }
-    @Test fun `personal backup round trip preserves Unicode tags activity and looks`() {
-        val backup = PersonalBackup(tools = WatchTools(favorites = setOf(5), notes = mapOf(5 to "Završna scena"), tags = mapOf(5 to setOf("Akcija")), episodeMinutes = 45, activity = listOf(WatchActivity(5, "Šuma", "2026-10-06", 2, 7))), appearance = AppearancePreset("Current", ThemeMode.DARK, options = ThemeOptions(palette = ThemePalette.OCEAN, compactLayout = true, scheduled = true)), presets = listOf(AppearancePreset("Veče")))
+    @Test fun `personal backup round trip preserves Unicode tags activity and current appearance`() {
+        val backup = PersonalBackup(tools = WatchTools(favorites = setOf(5), notes = mapOf(5 to "Završna scena"), tags = mapOf(5 to setOf("Akcija")), episodeMinutes = 45, activity = listOf(WatchActivity(5, "Šuma", "2026-10-06", 2, 7))), appearance = AppearanceSettings(ThemeMode.DARK, options = ThemeOptions(palette = ThemePalette.OCEAN, compactLayout = true, scheduled = true)))
         assertEquals(backup, PersonalBackup.decode(backup.encode()))
         assertFalse(backup.encode().contains("token")); assertFalse(backup.encode().contains("username"))
     }
     @Test fun `unrelated JSON and unsupported versions cannot clear personal data`() {
-        for (bad in listOf("{}", "[]", "{\"tools\":{}}", "{\"schemaVersion\":2,\"tools\":{}}", "not json")) {
+        for (bad in listOf("{}", "[]", "{\"tools\":{}}", "{\"schemaVersion\":3,\"tools\":{}}", "{\"schemaVersion\":1,\"tools\":{},\"appearance\":[]}", "not json")) {
             assertTrue(bad, runCatching { PersonalBackup.decode(bad) }.isFailure)
         }
     }
@@ -39,10 +39,10 @@ class PersonalBackupTest {
         assertEquals(WatchTools(), PersonalBackup.decode("{\"schemaVersion\":1,\"tools\":{},\"futureField\":true}").tools)
     }
     @Test fun `restored values are bounded and invalid history rows are removed`() {
-        val value = PersonalBackup(tools = WatchTools(favorites = setOf(-1, 2), notes = mapOf(2 to " x ", -1 to "bad"), tags = mapOf(2 to setOf("A", "a")), weeklyGoal = 900, episodeMinutes = 0, activity = listOf(WatchActivity(2, "A", "bad-date", 2, 2))), presets = listOf(AppearancePreset(" A "), AppearancePreset("a"))).normalized()
+        val value = PersonalBackup(tools = WatchTools(favorites = setOf(-1, 2), notes = mapOf(2 to " x ", -1 to "bad"), tags = mapOf(2 to setOf("A", "a")), weeklyGoal = 900, episodeMinutes = 0, activity = listOf(WatchActivity(2, "A", "bad-date", 2, 2)))).normalized()
         assertEquals(setOf(2), value.tools.favorites); assertEquals(mapOf(2 to "x"), value.tools.notes)
         assertEquals(setOf("A"), value.tools.tags[2]); assertEquals(100, value.tools.weeklyGoal); assertEquals(1, value.tools.episodeMinutes)
-        assertTrue(value.tools.activity.isEmpty()); assertEquals(listOf("A"), value.presets.map { it.name })
+        assertTrue(value.tools.activity.isEmpty())
     }
     @Test fun `history search combines case insensitive title and Monday based week`() {
         val rows = listOf(WatchActivity(1,"Alpha", "2026-10-05",1,1), WatchActivity(2,"ALPHA sequel", "2026-10-04",1,1), WatchActivity(3,"Beta", "2026-10-06",1,1), WatchActivity(4,"Alpha future", "2026-10-07",1,1))

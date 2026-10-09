@@ -9,7 +9,6 @@ import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
 import com.owlcoder.animeschedule.domain.model.ScheduleDay
 import com.owlcoder.animeschedule.domain.model.ThemeMode
-import com.owlcoder.animeschedule.domain.model.AccentColor
 import com.owlcoder.animeschedule.domain.model.AppLanguage
 import com.owlcoder.animeschedule.domain.model.UserPreferences
 import com.owlcoder.animeschedule.domain.model.WatchStatus
@@ -68,7 +67,6 @@ class ScheduleViewModelTest {
         override suspend fun setThemeMode(mode: ThemeMode) = Unit
         override suspend fun setNotificationsEnabled(enabled: Boolean) = Unit
         override suspend fun setNotificationOffset(minutes: Int) = Unit
-        override suspend fun setAccentColor(color: AccentColor) = Unit
         override suspend fun setAppLanguage(language: AppLanguage) = Unit
         override suspend fun setCacheRetentionDays(days: Int) = Unit
     }

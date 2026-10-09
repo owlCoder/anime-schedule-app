@@ -12,13 +12,13 @@ Native Android app for tracking anime airing schedules and managing your MyAnime
 - **Personal tracking tools** — account-scoped local favorites and notes, All-status and Unrated filters, random picks from current results, and UTF-8 CSV export through the Android document picker
 - **Activity and goals** — the latest 300 local progress changes (including offline edits), 7/30/90-day comparisons, daily trends, top titles and a Watching-backlog forecast, with a configurable Monday–Sunday episode goal using your schedule timezone
 - **Watch planner** — plan Watching, paused and planned titles within a time budget, include breaks between episodes, see episode ranges and share the plan
-- **Themes** — eleven predefined palettes, Classic accent colors, Android wallpaper colors, saved looks, scheduled light/dark hours, compact layouts, AMOLED canvas, higher contrast and reduced animations
+- **Themes** — 15 predefined light/dark palettes shared with onboarding; a separate Display menu for scheduled light/dark hours, compact layouts, AMOLED canvas, higher contrast and reduced animations
 - **Share anime** — send the title and AniList link with the native Android share sheet
 - **MyAnimeList integration** — OAuth 2.0 login, list read/update, a "+1 episode" quick action, and offline edits that are queued and delivered when you are back online
 - **Search** — find anime by title (paged results, recent searches, list status editing)
 - **Notifications** — optional local notifications when an anime on your *Watching* list airs, plus an in-app history with an unread badge
 - **Watch sources** — your own search-URL templates (Crunchyroll and Netflix are preset), opened in the app's built-in browser with an ad/tracker filter or in another app
-- **Settings** — searchable options, one Appearance menu for themes and accent colors, time zone override, notification timing, language, cache retention, episode duration and personal backups
+- **Settings** — searchable options, compact Appearance menu for theme mode and palettes, a separate Display menu, time zone override, notification timing, language, cache retention, episode duration and personal backups
 - **Languages** — English and Serbian (Latin), switchable without restarting the app
 - **Onboarding** and an in-app **changelog**
 
@@ -120,10 +120,20 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.12.6** (version code **43**, October 9, 2026).
+Current release: **5.12.7** (version code **44**, October 9, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### Polished in 5.12.7
+
+- Appearance and onboarding share 15 fixed palettes and compact System/Light/Dark controls.
+- Settings icons follow the current palette with contrasting glyphs. Display options live in
+  their own overlay; separate accents, wallpaper colors and saved appearances are removed.
+- Existing accents migrate to matching palettes. Personal backups store the current appearance
+  with schema 2 and can import schema 1 data without bringing back saved appearances.
+
+See the [release validation](docs/release-5.12.7.md).
 
 ### Polished in 5.12.6
 

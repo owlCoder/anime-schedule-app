@@ -11,7 +11,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "user_preferences",
+    produceMigrations = { listOf(com.owlcoder.animeschedule.data.local.datastore.AppearanceMigration()) },
+)
 
 @Module
 @InstallIn(SingletonComponent::class)

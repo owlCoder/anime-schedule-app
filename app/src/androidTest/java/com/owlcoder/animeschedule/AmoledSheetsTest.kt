@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.test.platform.app.InstrumentationRegistry
 import com.owlcoder.animeschedule.domain.model.*
 import com.owlcoder.animeschedule.presentation.components.AppSheet
-import com.owlcoder.animeschedule.presentation.screens.settings.AppearanceSheet
+import com.owlcoder.animeschedule.presentation.screens.settings.DisplaySheet
 import com.owlcoder.animeschedule.ui.theme.AnimeScheduleTheme
 import java.io.File
 import java.time.LocalTime
@@ -37,7 +37,7 @@ class AmoledSheetsTest {
         return pixels[pixels.width / 2, pixels.height / 2]
     }
 
-    @Test fun overlayCanvasFollowsPalettesDynamicColorsAndScheduledMode() {
+    @Test fun overlayCanvasFollowsAllPalettesAndScheduledMode() {
         var options by mutableStateOf(ThemeOptions())
         var mode by mutableStateOf(ThemeMode.DARK)
         var systemDark = false
@@ -60,12 +60,12 @@ class AmoledSheetsTest {
             compose.runOnIdle { options = options.copy(amoled = false) }
             assertNotEquals("Normal dark $palette", Color.Black, canvas())
         }
-        compose.runOnIdle { options = options.copy(amoled = true, dynamicColors = true) }
+        compose.runOnIdle { options = options.copy(amoled = true) }
         assertEquals(Color.Black, canvas())
         compose.runOnIdle { options = options.copy(amoled = false) }
         assertNotEquals(Color.Black, canvas())
         compose.runOnIdle { mode = ThemeMode.LIGHT; options = options.copy(amoled = true) }
-        assertTrue("Dynamic light stays light", canvas().luminance() > .8f)
+        assertTrue("Light stays light", canvas().luminance() > .8f)
         compose.runOnIdle { mode = ThemeMode.SYSTEM }
         if (systemDark) assertEquals("System dark", Color.Black, canvas())
         else assertTrue("System light", canvas().luminance() > .8f)
@@ -73,7 +73,7 @@ class AmoledSheetsTest {
         val hour = LocalTime.now().hour
         compose.runOnIdle {
             mode = ThemeMode.LIGHT
-            options = options.copy(dynamicColors = false, scheduled = true,
+            options = options.copy(scheduled = true,
                 darkStartHour = hour, darkEndHour = (hour + 1) % 24)
         }
         assertEquals("Scheduled dark overrides forced light", Color.Black, canvas())
@@ -89,8 +89,7 @@ class AmoledSheetsTest {
         var mode by mutableStateOf(ThemeMode.DARK)
         compose.setContent {
             AnimeScheduleTheme(themeMode = mode, options = options) {
-                AppearanceSheet(mode, AccentColor.GREEN, options, { mode = it },
-                    { options = it }, {}, {})
+                DisplaySheet(options, { options = it }, {})
             }
         }
         fun gutter(): Color {

@@ -19,14 +19,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import com.owlcoder.animeschedule.domain.model.AccentColor
 import com.owlcoder.animeschedule.domain.model.ThemeMode
 import com.owlcoder.animeschedule.presentation.components.ProvideMotionPolicy
 import com.owlcoder.animeschedule.domain.model.ThemeOptions
 import com.owlcoder.animeschedule.domain.model.ThemePalette
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.ui.graphics.lerp
 import com.owlcoder.animeschedule.presentation.components.MotionPolicy
 import com.owlcoder.animeschedule.presentation.components.rememberMotionPolicy
@@ -48,20 +44,6 @@ val LocalCompactLayout = compositionLocalOf { false }
 val LocalAmoledDark = compositionLocalOf { false }
 
 val PillShape = RoundedCornerShape(percent = 50)
-
-fun accentPrimary(accent: AccentColor, dark: Boolean = false): Color = when (accent) {
-    AccentColor.TELEGRAM_BLUE -> if (dark) Color(0xFF3D8FD6) else Color(0xFF007AFF)
-    AccentColor.PURPLE -> if (dark) Color(0xFFA25CC2) else Color(0xFF9B3DC7)
-    AccentColor.GREEN -> if (dark) Color(0xFF3EAA55) else Color(0xFF218C3A)
-    AccentColor.ORANGE -> if (dark) Color(0xFFCE7D28) else Color(0xFFC86B00)
-    AccentColor.PINK -> if (dark) Color(0xFFCB496B) else Color(0xFFD21F4F)
-    AccentColor.RED -> if (dark) Color(0xFFD1534B) else Color(0xFFD52C24)
-    AccentColor.CYAN -> if (dark) Color(0xFF479BBB) else Color(0xFF1686A8)
-    AccentColor.INDIGO -> if (dark) Color(0xFF6E6EC4) else Color(0xFF4B49B6)
-    AccentColor.TEAL -> if (dark) Color(0xFF4297A3) else Color(0xFF087B8C)
-    AccentColor.YELLOW -> if (dark) Color(0xFFC5A238) else Color(0xFFB07800)
-    AccentColor.DEEP_PURPLE -> if (dark) Color(0xFF7775C9) else Color(0xFF4B49B6)
-}
 
 internal fun Color.onAccent(): Color = if (luminance() > 0.179f) Color.Black else Color.White
 
@@ -138,9 +120,9 @@ private fun Color.compositeOver(background: Color): Color {
 }
 
 /** Palette roles are shared by cards, sheets and chrome rather than hard-coded by each view. */
-internal fun buildAppColorScheme(dark: Boolean, accent: AccentColor, options: ThemeOptions): ColorScheme {
+internal fun buildAppColorScheme(dark: Boolean, options: ThemeOptions): ColorScheme {
     val seed = when (options.palette) {
-        ThemePalette.CLASSIC -> accentPrimary(accent, dark)
+        ThemePalette.CLASSIC -> Color(if (dark) 0xFF3D8FD6 else 0xFF007AFF)
         ThemePalette.MIDNIGHT -> Color(if (dark) 0xFFB6B3FF else 0xFF5954AD)
         ThemePalette.SAKURA -> Color(if (dark) 0xFFFFADC4 else 0xFFAC345C)
         ThemePalette.FOREST -> Color(if (dark) 0xFF9BD6AE else 0xFF256A43)
@@ -151,6 +133,10 @@ internal fun buildAppColorScheme(dark: Boolean, accent: AccentColor, options: Th
         ThemePalette.ICE -> Color(if (dark) 0xFFADC9FF else 0xFF315D9C)
         ThemePalette.COFFEE -> Color(if (dark) 0xFFDDBAA4 else 0xFF79513B)
         ThemePalette.NEON -> Color(if (dark) 0xFFB3E778 else 0xFF486C16)
+        ThemePalette.RUBY -> Color(if (dark) 0xFFFFAFB6 else 0xFFAA2941)
+        ThemePalette.AMETHYST -> Color(if (dark) 0xFFE1B0F5 else 0xFF85429D)
+        ThemePalette.MINT -> Color(if (dark) 0xFF8DDBC7 else 0xFF146C58)
+        ThemePalette.GOLD -> Color(if (dark) 0xFFF0D17C else 0xFF806116)
     }
     val scheme = if (dark) darkColors(seed) else lightColors(seed)
     val tinted = if (options.palette == ThemePalette.CLASSIC) scheme else scheme.copy(
@@ -188,8 +174,6 @@ private fun enhanceScheme(scheme: ColorScheme, dark: Boolean, options: ThemeOpti
 @Composable
 fun AnimeScheduleTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
-    accentColor: AccentColor = AccentColor.TELEGRAM_BLUE,
-    dynamicColor: Boolean = false,
     options: ThemeOptions = ThemeOptions(),
     content: @Composable () -> Unit,
 ) {
@@ -205,13 +189,7 @@ fun AnimeScheduleTheme(
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
     }
-    val context = LocalContext.current
-    val colorScheme = if ((options.dynamicColors || dynamicColor) && android.os.Build.VERSION.SDK_INT >= 31) {
-        val dynamic = if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        enhanceScheme(dynamic, darkTheme, options)
-    } else {
-        buildAppColorScheme(darkTheme, accentColor, options)
-    }
+    val colorScheme = remember(darkTheme, options) { buildAppColorScheme(darkTheme, options) }
     val systemMotion = rememberMotionPolicy()
 
     // enableEdgeToEdge() follows the system theme by default. Keep system-bar icon
