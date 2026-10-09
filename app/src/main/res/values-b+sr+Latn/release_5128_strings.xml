@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="changelog_5128_title">Udobnije kontrole</string>
+    <string name="changelog_5128_search_title">Urednija pretraga</string>
+    <string name="changelog_5128_search">Polja za pretragu koriste isti izgled prilagođen temi, veće dugme za brisanje i usklađeno ponašanje tastature. Nedavne pretrage imaju jasnije kartice; filteri imaju kraći naziv i istaknut aktivan izbor.</string>
+    <string name="changelog_5128_controls_title">Kompaktne alatke i dostupne akcije</string>
+    <string name="changelog_5128_controls">Meniji sa alatima poštuju kompaktan prikaz, filteri i akcije u listama imaju veće dodirne površine, a dugmad u detaljima su poravnata. Nazad je dostupno i tokom učitavanja detalja animea.</string>
+</resources>

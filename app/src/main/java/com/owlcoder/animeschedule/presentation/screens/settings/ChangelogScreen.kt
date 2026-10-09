@@ -57,6 +57,8 @@ private data class ReleaseNote(
 @Composable
 fun ChangelogBottomSheet(onDismiss: () -> Unit) {
     val notes = listOf(
+        ReleaseNote(Icons.Outlined.Search, stringResource(R.string.changelog_5128_search_title), stringResource(R.string.changelog_5128_search)),
+        ReleaseNote(Icons.Outlined.Tune, stringResource(R.string.changelog_5128_controls_title), stringResource(R.string.changelog_5128_controls)),
         ReleaseNote(Icons.Outlined.Palette, stringResource(R.string.changelog_5127_themes_title), stringResource(R.string.changelog_5127_themes)),
         ReleaseNote(Icons.Outlined.Tune, stringResource(R.string.changelog_5127_display_title), stringResource(R.string.changelog_5127_display)),
         ReleaseNote(Icons.Outlined.Tune, stringResource(R.string.changelog_5126_library_title), stringResource(R.string.changelog_5126_library)),
@@ -166,7 +168,7 @@ fun ChangelogBottomSheet(onDismiss: () -> Unit) {
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
-                            text = stringResource(R.string.changelog_5127_title),
+                            text = stringResource(R.string.changelog_5128_title),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

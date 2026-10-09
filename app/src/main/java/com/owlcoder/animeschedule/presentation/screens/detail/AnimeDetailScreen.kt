@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -91,6 +92,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -175,7 +177,7 @@ fun AnimeDetailScreen(
         containerColor = MaterialTheme.colorScheme.background,
     ) { innerPadding ->
         when {
-            uiState.isLoading -> DetailLoadingState(Modifier.fillMaxSize().padding(innerPadding))
+            uiState.isLoading -> DetailLoadingState(Modifier.fillMaxSize().padding(innerPadding), onBack = onBack)
             uiState.errorRes != null || uiState.detail == null -> Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -499,6 +501,7 @@ private fun DetailActions(
     onEdit: () -> Unit,
     onIncrement: () -> Unit,
 ) {
+    val incrementDescription = stringResource(R.string.notification_increment)
     when {
         !isLoggedIn -> Box(
             modifier = Modifier.fillMaxWidth(),
@@ -522,13 +525,13 @@ private fun DetailActions(
             variant = AppButtonVariant.Primary,
         )
         else -> Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             AppButton(
                 label = stringResource(R.string.detail_status),
                 onClick = onEdit,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).fillMaxHeight(),
                 icon = Icons.Default.Edit,
                 variant = AppButtonVariant.Secondary,
             )
@@ -536,7 +539,9 @@ private fun DetailActions(
                 label = if (isIncrementing) "…" else "1",
                 icon = Icons.Default.Add,
                 onClick = onIncrement,
-                modifier = Modifier.widthIn(min = 88.dp),
+                modifier = Modifier.widthIn(min = 88.dp).fillMaxHeight().semantics {
+                    contentDescription = incrementDescription
+                },
                 enabled = detail.malListEntry.status == WatchStatus.WATCHING && !isIncrementing,
                 variant = AppButtonVariant.Primary,
             )
@@ -692,7 +697,7 @@ private fun HorizontalSection(title: String, content: LazyListScope.() -> Unit) 
 }
 
 @Composable
-internal fun DetailLoadingState(modifier: Modifier = Modifier) {
+internal fun DetailLoadingState(modifier: Modifier = Modifier, onBack: (() -> Unit)? = null) {
     val shimmer = rememberSkeletonShimmer()
     Box(modifier = modifier.navigationBarsPadding().testTag("detail-loading")) {
         Column(
@@ -765,6 +770,15 @@ internal fun DetailLoadingState(modifier: Modifier = Modifier) {
             label = stringResource(R.string.common_loading_details),
             message = stringResource(R.string.common_loading_details_message),
         )
+        if (onBack != null) {
+            GlassIconButton(
+                Icons.AutoMirrored.Filled.ArrowBack,
+                stringResource(R.string.cd_back),
+                onBack,
+                Modifier.align(Alignment.TopStart).windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(start = 10.dp, top = 6.dp).testTag("detail-loading-back"),
+            )
+        }
     }
 }
 

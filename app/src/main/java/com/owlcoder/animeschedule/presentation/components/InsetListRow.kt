@@ -75,7 +75,7 @@ fun InsetListRow(
 ) {
     val rowModifier = modifier
         .fillMaxWidth()
-        .heightIn(min = if (supportingText.isNullOrBlank()) 44.dp else 50.dp)
+        .heightIn(min = if (supportingText.isNullOrBlank()) 48.dp else 50.dp)
         .then(
             if (onClick != null) {
                 Modifier.clickable(

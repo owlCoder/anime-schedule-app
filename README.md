@@ -120,10 +120,20 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.12.7** (version code **44**, October 9, 2026).
+Current release: **5.12.8** (version code **45**, October 9, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### Polished in 5.12.8
+
+- Search uses the shared theme-aware input with consistent focus/IME handling, 48 dp clear
+  actions and distinct recent-search cards. The filter toolbar is shorter and shows active filtering.
+- Tool menus honor compact layout; discovery chips and inset list actions keep 48 dp touch targets.
+- Detail actions share their height, the episode increment has a localized accessible label,
+  and Back remains available while detail data is loading.
+
+See the [release validation](docs/release-5.12.8.md).
 
 ### Polished in 5.12.7
 

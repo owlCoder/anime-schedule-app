@@ -13,10 +13,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import com.owlcoder.animeschedule.R
@@ -41,6 +45,8 @@ fun AppSearchField(
     onClear: (() -> Unit)? = null,
     onSearch: (() -> Unit)? = null,
     enabled: Boolean = true,
+    focusRequester: FocusRequester? = null,
+    onFocusChanged: (Boolean) -> Unit = {},
 ) {
     val shape = ContinuousRoundedShape(GlassTokens.controlRadius)
     val clearDescription = stringResource(R.string.search_clear_query)
@@ -52,7 +58,9 @@ fun AppSearchField(
             onValueChange = onValueChange,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 48.dp)
+                .heightIn(min = 52.dp)
+                .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+                .onFocusChanged { onFocusChanged(it.isFocused) }
                 .background(MaterialTheme.colorScheme.surfaceContainerLow, shape)
                 .border(0.5.dp, MaterialTheme.colorScheme.outlineVariant, shape)
                 .semantics { contentDescription = placeholder }
@@ -63,8 +71,8 @@ fun AppSearchField(
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             keyboardOptions = KeyboardOptions(imeAction = if (onSearch != null) ImeAction.Search else ImeAction.Done),
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(
-                onSearch = { onSearch?.invoke(); focus.clearFocus(); keyboard?.hide() },
-                onDone = { focus.clearFocus(); keyboard?.hide() },
+                onSearch = { onSearch?.invoke(); focus.clearFocus(force = true); keyboard?.hide() },
+                onDone = { focus.clearFocus(force = true); keyboard?.hide() },
             ),
             // Keep decoration inside the text field so tapping its padding or leading icon
             // focuses the input as well. The clear action still has its own accessible target.
@@ -78,6 +86,7 @@ fun AppSearchField(
                         if (value.isEmpty()) {
                             Text(
                                 placeholder,
+                                modifier = Modifier.clearAndSetSemantics {},
                                 maxLines = 1,
                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -87,7 +96,7 @@ fun AppSearchField(
                         inner()
                     }
                     if (value.isNotEmpty() && onClear != null) {
-                        IconButton(onClick = onClear, modifier = Modifier.size(44.dp)) {
+                        IconButton(onClick = onClear, enabled = enabled, modifier = Modifier.size(48.dp)) {
                             Icon(Icons.Default.Close, clearDescription, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }

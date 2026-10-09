@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="changelog_5128_title">More comfortable controls</string>
+    <string name="changelog_5128_search_title">Cleaner search</string>
+    <string name="changelog_5128_search">Search fields share one theme-aware design, larger clear targets and consistent keyboard behavior. Recent searches have clearer cards; filters use a shorter label and highlight active filtering.</string>
+    <string name="changelog_5128_controls_title">Compact tools and accessible actions</string>
+    <string name="changelog_5128_controls">Tool menus respect compact layout, filter chips and list actions have larger touch targets, and detail actions stay aligned. Back is available while anime details load.</string>
+</resources>

@@ -9,7 +9,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,9 +27,6 @@ import androidx.compose.foundation.progressSemantics
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -49,18 +45,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.owlcoder.animeschedule.R
@@ -68,6 +58,7 @@ import com.owlcoder.animeschedule.domain.model.AnimeSearchResult
 import com.owlcoder.animeschedule.domain.model.MalListUpdate
 import com.owlcoder.animeschedule.presentation.components.AppButtonVariant
 import com.owlcoder.animeschedule.presentation.components.AppButton
+import com.owlcoder.animeschedule.presentation.components.AppSearchField
 import com.owlcoder.animeschedule.presentation.components.AppLargeHeader
 import com.owlcoder.animeschedule.presentation.components.AppMaterial
 import com.owlcoder.animeschedule.presentation.components.AppMaterialSurface
@@ -97,7 +88,6 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.owlcoder.animeschedule.presentation.components.iosSpring
 import com.owlcoder.animeschedule.presentation.components.iosTween
@@ -169,12 +159,6 @@ fun SearchScreen(
         if (focused) keyboard?.show()
     }
 
-    fun requestInputFocus() {
-        updateFocus(true)
-        focusRequester.requestFocus()
-        keyboard?.show()
-    }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -223,24 +207,16 @@ fun SearchScreen(
                     },
                 )
             }
-            SearchField(
-                query = query,
+            AppSearchField(
+                value = query,
+                onValueChange = { query = it; viewModel.setQuery(it) },
                 modifier = Modifier.weight(1f).testTag("anime-search-field"),
+                placeholder = stringResource(R.string.search_placeholder),
+                leadingIcon = Icons.Default.Search,
+                onClear = { query = ""; viewModel.setQuery("") },
+                onSearch = { viewModel.onSearchSubmit(query) },
                 focusRequester = focusRequester,
-                onFieldTap = ::requestInputFocus,
                 onFocusChanged = ::updateFocus,
-                onQueryChange = {
-                    query = it
-                    viewModel.setQuery(it)
-                },
-                onSubmit = {
-                    viewModel.onSearchSubmit(query)
-                    clearFocusAndKeyboard()
-                },
-                onClear = {
-                    query = ""
-                    viewModel.setQuery("")
-                },
             )
         }
 
@@ -249,15 +225,15 @@ fun SearchScreen(
             androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
                 if (maxWidth < 360.dp || androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.15f) {
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        AppButton(stringResource(R.string.discovery_search_filters), { clearFocusAndKeyboard(); showFilters = true }, variant = AppButtonVariant.Secondary, icon = Icons.Default.Tune, modifier = Modifier.fillMaxWidth().testTag("search-filters"))
+                        AppButton(stringResource(R.string.filter_title), { clearFocusAndKeyboard(); showFilters = true }, variant = if (uiState.filter.isActive) AppButtonVariant.Primary else AppButtonVariant.Secondary, icon = Icons.Default.Tune, modifier = Modifier.fillMaxWidth().testTag("search-filters"))
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text(stringResource(R.string.discovery_result_count, uiState.results.size, uiState.loadedCount), Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.discovery_result_count, uiState.results.size, uiState.loadedCount), Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.End)
                             if (uiState.filter.isActive) GlassIconButton(Icons.Default.RestartAlt, stringResource(R.string.seasonal_filter_reset), viewModel::clearFilter)
                         }
                     }
                 } else Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    AppButton(stringResource(R.string.discovery_search_filters), { clearFocusAndKeyboard(); showFilters = true }, variant = AppButtonVariant.Secondary, icon = Icons.Default.Tune, modifier = Modifier.testTag("search-filters"))
-                    Text(stringResource(R.string.discovery_result_count, uiState.results.size, uiState.loadedCount), Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    AppButton(stringResource(R.string.filter_title), { clearFocusAndKeyboard(); showFilters = true }, variant = if (uiState.filter.isActive) AppButtonVariant.Primary else AppButtonVariant.Secondary, icon = Icons.Default.Tune, modifier = Modifier.testTag("search-filters"))
+                    Text(stringResource(R.string.discovery_result_count, uiState.results.size, uiState.loadedCount), Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.End)
                     if (uiState.filter.isActive) GlassIconButton(Icons.Default.RestartAlt, stringResource(R.string.seasonal_filter_reset), viewModel::clearFilter)
                 }
             }
@@ -307,118 +283,6 @@ fun SearchScreen(
                 onConfirm = { animeId, update: MalListUpdate -> viewModel.updateListEntry(animeId, update) },
                 onRemove = { animeId -> viewModel.removeListEntry(animeId) },
             )
-        }
-    }
-}
-
-@Composable
-private fun SearchField(
-    query: String,
-    modifier: Modifier,
-    focusRequester: FocusRequester,
-    onFieldTap: () -> Unit,
-    onFocusChanged: (Boolean) -> Unit,
-    onQueryChange: (String) -> Unit,
-    onSubmit: () -> Unit,
-    onClear: () -> Unit,
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val motion = LocalMotionPolicy.current
-    val placeholder = stringResource(R.string.search_placeholder)
-    AppMaterialSurface(
-        modifier = modifier
-            .height(52.dp)
-            .animateContentSize(animationSpec = motion.iosSpring())
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onFieldTap,
-            ),
-        material = AppMaterial.Elevated,
-        shape = ContinuousRoundedShape(17.dp),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 13.dp, end = 1.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                Icons.Default.Search,
-                contentDescription = null,
-                modifier = Modifier.size(19.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 9.dp),
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                if (query.isEmpty()) {
-                    Text(
-                        text = placeholder,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                    )
-                }
-                BasicTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    singleLine = true,
-                    textStyle = TextStyle(
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                        lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
-                    ),
-                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { onSubmit() }),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { contentDescription = placeholder }
-                        .focusRequester(focusRequester)
-                        .onFocusChanged { onFocusChanged(it.isFocused) },
-                )
-            }
-            AnimatedVisibility(
-                visible = query.isNotEmpty(),
-                enter = scaleIn(
-                    initialScale = 0.85f,
-                    animationSpec = motion.iosSpring(),
-                ) + fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)),
-                exit = scaleOut(
-                    targetScale = 0.85f,
-                    animationSpec = motion.iosTween(IosMotion.Quick),
-                ) + fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clickable(
-                            role = Role.Button,
-                            onClick = onClear,
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Surface(
-                        modifier = Modifier.size(30.dp),
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        tonalElevation = 0.dp,
-                    ) {
-                        Box(Modifier.size(30.dp), contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = stringResource(R.string.search_clear_recent),
-                                modifier = Modifier.size(15.dp),
-                            )
-                        }
-                    }
-                }
-            }
         }
     }
 }
@@ -512,10 +376,12 @@ internal fun RecentSearches(searches: List<String>, onClear: () -> Unit, onSelec
             }
         }
         items(searches, key = { it }) { recent ->
-            Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
+            AppMaterialSurface(Modifier.padding(horizontal = 4.dp), material = AppMaterial.Grouped, shape = MaterialTheme.shapes.large) {
                 Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(start = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                    Row(Modifier.weight(1f).clickable(role = Role.Button) { onSelect(recent) }.padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                        Icon(Icons.Default.History, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(Modifier.weight(1f).heightIn(min = 56.dp).clickable(role = Role.Button) { onSelect(recent) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+                        Surface(Modifier.size(32.dp), shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.primaryContainer) {
+                            Box(contentAlignment = Alignment.Center) { Icon(Icons.Default.History, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary) }
+                        }
                         Text(recent, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                     GlassIconButton(Icons.Default.Close, stringResource(R.string.discovery_remove_recent, recent), { onRemove(recent) }, Modifier.testTag("recent-remove-$recent"))
