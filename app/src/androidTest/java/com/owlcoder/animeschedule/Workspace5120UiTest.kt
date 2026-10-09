@@ -185,7 +185,7 @@ class Workspace5120UiTest {
             compose.onNodeWithText(resources.getString(R.string.settings_changelog)).performClick()
             search.assertIsNotFocused()
             compose.onAllNodes(isDialog()).assertCountEquals(1)
-            compose.onNode(hasText(resources.getString(R.string.changelog_5125_title)) and hasAnyAncestor(isDialog())).assertIsDisplayed()
+            compose.onNode(hasText(resources.getString(R.string.changelog_5126_title)) and hasAnyAncestor(isDialog())).assertIsDisplayed()
             screenshot("settings-search-changelog-large-light")
             compose.onNode(hasContentDescription(resources.getString(android.R.string.cancel)) and hasAnyAncestor(isDialog())).performClick()
             compose.onAllNodes(isDialog()).assertCountEquals(0)

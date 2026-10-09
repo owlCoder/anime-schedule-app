@@ -39,7 +39,7 @@
     <string name="seasonal_hide_tracked">Sakrij naslove sa liste</string>
     <string name="list_filtered_empty">Nema odgovarajućih animea</string>
     <string name="list_filtered_empty_hint">Probaj drugi status, pretragu ili brzi filter.</string>
-    <string name="list_clear_filters">Ukloni brze filtere</string>
+    <string name="list_clear_filters">Ukloni filtere</string>
     <string name="palette_classic">Klasična</string>
     <string name="palette_midnight">Ponoć</string>
     <string name="palette_sakura">Sakura</string>

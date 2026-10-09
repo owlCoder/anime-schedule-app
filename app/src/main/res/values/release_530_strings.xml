@@ -39,7 +39,7 @@
     <string name="seasonal_hide_tracked">Hide tracked titles</string>
     <string name="list_filtered_empty">No matching anime</string>
     <string name="list_filtered_empty_hint">Try another status, search, or quick filter.</string>
-    <string name="list_clear_filters">Clear quick filters</string>
+    <string name="list_clear_filters">Clear filters</string>
     <string name="palette_classic">Classic</string>
     <string name="palette_midnight">Midnight</string>
     <string name="palette_sakura">Sakura</string>

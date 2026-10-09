@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="list_filters_title">Filteri liste</string>
+    <plurals name="list_filters_active">
+        <item quantity="one">Filteri liste · %1$d aktivan filter</item>
+        <item quantity="few">Filteri liste · %1$d aktivna filtera</item>
+        <item quantity="other">Filteri liste · %1$d aktivnih filtera</item>
+    </plurals>
+    <string name="list_filters_hint">Kombinuj favorite, ocene i oznake da pronađeš šta želiš da gledaš.</string>
+    <string name="list_show_results">Prikaži rezultate · %1$d</string>
+    <string name="notif_episode_label">Epizoda %1$d</string>
+    <string name="changelog_5126_title">Preglednija biblioteka</string>
+    <string name="changelog_5126_library_title">Preuređena Moja lista</string>
+    <string name="changelog_5126_library">Pretraga i statusi su uz listu. Dodatni filteri su u jednom panelu, kartice imaju poravnate akcije i više prostora za naslove, a ekran za prijavu može da se skroluje i sa većim tekstom.</string>
+    <string name="changelog_5126_overlays_title">Oštra pozadina i mirniji prelazi</string>
+    <string name="changelog_5126_overlays">Overlayi koriste oštru, zatamnjenu pozadinu. Dugme za povratak u zaglavlju prati animaciju zatvaranja, a promena stranice više ne uvećava i smanjuje sadržaj.</string>
+    <string name="changelog_5126_notifications_title">Jasnija obaveštenja i nova ikonica</string>
+    <string name="changelog_5126_notifications">Obaveštenja odvajaju naslov, epizodu i vreme. Sistemska obaveštenja imaju čitljivu malu ikonicu i proširen tekst. Ikonica u pokretaču i tematska varijanta koriste novi simbol kalendara i reprodukcije.</string>
+</resources>

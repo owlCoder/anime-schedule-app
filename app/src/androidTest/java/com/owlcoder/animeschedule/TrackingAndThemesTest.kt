@@ -132,15 +132,23 @@ class TrackingAndThemesTest {
         return vm
     }
 
+    private fun selectLibraryFilter(tag: String) {
+        compose.onNodeWithTag("list-filter-menu").performClick()
+        compose.onNodeWithTag(tag).performScrollTo().performClick()
+        if (tag == "list-favorites-filter" || tag == "list-unrated-filter") {
+            compose.onNodeWithTag("list-filters-apply").assertIsDisplayed().performClick()
+        }
+    }
+
     @Test
     fun favoritesNotesAllStatusesAndUnratedFiltersWorkTogether() {
         runBlocking { tools.toggleFavorite(101); tools.setNote(101, "Stopped at the opening") }
         val vm = showList()
         compose.onNodeWithTag("list-status-ALL").performClick()
         compose.waitUntil { vm.uiState.value.entries.size == 2 }
-        compose.onNodeWithTag("list-favorites-filter").performScrollTo().performClick()
+        selectLibraryFilter("list-favorites-filter")
         compose.waitUntil { vm.uiState.value.entries.map { it.animeId } == listOf(101) }
-        compose.onNodeWithTag("list-unrated-filter").performScrollTo().performClick()
+        selectLibraryFilter("list-unrated-filter")
         compose.onNodeWithText(text(R.string.list_filtered_empty)).assertIsDisplayed()
         compose.onNodeWithText(text(R.string.list_clear_filters)).performClick()
         compose.waitUntil { vm.uiState.value.entries.size == 2 }
@@ -182,7 +190,7 @@ class TrackingAndThemesTest {
         compose.onNodeWithContentDescription(instrumentation.targetContext.getString(android.R.string.cancel))
             .performClick()
         compose.onNodeWithTag("list-status-ALL").performClick()
-        compose.onNodeWithTag("list-unrated-filter").performScrollTo().performClick()
+        selectLibraryFilter("list-unrated-filter")
         compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
         compose.onNodeWithText(text(R.string.list_pick)).performScrollTo().performClick()
         compose.onNode(hasText("Beta Journey") and hasAnyAncestor(isDialog())).assertIsDisplayed()
@@ -235,11 +243,11 @@ class TrackingAndThemesTest {
         try { compose.waitUntil(5_000) { vm.uiState.value.tools.tags[101] == setOf("Akcija","Drama") } }
         catch (failure: Throwable) { throw AssertionError("Tags: stored=${runBlocking { tools.data.first() }.tags[101]}, visible=${vm.uiState.value.tools.tags[101]}", failure) }
         compose.onNodeWithTag("list-status-ALL").performClick()
-        compose.onNodeWithTag("list-tags-filter").performScrollTo().performClick()
+        selectLibraryFilter("list-tags-filter")
         compose.onNode(hasText("Drama") and hasAnyAncestor(isDialog())).performClick()
         compose.waitUntil { vm.uiState.value.entries.map { it.animeId } == listOf(101) }
         screenshot("tag-filter-and-time-estimate")
-        compose.onNodeWithTag("list-unrated-filter").performScrollTo().performClick()
+        selectLibraryFilter("list-unrated-filter")
         compose.onNodeWithText(text(R.string.list_filtered_empty)).assertIsDisplayed()
         compose.onNode(hasText(text(R.string.list_clear_filters)) and hasClickAction()).assertIsDisplayed().performClick()
         compose.waitUntil(5_000) { vm.uiState.value.entries.size == 2 && vm.uiState.value.activeTag == null }
@@ -334,7 +342,7 @@ class TrackingAndThemesTest {
         compose.onNodeWithTag("editor-pin").performClick()
         compose.onNodeWithTag("list-editor-save").performClick()
         compose.waitUntil(5_000) { vm.uiState.value.entries.first().animeId == 102 }
-        compose.onNodeWithTag("list-smart-filter").performClick()
+        selectLibraryFilter("list-smart-filter")
         compose.onNodeWithTag("smart-PINNED").performClick()
         compose.waitUntil(5_000) { vm.uiState.value.entries.map { it.animeId } == listOf(102) }
         compose.onNodeWithContentDescription(text(R.string.list_tools)).performClick()
@@ -350,7 +358,7 @@ class TrackingAndThemesTest {
         compose.onNode(hasText(text(R.string.saved_list_views)) and hasAnyAncestor(isDialog())).performScrollTo().performClick()
         compose.onNodeWithTag("saved-view-Pinned weekend").performScrollTo().performClick()
         compose.waitUntil(5_000) { vm.uiState.value.entries.map { it.animeId } == listOf(102) && vm.uiState.value.activeFilter == null }
-        compose.onNodeWithTag("list-smart-filter").performClick()
+        selectLibraryFilter("list-smart-filter")
         compose.onNodeWithTag("smart-NEAR_FINISH").performClick()
         compose.onNodeWithText(text(R.string.list_filtered_empty)).assertIsDisplayed()
         compose.onNodeWithText(text(R.string.list_clear_filters)).performClick()

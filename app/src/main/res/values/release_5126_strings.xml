@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="list_filters_title">Library filters</string>
+    <plurals name="list_filters_active">
+        <item quantity="one">Library filters · %1$d active filter</item>
+        <item quantity="other">Library filters · %1$d active filters</item>
+    </plurals>
+    <string name="list_filters_hint">Combine favorites, ratings and tags to find what you want to watch.</string>
+    <string name="list_show_results">Show results · %1$d</string>
+    <string name="notif_episode_label">Episode %1$d</string>
+    <string name="changelog_5126_title">A cleaner library</string>
+    <string name="changelog_5126_library_title">My List, reorganized</string>
+    <string name="changelog_5126_library">Search and statuses stay close to the list. Extra filters share one panel, cards have aligned actions and more room for titles, and the sign-in page scrolls comfortably with larger text.</string>
+    <string name="changelog_5126_overlays_title">Sharp backgrounds and calmer transitions</string>
+    <string name="changelog_5126_overlays">Overlays use a dimmed, sharp background. The header back button follows the closing animation, and switching pages no longer zooms the content.</string>
+    <string name="changelog_5126_notifications_title">Clearer notifications and a new icon</string>
+    <string name="changelog_5126_notifications">Notifications separate the title, episode and time. System alerts use a crisp small icon and readable expanded text. The launcher and themed icon share a new calendar and play symbol.</string>
+</resources>

@@ -207,7 +207,20 @@ class MalSyncAndActionsTest {
     @Test fun nativeNotificationHasTwoDistinctImmutableActionsAndDueReminderPosts() = runBlocking {
         notification(ids[0], System.currentTimeMillis() - 1, 1)
         remind(ids[0], 1)
-        val native = context.getSystemService(NotificationManager::class.java).activeNotifications.single { it.id == ids[0] }.notification
+        val notifications = context.getSystemService(NotificationManager::class.java)
+        assertTrue("Notification permission is available for the fixture", androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled())
+        val deadline = android.os.SystemClock.elapsedRealtime() + 5_000
+        var posted = notifications.activeNotifications.firstOrNull { it.id == ids[0] }
+        while (posted == null && android.os.SystemClock.elapsedRealtime() < deadline) {
+            Thread.sleep(50)
+            posted = notifications.activeNotifications.firstOrNull { it.id == ids[0] }
+        }
+        assertNotNull("Android delivers the fixture notification", posted)
+        val native = posted!!.notification
+        assertEquals(R.drawable.ic_notification, native.smallIcon.resId)
+        assertEquals(android.app.Notification.CATEGORY_REMINDER, native.category)
+        assertEquals(context.getString(R.string.notif_episode_label, 5), native.extras.getString(android.app.Notification.EXTRA_SUB_TEXT))
+        assertEquals(context.getString(R.string.notif_content_text, 5), native.extras.getCharSequence(android.app.Notification.EXTRA_BIG_TEXT).toString())
         assertEquals(2, native.actions.size)
         assertEquals(context.getString(R.string.notification_increment), native.actions[0].title.toString())
         assertEquals(context.getString(R.string.notification_snooze), native.actions[1].title.toString())
@@ -220,6 +233,23 @@ class MalSyncAndActionsTest {
         File(context.getExternalFilesDir(null), "qa-5110-system-actions.png").outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }; image.recycle()
         instrumentation.uiAutomation.executeShellCommand("cmd statusbar collapse").close()
     }
+    @Test fun notificationBrandingKeepsExpandedTextAndCoverWithoutAPosterSizedImage() {
+        val cover = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888)
+        try {
+            val row = NotificationEntity(ids[0], 101, "A long anime title for the expanded notification", 5,
+                null, 0, false, 100)
+            val beforeDelivery = System.currentTimeMillis()
+            val notification = NotificationPoster(context).build(row, cover = cover, actionToken = "fixture-action")
+            assertEquals(R.drawable.ic_notification, notification.smallIcon.resId)
+            assertNotNull(notification.getLargeIcon())
+            assertEquals(android.app.Notification.CATEGORY_REMINDER, notification.category)
+            assertTrue("An old history row receives the current alert time",
+                notification.`when` in beforeDelivery..System.currentTimeMillis())
+            assertEquals(context.getString(R.string.notif_content_text, 5), notification.extras.getCharSequence(android.app.Notification.EXTRA_BIG_TEXT).toString())
+            assertEquals(2, notification.actions.size)
+        } finally { cover.recycle() }
+    }
+
     private object FixtureAuth : MalAuthService {
         override suspend fun exchangeToken(clientId: String, code: String, codeVerifier: String, grantType: String, redirectUri: String) = MalTokenResponse("fixture-access", "fixture-refresh", 3600)
         override suspend fun refreshToken(clientId: String, refreshToken: String, grantType: String) = MalTokenResponse("fixture-access", "fixture-refresh", 3600)

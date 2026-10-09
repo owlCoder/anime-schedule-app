@@ -120,10 +120,22 @@ Without signing properties you can still validate the release configuration with
 
 ## Version
 
-Current release: **5.12.5** (version code **42**, October 8, 2026).
+Current release: **5.12.6** (version code **43**, October 9, 2026).
 
 The app version is defined by `versionName` / `versionCode` in [app/build.gradle.kts](app/build.gradle.kts); the
 in-app changelog (Settings → Changelog) lists what changed in each release.
+
+### Polished in 5.12.6
+
+- Overlay backgrounds stay sharp under the sheet’s own scrim. Header dismissal follows the
+  sheet animation; top-level navigation uses a calm fade without content zoom.
+- My List has a compact primary header, one filter panel, a visible result/sort summary,
+  wider titles and aligned 48 dp card actions. The sign-in view scrolls with larger text.
+- In-app notifications separate title, episode and time. System notifications use a dedicated
+  monochrome small icon, expanded text and a bounded cover thumbnail. Launcher/themed icons
+  share the new calendar/play mark.
+
+See the [release validation](docs/release-5.12.6.md) for this emulator review.
 
 ### Polished in 5.12.5
 

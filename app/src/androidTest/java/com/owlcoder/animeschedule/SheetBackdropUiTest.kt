@@ -39,7 +39,7 @@ class SheetBackdropUiTest {
         }
     }
 
-    @Test fun blurFollowsContentChangesAndClearsAfterRepeatedDismissals() {
+    @Test fun backgroundStaysSharpDuringContentChangesAndRepeatedDismissals() {
         var title by mutableStateOf<String?>(null)
         compose.setContent { AnimeScheduleTheme(themeMode = ThemeMode.DARK) {
             SheetBackdropHost(Modifier.fillMaxSize()) {
@@ -55,19 +55,19 @@ class SheetBackdropUiTest {
             assertTrue("Background starts sharp", contrast() > .8f)
             compose.onNodeWithTag("open-sheet").performClick()
             compose.onAllNodes(isDialog()).assertCountEquals(1)
-            assertTrue("Background is blurred", contrast() < .35f)
+            assertTrue("Open overlay keeps the background sharp", contrast() > .8f)
             compose.onNodeWithTag("change-sheet").performClick()
             compose.onAllNodes(isDialog()).assertCountEquals(1)
             compose.onNodeWithTag("close-sheet").assertIsDisplayed()
-            assertTrue("Changing content keeps blur", contrast() < .35f)
+            assertTrue("Changing content keeps the background sharp", contrast() > .8f)
             if (index == 1) Espresso.pressBack()
             else compose.onNodeWithTag("close-sheet").performClick()
             compose.onAllNodes(isDialog()).assertCountEquals(0)
-            assertTrue("Dismissal clears blur", contrast() > .8f)
+            assertTrue("Dismissal leaves the background sharp", contrast() > .8f)
         }
     }
 
-    @Test fun removingOneModalKeepsBackdropUntilLastModalCloses() {
+    @Test fun stackedModalsNeverBlurActivityContent() {
         var first by mutableStateOf(false)
         var second by mutableStateOf(false)
         compose.setContent { AnimeScheduleTheme(themeMode = ThemeMode.LIGHT) {
@@ -80,12 +80,12 @@ class SheetBackdropUiTest {
         assertTrue(contrast() > .8f)
         compose.runOnIdle { first = true; second = true }
         compose.onAllNodes(isDialog()).assertCountEquals(2)
-        assertTrue(contrast() < .35f)
+        assertTrue(contrast() > .8f)
         compose.runOnIdle { first = false }
         compose.onAllNodes(isDialog()).assertCountEquals(1)
-        assertTrue("The remaining modal keeps blur", contrast() < .35f)
+        assertTrue("The remaining modal keeps the background sharp", contrast() > .8f)
         compose.runOnIdle { second = false }
         compose.onAllNodes(isDialog()).assertCountEquals(0)
-        assertTrue("Last modal releases blur", contrast() > .8f)
+        assertTrue("Last modal leaves the background sharp", contrast() > .8f)
     }
 }

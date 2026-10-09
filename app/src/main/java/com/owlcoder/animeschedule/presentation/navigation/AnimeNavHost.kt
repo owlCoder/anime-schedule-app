@@ -2,8 +2,6 @@ package com.owlcoder.animeschedule.presentation.navigation
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
@@ -44,14 +42,8 @@ fun AnimeNavHost(
     // Top-level destinations should feel like switching panes, not pushing a new screen.
     val rootEnter = fadeIn(
         animationSpec = motion.iosDecelerate(IosMotion.Standard),
-    ) + scaleIn(
-        initialScale = if (motion.animationsEnabled) 0.992f else 1f,
-        animationSpec = motion.iosDecelerate(IosMotion.Standard),
     )
     val rootExit = fadeOut(
-        animationSpec = motion.iosAccelerate(IosMotion.Quick),
-    ) + scaleOut(
-        targetScale = if (motion.animationsEnabled) 0.996f else 1f,
         animationSpec = motion.iosAccelerate(IosMotion.Quick),
     )
 

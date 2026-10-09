@@ -2,18 +2,16 @@ package com.owlcoder.animeschedule.presentation.screens.mylist
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -55,7 +53,6 @@ import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.RemoveCircle
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material3.FilterChip
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.rememberCoroutineScope
@@ -81,11 +78,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -100,6 +99,8 @@ import com.owlcoder.animeschedule.domain.model.MalListEntry
 import com.owlcoder.animeschedule.domain.model.WatchStatus
 import com.owlcoder.animeschedule.domain.model.SmartListFilter
 import com.owlcoder.animeschedule.domain.model.minutesFor
+import com.owlcoder.animeschedule.presentation.components.iosPressScale
+import com.owlcoder.animeschedule.presentation.components.GlassIconButton
 import com.owlcoder.animeschedule.presentation.components.AppChoiceRow
 import com.owlcoder.animeschedule.presentation.components.AppSheet
 import com.owlcoder.animeschedule.presentation.components.GlassToolbarGroup
@@ -216,10 +217,8 @@ fun MyListScreen(
         targetState = uiState.isLoggedIn,
         modifier = Modifier.fillMaxSize(),
         transitionSpec = {
-            (fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) +
-                scaleIn(initialScale = 0.985f, animationSpec = motion.iosTween(IosMotion.Standard))) togetherWith
-                (fadeOut(animationSpec = motion.iosTween(IosMotion.Quick)) +
-                    scaleOut(targetScale = 0.995f, animationSpec = motion.iosTween(IosMotion.Quick)))
+            fadeIn(animationSpec = motion.iosTween(IosMotion.Quick)) togetherWith
+                fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
         },
         label = "my-list-auth-state",
     ) { loggedIn ->
@@ -249,7 +248,7 @@ fun MyListScreen(
                 onSmart = { overlay = ListOverlay.SMART },
                 onViews = { overlay = ListOverlay.VIEWS },
                 onRating = { overlay = ListOverlay.RATING },
-                onClearQuickFilters = viewModel::clearQuickFilters,
+                onClearQuickFilters = { viewModel.clearQuickFilters(); viewModel.setFilter(null) },
             )
         }
     }
@@ -336,7 +335,7 @@ fun MyListScreen(
 }
 
 @Composable
-private fun LoggedInList(
+internal fun LoggedInList(
     uiState: MyListUiState,
     totalCount: Int,
     showError: Boolean,
@@ -359,60 +358,55 @@ private fun LoggedInList(
     onClearQuickFilters: () -> Unit,
 ) {
     val motion = LocalMotionPolicy.current
+    var showFilters by remember { mutableStateOf(false) }
+    val activeCount = listOf(uiState.searchQuery.isNotBlank(), uiState.favoritesOnly,
+        uiState.unratedOnly, uiState.activeTag != null, uiState.smartFilter != SmartListFilter.ALL,
+        uiState.scoreRange != (0 to 10)).count { it }
+    val hasFilters = activeCount > 0 || (uiState.activeFilter != null && uiState.allEntries.isNotEmpty())
+    if (showFilters) MyListFiltersSheet(
+        uiState = uiState,
+        onFavorites = onFavorites, onUnrated = onUnrated,
+        onSmart = { showFilters = false; onSmart() },
+        onRating = { showFilters = false; onRating() },
+        onTags = { showFilters = false; onTags() },
+        onViews = { showFilters = false; onViews() },
+        onClear = onClearQuickFilters, onDismiss = { showFilters = false },
+    )
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.background)
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp)
-                    .animateContentSize(animationSpec = motion.iosSpring()),
+                modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background)
+                    .statusBarsPadding().padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                AppLargeHeader(
-                    title = stringResource(R.string.mylist_title),
-                    subtitle = totalCount.takeIf { it > 0 }?.let { count ->
-                        stringResource(R.string.mylist_anime_count, count)
-                    },
-                    modifier = Modifier.padding(top = 6.dp, bottom = 6.dp),
-                    trailingContent = {
-                        GlassToolbarGroup {
-                            GlassToolbarButton(Icons.Default.BarChart, stringResource(R.string.mylist_statistics), onShowInsights)
-                            GlassToolbarButton(Icons.AutoMirrored.Filled.Sort, stringResource(R.string.mylist_sort), onShowSort)
-                            GlassToolbarButton(Icons.Default.MoreHoriz, stringResource(R.string.list_tools), onShowTools)
-                        }
-                    },
-                )
-                InsightsStrip(uiState.insights, onShowInsights)
-                AppSearchField(
-                    value = uiState.searchQuery,
-                    onValueChange = onSearchQueryChange,
-                    placeholder = stringResource(R.string.mylist_search_placeholder),
-                    leadingIcon = Icons.Default.Search,
-                    onClear = { onSearchQueryChange("") },
-                    modifier = Modifier.heightIn(min = 48.dp),
-                )
-                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(uiState.smartFilter != SmartListFilter.ALL, onSmart, modifier = Modifier.testTag("list-smart-filter"), label = { Text(stringResource(if (uiState.smartFilter == SmartListFilter.ALL) R.string.smart_filters else uiState.smartFilter.labelRes())) }, leadingIcon = { Icon(Icons.Default.FilterAlt, null, Modifier.size(16.dp)) })
-                    FilterChip(uiState.scoreRange != (0 to 10), onRating, modifier = Modifier.testTag("list-rating-filter"), label = { Text(if (uiState.scoreRange == (0 to 10)) stringResource(R.string.rating_filter) else stringResource(R.string.rating_value, uiState.scoreRange.first, uiState.scoreRange.second)) }, leadingIcon = { Icon(Icons.Default.StarHalf, null, Modifier.size(16.dp)) })
-                    FilterChip(uiState.favoritesOnly, onFavorites, modifier = Modifier.testTag("list-favorites-filter"), label = { Text(stringResource(R.string.favorites)) }, leadingIcon = { Icon(Icons.Default.Star, null, Modifier.size(16.dp)) })
-                    FilterChip(uiState.unratedOnly, onUnrated, modifier = Modifier.testTag("list-unrated-filter"), label = { Text(stringResource(R.string.list_unrated)) }, leadingIcon = { Icon(Icons.Default.StarBorder, null, Modifier.size(16.dp)) })
-                    FilterChip(uiState.activeTag != null, onTags, modifier = Modifier.testTag("list-tags-filter"), label = { Text(uiState.activeTag ?: stringResource(R.string.personal_tags)) }, leadingIcon = { Icon(Icons.Default.Label, null, Modifier.size(16.dp)) })
-                    FilterChip(false, onViews, modifier = Modifier.testTag("list-saved-views"), label = { Text(stringResource(R.string.saved_list_views)) }, leadingIcon = { Icon(Icons.Default.Bookmarks, null, Modifier.size(16.dp)) })
+                Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AppLargeHeader(
+                        title = stringResource(R.string.mylist_title),
+                        subtitle = totalCount.takeIf { it > 0 }?.let { stringResource(R.string.mylist_anime_count, it) },
+                        modifier = Modifier.weight(1f),
+                    )
+                    GlassToolbarGroup {
+                        GlassToolbarButton(Icons.Default.BarChart, stringResource(R.string.mylist_statistics), onShowInsights)
+                        GlassToolbarButton(Icons.Default.MoreHoriz, stringResource(R.string.list_tools), onShowTools)
+                    }
                 }
-                val activeCount = listOf(uiState.searchQuery.isNotBlank(), uiState.favoritesOnly, uiState.unratedOnly, uiState.activeTag != null, uiState.smartFilter != SmartListFilter.ALL, uiState.scoreRange != (0 to 10)).count { it }
-                if (activeCount > 0) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.active_filter_count, activeCount) + " · " + stringResource(R.string.visible_results, uiState.entries.size), Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    IconButton(onClearQuickFilters, Modifier.testTag("list-clear-active")) { Icon(Icons.Default.FilterAltOff, stringResource(R.string.list_clear_filters), Modifier.size(20.dp)) }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AppSearchField(
+                        value = uiState.searchQuery, onValueChange = onSearchQueryChange,
+                        placeholder = stringResource(R.string.mylist_search_placeholder),
+                        leadingIcon = Icons.Default.Search, onClear = { onSearchQueryChange("") },
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                    )
+                    GlassIconButton(Icons.Default.Tune,
+                        pluralStringResource(R.plurals.list_filters_active, activeCount, activeCount),
+                        { showFilters = true }, Modifier.testTag("list-filter-menu"))
                 }
-                StatusFilterRow(
-                    activeFilter = uiState.activeFilter,
-                    counts = uiState.statusCounts,
-                    onFilterSelected = onFilterSelected,
-                    modifier = Modifier.padding(top = 7.dp, bottom = 6.dp),
-                )
+                StatusFilterRow(uiState.activeFilter, uiState.statusCounts, onFilterSelected,
+                    Modifier.padding(bottom = 4.dp))
             }
         },
     ) { innerPadding ->
@@ -423,90 +417,90 @@ private fun LoggedInList(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            val contentMode = when {
-                uiState.isLoading && uiState.entries.isEmpty() -> 0
-                showError && uiState.entries.isEmpty() -> 1
-                uiState.entries.isEmpty() -> 2
-                else -> 3
-            }
-            AnimatedContent(
-                targetState = contentMode,
-                modifier = Modifier.fillMaxSize(),
-                transitionSpec = {
-                    fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) togetherWith
-                        fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
-                },
-                label = "my-list-content",
-            ) { mode ->
-                when (mode) {
-                    0 -> AppLoadingState(
-                        modifier = Modifier.fillMaxSize(),
-                        label = stringResource(R.string.mylist_title),
-                    )
-                    1 -> AppErrorState(
-                        title = errorMsg,
-                        retryLabel = stringResource(R.string.common_retry),
-                        onRetry = onRefresh,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                    2 -> EmptyState(
-                        icon = Icons.AutoMirrored.Filled.FormatListBulleted,
-                        title = stringResource(if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null || uiState.smartFilter != SmartListFilter.ALL || uiState.scoreRange != (0 to 10)) R.string.list_filtered_empty else R.string.mylist_empty_title),
-                        subtitle = stringResource(if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null || uiState.smartFilter != SmartListFilter.ALL || uiState.scoreRange != (0 to 10)) R.string.list_filtered_empty_hint else R.string.mylist_empty_subtitle),
-                        actionLabel = if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null || uiState.smartFilter != SmartListFilter.ALL || uiState.scoreRange != (0 to 10)) stringResource(R.string.list_clear_filters) else null,
-                        onAction = if (uiState.searchQuery.isNotBlank() || uiState.favoritesOnly || uiState.unratedOnly || uiState.activeTag != null || uiState.smartFilter != SmartListFilter.ALL || uiState.scoreRange != (0 to 10)) onClearQuickFilters else null,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                    else -> LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = 5.dp, bottom = 116.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        if (showError) {
-                            item(key = "sync-error", contentType = "error") {
-                                ErrorBanner(
-                                    message = errorMsg,
-                                    onRetry = onRefresh,
-                                    modifier = Modifier.padding(horizontal = 16.dp),
+            Column(Modifier.fillMaxSize()) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(uiState.activeFilter?.displayName() ?: stringResource(R.string.list_all_statuses),
+                            style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.visible_results, uiState.entries.size) + " · " + stringResource(uiState.sortOrder.labelRes),
+                            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    if (activeCount > 0) GlassIconButton(Icons.Default.FilterAltOff,
+                        stringResource(R.string.list_clear_filters), onClearQuickFilters, Modifier.testTag("list-clear-active"))
+                    GlassIconButton(Icons.AutoMirrored.Filled.Sort, stringResource(R.string.mylist_sort), onShowSort)
+                }
+                val contentMode = when {
+                    uiState.isLoading && uiState.entries.isEmpty() -> 0
+                    showError && uiState.entries.isEmpty() -> 1
+                    uiState.entries.isEmpty() -> 2
+                    else -> 3
+                }
+                AnimatedContent(
+                    targetState = contentMode,
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    transitionSpec = {
+                        fadeIn(animationSpec = motion.iosTween(IosMotion.Standard)) togetherWith
+                            fadeOut(animationSpec = motion.iosTween(IosMotion.Quick))
+                    },
+                    label = "my-list-content",
+                ) { mode ->
+                    when (mode) {
+                        0 -> AppLoadingState(
+                            modifier = Modifier.fillMaxSize(),
+                            label = stringResource(R.string.mylist_title),
+                        )
+                        1 -> AppErrorState(
+                            title = errorMsg,
+                            retryLabel = stringResource(R.string.common_retry),
+                            onRetry = onRefresh,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                        2 -> EmptyState(
+                            icon = Icons.AutoMirrored.Filled.FormatListBulleted,
+                            title = stringResource(if (hasFilters) R.string.list_filtered_empty else R.string.mylist_empty_title),
+                            subtitle = stringResource(if (hasFilters) R.string.list_filtered_empty_hint else R.string.mylist_empty_subtitle),
+                            actionLabel = if (hasFilters) stringResource(R.string.list_clear_filters) else null,
+                            onAction = if (hasFilters) onClearQuickFilters else null,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                        else -> LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(top = 5.dp, bottom = 116.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            if (showError) {
+                                item(key = "sync-error", contentType = "error") {
+                                    ErrorBanner(
+                                        message = errorMsg,
+                                        onRetry = onRefresh,
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                    )
+                                }
+                            }
+                            items(
+                                items = uiState.entries,
+                                key = { entry -> entry.animeId },
+                                contentType = { "my-list-entry" },
+                            ) { entry ->
+                                MyListEntryCard(
+                                    entry = entry,
+                                    title = entry.title.ifEmpty { entry.animeId.toString() },
+                                    coverImageUrl = entry.coverImageUrl,
+                                    isIncrementing = entry.animeId in uiState.pendingIncrementIds,
+                                    isFavorite = entry.animeId in uiState.tools.favorites,
+                                    isPinned = entry.animeId in uiState.tools.pinned,
+                                    hasNote = uiState.tools.notes[entry.animeId]?.isNotBlank() == true,
+                                    tags = uiState.tools.tags[entry.animeId].orEmpty(),
+                                    remainingMinutes = entry.totalEpisodes?.takeIf { it > 0 }?.let { (it - entry.episodesWatched).coerceAtLeast(0).toLong() * uiState.tools.minutesFor(entry.animeId) },
+                                    onCardClick = { onAnimeClick(entry.animeId) },
+                                    onIncrementEpisode = { onIncrementEpisode(entry.animeId) },
+                                    onEditStatus = { onEditStatus(entry.animeId) },
+                                    showDivider = false,
+                                    modifier = Modifier.padding(horizontal = 16.dp).testTag("mylist-entry-${entry.animeId}"),
                                 )
                             }
-                        }
-                        item(key = "list-section-title", contentType = "section-title") {
-                            Text(
-                                text = "${uiState.activeFilter?.displayName() ?: stringResource(R.string.list_all_statuses)} · ${stringResource(uiState.sortOrder.labelRes)}",
-                                modifier = Modifier.padding(
-                                    start = 27.dp,
-                                    end = 27.dp,
-                                    top = 2.dp,
-                                    bottom = 1.dp,
-                                ),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 2,
-                            )
-                        }
-                        items(
-                            items = uiState.entries,
-                            key = { entry -> entry.animeId },
-                            contentType = { "my-list-entry" },
-                        ) { entry ->
-                            MyListEntryCard(
-                                entry = entry,
-                                title = entry.title.ifEmpty { entry.animeId.toString() },
-                                coverImageUrl = entry.coverImageUrl,
-                                isIncrementing = entry.animeId in uiState.pendingIncrementIds,
-                                isFavorite = entry.animeId in uiState.tools.favorites,
-                                isPinned = entry.animeId in uiState.tools.pinned,
-                                hasNote = uiState.tools.notes[entry.animeId]?.isNotBlank() == true,
-                                tags = uiState.tools.tags[entry.animeId].orEmpty(),
-                                remainingMinutes = entry.totalEpisodes?.takeIf { it > 0 }?.let { (it - entry.episodesWatched).coerceAtLeast(0).toLong() * uiState.tools.minutesFor(entry.animeId) },
-                                onCardClick = { onAnimeClick(entry.animeId) },
-                                onIncrementEpisode = { onIncrementEpisode(entry.animeId) },
-                                onEditStatus = { onEditStatus(entry.animeId) },
-                                showDivider = false,
-                                modifier = Modifier.padding(horizontal = 16.dp).testTag("mylist-entry-${entry.animeId}"),
-                            )
                         }
                     }
                 }
@@ -538,25 +532,19 @@ private fun StatusFilterRow(
                 label = "my-list-tab-color",
             )
             val containerColor by animateColorAsState(
-                targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                targetValue = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f).compositeOver(MaterialTheme.colorScheme.surface)
                 else MaterialTheme.colorScheme.surface,
                 animationSpec = motion.iosTween(IosMotion.Standard),
                 label = "my-list-tab-fill",
             )
-            val scale by animateFloatAsState(
-                targetValue = if (isSelected) 1f else 0.97f,
-                animationSpec = motion.iosSpring(),
-                label = "my-list-tab-scale",
-            )
+            val interactionSource = remember { MutableInteractionSource() }
             Box(
                 modifier = Modifier
-                    .sizeIn(minHeight = 44.dp)
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                    }
+                    .sizeIn(minHeight = 48.dp)
+                    .clip(PillShape)
                     .testTag("list-status-${status?.name ?: "ALL"}")
-                    .clickable(onClick = { onFilterSelected(status) })
+                    .selectable(isSelected, interactionSource = interactionSource, indication = null,
+                        role = Role.Tab, onClick = { onFilterSelected(status) })
                     .semantics {
                         role = Role.Tab
                         selected = isSelected
@@ -564,7 +552,7 @@ private fun StatusFilterRow(
                 contentAlignment = Alignment.Center,
             ) {
                 Surface(
-                    modifier = Modifier.heightIn(min = 38.dp),
+                    modifier = Modifier.heightIn(min = 48.dp),
                     shape = PillShape,
                     color = containerColor,
                     contentColor = contentColor,
@@ -576,7 +564,7 @@ private fun StatusFilterRow(
                     tonalElevation = 0.dp,
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 11.dp),
+                        modifier = Modifier.iosPressScale(interactionSource).padding(horizontal = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
@@ -616,111 +604,47 @@ private fun StatusFilterRow(
 }
 
 @Composable
-private fun NotLoggedInState(onLogin: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .padding(horizontal = 16.dp),
-    ) {
-        AppLargeHeader(
-            title = stringResource(R.string.mylist_title),
-            modifier = Modifier.padding(top = 6.dp),
-        )
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
+internal fun NotLoggedInState(onLogin: () -> Unit) {
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding()) {
+        AppLargeHeader(stringResource(R.string.mylist_title), Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+        LazyColumn(
+            Modifier.fillMaxSize().testTag("mylist-sign-in"),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 28.dp, bottom = 120.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier
-                    .widthIn(max = 340.dp)
-                    .padding(start = 4.dp, end = 4.dp, bottom = 86.dp),
-            ) {
-                Surface(
-                    modifier = Modifier.size(72.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-                    tonalElevation = 0.dp,
-                    shadowElevation = 0.dp,
-                ) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Surface(
-                            modifier = Modifier.size(52.dp),
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        ) {
-                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Icon(
-                                    Icons.Default.AccountCircle,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(38.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
+            item {
+                Surface(shape = ContinuousRoundedShape(24.dp), color = MaterialTheme.colorScheme.primaryContainer) {
+                    Box(Modifier.size(80.dp), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Bookmark, null, Modifier.size(38.dp), tint = MaterialTheme.colorScheme.primary)
                     }
                 }
-                Text(
-                    text = stringResource(R.string.mylist_not_logged_in_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    text = stringResource(R.string.mylist_not_logged_in_subtitle),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-                AppMaterialSurface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    material = AppMaterial.Grouped,
-                    shape = ContinuousRoundedShape(20.dp),
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        BenefitRow(
-                            icon = Icons.Default.CloudSync,
-                            title = stringResource(R.string.mylist_benefit_sync_title),
-                            subtitle = stringResource(R.string.mylist_benefit_sync_subtitle),
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(start = 58.dp),
-                            thickness = 0.5.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant,
-                        )
-                        BenefitRow(
-                            icon = Icons.Default.Bookmark,
-                            title = stringResource(R.string.mylist_benefit_status_title),
-                            subtitle = stringResource(R.string.mylist_benefit_status_subtitle),
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(start = 58.dp),
-                            thickness = 0.5.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant,
-                        )
-                        BenefitRow(
-                            icon = Icons.Default.Star,
-                            title = stringResource(R.string.mylist_benefit_scores_title),
-                            subtitle = stringResource(R.string.mylist_benefit_scores_subtitle),
-                        )
+            }
+            item {
+                Column(Modifier.widthIn(max = 420.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.mylist_not_logged_in_title), style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    Text(stringResource(R.string.mylist_not_logged_in_subtitle), style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                }
+            }
+            item {
+                AppButton(stringResource(R.string.profile_login), onLogin,
+                    Modifier.widthIn(max = 420.dp).fillMaxWidth(),
+                    variant = AppButtonVariant.Primary, icon = Icons.AutoMirrored.Filled.Login)
+            }
+            item {
+                AppMaterialSurface(Modifier.widthIn(max = 420.dp).fillMaxWidth(), material = AppMaterial.Grouped,
+                    shape = ContinuousRoundedShape(20.dp)) {
+                    Column {
+                        BenefitRow(Icons.Default.CloudSync, stringResource(R.string.mylist_benefit_sync_title), stringResource(R.string.mylist_benefit_sync_subtitle))
+                        HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = .5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                        BenefitRow(Icons.Default.Bookmark, stringResource(R.string.mylist_benefit_status_title), stringResource(R.string.mylist_benefit_status_subtitle))
+                        HorizontalDivider(Modifier.padding(horizontal = 14.dp), thickness = .5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                        BenefitRow(Icons.Default.Star, stringResource(R.string.mylist_benefit_scores_title), stringResource(R.string.mylist_benefit_scores_subtitle))
                     }
                 }
-                AppButton(
-                    label = stringResource(R.string.profile_login),
-                    onClick = onLogin,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .widthIn(max = 320.dp)
-                        .padding(top = 10.dp),
-                    variant = AppButtonVariant.Primary,
-                    icon = Icons.AutoMirrored.Filled.Login,
-                )
             }
         }
     }
@@ -760,30 +684,6 @@ private fun BenefitRow(icon: ImageVector, title: String, subtitle: String) {
     }
 }
 
-
-@Composable
-private fun InsightsStrip(insights: MyListInsights, onClick: (() -> Unit)? = null) {
-    AppMaterialSurface(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 9.dp)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        material = AppMaterial.Interactive,
-        shape = ContinuousRoundedShape(16.dp),
-    ) {
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 11.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            InsightMetric(insights.completedAnime.toString(), stringResource(R.string.mylist_metric_completed), Modifier.weight(1f))
-            InsightMetric(insights.watchedEpisodes.toString(), stringResource(R.string.mylist_metric_episodes), Modifier.weight(1f))
-            InsightMetric(insights.averageScore?.let { String.format(java.util.Locale.getDefault(), "%.1f", it) } ?: "—", stringResource(R.string.mylist_metric_score), Modifier.weight(1f))
-        }
-    }
-}
-
-@Composable
-private fun InsightMetric(value: String, label: String, modifier: Modifier = Modifier) {
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

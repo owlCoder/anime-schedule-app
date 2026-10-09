@@ -91,21 +91,20 @@ fun MyListEntryCard(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 4.dp, vertical = 3.dp)
                 .iosPressScale(cardInteraction, pressedScale = 0.992f),
-            shape = ContinuousRoundedShape(16.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.58f),
+            shape = ContinuousRoundedShape(20.dp),
+            color = MaterialTheme.colorScheme.surface,
             border = BorderStroke(
                 0.5.dp,
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f),
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f),
             ),
             tonalElevation = 0.dp,
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = if (compact) 72.dp else 88.dp)
-                    .padding(start = 10.dp, end = 7.dp, top = if (compact) 5.dp else 9.dp, bottom = if (compact) 5.dp else 9.dp),
+                    .heightIn(min = if (compact) 96.dp else 112.dp)
+                    .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(
@@ -122,43 +121,25 @@ fun MyListEntryCard(
                     MediaThumbnail.Small(
                         url = coverImageUrl,
                         contentDescription = title,
-                        modifier = Modifier.size(if (compact) 42.dp else 50.dp, if (compact) 56.dp else 68.dp),
+                        modifier = Modifier.size(if (compact) 48.dp else 56.dp, if (compact) 68.dp else 80.dp),
                     )
                     Spacer(Modifier.width(11.dp))
                     Column(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            if (isPinned) Icon(Icons.Default.PushPin, stringResource(R.string.pinned_anime), Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
-                            if (isFavorite) Icon(
-                                Icons.Default.Star,
-                                stringResource(R.string.favorites),
-                                Modifier.size(14.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            if (hasNote) Icon(
-                                Icons.Default.EditNote,
-                                stringResource(R.string.personal_note),
-                                Modifier.size(14.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = title,
-                                modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
+                        Text(
+                            text = title, style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold, maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                         FlowRow(
                             horizontalArrangement = Arrangement.spacedBy(7.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
+                            if (isPinned) Icon(Icons.Default.PushPin, stringResource(R.string.pinned_anime), Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
+                            if (isFavorite) Icon(Icons.Default.Star, stringResource(R.string.favorites), Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
+                            if (hasNote) Icon(Icons.Default.EditNote, stringResource(R.string.personal_note), Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(
                                 text = episodeLabel(entry),
                                 style = MaterialTheme.typography.bodySmall,
@@ -189,15 +170,15 @@ fun MyListEntryCard(
                                 )
                             }
                         }
-                        if (remainingMinutes != null && remainingMinutes > 0) Text(
+                        if (entry.status == WatchStatus.WATCHING && remainingMinutes != null && remainingMinutes > 0) Text(
                             stringResource(R.string.remaining_time_value, remainingMinutes / 60, remainingMinutes % 60),
                             style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (tags.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                            tags.take(3).forEach { tag ->
+                            tags.take(2).forEach { tag ->
                                 Text(tag, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.clip(MaterialTheme.shapes.small).background(MaterialTheme.colorScheme.primaryContainer).padding(horizontal = 6.dp, vertical = 3.dp))
                             }
-                            if (tags.size > 3) Text("+${tags.size - 3}", style = MaterialTheme.typography.labelSmall)
+                            if (tags.size > 2) Text("+${tags.size - 2}", style = MaterialTheme.typography.labelSmall)
                         }
                         if (progress != null) {
                             LinearProgressIndicator(
@@ -216,39 +197,40 @@ fun MyListEntryCard(
                     }
                 }
 
-                Spacer(Modifier.width(5.dp))
-                if (entry.status == WatchStatus.WATCHING) {
-                    GlassListAction(
-                        enabled = !isIncrementing,
-                        onClick = onIncrementEpisode,
-                        actionDescription = "+1",
-                    ) {
-                        if (isIncrementing) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(15.dp),
-                                strokeWidth = 2.dp,
-                            )
-                        } else {
-                            Text(
-                                text = "+1",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold,
-                            )
+                Spacer(Modifier.width(10.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (entry.status == WatchStatus.WATCHING) {
+                        GlassListAction(
+                            enabled = !isIncrementing,
+                            onClick = onIncrementEpisode,
+                            actionDescription = stringResource(R.string.notification_increment),
+                        ) {
+                            if (isIncrementing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(15.dp),
+                                    strokeWidth = 2.dp,
+                                )
+                            } else {
+                                Text(
+                                    text = "+1",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
                         }
                     }
-                    Spacer(Modifier.width(2.dp))
-                }
-                GlassListAction(
-                    onClick = onEditStatus,
-                    actionDescription = stringResource(R.string.cd_edit_list_status),
-                ) {
-                    Icon(
-                        Icons.Default.Edit,
-                        contentDescription = null,
-                        modifier = Modifier.size(17.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    GlassListAction(
+                        onClick = onEditStatus,
+                        actionDescription = stringResource(R.string.cd_edit_list_status),
+                    ) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = null,
+                            modifier = Modifier.size(17.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }
@@ -266,7 +248,7 @@ private fun GlassListAction(
     val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
-            .size(42.dp)
+            .size(48.dp)
             .iosPressScale(interactionSource, pressedScale = 0.91f)
             .clickable(
                 interactionSource = interactionSource,
@@ -282,7 +264,7 @@ private fun GlassListAction(
         contentAlignment = Alignment.Center,
     ) {
         Surface(
-            modifier = Modifier.size(34.dp),
+            modifier = Modifier.size(40.dp),
             shape = CircleShape,
             color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.82f),
             border = BorderStroke(
@@ -291,7 +273,7 @@ private fun GlassListAction(
             ),
             tonalElevation = 0.dp,
         ) {
-            Box(Modifier.size(34.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
                 content()
             }
         }

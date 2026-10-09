@@ -128,6 +128,7 @@ class AiringNotificationWorker @AssistedInject constructor(
         // Reuse the application loader so notification work does not create another cache.
         val request = ImageRequest.Builder(context)
             .data(url)
+            .size(256)
             .allowHardware(false)
             .build()
         return SingletonImageLoader.get(context).execute(request).image?.toBitmap()

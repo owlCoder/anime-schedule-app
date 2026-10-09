@@ -17,6 +17,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,8 +43,8 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 
 /**
- * Stable modal content surface. The Activity backdrop host owns blur separately from the dialog,
- * so content switches reuse the same effect and disposal always releases it.
+ * Stable modal content surface. The modal owns its dim scrim, so dismissal never leaves an
+ * independent Activity blur effect behind.
  *
  * Sheet drag gestures are disabled by default because nested scrollable content otherwise hands
  * its remaining drag to ModalBottomSheet at the top/bottom boundary. That makes a fully expanded
@@ -64,10 +69,21 @@ fun AppSheet(
     val scrim = Color.Black.copy(alpha = if (dark) 0.42f else 0.26f)
     val toast = LocalToast.current
     val sheetKey = remember { Any() }
-    val backdrop = LocalSheetBackdrop.current
-    DisposableEffect(backdrop, sheetKey) {
-        backdrop?.attach(sheetKey)
-        onDispose { backdrop?.detach(sheetKey) }
+    val scope = rememberCoroutineScope()
+    var dismissing by remember { mutableStateOf(false) }
+    val dismissAnimated: () -> Unit = {
+        if (!dismissing) {
+            dismissing = true
+            scope.launch {
+                try {
+                    sheetState.hide()
+                    // Nested content may reject Hidden and navigate to its parent instead.
+                    if (!sheetState.isVisible) onDismissRequest()
+                } finally {
+                    dismissing = false
+                }
+            }
+        }
     }
     DisposableEffect(toast, sheetKey) {
         toast.attachSheet(sheetKey)
@@ -132,7 +148,8 @@ fun AppSheet(
                         GlassIconButton(
                             icon = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(android.R.string.cancel),
-                            onClick = onDismissRequest,
+                            onClick = dismissAnimated,
+                            enabled = !dismissing,
                             modifier = Modifier.padding(end = 6.dp),
                         )
                     }
@@ -151,7 +168,8 @@ fun AppSheet(
                         GlassIconButton(
                             icon = Icons.Default.Close,
                             contentDescription = stringResource(android.R.string.cancel),
-                            onClick = onDismissRequest,
+                            onClick = dismissAnimated,
+                            enabled = !dismissing,
                         )
                     }
                 }
